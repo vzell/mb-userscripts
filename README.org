@@ -47555,7 +47555,7 @@ functioning of the userscript
 
 #+end_example
 
-* TODO add jesus2099 artcode fetching (configurable)
+* DONE add jesus2099 artcode fetching (configurable)
 ** DONE initial
 
 In the uploaded userscript,
@@ -48174,34 +48174,6 @@ and this is the code
             }
 #+end_example
 
-** TODO Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images (count 0)
-
-Do NOT render the CAA toggle button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
-
-#+begin_example
-<button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
-  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3abf4aed-71c0-45a6-8140-d916553956d8/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
-  <span class="mb-caa-toggle-count">0
-  </span>
-</button>
-#+end_example
-
-So when there is a '<span class="mb-caa-toggle-count">0' present
-
-** TODO incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
-
-some more things to implement:
-
-- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
-  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
-  functionality right to the columns defined as
-
-#+begin_example
-            features: {
-                addCAA: '<column name>'
-            },
-#+end_example
-  
 * DONE rename "type: 'events'," to "type: 'artist-events',
 
 * DONE Why - I would at least expect an error in the console log
@@ -53408,7 +53380,6 @@ before
     function initCaaPics() {
 #+end_example
 
-
 * DONE in the case of uncollapsing a RG in the CAA column also load the front images for all Releases in that RG
 
 In the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
@@ -54088,7 +54059,119 @@ why ist the "function ergInjectCaaInlineThumbnails(table)" not working on the UR
 
 in column "Release groups" when expanding a release group
 
+* DONE why does the tool tip show Show all CAA cover art images (8) in this cell
+
+In the uploaded userscript,
+
+why does the tooltip show "Show all CAA cover art images (8) in this cell"
+
+#+begin_example
+<span data-caa-expand-btn="expanded" title="Show all CAA cover art images (8) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
+#+end_example
+
+although it's expanded
+
+** one more
+
+With https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+
+clicking on the "SHow all..." icon when in collapsed state, all images are uncollapsed and shown, but the I get
+
+#+begin_example
+<td data-eaa-multi-built="1">
+  <ul class="mb-caa-art-ul" data-mb-art-search="Poster">
+    <li class="mb-caa-art-li mb-caa-art-li-summary">
+      <span data-caa-expand-btn="expanded" title="Show all EAA event art images (1) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
+      </span>
+      <a href="/event/b0466931-607d-4033-aff3-022c3122ea2d/event-art" title="1 image found for this event" data-eaa-enriched="1">
+	<span class="artwork-icon eaa-icon" title="1 image found for this event" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250&quot;);">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Network fetch (712 ms)">🔵
+	</span>
+	<span class="mb-eaa-count-badge" title="1 image found for this event">1
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/43847748144-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Poster
+      </span>
+    </li>
+  </ul>
+</td>
+#+end_example
+
 * TODO Change expand multi-row cells to "Expand|all" | "multi-row|cells" - elements under each other aligned in the middle
+
+1.)
+
+Currently the "mb-col-collapse-all-btn" button 
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;">
+  <span>▶ Expand
+  </span>
+  <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;">
+    <span>multi-row
+    </span>
+    <span>cells
+    </span>
+  </span>
+</button>
+#+end_example
+
+renders "multi-row" and "cells" above each other.
+
+I want that "Expand" also renders above "ALL", like in the following HTML snippet
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;">
+  <span>▶ Expand
+  </span>
+    <span>ALL
+    </span>
+  <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;">
+    <span>multi-row
+    </span>
+    <span>cells
+    </span>
+  </span>
+</button>
+#+end_example
+
+2.)
+
+the tooltip of "mb-col-collapse-all-btn" should change from
+
+#+begin_example
+
+#+end_example
+
+to
+
+#+begin_example
+
+#+end_example
+
+3.)
+
+Change the button text from
+
+#+begin_example
+            collapseHdrBtn.title = `Expand all multi-row "${colName}" cells in this table column`;
+#+end_example
+
+#+begin_example
+            collapseHdrBtn.title = `Expand all multi-row "${colName}" cells (<number of multi-row cells in this column>) in this table column`;
+#+end_example
+
+to add the "<number of multi-row cells in this column>" to the tooltip
+
+Please implement
 
 
 * TODO Change all the entity links to open in a new tab
@@ -54572,8 +54655,6 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 
 
 * TODO Change all the entity links to open in a new tab
-
-* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
 
 
 * TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just display ONE, actually make it a multi-row cell
@@ -55094,48 +55175,35 @@ collapsableColumns: [ 'Location', '', ... ],
         }
 #+end_example
 
-* DONE why does the tool tip show Show all CAA cover art images (8) in this cell
 
-In the uploaded userscript,
+* TODO Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images (count 0)
 
-why does the tooltip show "Show all CAA cover art images (8) in this cell"
-
-#+begin_example
-<span data-caa-expand-btn="expanded" title="Show all CAA cover art images (8) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
-#+end_example
-
-although it's expanded
-
-** one more
-
-With https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
-
-clicking on the "SHow all..." icon when in collapsed state, all images are uncollapsed and shown, but the I get
+Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
 
 #+begin_example
-<td data-eaa-multi-built="1">
-  <ul class="mb-caa-art-ul" data-mb-art-search="Poster">
-    <li class="mb-caa-art-li mb-caa-art-li-summary">
-      <span data-caa-expand-btn="expanded" title="Show all EAA event art images (1) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
-      </span>
-      <a href="/event/b0466931-607d-4033-aff3-022c3122ea2d/event-art" title="1 image found for this event" data-eaa-enriched="1">
-	<span class="artwork-icon eaa-icon" title="1 image found for this event" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250&quot;);">
-	</span>
-      </a>
-      <span class="mb-art-cache-hint-col-wrap">
-	<span class="mb-art-cache-hint-col" title="Network fetch (712 ms)">🔵
-	</span>
-	<span class="mb-eaa-count-badge" title="1 image found for this event">1
-	</span>
-      </span>
-      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/43847748144-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Poster
-      </span>
-    </li>
-  </ul>
-</td>
+<button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3abf4aed-71c0-45a6-8140-d916553956d8/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">0
+  </span>
+</button>
 #+end_example
+
+So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefull reload from the net dislpay it again if the count > "0"
+
+
+* TODO incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
+
+some more things to implement:
+
+- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
+  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
+  functionality right to the columns defined as
+
+#+begin_example
+            features: {
+                addCAA: '<column name>'
+            },
+#+end_example
+  
+
+* TODO the order of the buttons when being visible should alway be klike in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlighning", "Clear all column filters", "Clear all filters"

@@ -4073,7 +4073,7 @@
         const clearBtn = document.createElement('button');
         clearBtn.className = 'mb-subtable-clear-btn';
         clearBtn.type = 'button';
-        clearBtn.title = 'Clear all filters for this sub-table (column filters and sub-table filter)';
+        clearBtn.title = 'Clear all filters for this sub-table (the sub-table filter and all column filters)';
         clearBtn.style.display = 'none'; // Initially hidden
 
         // Create red ✗ symbol
@@ -4210,7 +4210,7 @@
         btn.type  = 'button';
         btn.className = 'mb-subtable-collapse-btn';
         btn.innerHTML = makeCollapseExpandBtnHTML(true);
-        btn.title = `Expand all collapsed multi-row cells in "${categoryName}"`;
+        btn.title = `Expand ALL collapsed multi-row cells in "${categoryName}" sub-section`;
         btn.setAttribute('aria-label', `Expand all collapsed multi-row cells in: ${categoryName}`);
         // Same base style as createSubTableHighlightButton; hidden until
         // updateSubTableCollapseButton() determines multi-row cells exist.
@@ -9505,7 +9505,7 @@
     preFilterExcludeCheckbox.style.cssText = uiCheckboxInputCSS();
     preFilterExcludeLabel.appendChild(preFilterExcludeCheckbox);
     preFilterExcludeLabel.appendChild(document.createTextNode('Ex'));
-    preFilterExcludeLabel.title = 'Exclude matches (Load) — rows matching the filter expression are excluded instead of kept';
+    preFilterExcludeLabel.title = 'Exclude Matches (Load) — rows matching the filter expression are excluded instead of kept';
 
     const preFilterMsg = document.createElement('span');
     preFilterMsg.id = 'mb-preload-filter-msg';
@@ -9545,7 +9545,7 @@
     filterInput.placeholder = activeDefinition && activeDefinition.tableMode === 'multi'
         ? `Global Filter… works across all sub-tables`
         : `Global Filter…`;
-    filterInput.title = `Enter global filter string (focus this field with ${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')})`;
+    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}')`;
     filterInput.style.cssText = uiGlobalFilterInputCSS();
     // Remove default border-radius on the right so the x/handle attach flush
     filterInput.style.borderRadius = '3px 0 0 3px';
@@ -9563,7 +9563,7 @@
         'background:#fafafa;',
         'transition:color 0.15s, background 0.15s;'
     ].join(' ');
-    filterClear.title = 'Clear global filter (✕)';
+    filterClear.title = 'Clear global filter';
     filterClear.onmouseenter = () => { filterClear.style.color = '#c00'; filterClear.style.background = '#fee'; };
     filterClear.onmouseleave = () => { filterClear.style.color = '#999'; filterClear.style.background = '#fafafa'; };
 
@@ -9611,7 +9611,7 @@
     caseCheckbox.style.cssText = uiCheckboxInputCSS();
     caseLabel.appendChild(caseCheckbox);
     caseLabel.appendChild(document.createTextNode('Cc'));
-    caseLabel.title = 'Case Sensitive Filtering';
+    caseLabel.title = 'Case Sensitive Filtering (ALL sub-tables)';
 
     const regexpLabel = document.createElement('label');
     regexpLabel.id = 'mb-global-filter-rx-label';
@@ -9622,7 +9622,7 @@
     regexpCheckbox.style.cssText = uiCheckboxInputCSS();
     regexpLabel.appendChild(regexpCheckbox);
     regexpLabel.appendChild(document.createTextNode('Rx'));
-    regexpLabel.title = 'RegExp Filtering';
+    regexpLabel.title = 'RegExp Filtering (ALL sub-tables)';
 
     const excludeLabel = document.createElement('label');
     excludeLabel.id = 'mb-global-filter-exclude-label';
@@ -9633,7 +9633,7 @@
     excludeCheckbox.style.cssText = uiCheckboxInputCSS();
     excludeLabel.appendChild(excludeCheckbox);
     excludeLabel.appendChild(document.createTextNode('Ex'));
-    excludeLabel.title = 'Exclude matches (Global Filter)';
+    excludeLabel.title = 'Exclude Matches (ALL sub-tables)';
 
     filterContainer.appendChild(filterWrapper);
     filterContainer.appendChild(caseLabel);
@@ -9717,9 +9717,9 @@
     // Create filter toggle button (for global and column filter highlighting)
     const unhighlightAllBtn = document.createElement('button');
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
-    unhighlightAllBtn.textContent = '🎨 Toggle highlighting';
+    unhighlightAllBtn.textContent = '🎨 Toggle ALL highlighting';
     unhighlightAllBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
-    unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables)';
+    unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
 
     /**
      * Update filter highlight button background color based on highlighting state
@@ -9763,7 +9763,7 @@
     filterContainer.appendChild(unhighlightAllBtn);
 
     // Global ▶ collapse button — collapses all collapsable columns at once.
-    // Inserted BEFORE the '🎨 Toggle highlighting' button so it is easy to find.
+    // Inserted BEFORE the '🎨 Toggle ALL highlighting' button so it is easy to find.
     // Visibility is managed by initCollapsableColumns(): shown only when the
     // active page definition declares collapsableColumns with multi-row data.
     const globalCollapseBtn = document.createElement('button');
@@ -9783,10 +9783,10 @@
 
     const clearColumnFiltersBtn = document.createElement('button');
     clearColumnFiltersBtn.appendChild(xSymbol);
-    clearColumnFiltersBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
+    clearColumnFiltersBtn.appendChild(document.createTextNode('Clear ALL COLUMN filters'));
     clearColumnFiltersBtn.id = 'mb-clear-column-filters-btn';
     clearColumnFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearColumnFiltersBtn.title = 'Clear ALL column-specific filter inputs — global action (Shift+Esc)';
+    clearColumnFiltersBtn.title = `Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')`;
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
@@ -9816,7 +9816,7 @@
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (except the filter when 'Loading from Disk' was used — also triggered by ${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}`;
+    clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
     clearAllFiltersBtn.onclick = () => {
         // filterClear.click() resets the global filter to prefix-only and runs the filter.
         filterClear.click();
@@ -9932,10 +9932,10 @@
             if (labelSpan) {
                 if (stfActive) {
                     labelSpan.textContent = 'Clear all filters';
-                    btn.title = 'Clear all filters for this sub-table (column filters and sub-table filter)';
+                    btn.title = 'Clear ALL filters for this sub-table (the sub-table filter and ALL column filters)';
                 } else {
-                    labelSpan.textContent = 'Clear all COLUMN filters';
-                    btn.title = 'Clear all COLUMN filters for this sub-table';
+                    labelSpan.textContent = 'Clear all column filters';
+                    btn.title = 'Clear ALL COLUMN filters for this sub-table';
                 }
             }
 
@@ -12697,7 +12697,7 @@
             const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = '…';
-            input.title = 'Enter column filter string';
+            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')}'`;
             input.className = 'mb-col-filter-input';
             input.dataset.colIdx = idx;
 
@@ -15762,7 +15762,7 @@
         const toggleIcon = document.createElement('span');
         toggleIcon.className = 'mb-subtable-filter-toggle-icon';
         toggleIcon.textContent = '🔍';
-        toggleIcon.title = 'Toggle filter elements on/off for this section';
+        toggleIcon.title = `Toggle filter elements for sub-section "${categoryName}"`;
         toggleIcon.setAttribute('role', 'button');
         toggleIcon.setAttribute('aria-label', `Toggle sub-table filter for "${categoryName}"`);
 
@@ -15838,7 +15838,7 @@
         const caseLabel = document.createElement('label');
         caseLabel.id = `${pfx}-case-label`;
         caseLabel.htmlFor = caseCheckbox.id;
-        caseLabel.title = 'Case Sensitive Filtering';
+        caseLabel.title = 'Case Sensitive Filtering (filter for "${categoryName}" sub-table)';
         caseLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
         caseLabel.appendChild(caseCheckbox);
         caseLabel.appendChild(document.createTextNode('Cc'));
@@ -15852,7 +15852,7 @@
         const rxLabel = document.createElement('label');
         rxLabel.id = `${pfx}-rx-label`;
         rxLabel.htmlFor = rxCheckbox.id;
-        rxLabel.title = 'RegExp Filtering';
+        rxLabel.title = 'RegExp Filtering (filter for "${categoryName}" sub-table)';
         rxLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
         rxLabel.appendChild(rxCheckbox);
         rxLabel.appendChild(document.createTextNode('Rx'));
@@ -15866,12 +15866,12 @@
         const exLabel = document.createElement('label');
         exLabel.id = `${pfx}-ex-label`;
         exLabel.htmlFor = exCheckbox.id;
-        exLabel.title = `Exclude matches (Filter for "${categoryName}")`;
+        exLabel.title = `Exclude Matches (filter for "${categoryName}" sub-table)`;
         exLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
         exLabel.appendChild(exCheckbox);
         exLabel.appendChild(document.createTextNode('Ex'));
 
-        // ── "Clear ALL COLUMN filters" button (inside STF panel) ────────────────
+        // ── "Clear all column filters" button (inside STF panel) ────────────────
         // Visible only while the STF input contains text.  Clicking it clears only
         // the column-level filter inputs for this table — the STF input itself is
         // left untouched so the sub-table filter keeps filtering.
@@ -15879,13 +15879,13 @@
         clearAllStfBtn.id = `${pfx}-clear-all-btn`;
         clearAllStfBtn.className = 'mb-stf-clear-col-btn';
         clearAllStfBtn.type = 'button';
-        clearAllStfBtn.title = 'Clear all COLUMN filters for this sub-table (sub-table filter is kept)';
+        clearAllStfBtn.title = 'Clear ALL column filters for this sub-table (the sub-table filter itself is kept)';
         // Create red ✗ symbol
         const _xSym = document.createElement('span');
         _xSym.textContent = '✗ ';
         _xSym.style.cssText = 'color:red; font-size:1em; font-weight:bold;';
         clearAllStfBtn.appendChild(_xSym);
-        clearAllStfBtn.appendChild(document.createTextNode('Clear all COLUMN filters'));
+        clearAllStfBtn.appendChild(document.createTextNode('Clear all column filters'));
         // Initially hidden — shown by updateInputStyle() when STF input has text
         clearAllStfBtn.style.cssText = 'font-size:0.8em; padding:2px 6px; border-radius:4px; background:rgb(240,240,240); border:1px solid rgb(204,204,204); cursor:pointer; vertical-align:middle; display:none;';
 
@@ -15893,7 +15893,7 @@
         const highlightBtn = document.createElement('button');
         highlightBtn.id = `${pfx}-toggle-filter-highlight-btn`;
         highlightBtn.type = 'button';
-        highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table)';
+        highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
         highlightBtn.textContent = '🎨 Toggle highlighting';
         // Initially hidden — shown by updateFilterButtonsVisibility() as soon as any
         // filter (subtable input or column filter) is active for this subtable.
@@ -16158,7 +16158,7 @@
             }
         }
 
-        // ── "Clear ALL COLUMN filters" button handler ────────────────────────────
+        // ── "Clear all column filters" button handler ────────────────────────────
         clearAllStfBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             // Clear only column-level filter inputs for this table.
@@ -16173,7 +16173,7 @@
             }
             // Re-run the global filter so column-filter row visibility is refreshed.
             if (typeof runFilter === 'function') runFilter();
-            Lib.debug('filter', `STF in-panel "Clear all COLUMN filters" clicked for "${categoryName}": column filters cleared, STF kept`);
+            Lib.debug('filter', `STF in-panel "Clear all column filters" clicked for "${categoryName}": column filters cleared, STF kept`);
         });
 
         // ── Event wiring ─────────────────────────────────────────────────────
@@ -16694,7 +16694,7 @@
                     // Use the stored seeAllCount to update button text
                     const countSuffix = group.seeAllCount ? ` ${group.seeAllCount}` : '';
                     showAllBtn.textContent = `Show all${countSuffix} rows`;
-                    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type)`;
+                    showAllBtn.title = `Click to show all${countSuffix} rows in a new browser tab for this sub-section (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type section)`;
                     showAllBtn.className = 'mb-show-all-subtable-btn';
                     showAllBtn.type = 'button';
                     // Apply configurable initial background color (overrides the CSS class default).
@@ -18565,7 +18565,7 @@
             const collapseHdrBtn = document.createElement('span');
             collapseHdrBtn.className = 'mb-col-collapse-hdr-btn';
             collapseHdrBtn.dataset.colIndex = String(colIndex);
-            collapseHdrBtn.title = `Expand all multi-row ${colName} cells in this table column`;
+            collapseHdrBtn.title = `Expand all ${collapseHdrBtns.length} multi-row "${colName}" cells in this table column`;
             collapseHdrBtn.setAttribute('role', 'button');
             collapseHdrBtn.setAttribute('aria-expanded', 'false');
             collapseHdrBtn.setAttribute('aria-label', `Expand all collapsed cells in: ${colName}`);
