@@ -45966,6 +45966,8 @@ Include a "Close" button and also "Escape" key closing of the popup.
 * TODO statistics panel
 ** wrong stats
 ** make it multitable aware
+** memory usage how is it counted
+** make it aware of the NEW Artist-Releasegroups
 ** DONE create keyboard shorcut
 
 
@@ -53736,17 +53738,31 @@ function splitCountryDateCell(newRow, countryDateIdx) {
 }
 Doing this for Location and Area as well would shave hundreds of lines of visual noise off startFetchingProcess and make the primary data-collection loop much easier to follow.
 #+end_example
+** check
 
-* TODO please check function documentations against it's implementation again and fix if necessary + rebuild HELP + CHANGLOG
-
-In the uploaded userscript "ShowAllEntityData.user.js" and library "ShowAllEntityData_CHANGELOG.json"
+In the uploaded userscript "ShowAllEntityData.user.js" and library
 
 - check for all unused variables and function definitions, create a report and fix
+
+* TODO please check function documentations against it's implementation again and fix if necessary
+
+In the uploaded userscript "ShowAllEntityData.user.js" and library
+
 - check the current function documentations against their implementation, where the doc is differing, please fix
+
+* TODO rebuild HELP file
+
+In the uploaded userscript "ShowAllEntityData.user.js" and helpfile "ShowAllEntityData_HELP.json"
+
 - resync the uploaded HELP file "ShowAllEntityData_HELP.txt" against the current code base and keyboard shortcuts
+
+* TODO check changelog file structure and add a changelog entry
+
+In the uploaded userscript "ShowAllEntityData.user.js" and changelog "ShowAllEntityData_CHANGELOG.json"
+
 - add a changelog entry
 
-* document test suite after userscript and library changes
+* TODO document test suite after userscript and library changes
 ** library
 ** userscript
 
@@ -54208,7 +54224,7 @@ to the event parts extracted
 * question: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
 
 
-* on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
+* QUESTION: on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
 
 on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
 fetching of all paginated pages begins after pressing the "Show all.." action button
@@ -54249,14 +54265,8 @@ to give the user the chance to quickly filter either for rows with OR without im
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
 
 
-* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 
-* TODO add shortcut "Render" when no filtering in the "Load from Disk" path
-
-* TODO deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog
-
-
-* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
+* TODO OBSOLETE: on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
 ** initial
 
 on the pageType of URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
@@ -54293,7 +54303,7 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
 
 ** remove the sub-tables from the DOM before starting to fetch any CAA images
 
-* TODO split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
+* TODO OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
 ** initial
 
 given the fact that the following action button (also it's labeled '🧮 Non-official RGs')
@@ -54560,7 +54570,8 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
-* create a configurable extractMultiRowCell function on a source column: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events ==> "Area", "Country" columns
+
+* TODO create a configurable extractMultiRowCell function on a source column: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events ==> "Area", "Country" columns
 
 #+begin_example
             tableMode: 'single'
@@ -54593,6 +54604,7 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 
 
 * TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just display ONE, actually make it a multi-row cell
+
 
 * TODO add information that ALL CAA images have been loaded
 ** DONE initial
@@ -54632,7 +54644,7 @@ Actually display ALL the different timeing information (for the different image 
 ** TODO make the info box a little bit wider
 
 
-* TODO When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
+* DONE When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
 
 When loading saving from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" -
 https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but
@@ -54688,7 +54700,7 @@ fetching of all paginated pages begins after pressing the "Show all.." action bu
 
 
 
-* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+* TODO "CAA" column AND other columns where thumbnails are shown: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
 
 In the newly uploaded userscript,
@@ -54712,21 +54724,20 @@ The "Cell stucture" submenu list should have, additionally to the entries for mu
 entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
 to give the user the chance to quickly filter either for rows with OR without images
 
+* TODO incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
 
-* TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
+some more things to implement:
 
-Is this function also used for alignment inside the columns cells
+- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
+  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
+  functionality right to the columns defined as
 
 #+begin_example
-        // --- Helper: is a column name numeric? ---------------------------------
-        const isNumericCol = (name) =>
-            name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
-            name.includes('Length') || name.includes('#');
+            features: {
+                addCAA: '<column name>'
+            },
 #+end_example
-
-
-* TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
-
+  
 
 * DONE deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog*
 * DONE initial
@@ -55170,6 +55181,7 @@ all the red "x" icons should get rendered in bold with a dark red color
 when entering the first time something in the filter field, the whole filter dialog shrinks in horizontal size BUT it
 shrinks NOT anymore as soon the enduser has resized the dialog and it gets stored in browser storage, can you diagnose this from the curretn code ? if yes please fix
 
+* DONE "Case sensitive" and "Regexp" checkboxes are missing their tooltips + add an "x" icon to clear the filter field with the mouse
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 ** initial
 
@@ -55257,9 +55269,7 @@ Esc with panel closed → closes dialog
 #+end_example
 
 
-* TODO "Case sensitive" and "Regexp" checkboxes are missing their tooltips + add an "x" icon to clear the filter field with the mouse
-
-* maybe also the other filter dialogs could get the same
+* TODO maybe also the other filter dialogs could get the same
 
 persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store
 (push to history) button - (also for load from disk - dialog)
@@ -55302,7 +55312,7 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
 ** remove the sub-tables from the DOM before starting to fetch any CAA images
 
 
-* TODO split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
+* TODO OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
 ** initial
 
 given the fact that the following action button (also it's labeled '🧮 Non-official RGs')
@@ -55659,21 +55669,6 @@ Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-t
 So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefull reload from the net dislpay it again if the count > "0"
 
 
-* TODO incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
-
-some more things to implement:
-
-- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
-  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
-  functionality right to the columns defined as
-
-#+begin_example
-            features: {
-                addCAA: '<column name>'
-            },
-#+end_example
-  
-
 * TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlighning", "Clear all column filters", "Clear all filters"
 
 
@@ -55727,7 +55722,7 @@ a couple of things are still missing (also add a changelog):
 
 
 * TODO fix Artist-Releasegroup pages
-** changes to do
+** DONE changes to do
 
 Change the code blocks
 
@@ -55802,7 +55797,7 @@ Remove the complete code block
                 }
 #+end_example
 
-** initial
+** DONE initial
 
 In the NEWLY uploaded userscript,
 
@@ -55848,7 +55843,7 @@ The commented block between
         // ── END: Artist-Releasegroups pre-fetch pass ──────────────────────────────────────────────
 #+end_example
 
-is probably the place where the pre-fetch logic belongs tp
+is probably the place where the pre-fetch logic belongs to.
 
 On the final rendered page we additionally extract ALL the h3 category header names from the full fetch pipeline (they
 represent the 'official' and 'non-official' ones) in a new array variable "h3_all_category_header_array".
@@ -55891,3 +55886,221 @@ should account which subType has been selected.
 #+begin_example
 globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
 #+end_example
+
+** DONE bugs
+
+There are some bugs:
+
+Please also check the uploaded console debug file, the userscript eecution has bee stopped during processing "Page 2/22
+processed" when the real fetch pipeline executes
+
+1.) 
+
+when the pre-fetch pass is executed the "globalStatusDisplay" is dynamically updated with the pre-fetch loading info, but the span
+
+#+begin_example
+<span id="mb-fetch-progress-outer"..>
+#+end_example
+
+is NOT updated. The new function documentation (// ── BEGIN: Artist-Releasegroups pre-fetch pass ─...) mentions the "fetchProgressLabel" would be updated
+
+
+2.)
+
+on the final rendered page the two new buttons DO not show up when the function
+
+#+begin_example
+function _injectDiscographyViewButtons()
+#+end_example
+
+is supposed to be called
+
+** DONE bugs
+
+there are some bugs
+
+1.) starting from the final rendered page:
+
+- when clicked on the "Official Discography"-button and e.g. uncollapsed the CAA artwork images for the first sub-table
+  "Album and then clicking on the "Non-Official Discography"-button, the artwork stripe just uncollapsed in the official
+  view, is still displayed in the un-official view, but above ALL sub-tables. On the un-official view (if more image
+  stripes on other sub-tables in the official view are un-collapsed) they are accumulating above all other sub-tables
+
+- the same effect happens if I uncollapse image stripes on the un-offical view, BUT they accumulate BELOW all sub-tables
+
+2.) starting from the final rendered page:
+
+- switching to the official view ("Official Discography"-button)
+
+#+begin_example
+h2 header line: "Official Discography" (582 of 2123) [artwork 2067]
+#+end_example
+
+whereas (how it should be displayed, as the different views should ONLY take their own total and sub-table level counts
+into account)
+
+#+begin_example
+h2 header line: "Official Discography" (582) [artwork 578]
+#+end_example
+
+3.) starting from the final rendered page:
+
+a.)
+
+- switching to the non-official view ("Non-Official Discography"-button)
+
+#+begin_example
+h2 header line: "Non-Official Discography" (1541 of 2123) [artwork 2067]
+#+end_example
+
+whereas (how it should be displayed, as the different views should ONLY take their own total and sub-table level counts
+into account)
+
+#+begin_example
+h2 header line: "Non-OfficialDiscography" (2123) [artwork 2067]
+#+end_example
+
+b.)
+
+- the row display, if uncollapsed all sub-tables is correct, but some sub-tables have a count in the h3 header of the
+  sub-table which render in the format
+
+#+begin_example
+(<actual rows in sub-table of the un-official case> of <actual rows in sub-table of the official case>)
+#+end_example
+
+e.g in the sub-table with name "Album + Compilation"
+
+#+begin_example
+h3 header line: "Album + Compilation (168 of 36)"
+#+end_example
+
+4.) and NOW add some new functionality:
+
+
+- add another button "Complete Discography" in front of the "Official Discography" and "Non-Official Discography"
+  buttons. That button should have the green background color because that what is displayed after the initial rendering
+  on the final page. The button could also be used when clicking on it to toggle back to this same state using the array
+  "h3_all_category_header_array" after another button like "Official Discography" or "Non-Official Discography" had been
+  clicked meanwhile.
+
+- add another button "Complete Discography (merged)" after the "Official Discography" and "Non-Official Discography"
+  buttons based on the array "h3_all_category_unique_header_array".
+
+- always the latest button clicked (of the 4 "Complete Discography", "Official Discography", "Non-Official Discography",
+  "Complete Discography (merged)" should have the green background color
+
+** still bugs  
+
+Still bugs
+
+1.)
+
+the "Complete Discography"-button still has NOT the green backgound initially on the rendered page
+
+2.)
+
+in merged mode, make sure that all headers and corresponding sub-tables of the array
+"h3_all_category_unique_header_array" are present on the page, but ALL the rows from a same named sub-table from the
+"official" view should be ADDED together with ALL the rows from a same named sub-table from the "un-official" view
+(under just one sub-table with the name which is the same in both views)
+
+3.)
+
+the total count of rows which have CAA artwork images are wrong in the "toggle CAA artwork"-button in the h2 header row
+when switching from the initial rendered page to one of the other views, it always shows the total count of rows which
+have CAA artwork images from the initial "Complete Discography" case.
+
+* make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
+
+* make the whole CAA/EAA image fetching based a new (maybe experimental) boolean - 25m 22s for 4117 Springsteen images (network case)
+
+Vivaldi memory consumption:  4247 MB all, 1529 MB biggest sub-process
+
+but only the fetching, not the rest of the infrastructure which is based on it (the infrastructuree should just assume
+that NO artwork images are present at all) with the execption of the "Retry loading all CAA images" button in the h3
+header (it should NOT be displayd in that case) and the cell specific icons which deal with "reload" and collapsing
+(this should always assume 0 images) - also write an info line about it and change the tooltips (sub-table level and
+comumn cell level accordingly)
+
+* why, in the case of sorting/filtering in the final rendered page, are the artwork icons reloaded again
+
+1434 in 14 minutes 
+
+* Statistics panel: ~207 KB us WRONG
+
+* test with the VA pass
+
+* reintroduce the old "official RGs" button
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+
+* the "global filter info" box should read, "Globally filtered <n> rows [global:"<filter expression>"]
+
+* counting and display wrong: actually with indexedDB cache
+
+* test with final rendered page (so all are display)
+** starting with ALL rows fetched for officail an non-officail
+
+# "Discography": 1941 of 1946/2123  [artwork 567]   
+
+** switching to official
+
+# h2 header line: "Official Discography" (582 of 2123) [artwork 2067]
+# h2 header line: "Discography" (582) [artwork 578]                         original: OK
+
+** switching to non-official
+
+# h2 header line: "Non-Official Discography" (1541 of 2123) [artwork 2067]
+# h2 header line: "Discography" (2123) [artwork 2067]               original: OK
+
+- the row display, if uncollapsed all sub-tables is correct, but some sub-tables have a count in the h3 header of the
+  sub-table which render in the format
+
+#+begin_example
+(<actual rows in sub-table of the un-official case> of <actual rows in sub-table of the official case>)
+#+end_example
+
+e.g in the sub-table with name "Album + Compilation (168 of 36)"
+
+** filtering tests
+
+                ok                                                                ok
+# Album (3 of 8)/22 "[artwork] 3"  "of"  [ ]cc   <buttons> (ok)          Filtered 8 rows [MB-Name:"the"]
+
+#+begin_example
+global filter: "bruce"
+sub-header("Album") filter: "of"
+column filter("MB-Name"): "the"
+#+end_example
+
+==> then switch to
+
+#+begin_example
+global filter: "bruce"
+sub-header("Album") filter: "the" [cc]
+column filter("MB-Name"): "of"
+#+end_example
+
+# "Official Discography": 1939 of 1941/2123  [artwork 567]
+                ok                                                                ok
+# Album (1 of 3)/22 "[artwork] 1"  "the"  [x]cc   <buttons> (ok)          Filtered 3 rows [MB-Name:"of"]
+
+Table: 1 row (ok)
+
+
+* explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
+
