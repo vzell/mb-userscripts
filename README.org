@@ -55713,6 +55713,8 @@ a couple of things are still missing (also add a changelog):
 
 * fix Artist-Releasegroup pages
 
+Change the code blocks
+
 #+begin_example
             type: 'artist-releasegroups',
             // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
@@ -55737,12 +55739,23 @@ a couple of things are still missing (also add a changelog):
         },
 #+end_example
 
-
 #+begin_example
-// Add tooltip based on button label
+        // Add tooltip based on button label
+        if (conf.label.includes('Show all')) {
+            // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
+            eb.title = `Fetch all the table data from the MusicBrainz backend database`;
+        } else if (conf.label.includes('Artist RGs')) {
+            eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database (combined)';
+        } else if (conf.label.includes('Various Artists RGs')) {
+            eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
+        } else if (conf.label.includes('Artist releases')) {
+            eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
+        } else if (conf.label.includes('VA releases')) {
+            eb.title = 'Fetch all various artists releases from the MusicBrainz backend database';
+        }
 #+end_example
 
-Please also remove the complete code block:
+Remove the complete code block
 
 #+begin_example
                 // ── Section-break h2 injection ────────────────────────────────
@@ -55773,30 +55786,6 @@ Please also remove the complete code block:
 #+end_example
 
 
-#+begin_example
-globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
-#+end_example
-
-        // ── Multi-pass fetch detection ────────────────────────────────────────
-        // When any param value is an Array (e.g. params.all = ['1','0']), run the
-        // full fetch pipeline once per value and merge the results.  Currently only
-        // used by the '🧮 Artist RGs' button (all: ['1','0'], va:'0') which fetches
-        // the combined (all=1) discography first and then the official-only (all=0)
-        // discography to determine the split point between official and non-official
-        // groups.
-        //
-        // Pass order and merge strategy:
-        //   Pass A  — first array element (e.g. all='1'): official + non-official groups
-        //   Pass B  — second array element (e.g. all='0'): official groups only
-        //
-        // The category names from Pass B are compared against Pass A in order.
-        // As long as names match, those groups are "official".  The first name in
-        // Pass A that is not in the Pass-B sequence marks the start of the non-official
-        // section.  A { h2SectionBreak: 'Non-Official Artist Discography' } property
-        // is stamped on that group so renderGroupedTable can inject an <h2> before it.
-
-
-In the uploaded userscript,
 
 Please add the following function between the following to marker
 
@@ -55808,20 +55797,7 @@ Please add the following function between the following to marker
         // ── end multi-pass block ──────────────────────────────────────────────
 #+end_example
 
-Create a new helper function which returns an array of all the artists discography sections on pageTypes of "type: 'artist-releasegroups'" https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-
-Create a new array variable "h3_official_section_header_array" 
-
-Logic for the 
-
-for 1 -- max paginated pages
-
-- on each page extract all "h3" header names and add them to the h3_official_section_header_array (if not already present)
-
-#+begin_example
-<h3>Album</h3>   ==> Album
-#+end_example
+In the uploaded userscript,
 
 First of all the big picture:
 
@@ -55876,6 +55852,8 @@ created array "h3_all_category_unique_header_array".
 When we have that information the goal is to create on the final rendered page two new buttons "Official Discography" and
 "Non-Official Discography" and
 
+- the "globalStatusDisplay.textContent" should display the prefetching
+
 - when clicking the "Official Discography"-button we only display the 'offical' headers with their sub-tables and hide
   the 'non-offical' ones. 
 
@@ -55891,6 +55869,9 @@ When we have that information the goal is to create on the final rendered page t
 <span class="mb-row-count-stat">(2123)</span>
 #+end_example
 
-should account which subType has been selected
+should account which subType has been selected.
 
+#+begin_example
+globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
+#+end_example
 
