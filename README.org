@@ -55737,63 +55737,13 @@ a couple of things are still missing (also add a changelog):
         },
 #+end_example
 
-#+begin_example
-            type: 'artist-releasegroups',
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official',     params: { all: '0', va: '0' } },
-                { label: '🧮 Non-Official', params: { all: '0', va: '1' } },
-            ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
-                ],
-                collapsableColumns: [ 'CAA' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi' // native tables, h3 headers
-        },
-#+end_example
 
 #+begin_example
 // Add tooltip based on button label
 #+end_example
 
-#+begin_example
-globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
-#+end_example
+Please also remove the complete code block:
 
-        // ── Multi-pass fetch detection ────────────────────────────────────────
-        // When any param value is an Array (e.g. params.all = ['1','0']), run the
-        // full fetch pipeline once per value and merge the results.  Currently only
-        // used by the '🧮 Artist RGs' button (all: ['1','0'], va:'0') which fetches
-        // the combined (all=1) discography first and then the official-only (all=0)
-        // discography to determine the split point between official and non-official
-        // groups.
-        //
-        // Pass order and merge strategy:
-        //   Pass A  — first array element (e.g. all='1'): official + non-official groups
-        //   Pass B  — second array element (e.g. all='0'): official groups only
-        //
-        // The category names from Pass B are compared against Pass A in order.
-        // As long as names match, those groups are "official".  The first name in
-        // Pass A that is not in the Pass-B sequence marks the start of the non-official
-        // section.  A { h2SectionBreak: 'Non-Official Artist Discography' } property
-        // is stamped on that group so renderGroupedTable can inject an <h2> before it.
-
-#+begin_example
-        // ── Multi-pass fetch detection ────────────────────────────────────────
-#+end_example
-
-#+begin_example
-        // ── end multi-pass block ──────────────────────────────────────────────
-#+end_example
-	
 #+begin_example
                 // ── Section-break h2 injection ────────────────────────────────
                 // Stamped by the multi-pass fetch (Artist RGs button) to separate
@@ -55822,6 +55772,47 @@ globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
                 }
 #+end_example
 
+
+#+begin_example
+globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
+#+end_example
+
+        // ── Multi-pass fetch detection ────────────────────────────────────────
+        // When any param value is an Array (e.g. params.all = ['1','0']), run the
+        // full fetch pipeline once per value and merge the results.  Currently only
+        // used by the '🧮 Artist RGs' button (all: ['1','0'], va:'0') which fetches
+        // the combined (all=1) discography first and then the official-only (all=0)
+        // discography to determine the split point between official and non-official
+        // groups.
+        //
+        // Pass order and merge strategy:
+        //   Pass A  — first array element (e.g. all='1'): official + non-official groups
+        //   Pass B  — second array element (e.g. all='0'): official groups only
+        //
+        // The category names from Pass B are compared against Pass A in order.
+        // As long as names match, those groups are "official".  The first name in
+        // Pass A that is not in the Pass-B sequence marks the start of the non-official
+        // section.  A { h2SectionBreak: 'Non-Official Artist Discography' } property
+        // is stamped on that group so renderGroupedTable can inject an <h2> before it.
+
+
+In the uploaded userscript,
+
+Please add the following function between the following to marker
+
+#+begin_example
+        // ── Multi-pass fetch detection ────────────────────────────────────────
+#+end_example
+
+#+begin_example
+        // ── end multi-pass block ──────────────────────────────────────────────
+#+end_example
+
+Create a new helper function which returns an array of all the artists discography sections on pageTypes of "type: 'artist-releasegroups'" https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+
+Create a new array variable "h3_official_section_header_array" 
+
 Logic for the 
 
 for 1 -- max paginated pages
@@ -55831,3 +55822,75 @@ for 1 -- max paginated pages
 #+begin_example
 <h3>Album</h3>   ==> Album
 #+end_example
+
+First of all the big picture:
+
+For the special case if URLs have a pageType of "type: 'artist-releasegroups'" e.g.
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f the full fetch pipeline fetches the combined (all=1)
+discography of an artist, the 'official' and the 'non-official' discography defined with "params: { all: '1', va: '0' }"
+in the pageType definition.
+
+Currently the final rendered page shows after the h2 header line named "Discography", first all sub-tables for the
+'official discography' where each sub-table is preceeded with a h3 header line with the release-group 'category' of the
+discography data, e.g. "Album", "Album + Compilation", etc. After all the 'official' categories, the sub-tables for the
+'non-official discography' is rendered the same way. There is currently now way to know where the 'non-official' section
+starts. And to make it worse, a h3 header name like "Album" could exist in both sections the 'official' and
+'non-official' one.
+
+In order to know which sub-tables belong to which section types, the plan is to pre-fetch all the paginated webpages
+belonging to just the 'official' artist-releasegroups and EXTRACTING (but NOT rendering them) just the h3 header names
+in a new array variable "h3_official_category_header_array", BEFORE we do the usual full fetch pipeline for the combined
+(all=1) discography and the rest of the processing logic.
+
+There is a new "subType: 'artist-releasegroups'" definition in the variable "const pageDefinitions"
+
+#+begin_example
+            subType: 'artist-releasegroups',
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official',     params: { all: '0', va: '0' } },
+                { label: '🧮 Non-Official', params: { all: '0', va: '1' } },
+            ],
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+which defines how to get the corresponding webpages for JUST the h3 header name extraction.
+
+On the final rendered page we additionally extract ALL the h3 category header names from the full fetch pipeline (they
+represent the 'official' and 'non-official' ones) in a new array variable "h3_all_category_header_array".
+
+The category names from array "h3_all_category_header_array" are then compared against the array
+"h3_official_category_header_array" in order to create a third array "h3_non_official_category_header_array" which holds
+ONLY the 'non-offical' entries.
+
+In the comparison strategy, as long as names match, those entries are 'official'. The first name in
+"h3_all_category_header_array" that is not in the "h3_official_category_header_array" sequence marks the start of the
+'non-official' section.
+
+For later display purposes another array "h3_all_category_unique_header_array" is also created which should hold ONLY
+the unique values of the "h3_all_category_header_array" array, but leaving the order intact. That means, if an entry
+with the same name repeats in the array "h3_all_category_header_array" the second entry should be disgarded in the newly
+created array "h3_all_category_unique_header_array".
+
+When we have that information the goal is to create on the final rendered page two new buttons "Official Discography" and
+"Non-Official Discography" and
+
+- when clicking the "Official Discography"-button we only display the 'offical' headers with their sub-tables and hide
+  the 'non-offical' ones. 
+
+- when clicking the "Non-Official Discography"-button we only display the 'non-offical' headers with their sub-tables and hide
+  the 'offical' ones
+
+- depending on which button has been clicked, the h2 header name initially displayed as "Discography" should be cahnge
+  either to "Official Discography" or "Non-Official Discography"
+
+- also the total row count calculation in the span
+
+#+begin_example
+<span class="mb-row-count-stat">(2123)</span>
+#+end_example
+
+should account which subType has been selected
+
+
