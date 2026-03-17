@@ -55198,6 +55198,51 @@ field and they are mich smaller than before, something is broken here
 
 pressing the "Escape" key in the quick filter list and it's NOT empty should clear the filter field only the second press should leave the dialog
 
+** two remaining bugs
+
+In the uploaded userscript,
+
+there are two remaining bugs related to the "Load Table Data" dialog '"id="sa-load-dialog-overlay"':
+	
+1.)
+
+pressing the "Escape" key in the following two filter input boxes
+
+#+begin_example
+<input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="width:100%;padding:8px 32px 8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;box-sizing:border-box;">
+#+end_example
+
+and
+
+#+begin_example
+<input id="sa-epl-qf" type="text" placeholder="🔍 Quick filter list..." style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;outline:none;">
+#+end_example
+
+and if they are NOT empty should clear the filter field only the second press should leave the dialog
+
+the quick filter list and it's NOT empty should clear the filter field and only the second press should leave the corresponding dialog
+
+2.)
+
+- add a red colored unicode "x" (clear) icon inside the filter field right aligned to the end of the filter field also for the
+  following two filter input boxes
+
+#+begin_example
+<input id="sa-hist-quick-filter" type="text" placeholder="🔍 Quick filter both lists..." style="width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid #ccc;border-radius:4px;font-size:0.88em;outline:none;">
+#+end_example
+
+and
+
+#+begin_example
+<input id="sa-epl-qf" type="text" placeholder="🔍 Quick filter list..." style="width:100%;box-sizing:border-box;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;outline:none;">
+#+end_example
+
+- change the color of the unicode "x" (clear) icon in the following filter also to the red color
+
+#+begin_example
+<input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="width:100%;padding:8px 32px 8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;box-sizing:border-box;">
+#+end_example
+
 
 * TODO "Case sensitive" and "Regexp" checkboxes are missing their tooltips + add an "x" icon to clear the filter field with the mouse
 
@@ -55665,3 +55710,124 @@ integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
+
+* fix Artist-Releasegroup pages
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs',         params: { all: '1', va: '0' } },
+                { label: '🧮 Various Artist RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+#+begin_example
+            type: 'artist-releasegroups',
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official',     params: { all: '0', va: '0' } },
+                { label: '🧮 Non-Official', params: { all: '0', va: '1' } },
+            ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+#+begin_example
+// Add tooltip based on button label
+#+end_example
+
+#+begin_example
+globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
+#+end_example
+
+        // ── Multi-pass fetch detection ────────────────────────────────────────
+        // When any param value is an Array (e.g. params.all = ['1','0']), run the
+        // full fetch pipeline once per value and merge the results.  Currently only
+        // used by the '🧮 Artist RGs' button (all: ['1','0'], va:'0') which fetches
+        // the combined (all=1) discography first and then the official-only (all=0)
+        // discography to determine the split point between official and non-official
+        // groups.
+        //
+        // Pass order and merge strategy:
+        //   Pass A  — first array element (e.g. all='1'): official + non-official groups
+        //   Pass B  — second array element (e.g. all='0'): official groups only
+        //
+        // The category names from Pass B are compared against Pass A in order.
+        // As long as names match, those groups are "official".  The first name in
+        // Pass A that is not in the Pass-B sequence marks the start of the non-official
+        // section.  A { h2SectionBreak: 'Non-Official Artist Discography' } property
+        // is stamped on that group so renderGroupedTable can inject an <h2> before it.
+
+#+begin_example
+        // ── Multi-pass fetch detection ────────────────────────────────────────
+#+end_example
+
+#+begin_example
+        // ── end multi-pass block ──────────────────────────────────────────────
+#+end_example
+	
+#+begin_example
+                // ── Section-break h2 injection ────────────────────────────────
+                // Stamped by the multi-pass fetch (Artist RGs button) to separate
+                // the official groups from the non-official groups.
+                if (group.h2SectionBreak) {
+                    const breakH2 = document.createElement('h2');
+                    breakH2.className = 'mb-toggle-h2';
+                    breakH2.textContent = group.h2SectionBreak;
+                    breakH2.style.cssText =
+                        'cursor:pointer; user-select:none; margin-top:1.4em;';
+                    breakH2.title = 'Click to collapse/uncollapse section';
+                    // Wire the same collapse-on-click behaviour as the original h2.
+                    breakH2.addEventListener('click', (ev) => {
+                        if (['A','BUTTON','INPUT','LABEL','SELECT','TEXTAREA']
+                            .includes(ev.target.tagName)) return;
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    });
+                    if (lastInsertedElement) {
+                        lastInsertedElement.after(breakH2);
+                        lastInsertedElement = breakH2;
+                    } else {
+                        container.appendChild(breakH2);
+                        lastInsertedElement = breakH2;
+                    }
+                }
+#+end_example
+
+Logic for the 
+
+for 1 -- max paginated pages
+
+- on each page extract all "h3" header names and add them to the h3_official_section_header_array (if not already present)
+
+#+begin_example
+<h3>Album</h3>   ==> Album
+#+end_example
