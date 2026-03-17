@@ -1,0 +1,682 @@
+﻿19:18:45.851 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.202+2026-03-17) loaded with external library (3.14.3+2026-03-04) active on MusicBrainz page: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 
+19:18:45.851 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 
+19:18:45.851 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f 
+19:18:45.852 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f 
+19:18:45.852 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters: page=1 
+19:18:45.852 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+19:18:45.852 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: artist-releasegroups 
+19:18:45.852 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+19:18:45.852 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Initializing script for path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f
+19:18:45.852 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Cached entity name at init time: "Bruce Springsteen" 
+19:18:45.859 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 Blurred #headerid-query input on page entry 
+19:18:45.860 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Changelog source: remote — replaced 0 local entries with 376 remote entries (fromCache=true) 
+19:18:53.274 [VZ-ShowAllEntityData: artist-releasegroups] 🚀 columnErasers configured: "Title" → [▶, jesus2099] 
+19:18:53.274 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Artist-Releasegroups pre-fetch pass: using params {all: '0', va: '0'}
+19:18:53.275 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Fetching maxPage from: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=0&page=1 
+19:18:53.275 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=0&va=0&page=1 
+19:19:37.547 [VZ-ShowAllEntityData: artist-releasegroups] ✅ Determined maxPage: 6 
+19:19:37.547 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Artist-Releasegroups pre-fetch pass: maxPage=6 
+19:19:37.548 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1&all=0&va=0 
+19:19:39.164 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Album" 
+19:19:39.164 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Album + Compilation" 
+19:19:39.164 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Album + Compilation + Live" 
+19:19:39.164 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Album + Live" 
+19:19:39.165 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2&all=0&va=0 
+19:19:40.130 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=3&all=0&va=0 
+19:19:41.080 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=4&all=0&va=0 
+19:19:42.121 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=5&all=0&va=0 
+19:19:43.213 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "EP" 
+19:19:43.213 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "EP + Compilation" 
+19:19:43.213 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "EP + Compilation + Live" 
+19:19:43.213 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "EP + Live" 
+19:19:43.213 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Single" 
+19:19:43.213 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=6&all=0&va=0 
+19:19:44.282 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Single + Compilation" 
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Single + Compilation + Live" 
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Single + Live" 
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Broadcast + Live" 
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Other" 
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Other + Compilation + Spokenword + Interview + Live" 
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Other + Spokenword" 
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Pre-fetch pass — official category found: "Other + Audiobook" 
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Artist-Releasegroups pre-fetch pass complete. Official categories: (17) ['Album', 'Album + Compilation', 'Album + Compilation + Live', 'Album + Live', 'EP', 'EP + Compilation', 'EP + Compilation + Live', 'EP + Live', 'Single', 'Single + Compilation', 'Single + Compilation + Live', 'Single + Live', 'Broadcast + Live', 'Other', 'Other + Compilation + Spokenword + Interview + Live', 'Other + Spokenword', 'Other + Audiobook']
+19:19:44.283 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Signalling other scripts to stop... 
+19:19:44.284 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Starting fetch process... {all: '1', va: '0'}
+19:19:44.284 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Context: overrideParams detected. Fetching maxPage with overrides. {all: '1', va: '0'}
+19:19:44.284 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Fetching maxPage from: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=1 
+19:19:44.284 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?all=1&va=0&page=1 
+19:19:46.078 [VZ-ShowAllEntityData: artist-releasegroups] ✅ Determined maxPage: 22 
+19:19:46.078 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Total pages to fetch: 22 
+19:19:46.078 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Starting clutter element removal. 
+19:19:46.079 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removed 4 jesus2099 bigbox elements. 
+19:19:46.079 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removed artist release group filter description paragraph. 
+19:19:46.079 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removing Sanojjonas containers... 
+19:19:46.080 [VZ-ShowAllEntityData: artist-releasegroups] 🧹 Removing Sanojjonas containers... 
+19:19:46.091 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Fetching URL for page 1: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1&all=1&va=0 
+19:19:46.091 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1&all=1&va=0 
+19:19:47.345 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+19:19:47.345 [VZ-ShowAllEntityData: artist-releasegroups] 📝 No targetHeader provided; returning all tables found in container. 
+19:19:47.346 [VZ-ShowAllEntityData: artist-releasegroups] 📝 parseDocumentForTables: Found 4 total tables. Target header filter: "none" 
+19:19:47.346 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+19:19:47.346 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Detected indices → mainColIdx=2 (Title), extractors=[caa("Title"@2), primaryAlias("Title"@2)], syntheticExtractors=[none], erasers=[[▶,jesus2099]@"Title"(colIdx=2)], renderMultiRow=[none], excluded=[] for pageType: artist-releasegroups 
+19:19:47.346 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Type Change: "Album". Rows so far: 0 
+19:19:47.346 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.347 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.347 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/cover-art) 
+19:19:47.347 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.347 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.347 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/4b443e66-52a7-3cc9-a522-0dc64a6a51dc/cover-art) 
+19:19:47.347 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/39b22944-7503-3937-8bba-09b17281cc6a/cover-art) 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/b613123b-a234-3f48-9c45-e05bf4e6b9e7/cover-art) 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/8a6f6ede-b60a-3cad-b3b9-cfb57e9e1dbd/cover-art) 
+19:19:47.348 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/324aee0c-36ec-35c1-9c93-b67a1d428037/cover-art) 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/3c39a076-8e52-38f2-8076-260d0672fb23/cover-art) 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/b3559cb2-d7ad-32eb-a17e-54a873ce4122/cover-art) 
+19:19:47.349 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.350 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.350 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/220de9c6-fa5f-39e3-ae89-1faf8a8bbc67/cover-art) 
+19:19:47.350 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.350 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.350 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c0e8b10a-9478-30ea-a299-90ab2b703ab0/cover-art) 
+19:19:47.350 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.350 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.350 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/46ab3187-496d-3565-900e-57d89bacd22c/cover-art) 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/602387fa-a76f-3895-9039-1c812c6cb28c/cover-art) 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d19453c0-cd72-3468-b110-0f898c111e5e/cover-art) 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d5f992ab-6238-3b28-bf2b-7b16d913c9f6/cover-art) 
+19:19:47.351 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.352 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.352 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5af7998f-9b53-3ebb-8f09-ebfbca703a59/cover-art) 
+19:19:47.352 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.352 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.352 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/9cec178a-f785-33c5-8888-63ba27efca4c/cover-art) 
+19:19:47.352 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.352 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.352 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d875c2f0-27d5-4946-81f9-3ebaf6636ccd/cover-art) 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e9afb320-60f4-42b1-bc4d-49d7d2e49010/cover-art) 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c0ae827c-bb5b-4c98-ab3a-1d9573c110ac/cover-art) 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.353 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/48e335f3-8e4a-4e38-b2df-e1514b9f9126/cover-art) 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d6c1b942-edc7-4bca-bd34-6c43760272af/cover-art) 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: Path C — synthesised cover-art anchor for /release-group/e4275fc9-511b-45fe-a1fc-ee1f1142ba9b 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Type Change: "Album + Compilation". Rows so far: 22 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.354 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f4790d67-2e8c-42b8-828a-68d936fd119a/cover-art) 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/cc168b35-1bc6-4f93-baaa-c9825fcd3699/cover-art) 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/dfe499e1-df9a-44df-8f95-65af2ba16eb3/cover-art) 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.355 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/0d849d30-df2d-442e-bc3f-0476027faedc/cover-art) 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c760a3af-763f-48c9-bc8d-5001130c7331/cover-art) 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/4318adaa-84bb-4f6b-8e2e-4689fc1067be/cover-art) 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/514ef4c3-e518-4181-947b-bba360056b62/cover-art) 
+19:19:47.356 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/a98a27c8-5da5-4a8d-a98f-90a91b776e0a/cover-art) 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/8435fc60-e3c1-439d-896d-7deb2fe4489c/cover-art) 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/88813fc2-9ed6-4644-9290-df2411d1670d/cover-art) 
+19:19:47.357 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/21a2cabb-d1cc-4eaf-ac0a-6bd349441f9c/cover-art) 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/81e56a68-8b36-43e7-b3ab-1084f824448b/cover-art) 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/6d954eab-7389-4dbb-aaca-7037b71e6e22/cover-art) 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.358 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.359 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/12099757-b8a8-45d8-b95a-9bb5dc2748e7/cover-art) 
+19:19:47.359 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.359 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.359 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f722b0db-3035-3b4b-b499-57e42d4219c7/cover-art) 
+19:19:47.359 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.359 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.360 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c7d15bdb-2c9b-44f1-b76e-2cdde02b4d2e/cover-art) 
+19:19:47.360 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.360 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.360 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/8c632eed-9d50-4bc8-b76d-9c99313d0113/cover-art) 
+19:19:47.360 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.360 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.360 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/60ba10e0-9f77-3237-8b0a-967b31679a1b/cover-art) 
+19:19:47.361 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.361 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.361 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/609d33d6-e77e-3983-8670-1e1a0172453d/cover-art) 
+19:19:47.361 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.361 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.361 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/ddf3e647-82c7-4589-967d-30d3fde36756/cover-art) 
+19:19:47.361 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.361 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c3369f7a-b550-4a2f-beb9-b64675015705/cover-art) 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/6e44ac1b-536d-4766-9c65-3599571d3691/cover-art) 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/af4e50d8-b08e-4c60-9395-2c147ede62eb/cover-art) 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.362 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/3b75264e-b299-43b1-836a-b3e65c5778ea/cover-art) 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/4039e96d-8312-36be-8511-d6b786043ebf/cover-art) 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/3eb2f3c8-1975-48b2-b455-acc202057386/cover-art) 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.363 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/2872c420-5a5f-482e-b00c-199541c5b9b3/cover-art) 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/2cdcbdc4-b5b1-4afa-853f-f84faae2a0e0/cover-art) 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/7e740659-f899-49f3-9790-66116d64e9e4/cover-art) 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.364 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/229019c4-e9da-4bc4-b857-ebf1ac583f2a/cover-art) 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/1153923d-b3db-4603-8b60-129f2b52431f/cover-art) 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/8de6367e-f8bb-43cd-8ad9-180cae0c6859/cover-art) 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.365 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c1fcee20-dbc4-4bea-98c3-26b2b514986d/cover-art) 
+19:19:47.366 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.366 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.366 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/14a3c52f-855e-4c76-8de6-37f395e8aeab/cover-art) 
+19:19:47.366 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.366 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.366 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/1b16edcb-a529-4e05-85da-0e896b8a907a/cover-art) 
+19:19:47.366 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.367 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.367 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f731060c-05d4-439d-8351-59e5e5eb91a0/cover-art) 
+19:19:47.367 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Type Change: "Album + Compilation + Live". Rows so far: 58 
+19:19:47.367 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.367 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.367 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/85206823-9808-3da2-a9d7-2e9b8b0f4e99/cover-art) 
+19:19:47.367 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/407bbe17-0fd9-333a-94d7-382bde11080e/cover-art) 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/607858fd-1f1a-4cf1-abb3-2c77cc25ac3c/cover-art) 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d97a6cf4-3f7e-321c-9729-9331e5c57e99/cover-art) 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.368 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d43c0c6d-c6dc-4bb3-a592-56c740bb8858/cover-art) 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/4851df98-1d21-4cb7-8d1f-da37fd16c443/cover-art) 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d94d0f16-8d93-4fd1-aa81-3770da717079/cover-art) 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.369 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/9a85d243-398b-4509-a912-dbd4370b2a0c/cover-art) 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/398fc9f6-7616-4939-9169-f65cbedd0792/cover-art) 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/13495166-82b8-4f39-a134-2c7d744b899e/cover-art) 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.370 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/287b4139-95f4-41b2-a40a-7cef683a4ada/cover-art) 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/8d959848-4560-457d-af41-68c12d3cba13/cover-art) 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/d5e79633-a542-44b7-95ac-965d4f7f69c2/cover-art) 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5cc69684-9d14-440a-8852-8f6b432e8f1f/cover-art) 
+19:19:47.371 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/11faa778-4ae8-46d5-b6aa-073a7dd71e83/cover-art) 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/0c8d9a0b-baba-40fd-88fe-9e4c0cdd7fd3/cover-art) 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/012d7288-51d6-40f6-ad11-25c25bd6635f/cover-art) 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.372 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.373 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/60d5f5e6-960c-4094-bab5-ab15e36ee2a5/cover-art) 
+19:19:47.373 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.373 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.373 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/13f3f629-65a4-46be-9317-b58d3bbec8a9/cover-art) 
+19:19:47.373 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.373 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.373 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/7f5fa800-5f38-4f19-82ad-ae4a7369acb1/cover-art) 
+19:19:47.373 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/0c7f4c82-9543-47ad-afde-4b4b3e45a41c/cover-art) 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/13eaa7cf-b801-4c29-8d14-a230ea6b86de/cover-art) 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/121eb4d3-5b70-459e-898a-e9d0c4cb423a/cover-art) 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.374 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/113cb855-77f4-4ee3-9ad3-8b9df53ecc75/cover-art) 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/12af4ff3-1dc3-4e36-93ea-e0637b063848/cover-art) 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/2e505747-7df8-4ca7-8cd3-455b5fe89ada/cover-art) 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.375 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/a2873b00-abeb-4396-9d2a-24c1c6b9127e/cover-art) 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/b8353ab3-98d2-4dc8-a7e1-386a6f306727/cover-art) 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e5c28ba7-eff0-4b97-bbf3-afc19ee06acc/cover-art) 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/4c2aeda7-8633-4f96-bf5f-cc3af27792aa/cover-art) 
+19:19:47.376 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/9eb47c27-b5c9-4018-9b58-2054f611da3d/cover-art) 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/09205013-ee8b-4a48-be3b-212f3e90df47/cover-art) 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/ca49a124-cd96-4d3d-be18-1fcef56243fb/cover-art) 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Type Change: "Album + Live". Rows so far: 91 
+19:19:47.377 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/af0c4ebb-3d9c-3159-8bce-322ca62744bb/cover-art) 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/6a118838-5cef-447f-aee4-84dda2eba8ad/cover-art) 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5747ee46-1a6c-3a25-b53e-cd4c7ec3bd04/cover-art) 
+19:19:47.378 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/7f76b82a-912f-39ee-bf39-477f3cf2c062/cover-art) 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/a1b6282e-a9e9-3e8a-a6e3-d25b24e712b7/cover-art) 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/9c918659-bb87-3f8e-afc9-837ea99e586d/cover-art) 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.379 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.380 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/97263724-7eec-4ff0-a802-b20b9471a653/cover-art) 
+19:19:47.380 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.380 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.380 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/ba66b831-4810-4227-8386-cda82799a6ac/cover-art) 
+19:19:47.380 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:47.380 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:47.380 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/9d9a13d5-b415-45e5-8f2c-4cdfdd308c44/cover-art) 
+19:19:47.381 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Page 1/22 processed in 1.29s. Rows on page: 100. Total: 100 
+19:19:47.381 [VZ-ShowAllEntityData: artist-releasegroups] 📥   Summary: Album: +22 (Total: 22) | Album + Compilation: +36 (Total: 36) | Album + Compilation + Live: +33 (Total: 33) | Album + Live: +9 (Total: 9) 
+19:19:47.381 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Fetching URL for page 2: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2&all=1&va=0 
+19:19:47.381 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2&all=1&va=0 
+19:19:48.453 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Page 2: No li.show-all elements found — nothing to expand. 
+19:19:48.453 [VZ-ShowAllEntityData: artist-releasegroups] 📝 No targetHeader provided; returning all tables found in container. 
+19:19:48.453 [VZ-ShowAllEntityData: artist-releasegroups] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+19:19:48.453 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Found matching table "[object HTMLTableElement]" on page 2 to process. 
+19:19:48.453 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Detected indices → mainColIdx=2 (Title), extractors=[caa("Title"@2), primaryAlias("Title"@2)], syntheticExtractors=[none], erasers=[[▶,jesus2099]@"Title"(colIdx=2)], renderMultiRow=[none], excluded=[] for pageType: artist-releasegroups 
+19:19:48.453 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e9de0d16-ee7b-4f99-a127-5d17c3dc4741/cover-art) 
+19:19:48.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/6c8e492e-d0eb-4839-b170-bd12d4a89bf6/cover-art) 
+19:19:48.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.454 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/57ce7c9a-63a6-4c08-901b-ad0d8182e257/cover-art) 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/09bea297-f4ec-447d-b2d1-045e28ddf925/cover-art) 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/2054102a-eab9-326a-a2aa-58fb8b47e219/cover-art) 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/8e2605cd-c7d5-4b1f-b2b6-b6d01cacab20/cover-art) 
+19:19:48.455 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f42a1c9a-b92d-4378-8e81-2928f7a1b306/cover-art) 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/21d62992-7e3c-42ff-a131-c428197c1a11/cover-art) 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/3e7a7f45-22dd-4830-97d5-6a0325c80ba4/cover-art) 
+19:19:48.456 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/eb73cbbc-2f00-3b15-8100-1375c9c03d6e/cover-art) 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/0d657590-d9d1-482c-86ef-97e231f2bd39/cover-art) 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/67f3b34f-642b-4f26-aa69-35c57bacd2c3/cover-art) 
+19:19:48.457 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/63a7fa88-c659-4e69-9f08-df4547e5cccd/cover-art) 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/3a41e585-125e-35f0-a5d8-e1dc979fe725/cover-art) 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/fa769982-26fa-3e24-a076-44bce8d16b00/cover-art) 
+19:19:48.458 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/ba0a9214-4048-41d4-96de-819af715c059/cover-art) 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5bc53df7-99a8-4c45-9589-34b379321e3b/cover-art) 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5a6ee362-f2de-3fb3-9072-a40f8b476629/cover-art) 
+19:19:48.459 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/18b01d10-3ef4-3e7e-a40e-00690bb6c904/cover-art) 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c213faf1-8a4a-4cfb-81f7-020c6c73b9ff/cover-art) 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/dbfd87c8-9037-4316-9273-6ef42931efe8/cover-art) 
+19:19:48.460 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f7c4387f-094e-49f2-99d6-33b9796151f0/cover-art) 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/fcc9ae5a-b4ff-40bb-98b8-aae33412635a/cover-art) 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e1e896e4-3813-4f0d-9ba8-d42f37498fc5/cover-art) 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.461 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/01889028-aa96-43ee-b5eb-be02c594dd8a/cover-art) 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/c3c0ede0-c9e0-45dd-9af8-510fb41a989f/cover-art) 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/33019afd-f41b-4c13-9d36-a8d942f12cb8/cover-art) 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.462 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/329468df-9045-44d8-aff1-7727d5e59d12/cover-art) 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/10752f23-f1a1-4ba6-b8c0-63531e7704b5/cover-art) 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5625e164-66bc-4580-b812-7e93402736a2/cover-art) 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.463 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.464 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/827ca84a-3016-446d-abe0-8aeaa19dc90b/cover-art) 
+19:19:48.464 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.464 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.464 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/cc2a2d90-578b-42b0-8940-a4feaf787fd3/cover-art) 
+19:19:48.464 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.464 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.464 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/687923d2-ecdb-4630-9dca-33cceb0ed26c/cover-art) 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/135cb1c1-bb8f-471e-9cf2-67bc48dc8a59/cover-art) 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f2ad1bb6-df9e-4a75-8802-8ac20eabbfc8/cover-art) 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.465 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/459f51c4-d6a9-4a37-92e9-7d96523bf7af/cover-art) 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5eb0333c-616c-48cc-8206-4f3bf4069a47/cover-art) 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/284adfa5-9dfa-42ce-bbf8-21adc559ae43/cover-art) 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.466 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f2a3e130-91c3-48b2-82c0-e28db139202e/cover-art) 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e6865ddd-deda-442b-a040-bbff4ae50364/cover-art) 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/87bd254f-c568-4c73-a48b-1df8e988a2e3/cover-art) 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.467 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/017a0611-c37f-44f2-bae1-e5caac15671f/cover-art) 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/683c4ec6-4979-437e-9709-cc15f5cc3380/cover-art) 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e3ad6654-c8b9-4a56-bf39-18f38120f3c9/cover-art) 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.468 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f392c1eb-95b6-48a0-b661-a6d7a79d051d/cover-art) 
+19:19:48.469 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.469 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.469 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/84e56fc4-6743-4adc-9066-16dccdf40532/cover-art) 
+19:19:48.469 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.469 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.469 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/3d83876a-267d-46db-9c62-03d6491cf4b7/cover-art) 
+19:19:48.469 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.469 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/cc6cfbea-adf5-4481-b3c7-90b99ca5ba2b/cover-art) 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/b752f84a-d131-4128-87a5-8553402d67b3/cover-art) 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/651a2e75-2218-4657-a778-bcd1e049c646/cover-art) 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.470 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.471 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/601354ac-7e49-4b6a-961e-18f3487275c4/cover-art) 
+19:19:48.471 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.471 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.471 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/b5117c6b-77a3-43c4-a16f-db769473966c/cover-art) 
+19:19:48.471 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.471 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.471 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/8d46a422-bc42-4698-92a5-a146d27468d3/cover-art) 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/9462bb0a-b402-4efa-b72b-5fecc9698172/cover-art) 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/bf964ae7-4cc5-4fb9-8bce-29f1a627d992/cover-art) 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.472 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e5397bb1-da00-476e-9d74-6128fd7704d1/cover-art) 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5a7e9ab6-b71b-45a1-902d-7e266797ccd7/cover-art) 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/029286c9-5f43-4814-8c92-0c4061997b8c/cover-art) 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.473 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e8850473-8e94-4953-824e-a0d25399b8d8/cover-art) 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/2172ec04-4e69-4150-a89c-0b9be374b13f/cover-art) 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/5cbee6ec-2cd2-4cc5-a41e-33d80140fe63/cover-art) 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.474 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/23cd1c13-f9a6-423d-8b72-c0474e817e0f/cover-art) 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/93205558-d50c-4207-87ab-21176f3dde8c/cover-art) 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/40720a9c-a77c-4db2-8d5b-9f40ddd34037/cover-art) 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.475 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/30a43a20-cca0-4fe2-a8d3-bad7686140f0/cover-art) 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e56ef67a-b012-4a4b-82e6-06d4715e25e6/cover-art) 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/2b6343d4-bfed-4fe1-815f-709de612afc7/cover-art) 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.476 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/73eb3203-074c-44f5-9832-d6762d295d11/cover-art) 
+19:19:48.478 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.478 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.478 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/1d51eced-e415-47d7-be69-5e511ae45a0f/cover-art) 
+19:19:48.478 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.478 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.478 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/370f36f9-1785-436e-83c8-6461e9f70ab2/cover-art) 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/64ffa105-8a32-480a-8a02-fdf2c67649d5/cover-art) 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/3f302be7-19ad-49b7-9dc0-a382816afb5d/cover-art) 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.479 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/90212e50-8cba-42a9-888e-103b3fc32794/cover-art) 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f41dfab1-1e98-49af-a566-b52f4f4856e3/cover-art) 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/bbb3f6ec-9d18-4745-95bd-5a6a43b025b2/cover-art) 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.480 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/122bf581-fb29-4066-b9d5-e7363f0c67f0/cover-art) 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/fe8c1488-63e5-4181-ad23-f2befafd3f37/cover-art) 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/923cd76d-5180-4b74-a834-4e05a9765bb4/cover-art) 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.481 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/db008b29-87d8-409b-b690-ecf191cc12a1/cover-art) 
+19:19:48.482 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.482 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.482 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f90cae2f-ed23-4b47-b57c-35ff7c54ec8c/cover-art) 
+19:19:48.482 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.482 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.482 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/6cb4a87c-2c7f-49c3-a40e-34d1d792e52d/cover-art) 
+19:19:48.482 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.482 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/53d48dcc-6f44-4e2b-8bfd-849c75493e05/cover-art) 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/4ea70348-93ea-456b-b5c0-5a28cc722445/cover-art) 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/7aea7c3b-8069-47d7-89e1-25d52b2f8a32/cover-art) 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.483 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.484 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e6e8855c-8696-4ba7-95a2-04e606a9f241/cover-art) 
+19:19:48.484 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.484 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.484 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/04fed8d1-2758-483f-a0fb-fd12a2d1bd91/cover-art) 
+19:19:48.484 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.484 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.484 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/23deefa5-aedd-4444-aafc-5fea60db1e44/cover-art) 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/aa18b9e5-f49c-4b76-a244-e7e2bb8fb4a5/cover-art) 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/baff3866-be72-4268-9624-6e03203488da/cover-art) 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.485 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/45ace75e-762f-4c77-9e28-efe66e04f67a/cover-art) 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/f1eec830-f6f5-4e81-a6b6-eff0c954d889/cover-art) 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/7c624461-2356-4d5b-a427-913a8b5ae2aa/cover-art) 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.486 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/6d831159-1504-4ac7-a073-4d63f35511e8/cover-art) 
+19:19:48.487 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.487 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.487 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/294cefbd-d582-4729-9643-5029b8eee6ec/cover-art) 
+19:19:48.487 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.487 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.487 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/906ac132-9226-4089-9e58-ff48422a6238/cover-art) 
+19:19:48.487 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e5189369-d0a8-4b0c-8a1d-aa88c83103bd/cover-art) 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/e0c156ca-dd99-4b23-9209-895772d0f7db/cover-art) 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/bf2a49d1-eeae-49c4-8d21-d9987ca91266/cover-art) 
+19:19:48.488 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/8b65ccd0-1d21-428d-9c4e-4f636f002994/cover-art) 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📝 columnEraser: no matching elements found in column "Title" (colIdx=2), erasers=[▶, jesus2099] 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: moving bare artwork-icon span (no wrapping anchor) to synthetic CAA cell 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📝 caa extractor: wrapped bare span in synthetic anchor (/release-group/7d23ceac-24ba-4024-93a1-4ab124d2483a/cover-art) 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Page 2/22 processed in 1.11s. Rows on page: 100. Total: 200 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📥   Summary: Album: +0 (Total: 22) | Album + Compilation: +0 (Total: 36) | Album + Compilation + Live: +0 (Total: 33) | Album + Live: +100 (Total: 109) 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Fetching URL for page 3: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=3&all=1&va=0 
+19:19:48.489 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Initiating fetch for URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=3&all=1&va=0 
+19:19:49.597 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Page 3: No li.show-all elements found — nothing to expand. 
+19:19:49.597 [VZ-ShowAllEntityData: artist-releasegroups] 📝 No targetHeader provided; returning all tables found in container. 
+19:19:49.597 [VZ-ShowAllEntityData: artist-releasegroups] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+19:19:49.597 [VZ-ShowAllEntityData: artist-releasegroups] 📥 Found matching table "[object HTMLTableElement]" on page 3 to process. 
+19:19:49.597 [VZ-ShowAllEntityData: artist-releasegroups] 📝 Detected indices → mainColIdx=2 (Title), extractors=[caa("Title"@2), primaryAlias("Title"@2)], syntheticExtractors=[none], erasers=[[▶,jesus2099]@"Title"(colIdx=2)], renderMultiRow=[none], excluded=[] for pageType: artist-releasegroups 
