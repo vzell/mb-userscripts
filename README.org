@@ -54913,6 +54913,7 @@ the loaded file should be rendered.
 - why can't the shortcurt "Alt+R" not be used in this context, as the filtering phase hasn't been down yet and the final "Render Data" is NOT visible yet
 
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+** initial
 
 In the uploaded userscript,
 
@@ -55029,8 +55030,7 @@ The "Load Table Data" dialog should have a configurable initial 'min-width:640px
 but should then remember it's last position and geometry in browser storage (like the corresponding "Export to <format>" dialogs"
 
 * TODO persistent "+"-store history (push to history) with it's own edit dialog for editing the currently stored entries + the ability to add new/edit existant and remove existant entries (same UI look and feel)
-
-** init
+** DONE init
 
 Add the following functionality to the "History"-button popup:
 
@@ -55091,7 +55091,7 @@ should be presented in a nice UI table structure with their attributes like "Cas
 "Exclude Matches". The dialog should also have a quick filter functionality with highlightning the filter expression in
 the resulting rows, convenient if the list gets large.
 
-** answer
+** DONE answer
 
 #+begin_example
 Storage keys — lru-sa-hist-list (renamed from sa_load_filter_history, with transparent migration fallback) and new persistent-sa-hist-list.
@@ -55120,7 +55120,7 @@ Draggable, resizable
 Navigation flows: quick-filter ↓ → pin list → lru list; ↑ reverses; Escape from list → quick-filter; Escape with empty quick-filter → close panel.
 #+end_example
 
-** "Save" should not leave the complete "Load Table Data" dialog, instead 
+** DONE "Save" should not leave the complete "Load Table Data" dialog, instead 
 
 a couple of glitches
 
@@ -55186,7 +55186,7 @@ to
             prefilterToggleBtn.title = 'Toggle prefilter highlighting';
 #+end_example
 
-** bugs
+** DONE bugs
 
 1.)
 
@@ -55198,7 +55198,7 @@ field and they are mich smaller than before, something is broken here
 
 pressing the "Escape" key in the quick filter list and it's NOT empty should clear the filter field only the second press should leave the dialog
 
-** two remaining bugs
+** DONE two remaining bugs
 
 In the uploaded userscript,
 
@@ -55242,6 +55242,129 @@ and
 #+begin_example
 <input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="width:100%;padding:8px 32px 8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;box-sizing:border-box;">
 #+end_example
+
+** TODO another two bugs
+
+1.)
+
+all the red "x" icons should get rendered in bold with a dark red color
+
+2.)
+
+when entering the first time something in the filter field, the whole filter dialog shrinks in horizontal size
+e.g. entering "Thunder Road"
+
+Shrinks from
+
+#+begin_example
+<div id="sa-load-dialog-overlay" style="position: fixed; background: rgb(255, 255, 255); padding: 24px; border-radius: 12px; box-shadow: rgba(0, 0, 0, 0.3) 0px 8px 32px; width: 420px; max-width: calc(-40px + 100vw); min-width: 640px; font-family: sans-serif; border: 1px solid rgb(204, 204, 204); z-index: 20000; max-height: calc(-40px + 100vh); min-height: 120px; overflow-y: auto; resize: both; box-sizing: border-box; transform: none; top: 126px; left: 598px; height: 776px;">
+            <!-- ── Shared header (also drag handle) ── -->
+            <div id="sa-ld-drag-handle" style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;cursor:move;user-select:none;">
+                <h3 style="margin:0;color:#222;font-size:1.2em;">📂 Load Table Data</h3>
+                <p style="margin:5px 0 0;color:#666;font-size:1.00em;">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
+            </div>
+
+            <!-- ── Phase 1 — Load ── -->
+            <div id="sa-ld-phase1">
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-load-confirm" style="flex: 2 1 0%; padding: 10px; background: rgb(76, 175, 80); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s;"><span><span style="text-decoration:underline">L</span>oad Data</span></button>
+                    <button id="sa-load-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">Cancel</button>
+                </div>
+                <div id="sa-ld-load-status" style="display: block; padding: 5px 2px; font-size: 0.95em; min-height: 20px; color: rgb(46, 125, 50);">✅ Loaded <strong>109</strong> rows from <em>"MB-Place-(The Stone Pony)-Events-(109)_2026-03-17T15-56-13.json.gz"</em></div>
+                <div id="sa-ld-meta-block" style="display: block; margin-top: 10px; border-top: 1px solid rgb(238, 238, 238); padding-top: 10px;"><div style="font-size:0.82em;color:#555;margin-bottom:6px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;">📄 File Metadata</div><table style="border-collapse:collapse;width:100%;font-size:0.88em;line-height:1.5;"><tbody><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Entity type</td><td style="padding:3px 0;word-break:break-all;">Place</td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Entity name</td><td style="padding:3px 0;word-break:break-all;">The Stone Pony</td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Section</td><td style="padding:3px 0;word-break:break-all;">Events</td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Detail</td><td style="padding:3px 0;word-break:break-all;"><span style="color:#bbb;">—</span></td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Page type</td><td style="padding:3px 0;word-break:break-all;">place-events</td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Table mode</td><td style="padding:3px 0;word-break:break-all;"><span style="background:#2e7d32;color:#fff;border-radius:3px;padding:0 5px;font-size:0.82em;">single</span></td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Rows</td><td style="padding:3px 0;word-break:break-all;"><strong>109</strong></td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Button label</td><td style="padding:3px 0;word-break:break-all;"><em>Show all Events for Place</em></td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Saved</td><td style="padding:3px 0;word-break:break-all;">17/03/2026, 16:56:13</td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">Version</td><td style="padding:3px 0;word-break:break-all;"><span style="background:#f5f5f5;border:1px solid #ddd;border-radius:3px;padding:0 5px;font-size:0.85em;">1.0</span></td></tr><tr><td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">URL</td><td style="padding:3px 0;word-break:break-all;"><a href="https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events" target="_blank" style="color:#1565c0;font-size:0.88em;word-break:break-all;">https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events</a></td></tr></tbody></table></div>
+            </div>
+
+            <!-- ── Phase 2 — Filter (hidden until load complete) ── -->
+            <div id="sa-ld-phase2" style="display: block; margin-top: 18px; border-top: 1px solid rgb(238, 238, 238); padding-top: 16px;">
+                <!-- Filter expression row: input + Pin + History button -->
+                <div style="margin-bottom:10px;position:relative;">
+                    <div style="display:flex;gap:4px;align-items:stretch;">
+                        <div style="position:relative;flex:1;display:flex;align-items:center;">
+                            <input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="width:100%;padding:8px 32px 8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;box-sizing:border-box;">
+                            <button id="sa-filter-clear-btn" tabindex="-1" title="Clear filter expression" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#c0392b;font-size:1em;line-height:1;padding:2px 3px;border-radius:3px;display:none;">✕</button>
+                        </div>
+                        <button id="sa-hist-pin-btn" title="Pin current filter to persistent list (saves query + checkbox states)" style="padding:0 10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;cursor:pointer;font-size:1.1em;font-weight:bold;color:#2e7d32;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">+</button>
+                        <button id="sa-load-history-toggle" title="Show/hide filter history (Alt+H)" style="padding: 0px 10px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); border-radius: 6px; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s; display: none;">
+                            🕑 <span style="text-decoration:underline">H</span>istory ▼
+                        </button>
+                    </div>
+                    <!-- ── History dropdown panel ── -->
+                    <div id="sa-load-history-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:20001;box-sizing:border-box;">
+                        <!-- Quick-filter input inside the panel -->
+                        <div style="padding:8px 8px 6px;border-bottom:1px solid #eee;">
+                            <div style="position:relative;display:flex;align-items:center;">
+                                <input id="sa-hist-quick-filter" type="text" placeholder="🔍 Quick filter both lists..." style="width:100%;box-sizing:border-box;padding:5px 32px 5px 8px;border:1px solid #ccc;border-radius:4px;font-size:0.88em;outline:none;">
+                                <button id="sa-hist-qf-clear-btn" tabindex="-1" title="Clear quick filter" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#c0392b;font-size:0.95em;line-height:1;padding:2px 3px;border-radius:3px;display:none;">✕</button>
+                            </div>
+                        </div>
+                        <!-- Persistent pinned list -->
+                        <div style="padding:4px 8px 2px;background:#e8f5e9;border-bottom:1px solid #c8e6c9;">
+                            <span style="font-size:0.76em;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:0.04em;">📌 Pinned</span>
+                        </div>
+                        <div id="persistent-sa-hist-list" style="max-height:380px;overflow-y:auto;" tabindex="0"><div style="padding:8px 10px;color:#aaa;font-size:0.85em;text-align:center;">No matching entries</div></div>
+                        <div id="persistent-sa-hist-footer" style="padding:3px 8px;border-top:1px solid #eee;border-bottom:1px solid #ddd;font-size:0.76em;color:#666;display:flex;justify-content:space-between;background:#f9fbe7;">
+                            <span id="persistent-sa-hist-count">0 of 0 entries</span>
+                            <span>↑↓ navigate &nbsp; Enter: apply</span>
+                        </div>
+                        <!-- LRU recent list -->
+                        <div style="padding:4px 8px 2px;background:#e3f2fd;border-bottom:1px solid #bbdefb;">
+                            <span style="font-size:0.76em;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:0.04em;">🕑 Recent (LRU)</span>
+                        </div>
+                        <div id="lru-sa-hist-list" style="max-height:380px;overflow-y:auto;" tabindex="0"><div style="padding:8px 10px;color:#aaa;font-size:0.85em;text-align:center;">No matching entries</div></div>
+                        <div id="lru-sa-hist-footer" style="padding:3px 8px;border-top:1px solid #eee;font-size:0.76em;color:#888;display:flex;justify-content:space-between;">
+                            <span id="lru-sa-hist-count">0 of 0 entries</span>
+                            <span>↑↓ navigate &nbsp; Enter: apply &nbsp; Esc: close</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Checkbox row + Edit Persistent List button -->
+                <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;flex-wrap:wrap;">
+                    <div style="display:flex;gap:20px;justify-content:center;flex:1;flex-wrap:wrap;">
+                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Match filter expression with exact case (uppercase/lowercase must match)">
+                            <input type="checkbox" id="sa-load-case"> Case Sensitive
+                        </label>
+                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Interpret filter expression as a regular expression (JavaScript RegExp syntax)">
+                            <input type="checkbox" id="sa-load-regex"> Regular Expression
+                        </label>
+                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                            <input type="checkbox" id="sa-load-exclude"> Exclude Matches
+                        </label>
+                    </div>
+                    <button id="sa-hist-edit-btn" title="Edit the persistent pinned filter list (Alt+E)" style="padding:5px 10px;background:#fff8e1;border:1px solid #ffe082;border-radius:6px;cursor:pointer;font-size:0.82em;font-weight:600;color:#e65100;white-space:nowrap;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
+                        ✎ <span style="text-decoration:underline">E</span>dit Pinned
+                    </button>
+                </div>
+                <!-- Action buttons -->
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-filter-confirm" style="flex:2;padding:10px;background:#1976D2;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
+                        <span><span style="text-decoration:underline">F</span>ilter Data</span>
+                    </button>
+                    <button id="sa-render-no-filter-confirm" style="flex:1;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;" title="Render all rows from the loaded file without applying any filter">
+                        <span>▶ <span style="text-decoration:underline">R</span>ender All Rows</span>
+                    </button>
+                </div>
+                <div id="sa-ld-filter-status" style="display:none;padding:5px 2px;font-size:0.95em;min-height:20px;"></div>
+            </div>
+
+            <!-- ── Phase 3 — Render (hidden until filter count computed) ── -->
+            <div id="sa-ld-phase3" style="display:none;margin-top:18px;border-top:1px solid #eee;padding-top:16px;">
+                <div style="display:flex;gap:12px;margin-bottom:8px;">
+                    <button id="sa-render-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
+                        <span><span style="text-decoration:underline">R</span>ender Data</span>
+                    </button>
+                </div>
+                <div id="sa-ld-render-status" style="display:none;padding:5px 2px;font-size:0.95em;min-height:20px;"></div>
+            </div>
+        </div>
+#+end_example
+
+to
+
+#+begin_example
+??
+#+end_example
+
+BUT it shrinks NOT anymore as soon the enduser has resized the dialog and it gets stored in browser storage
 
 
 * TODO "Case sensitive" and "Regexp" checkboxes are missing their tooltips + add an "x" icon to clear the filter field with the mouse
@@ -55703,15 +55826,17 @@ integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
 #+end_example
 
 
-* Make the "Tracks" column a multi-row cell column, "+" is the divider
+* TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
-* todos
+
+* TODO todos
 
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
 
-* fix Artist-Releasegroup pages
+
+* TODO fix Artist-Releasegroup pages
 
 Change the code blocks
 
