@@ -56104,3 +56104,5 @@ Table: 1 row (ok)
 
 * explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
 
+* rendering time for VA - 1057 4.33s minutes in network mode
+
