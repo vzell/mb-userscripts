@@ -55727,10 +55727,12 @@ a couple of things are still missing (also add a changelog):
 
 
 * TODO fix Artist-Releasegroup pages
+** changes to do
 
 Change the code blocks
 
 #+begin_example
+        {
             type: 'artist-releasegroups',
             // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
@@ -55800,53 +55802,53 @@ Remove the complete code block
                 }
 #+end_example
 
+** initial
 
+In the NEWLY uploaded userscript,
 
-Please add the following function between the following to marker
-
-#+begin_example
-        // ── Multi-pass fetch detection ────────────────────────────────────────
-#+end_example
-
-#+begin_example
-        // ── end multi-pass block ──────────────────────────────────────────────
-#+end_example
-
-In the uploaded userscript,
-
-First of all the big picture:
+For the next implentation you have to do, first of all the big picture:
 
 For the special case if URLs have a pageType of "type: 'artist-releasegroups'" e.g.
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f the full fetch pipeline fetches the combined (all=1)
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f the full fetch pipeline fetches the combined ("all: '1'")
 discography of an artist, the 'official' and the 'non-official' discography defined with "params: { all: '1', va: '0' }"
-in the pageType definition.
+in the page definition variable "const pageDefinitions".
 
 Currently the final rendered page shows after the h2 header line named "Discography", first all sub-tables for the
 'official discography' where each sub-table is preceeded with a h3 header line with the release-group 'category' of the
 discography data, e.g. "Album", "Album + Compilation", etc. After all the 'official' categories, the sub-tables for the
-'non-official discography' is rendered the same way. There is currently now way to know where the 'non-official' section
-starts. And to make it worse, a h3 header name like "Album" could exist in both sections the 'official' and
+'non-official discography' are rendered the same way. There is currently no way to know where the 'non-official' section
+starts. And, to make it worse, a h3 header name like "Album" could exist in both sections the 'official' and
 'non-official' one.
 
 In order to know which sub-tables belong to which section types, the plan is to pre-fetch all the paginated webpages
 belonging to just the 'official' artist-releasegroups and EXTRACTING (but NOT rendering them) just the h3 header names
 in a new array variable "h3_official_category_header_array", BEFORE we do the usual full fetch pipeline for the combined
-(all=1) discography and the rest of the processing logic.
+("all: '1'") discography and the rest of the processing logic.
 
 There is a new "subType: 'artist-releasegroups'" definition in the variable "const pageDefinitions"
 
 #+begin_example
+        {
             subType: 'artist-releasegroups',
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Official',     params: { all: '0', va: '0' } },
-                { label: '🧮 Non-Official', params: { all: '0', va: '1' } },
-            ],
-            tableMode: 'multi' // native tables, h3 headers
+                { mainLabel: '🧮 Artist RGs',         pre_fetch_type: 'Official', params: { all: '0', va: '0' } },
+                { mainLabel: '🧮 Various Artist RGs', pre_fetch_type: 'Official', params: { all: '0', va: '1' } },
+            ]
         },
 #+end_example
 
-which defines how to get the corresponding webpages for JUST the h3 header name extraction.
+which defines, when clicking on the inital page the "mainLabel" button, which URL ("match") with which query_parameters ("params") should be used 
+to get the corresponding webpages for JUST the h3 header name extraction for the pre_fetch_type: 'Official' (like in the main fetch loop)
+
+The commented block between
+
+#+begin_example
+        // ── BEGIN: Artist-Releasegroups pre-fetch pass ────────────────────────────────────────
+        // ── END: Artist-Releasegroups pre-fetch pass ──────────────────────────────────────────────
+#+end_example
+
+is probably the place where the pre-fetch logic belongs tp
 
 On the final rendered page we additionally extract ALL the h3 category header names from the full fetch pipeline (they
 represent the 'official' and 'non-official' ones) in a new array variable "h3_all_category_header_array".
@@ -55865,9 +55867,9 @@ with the same name repeats in the array "h3_all_category_header_array" the secon
 created array "h3_all_category_unique_header_array".
 
 When we have that information the goal is to create on the final rendered page two new buttons "Official Discography" and
-"Non-Official Discography" and
+"Non-Official Discography" right beside the existing buttons rerendered from the initial page and
 
-- the "globalStatusDisplay.textContent" should display the prefetching
+- the "globalStatusDisplay.textContent" and the '<span id="mb-fetch-progress-outer"' should display the ongoing prefetching state 
 
 - when clicking the "Official Discography"-button we only display the 'offical' headers with their sub-tables and hide
   the 'non-offical' ones. 
@@ -55889,4 +55891,3 @@ should account which subType has been selected.
 #+begin_example
 globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
 #+end_example
-

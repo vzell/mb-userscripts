@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.201+2026-03-17
+// @version      9.99.202+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -11332,6 +11332,35 @@
     let _mbRowIdxCounter = 0;
     let isLoaded = false;
     let stopRequested = false;
+
+    // ── Artist-Releasegroups discography view state ──────────────────────────
+    // Populated during the pre-fetch pass (official-only) and the main fetch
+    // pass (all categories).  Used by the "Official Discography" /
+    // "Non-Official Discography" toggle buttons injected after rendering.
+    //
+    // h3_official_category_header_array   – ordered list of h3 names from the
+    //                                       official-only pre-fetch pass (all: '0').
+    // h3_all_category_header_array        – ordered list of h3 names from the
+    //                                       combined main fetch (all: '1'), may
+    //                                       contain duplicates when a category
+    //                                       (e.g. "Album") exists in both sections.
+    // h3_all_category_unique_header_array – like h3_all_category_header_array but
+    //                                       with duplicates removed while preserving
+    //                                       first-occurrence order.
+    // h3_non_official_category_header_array – entries from h3_all_category_header_array
+    //                                         that are NOT in the leading official
+    //                                         sequence (i.e. belong to non-official).
+    //
+    // discographyViewState – tracks which filter button is currently active:
+    //   'all'         → no view filter applied (default after initial render)
+    //   'official'    → only official h3/table pairs are visible
+    //   'non-official'→ only non-official h3/table pairs are visible
+    let h3_official_category_header_array   = [];
+    let h3_all_category_header_array        = [];
+    let h3_all_category_unique_header_array = [];
+    let h3_non_official_category_header_array = [];
+    let discographyViewState = 'all'; // 'all' | 'official' | 'non-official'
+    // ── end Artist-Releasegroups discography view state ──────────────────────
     let multiTableSortStates = new Map();
     // Registry of per-table tint functions so renderFinalTable can re-apply tints after re-render
     let multiSortTintRegistry = new Map(); // sortKey → { applyTints, clearTints }
@@ -15204,33 +15233,125 @@
         e.stopPropagation();
 
         // ── BEGIN: Artist-Releasegroups pre-fetch pass ────────────────────────────────────────
-        // const _runPass = async (passParams, passLabel) => {
- 
-        //     const _passMaxPage = await fetchMaxPageGeneric(path, passParams);
-        //     Lib.debug('fetch', `Artist-Releasegroups pre-fetch pass ${passLabel}: maxPage=${_passMaxPage}`);
-        //     globalStatusDisplay.textContent = `Loading ${passLabel} (${_passMaxPage} page(s))…`;
+        //
+        // For artist-releasegroups pages, before the combined (all:'1') main fetch we
+        // pre-fetch the official-only (all:'0') pages in order to collect the ordered
+        // list of h3 category headers that belong exclusively to the official section.
+        // This information is later used to split the rendered h3/table pairs into
+        // "Official Discography" and "Non-Official Discography" view modes.
+        //
+        // The subType definition (subType:'artist-releasegroups') carries the per-button
+        // pre_fetch_type:'Official' flag and the official-only params (all:'0', va:'0'
+        // or all:'0', va:'1').  We look up those params from the matching subType button
+        // whose mainLabel equals the currently-clicked button's label.
+        //
+        // Nothing is rendered during this pass — only h3 text content is collected.
+        // Progress is surfaced via globalStatusDisplay and fetchProgressLabel so the
+        // user can see that work is happening.
+        //
+        // Reset arrays unconditionally so a second button press always gets fresh data.
+        h3_official_category_header_array   = [];
+        h3_all_category_header_array        = [];
+        h3_all_category_unique_header_array = [];
+        h3_non_official_category_header_array = [];
+        discographyViewState = 'all';
 
-        //     const _passCurrentPageNum = parseInt(
-        //         new URLSearchParams(window.location.search).get('page') || '1', 10
-        //     );
+        if (pageType === 'artist-releasegroups') {
+            // Locate the subType definition and find the matching button by mainLabel
+            // so we know which official-only params to use for this pre-fetch.
+            const _subTypeDef = pageDefinitions.find(
+                d => d.subType === 'artist-releasegroups' &&
+                     typeof d.match === 'function' &&
+                     d.match(path, params)
+            );
+            const _clickedLabel = (activeDefinition.label || '').replace(/^🧮[¹²³⁴⁵⁶⁷⁸⁹]?\s*/, '');
+            const _subTypeBtn = _subTypeDef && _subTypeDef.buttons
+                ? _subTypeDef.buttons.find(b => {
+                      const _bl = (b.mainLabel || '').replace(/^🧮[¹²³⁴⁵⁶⁷⁸⁹]?\s*/, '');
+                      return _bl === _clickedLabel;
+                  })
+                : null;
 
-        //     for (let p = 1; p <= _passMaxPage; p++) {
-        //         if (stopRequested) break;
+            if (_subTypeBtn && _subTypeBtn.pre_fetch_type === 'Official' && _subTypeBtn.params) {
+                const _preFetchParams = _subTypeBtn.params; // e.g. { all: '0', va: '0' }
+                Lib.debug('fetch', `Artist-Releasegroups pre-fetch pass: using params`, _preFetchParams);
 
-        //         const fetchUrl = new URL(window.location.href);
-        //         fetchUrl.searchParams.set('page', p.toString());
-        //         Object.keys(passParams).forEach(k => fetchUrl.searchParams.set(k, passParams[k]));
+                // Pass 1 of 2: determine max page for the official-only URL
+                globalStatusDisplay.textContent = 'Loading (pass 1 of 2): getting official page count…';
+                globalStatusDisplay.style.color = '#999';
+                fetchProgressLabel.textContent  = 'Pass 1 of 2 — official headers…';
+                fetchProgressLabel.style.color  = '#333';
+                fetchProgressFill.style.background = '#b3d9ff'; // light blue for pre-fetch pass
 
-        //         let doc;
-        //         try {
-        //             const html = await fetchHtml(fetchUrl.toString());
-        //             doc = new DOMParser().parseFromString(html, 'text/html');
-        //         } catch (err) {
-        //             Lib.error('fetch', `Artist-Releasegroups pre-fetch pass ${passLabel} page ${p} error:`, err);
-        //             break;
-        //         }
+                const _preMaxPage = await fetchMaxPageGeneric(path, _preFetchParams);
+                Lib.debug('fetch', `Artist-Releasegroups pre-fetch pass: maxPage=${_preMaxPage}`);
 
-	// 	... <complete implementation>
+                let _preLastCategorySeen = null;
+
+                for (let _pp = 1; _pp <= _preMaxPage; _pp++) {
+                    if (stopRequested) break;
+
+                    const _preUrl = new URL(window.location.origin + path);
+                    _preUrl.searchParams.set('page', String(_pp));
+                    Object.keys(_preFetchParams).forEach(k =>
+                        _preUrl.searchParams.set(k, _preFetchParams[k])
+                    );
+
+                    // Update progress bar and status for each pre-fetch page
+                    const _preProgress = Math.round((_pp / _preMaxPage) * 100);
+                    fetchProgressFill.style.width = `${_preProgress}%`;
+                    fetchProgressLabel.textContent =
+                        `Pass 1 of 2 — official headers: page ${_pp}/${_preMaxPage}`;
+                    globalStatusDisplay.textContent =
+                        `Loading (pass 1 of 2): fetching official page ${_pp} of ${_preMaxPage}…`;
+
+                    let _preDoc;
+                    try {
+                        const _preHtml = await fetchHtml(_preUrl.toString());
+                        _preDoc = new DOMParser().parseFromString(_preHtml, 'text/html');
+                    } catch (_preErr) {
+                        Lib.error('fetch',
+                            `Artist-Releasegroups pre-fetch pass: page ${_pp} fetch error:`, _preErr);
+                        break;
+                    }
+
+                    // Extract h3 text content from each tbl on this page, using the same
+                    // backwards-walk logic as the main fetch pipeline at line ~15596.
+                    _preDoc.querySelectorAll('table.tbl').forEach(_preTbl => {
+                        let _prevEl = _preTbl.previousElementSibling;
+                        let _steps  = 0;
+                        let _h3El   = null;
+                        while (_prevEl && _steps < 5) {
+                            if (_prevEl.tagName === 'H3') { _h3El = _prevEl; break; }
+                            _prevEl = _prevEl.previousElementSibling;
+                            _steps++;
+                        }
+                        const _catName = _h3El ? _h3El.textContent.trim() : 'Other';
+
+                        // Only push when the category changes (mirrors main fetch dedup logic)
+                        if (_catName !== _preLastCategorySeen) {
+                            Lib.debug('fetch',
+                                `Pre-fetch pass — official category found: "${_catName}"`);
+                            h3_official_category_header_array.push(_catName);
+                            _preLastCategorySeen = _catName;
+                        }
+                    });
+                }
+
+                Lib.debug('fetch',
+                    `Artist-Releasegroups pre-fetch pass complete. Official categories:`,
+                    h3_official_category_header_array);
+
+                // Reset progress bar for the main fetch pass (pass 2 of 2)
+                fetchProgressFill.style.width = '0%';
+                fetchProgressFill.style.background = '#ffcccc'; // back to light red
+                fetchProgressLabel.textContent = 'Loading (pass 2 of 2)…';
+                globalStatusDisplay.textContent = 'Loading (pass 2 of 2)…';
+            } else {
+                Lib.debug('fetch',
+                    `Artist-Releasegroups: no matching subType button found — skipping pre-fetch pass`);
+            }
+        }
         // ── END: Artist-Releasegroups pre-fetch pass ──────────────────────────────────────────────
 
         // UI Cleanup: If targeting a specific header, remove ONLY those h2 headers and
@@ -15369,6 +15490,13 @@
         groupedRows = [];
         expandedCells.clear();
         _mbRowIdxCounter = 0;
+
+        // Reset artist-releasegroups discography view state for a fresh fetch
+        h3_official_category_header_array    = [];
+        h3_all_category_header_array         = [];
+        h3_all_category_unique_header_array  = [];
+        h3_non_official_category_header_array = [];
+        discographyViewState = 'all';
 
         // Run refactored clutter removal
         performClutterCleanup();
@@ -16221,6 +16349,126 @@
 
             // Perform final cleanup of UI artifacts
             finalCleanup();
+
+            // ── Artist-Releasegroups: build h3 category arrays and inject ────────────
+            // discography view-mode buttons ("Official Discography" / "Non-Official
+            // Discography") after the main combined (all:'1') render is complete.
+            //
+            // This block runs only for artist-releasegroups pages AND only when the
+            // pre-fetch pass has actually collected official category data (otherwise
+            // there is nothing to split).
+            if (pageType === 'artist-releasegroups' &&
+                h3_official_category_header_array.length > 0) {
+
+                // Step 1 — Build h3_all_category_header_array from groupedRows
+                // (preserves duplicates, mirrors the order categories were fetched).
+                h3_all_category_header_array = groupedRows.map(g => g.category || 'Other');
+
+                // Step 2 — Build h3_all_category_unique_header_array (first-occurrence
+                // order, duplicates discarded).
+                h3_all_category_unique_header_array = [];
+                const _seenCats = new Set();
+                for (const _cat of h3_all_category_header_array) {
+                    if (!_seenCats.has(_cat)) {
+                        _seenCats.add(_cat);
+                        h3_all_category_unique_header_array.push(_cat);
+                    }
+                }
+
+                // Step 3 — Determine non-official categories.
+                // Strategy: walk h3_all_category_header_array; as long as entries
+                // match the front of h3_official_category_header_array in sequence,
+                // they are "official".  The first entry that breaks the sequence
+                // marks the start of the non-official section — everything from that
+                // point onwards is non-official.
+                //
+                // We track a pointer into the official array rather than a Set so
+                // that a category name that legitimately appears in BOTH sections
+                // (e.g. "Album") is correctly attributed to non-official when it
+                // re-appears after the official sequence has been exhausted.
+                h3_non_official_category_header_array = [];
+                let _offIdx = 0;
+                let _nonOfficialStarted = false;
+                for (const _allCat of h3_all_category_header_array) {
+                    if (!_nonOfficialStarted) {
+                        if (_offIdx < h3_official_category_header_array.length &&
+                            _allCat === h3_official_category_header_array[_offIdx]) {
+                            // Still in the official sequence
+                            _offIdx++;
+                        } else {
+                            // First mismatch — non-official section starts here
+                            _nonOfficialStarted = true;
+                            if (!h3_non_official_category_header_array.includes(_allCat)) {
+                                h3_non_official_category_header_array.push(_allCat);
+                            }
+                        }
+                    } else {
+                        if (!h3_non_official_category_header_array.includes(_allCat)) {
+                            h3_non_official_category_header_array.push(_allCat);
+                        }
+                    }
+                }
+
+                Lib.debug('fetch', `Artist-Releasegroups category arrays:`, {
+                    official:   h3_official_category_header_array,
+                    all:        h3_all_category_header_array,
+                    allUnique:  h3_all_category_unique_header_array,
+                    nonOfficial: h3_non_official_category_header_array
+                });
+
+                // Step 4 — Stamp each rendered h3 with a data attribute indicating
+                // whether it belongs to the official or non-official section.
+                // We walk the live DOM h3.mb-toggle-h3 elements in document order,
+                // which mirrors the order in groupedRows, and match them by index.
+                const _allH3s = Array.from(
+                    document.querySelectorAll('#content h3.mb-toggle-h3')
+                );
+                _allH3s.forEach((_h3Dom, _h3Idx) => {
+                    const _catName = h3_all_category_header_array[_h3Idx] || '';
+                    const _section = h3_non_official_category_header_array.includes(_catName)
+                        && (_h3Idx >= h3_official_category_header_array.length ||
+                            h3_all_category_header_array.slice(0, h3_official_category_header_array.length)
+                                .indexOf(_catName) === -1)
+                        ? 'non-official'
+                        : 'official';
+
+                    // Re-derive section by replaying the same index-based logic used
+                    // to build h3_non_official_category_header_array above, so every
+                    // h3 is correctly tagged without ambiguity.
+                    let _offPtr = 0;
+                    let _nonOffStarted = false;
+                    let _sectionTag = 'official';
+                    for (let _i = 0; _i <= _h3Idx; _i++) {
+                        const _c = h3_all_category_header_array[_i];
+                        if (!_nonOffStarted) {
+                            if (_offPtr < h3_official_category_header_array.length &&
+                                _c === h3_official_category_header_array[_offPtr]) {
+                                _offPtr++;
+                                _sectionTag = 'official';
+                            } else {
+                                _nonOffStarted = true;
+                                _sectionTag = 'non-official';
+                            }
+                        } else {
+                            _sectionTag = 'non-official';
+                        }
+                    }
+
+                    _h3Dom.dataset.mbDiscSection = _sectionTag;
+                    const _nextTable = _h3Dom.nextElementSibling;
+                    if (_nextTable && _nextTable.classList.contains('tbl')) {
+                        _nextTable.dataset.mbDiscSection = _sectionTag;
+                    }
+                    Lib.debug('render',
+                        `h3 #${_h3Idx} "${_catName}" → section="${_sectionTag}"`);
+                });
+
+                // Step 5 — Inject "Official Discography" and "Non-Official Discography"
+                // buttons into controlsContainer, right after the existing action buttons
+                // (before the Save/Load divider).
+                _injectDiscographyViewButtons();
+            }
+            // ── end Artist-Releasegroups discography view setup ──────────────────────
 
             // Install navigation guard (idempotent — safe to call on every render)
             initNavigationGuard();
@@ -17622,6 +17870,216 @@
         if (Lib.settings.sa_enable_save_load) {
             saveToDiskBtn.style.display = 'inline-block';
         }
+    }
+
+    /**
+     * Injects "Official Discography" and "Non-Official Discography" toggle buttons
+     * into controlsContainer for artist-releasegroups pages after the combined
+     * (all:'1') render has completed and the h3 category arrays have been built.
+     *
+     * The buttons are inserted immediately after the last allActionButtons entry
+     * (before the Save/Load divider) so they sit visually adjacent to the main
+     * fetch buttons.
+     *
+     * Idempotent: removes any previously injected buttons before re-creating them,
+     * so a second button press (page reload) starts clean.
+     *
+     * Called from: startFetchingProcess() after the main fetch pipeline completes.
+     */
+    function _injectDiscographyViewButtons() {
+        // Guard: only meaningful for artist-releasegroups pages
+        if (pageType !== 'artist-releasegroups') return;
+
+        // Remove stale buttons from a prior render (idempotency)
+        ['mb-disc-official-btn', 'mb-disc-nonofficial-btn', 'mb-disc-btn-divider']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.remove(); });
+
+        const _discDivider = document.createElement('span');
+        _discDivider.id = 'mb-disc-btn-divider';
+        _discDivider.textContent = ' | ';
+        _discDivider.style.cssText = uiButtonDividerCSS();
+
+        const _makeDiscBtn = (id, label, section) => {
+            const _btn = document.createElement('button');
+            _btn.id    = id;
+            _btn.type  = 'button';
+            _btn.textContent = label;
+            _btn.style.cssText = uiActionBtnBaseCSS();
+            _btn.title = section === 'official'
+                ? 'Show only the official discography sub-tables (hide non-official)'
+                : 'Show only the non-official discography sub-tables (hide official)';
+
+            _btn.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+
+                if (discographyViewState === section) {
+                    // Clicking the active button resets to "all"
+                    _applyDiscographyViewFilter('all');
+                } else {
+                    _applyDiscographyViewFilter(section);
+                }
+            });
+            return _btn;
+        };
+
+        const _officialBtn    = _makeDiscBtn('mb-disc-official-btn',    '📀 Official Discography',     'official');
+        const _nonOfficialBtn = _makeDiscBtn('mb-disc-nonofficial-btn', '📼 Non-Official Discography', 'non-official');
+
+        // Insert: divider → official btn → non-official btn
+        // Place BEFORE the initial Save/Load divider (#mb-button-divider-initial).
+        const _refDivider = document.getElementById('mb-button-divider-initial');
+        if (_refDivider) {
+            controlsContainer.insertBefore(_nonOfficialBtn, _refDivider);
+            controlsContainer.insertBefore(_officialBtn,    _nonOfficialBtn);
+            controlsContainer.insertBefore(_discDivider,    _officialBtn);
+        } else {
+            // Fallback: append after last allActionButton
+            const _lastBtn = allActionButtons[allActionButtons.length - 1];
+            if (_lastBtn && _lastBtn.nextSibling) {
+                controlsContainer.insertBefore(_discDivider,    _lastBtn.nextSibling);
+            } else {
+                controlsContainer.appendChild(_discDivider);
+            }
+            controlsContainer.insertBefore(_officialBtn,    _discDivider.nextSibling || null);
+            controlsContainer.insertBefore(_nonOfficialBtn, _officialBtn.nextSibling || null);
+        }
+
+        Lib.debug('render', `_injectDiscographyViewButtons: buttons injected ` +
+            `(official=${h3_official_category_header_array.length} categories, ` +
+            `non-official=${h3_non_official_category_header_array.length} categories)`);
+    }
+
+    /**
+     * Applies (or clears) the discography view filter for artist-releasegroups pages.
+     *
+     * When `section` is 'official' or 'non-official', all h3.mb-toggle-h3 elements
+     * and their immediately following table.tbl siblings whose
+     * `data-mb-disc-section` attribute does NOT match `section` are hidden
+     * (display:none).  The matching ones are restored to their normal display.
+     *
+     * When `section` is 'all', all h3 and table pairs are restored regardless of
+     * their section tag.
+     *
+     * Side-effects:
+     *   - Updates `discographyViewState`
+     *   - Renames the "Discography" h2 header to "Official Discography" or
+     *     "Non-Official Discography" (or back to "Discography")
+     *   - Recalculates and updates the `mb-row-count-stat` span inside the h2
+     *   - Visually highlights the active button with a green tint; the inactive
+     *     sibling is returned to normal colouring
+     *
+     * @param {'all'|'official'|'non-official'} section
+     */
+    function _applyDiscographyViewFilter(section) {
+        discographyViewState = section;
+
+        // ── Update button tints ───────────────────────────────────────────────
+        const _offBtn    = document.getElementById('mb-disc-official-btn');
+        const _nonOffBtn = document.getElementById('mb-disc-nonofficial-btn');
+
+        const _btnActive   = 'background:#c8f7c5; color:#1a5c18; font-weight:bold;';
+        const _btnInactive = '';
+
+        if (_offBtn) {
+            _offBtn.style.cssText    = uiActionBtnBaseCSS() + (section === 'official'    ? _btnActive : _btnInactive);
+        }
+        if (_nonOffBtn) {
+            _nonOffBtn.style.cssText = uiActionBtnBaseCSS() + (section === 'non-official' ? _btnActive : _btnInactive);
+        }
+
+        // ── Show / hide h3 + table pairs ─────────────────────────────────────
+        const _container = document.getElementById('content') || document.body;
+        const _h3s = Array.from(_container.querySelectorAll('h3.mb-toggle-h3'));
+
+        _h3s.forEach(_h3 => {
+            const _sec = _h3.dataset.mbDiscSection || 'official';
+            const _show = (section === 'all') || (_sec === section);
+
+            _h3.style.display = _show ? '' : 'none';
+
+            // The table immediately follows the h3
+            const _tbl = _h3.nextElementSibling;
+            if (_tbl && _tbl.classList.contains('tbl')) {
+                // Respect the h3's own collapsed/expanded state: only show the
+                // table when it was expanded AND we want to show the section.
+                const _h3Icon = _h3.querySelector('.mb-toggle-icon');
+                const _wasExpanded = _h3Icon && _h3Icon.textContent === '▼';
+                _tbl.style.display = (_show && _wasExpanded) ? '' : 'none';
+            }
+        });
+
+        // ── Rename h2 header and recalculate row count stat ──────────────────
+        const _allH2s  = Array.from(document.querySelectorAll('h2'));
+        const _mainH2  = _allH2s.find(h => h.querySelector('.mb-row-count-stat'));
+        if (_mainH2) {
+            // Derive human-readable heading text (strip icon, count-stat, controls)
+            const _rawText = Array.from(_mainH2.childNodes)
+                .filter(n => n.nodeType === Node.TEXT_NODE)
+                .map(n => n.textContent.trim())
+                .join('') || 'Discography';
+
+            // Strip any existing section suffix before replacing
+            const _baseText = _rawText
+                .replace(/\s*(Official|Non-Official)\s*Discography\s*$/i, '')
+                .replace(/\bDiscography\b/i, '')
+                .trim();
+
+            let _newHeading;
+            if (section === 'official') {
+                _newHeading = (_baseText ? _baseText + ' ' : '') + 'Official Discography';
+            } else if (section === 'non-official') {
+                _newHeading = (_baseText ? _baseText + ' ' : '') + 'Non-Official Discography';
+            } else {
+                _newHeading = (_baseText ? _baseText + ' ' : '') + 'Discography';
+            }
+
+            // Replace the raw text node(s) inside the h2 with the new heading text.
+            // We must NOT touch child elements (spans, buttons, the filterContainer).
+            Array.from(_mainH2.childNodes)
+                .filter(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())
+                .forEach((n, i) => {
+                    if (i === 0) {
+                        n.textContent = _newHeading + ' ';
+                    } else {
+                        n.textContent = '';
+                    }
+                });
+            // If there are no text nodes at all, prepend one
+            if (!Array.from(_mainH2.childNodes)
+                    .some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim())) {
+                _mainH2.insertBefore(
+                    document.createTextNode(_newHeading + ' '),
+                    _mainH2.firstChild
+                );
+            }
+
+            // Recalculate the visible row count for the current section view
+            let _visibleRows = 0;
+            if (section === 'all') {
+                _visibleRows = groupedRows.reduce((acc, g) => acc + g.rows.length, 0);
+            } else {
+                const _h3s2 = Array.from(
+                    (_container || document).querySelectorAll('h3.mb-toggle-h3')
+                );
+                _h3s2.forEach((_h3v, _idx) => {
+                    if ((_h3v.dataset.mbDiscSection || 'official') === section) {
+                        _visibleRows += (groupedRows[_idx] ? groupedRows[_idx].rows.length : 0);
+                    }
+                });
+            }
+
+            const _totalRows = groupedRows.reduce((acc, g) => acc + g.rows.length, 0);
+            const _statSpan  = _mainH2.querySelector('.mb-row-count-stat');
+            if (_statSpan) {
+                _statSpan.textContent = (_visibleRows === _totalRows || section === 'all')
+                    ? `(${_totalRows})`
+                    : `(${_visibleRows} of ${_totalRows})`;
+            }
+        }
+
+        Lib.debug('render',
+            `_applyDiscographyViewFilter: section="${section}" applied`);
     }
 
     /**
