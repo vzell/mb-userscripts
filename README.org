@@ -56205,3 +56205,6 @@ Table: 1 row (ok)
 
 * rendering time for VA - 1057 4.33s minutes in network mode
 
+* make the auto-resize always run by default but configurable
+
+
