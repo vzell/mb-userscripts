@@ -56111,21 +56111,37 @@ Another bug
 
 **** Official
 
-| Statistic                             | Value | Comment |   |
-|---------------------------------------+-------+---------+---|
-| Network Loading time for CAA          |       |         |   |
-| IndexedDB Loading time for CAA        |       |         |   |
-| Memory Usage                          |       |         |   |
-| Page Type                             |       |         |   |
-| Table Type                            |       |         |   |
-| Sub-tables                            |       |         |   |
-| Total columns                         |       |         |   |
-| ▶ [per column multi-row list (count)] |       |         |   |
-| Visible columns                       |       |         |   |
-| Hidden columns                        |       |         |   |
-| Global Filter                         |       |         |   |
-| Column Filters (total)                |       |         |   |
-| ▶ [per column multi-row list (count)] |       |         |   |
+| Statistic                             | Value | Comment |
+|---------------------------------------+-------+---------|
+| Column Filters (total)                |       |         |
+| ▶ [per column multi-row list (count)] |       |         |
+
+
+| Statistic                      | Value | Comment |
+|--------------------------------+-------+---------|
+| Network Loading time for CAA   |       |         |
+| IndexedDB Loading time for CAA |       |         |
+| Memory Usage                   |       |         |
+| Page Type                      |       |         |
+| Table Type                     |       |         |
+| Sub-tables                     |       |         |
+| Total columns                  |       |         |
+| Visible columns                |       |         |
+| Hidden columns                 |       |         |
+| Global Filter                  |       |         |
+
+| Section/Sub-section                                                                                           | Total rows | Total artworks |
+|---------------------------------------------------------------------------------------------------------------+------------+----------------|
+| Album                                                                                                         |        124 |            119 |
+|---------------------------------------------------------------------------------------------------------------+------------+----------------|
+| Official release                                                                                              |        119 |            114 |
+| ▶ [per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
+| Promotion release                                                                                             |          4 |              4 |
+| ▶ [per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
+| Bootleg release                                                                                               |          1 |              1 |
+| ▶ [per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
+
+
 
 
 | Section name             | Type         | Total rows | Total artworks | broken |
@@ -56134,7 +56150,6 @@ Another bug
 | Official Discography     | official     |        582 |            578 |        |
 | Non-Official Discography | non-official |       1541 |           1489 |        |
 | Merged Discography       | merged       |       2123 |            190 | yes    |
-
 
 | Sub-section name | Complete | Rows | Artworks | Official | Rows | Artworks | Non-official | Rows | Artworks | Merged | Rows | Artworks |
 |------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
@@ -56151,13 +56166,29 @@ Another bug
 
 **** Non-official
 
+| Section name             | Type         | Total rows | Total artworks | broken |
+|--------------------------+--------------+------------+----------------+--------|
+| Complete Discography     | complete     |       2123 |           2067 |        |
+| Official Discography     | official     |        582 |            578 |        |
+| Non-Official Discography | non-official |       1541 |           1489 |        |
+| Merged Discography       | merged       |       2123 |            190 | yes    |
+
 | h2 section name | total rows | total artworks |
 |-----------------+------------+----------------|
 | Album + Live    |       2123 |           2067 |
 
-| sub-section name | complete | complete rows | complete artworks | official | official rows | official artworks | non-official | non-official rows | non-official artworks | merged | merged rows | merged artworks |
-|------------------+----------+---------------+-------------------+----------+---------------+-------------------+--------------+-------------------+-----------------------+--------+-------------+-----------------|
-| Album + Live     | yes      |            23 |                23 | yes      |            23 |                23 | yes          |                13 |                     9 | yes    |          36 |              23 |
+| Sub-section name | Complete | Rows | Artworks | Official | Rows | Artworks | Non-official | Rows | Artworks | Merged | Rows | Artworks |
+|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
+| Album            | yes      |   22 |       21 | yes      |   22 |       21 | no           |      |          | yes    |   24 |       23 |
+| Album + Live     | yes      |  362 |      361 | yes      |  362 |      361 | no           |      |          | yes    | 1191 |        0 |
+| Other            | yes      |    1 |        1 | yes      |    1 |        1 | no           |      |          | yes    |    1 |        0 |
+|                  |          |      |          |          |      |          |              |      |          |        |      |          |
+|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
+| Album            | yes      |    2 |        2 | no       |      |          | yes          |    2 |        2 | no     |      |          |
+| Album + Live     | yes      |  829 |      795 | no       |      |          | yes          |  829 |      795 | no     |      |          |
+| Album + Demo     | yes      |    5 |        5 | no       |      |          | yes          |    5 |        5 | yes    |    5 |        0 |
+|                  |          |      |          |          |      |          |              |      |          |        |      |          |
+|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
 
 
 
