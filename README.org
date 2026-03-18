@@ -54233,7 +54233,6 @@ fetching of all paginated pages begins after pressing the "Show all.." action bu
 
 * TODO Change all the entity links to open in a new tab
 
-
 * TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
 
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
@@ -54266,7 +54265,7 @@ to give the user the chance to quickly filter either for rows with OR without im
 
 
 
-* TODO OBSOLETE: on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
+* DONE OBSOLETE: on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
 ** initial
 
 on the pageType of URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
@@ -54303,7 +54302,7 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
 
 ** remove the sub-tables from the DOM before starting to fetch any CAA images
 
-* TODO OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
+* DONE OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
 ** initial
 
 given the fact that the following action button (also it's labeled '🧮 Non-official RGs')
@@ -54566,41 +54565,6 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 ** rename "All official" to just "All" , same for VA
 
 ** count in the "Official Artist Discography" is the same as the global count (im not sure when it happens, probably during filtering)
-
-
-* TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
-
-
-* TODO create a configurable extractMultiRowCell function on a source column: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events ==> "Area", "Country" columns
-
-#+begin_example
-            tableMode: 'single'
-        },
-#+end_example
-
-#+begin_example
-        {
-            type: 'artist-events',
-            match: (path) => path.includes('/events'),
-            buttons: [ { label: 'Show all Events for Artist' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
-                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
-                ],
-                collapsableColumns: [ 'Location', 'EAA' ],
-                addEAA: 'Event',
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        }
-#+end_example
-
-
-
-* TODO Change all the entity links to open in a new tab
 
 
 * TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just display ONE, actually make it a multi-row cell
@@ -55312,7 +55276,7 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
 ** remove the sub-tables from the DOM before starting to fetch any CAA images
 
 
-* TODO OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
+* DONE OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
 ** initial
 
 given the fact that the following action button (also it's labeled '🧮 Non-official RGs')
@@ -55578,7 +55542,6 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
-
 * TODO create a configurable extractMultiRowCell function on a source column: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events ==> "Area", "Country" columns
 
 #+begin_example
@@ -55712,7 +55675,6 @@ integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
 
 
 * TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
-
 
 * TODO todos
 
@@ -56011,7 +55973,7 @@ the total count of rows which have CAA artwork images are wrong in the "toggle C
 when switching from the initial rendered page to one of the other views, it always shows the total count of rows which
 have CAA artwork images from the initial "Complete Discography" case.
 
-** bug in merged mode
+** DONE bug in merged mode
 
 There is still a bug in "merged" view. Not all h3 headers/sub-tables are included in the "merged" view when compared to
 the h3 "official" and "non-official" headers, but they should. h3 headers which are ONLY in the official view OR h3
@@ -56022,7 +55984,7 @@ h3 header/sub-table in the "merged" view (so it should be the union of both sub-
 The question is if we need the array "h3_all_category_unique_header_array" at all for this algorithm. If not please
 remove from the code with all it's references.
 
-** bug in collapse/uncollapse CAA images, per cell. per column, per table, global
+** DONE bug in collapse/uncollapse CAA images, per cell. per column, per table, global
 
 more bugs
 
@@ -56044,13 +56006,13 @@ global button
 
 The h1 header "Density" button does not work on this type of pages anymore
 
-** fix button text and all related code
+** DONE fix button text and all related code
 
 #+begin_example
 '🧮 Various Artist RGs'  ==> '🧮 Various Artists RGs'
 #+end_example
-
-** merged still wrong
+*
+** DONE merged still wrong
 still bugs
 
 1.)
@@ -56088,7 +56050,7 @@ to plural
 '🧮 Various Artists RGs'
 #+end_example
 
-** bugs
+** DONE bugs
 
 the toggle "CAA artwork count"-button is wrong on some h3 headers in "merged" view: it still shows the count from the "official" view
 
@@ -56098,7 +56060,7 @@ the toggle "CAA artwork count"-button is wrong on some h3 headers in "merged" vi
 |--------------+-------------------+--------------------+------------------------+-------------------+--------------------+------------------------+-----------------------+------------------------+----------------------------+-----------------+------------------+----------------------|
 | Album + Live | yes               |                 23 |                     23 | yes               |                 23 |                     23 | yes                   |                     13 |                          9 | yes             |               36 |                   23 |
 
-** bug
+** DONE bug
 
 Another bug
 
@@ -56106,7 +56068,7 @@ Another bug
 - when switching back from the "merged" view to the "un-official" view, the h2 artwork count is wrong, it's the same as for the "merged" view, but the individell artwork counts in the h2 rows are OK 
 - when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
-* Statistics
+* TODO Statistics
 ** version: 9.99.211+2026-03-17
 *** Global
 
@@ -56575,9 +56537,7 @@ in the following block (because this are the filtered rows wich still CAA thumbn
   <span style="font-size:0.8em;color:#555">Total artworks
   </span>
 </td>
-
 #+end_example
-
 
 4.)
 
@@ -56730,7 +56690,8 @@ right in front of the block
 
 * fix CCA art work count + add them + total rows to summary, on the table level ist should be the filtered state and  artwork count per event/release
 
-* remove 
+
+* DONE remove 
 
 #+begin_example
   <span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
@@ -56757,11 +56718,10 @@ comumn cell level accordingly)
 
 1434 in 14 minutes 
 
-* Statistics panel: ~207 KB us WRONG
-
+* DONE Statistics panel: ~207 KB us WRONG
 * test with the VA pass
 
-* reintroduce the old "official RGs" button
+* TODO reintroduce the old "official RGs" button
 
 #+begin_example
         {
@@ -56778,7 +56738,7 @@ comumn cell level accordingly)
 #+end_example
 
 
-* the "global filter info" box should read, "Globally filtered <n> rows [global:"<filter expression>"]
+* TODO the "global filter info" box should read, "Globally filtered <n> rows [global:"<filter expression>"]
 
 * counting and display wrong: actually with indexedDB cache
 
@@ -56832,11 +56792,11 @@ column filter("MB-Name"): "of"
 Table: 1 row (ok)
 
 
-* explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
+* TODO explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
 
 * rendering time for VA - 1057 4.33s minutes in network mode
 
-* make the auto-resize always run by default but configurable
+* DONE make the auto-resize always run by default but configurable
 
 * TODO reorder the tab/sub-table specific section alway lasts
 
