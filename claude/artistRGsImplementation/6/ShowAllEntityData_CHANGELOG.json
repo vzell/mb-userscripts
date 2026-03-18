@@ -1,23 +1,5 @@
 [
     {
-      "version": "9.99.209",
-      "date": "2026-03-17",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Bug 1 — 'Complete Discography (merged)' view: after switching away from merged and back, or after visiting official/non-official view after a merged pass, row counts inflated on repeated cycles (e.g. 'Album' official showed 34 instead of 32 after merged filled it with 32+2=34 combined rows). Root cause: the merged tbody fill used `_tbody.innerHTML = ''` which detached the original row DOM nodes from the tbody, then inserted cloneNode copies. On switching back to 'all', the 'all' restore path left the merged-filled tbody untouched (34 clones), so every subsequent view of that table showed the inflated count. The original row DOM nodes in `groupedRows[idx].rows` were still referenced but were now detached orphans — so the next merged pass pushed 32 detached originals + 2 non-official = 34 instead of 36. Fix: (a) each first-occurrence table in merged mode is now marked with `data-mb-merged-tbody='true'`; (b) a new pre-pass at the start of `_applyDiscographyViewFilter` restores every marked table's tbody from `groupedRows[idx].rows` (re-inserting the original live row nodes, not clones) before applying the new section; (c) the merged tbody fill continues to use `cloneNode(true)` for the combined rows so the originals in `groupedRows` are never detached."
-          ]
-        },
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "Button label fix: '🧮 Various Artist RGs' renamed to '🧮 Various Artists RGs' (plural 'Artists') in both `pageDefinitions` entries (main fetch `label` and pre-fetch `mainLabel`) and the tooltip `includes()` check."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.208",
       "date": "2026-03-17",
       "sections": [

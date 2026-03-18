@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.210",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Artist-Releasegroups 'merged' view — CAA/EAA artwork toggle-button badge showed stale count from the official section only (e.g. 'Album + Live' showed 22 instead of 32 = 23 official + 9 non-official). Root cause: `_artInitPics` builds each bigbox from the table's current tbody links and keys it by the table's DOM position index. When the merged pass replaced the tbody with combined rows, `_artInitPics` was not re-run for that table, so the bigbox and toggle-button badge still reflected only the original official rows. Fix: added `_artRebuildBigPicsForTable(table)` helper that mirrors the single-table path of `_artInitPics` (count links → create/update toggle button → create/update retry button → init bigbox) for both CAA_CTX and EAA_CTX. Called immediately after the merged tbody fill and also in the restore pre-pass (when leaving merged view) so bigbox counts are always in sync with the current tbody content."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.209",
       "date": "2026-03-17",
       "sections": [

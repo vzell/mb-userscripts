@@ -1,37 +1,5 @@
 [
     {
-      "version": "9.99.209",
-      "date": "2026-03-17",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Bug 1 — 'Complete Discography (merged)' view: after switching away from merged and back, or after visiting official/non-official view after a merged pass, row counts inflated on repeated cycles (e.g. 'Album' official showed 34 instead of 32 after merged filled it with 32+2=34 combined rows). Root cause: the merged tbody fill used `_tbody.innerHTML = ''` which detached the original row DOM nodes from the tbody, then inserted cloneNode copies. On switching back to 'all', the 'all' restore path left the merged-filled tbody untouched (34 clones), so every subsequent view of that table showed the inflated count. The original row DOM nodes in `groupedRows[idx].rows` were still referenced but were now detached orphans — so the next merged pass pushed 32 detached originals + 2 non-official = 34 instead of 36. Fix: (a) each first-occurrence table in merged mode is now marked with `data-mb-merged-tbody='true'`; (b) a new pre-pass at the start of `_applyDiscographyViewFilter` restores every marked table's tbody from `groupedRows[idx].rows` (re-inserting the original live row nodes, not clones) before applying the new section; (c) the merged tbody fill continues to use `cloneNode(true)` for the combined rows so the originals in `groupedRows` are never detached."
-          ]
-        },
-        {
-          "label": "✨ New Features / Changes",
-          "items": [
-            "Button label fix: '🧮 Various Artist RGs' renamed to '🧮 Various Artists RGs' (plural 'Artists') in both `pageDefinitions` entries (main fetch `label` and pre-fetch `mainLabel`) and the tooltip `includes()` check."
-          ]
-        }
-      ]
-    },
-    {
-      "version": "9.99.208",
-      "date": "2026-03-17",
-      "sections": [
-        {
-          "label": "🐛 Bug Fixes",
-          "items": [
-            "Bug 1 — 'Various Artist RGs' button tooltip was showing the same text as 'Artist RGs'. Root cause: the `else if` chain checked `conf.label.includes('Artist RGs')` before `conf.label.includes('Various Artist RGs')`. Since the VA label ('🧮 Various Artist RGs') is a superset of 'Artist RGs', it always matched the first branch and never reached the VA branch. Fixed by swapping the order: 'Various Artist RGs' is now checked first.",
-            "Bug 2 — CAA/EAA per-table and global artwork toggle buttons stopped working after a discography view switch. Root cause: the previous fix for the global badge count set `_artBtn.style.display = 'none'` explicitly on toggle buttons inside hidden h3s. This interfered with `_artCreateOrUpdateToggleButton`'s re-render path which unconditionally resets `btn.style.display = 'inline-flex'` on every `_artInitPics` pass, overwriting the 'none'. Worse, the explicit 'none' broke the per-table button's own click handler (which looks up the bigbox by ID and toggles its display — a side-effect-free operation that cannot be broken by display manipulation on the button itself, but the user interaction was impossible with a visually hidden button). New approach: instead of manipulating art button display directly, we tag the h3 element with `data-mb-disc-hidden='true'` when hiding it, and patched `_artCreateOrUpdateGlobalToggleButton` to skip sub-table toggle buttons whose `closest('h3.mb-toggle-h3')` has `dataset.mbDiscHidden === 'true'`. The global toggle click handler was also patched to skip bigboxes belonging to hidden-section h3s.",
-            "Bug 3 — Density (and all other) buttons appeared broken after collapsing then re-expanding the h2 section header while a discography view filter (Official/Non-Official/merged) was active. Root cause: `makeH2sCollapsible`'s `contentNodes` array is captured at page-render time — before `_artInitBigPics` inserts bigbox divs, and before `_applyDiscographyViewFilter` sets `h3.style.display = 'none'`. On h2 expansion, the handler set `node.style.display = ''` on ALL h3 nodes in contentNodes unconditionally, erasing the `display:none` that our view filter had set. This left ALL h3s visible regardless of the active view, creating an inconsistent state (wrong h2 heading, wrong row counts, wrong button tints, misplaced bigboxes) that made every subsequent button click appear non-functional. Fixed: the h2 expansion path now checks `node.dataset.mbDiscHidden === 'true'` and skips restoring h3s (and their associated tables) that are currently hidden by the active discography view. Fixed additionally: the h2 collapse path now calls `_artHideBigboxesForTable(node)` for each table in contentNodes before hiding it, preventing CAA/EAA artwork stripes from floating when the h2 is collapsed (this was a pre-existing bug exposed when bigboxes were present)."
-          ]
-        }
-      ]
-    },
-    {
       "version": "9.99.207",
       "date": "2026-03-17",
       "sections": [

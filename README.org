@@ -55990,7 +55990,7 @@ h3 header line: "Album + Compilation (168 of 36)"
 - always the latest button clicked (of the 4 "Complete Discography", "Official Discography", "Non-Official Discography",
   "Complete Discography (merged)" should have the green background color
 
-** still bugs  
+** DONE still bugs  
 
 Still bugs
 
@@ -56010,6 +56010,98 @@ in merged mode, make sure that all headers and corresponding sub-tables of the a
 the total count of rows which have CAA artwork images are wrong in the "toggle CAA artwork"-button in the h2 header row
 when switching from the initial rendered page to one of the other views, it always shows the total count of rows which
 have CAA artwork images from the initial "Complete Discography" case.
+
+** bug in merged mode
+
+There is still a bug in "merged" view. Not all h3 headers/sub-tables are included in the "merged" view when compared to
+the h3 "official" and "non-official" headers, but they should. h3 headers which are ONLY in the official view OR h3
+headers which are ONLY in the "un-official" view should BOTH be included in the "merged" view. for same named columns in
+both the "official" and "non-official" views, ALL their individual rows should be added to the same named
+h3 header/sub-table in the "merged" view (so it should be the union of both sub-tables)
+
+The question is if we need the array "h3_all_category_unique_header_array" at all for this algorithm. If not please
+remove from the code with all it's references.
+
+** bug in collapse/uncollapse CAA images, per cell. per column, per table, global
+
+more bugs
+
+1.)
+
+the "Various Artist RGs"-button tooltip is wrong, it shows the same tooltip as the "Artist RGs"-button", please fix this
+
+2.)
+
+there is bug in that the "collapse/uncollapse CAA images"-buttons/glyph are NOT working (only the per column data cell glyph works)
+
+#+begin_example
+per column glyph
+per table button
+global button
+#+end_example
+
+3.)
+
+The h1 header "Density" button does not work on this type of pages anymore
+
+** fix button text and all related code
+
+#+begin_example
+'🧮 Various Artist RGs'  ==> '🧮 Various Artists RGs'
+#+end_example
+
+** merged still wrong
+still bugs
+
+1.)
+
+"merged" view still wrong
+
+lets take the example from https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when the "Various Artist
+RGs"-button has been clicked on the initial page in the merged views:
+
+- After initial rendering of the final table  (counts seem to be OK)
+
+| column name | complete presence | complete row coun | official presence | official row count | non-official presence | non-official row count | merged presence | merged row count |
+|-------------+-------------------+-------------------+-------------------+--------------------+-----------------------+------------------------+-----------------+------------------|
+| Compilation | yes               |                 2 | yes               |                  2 | no                    |                        | yes             |                2 |
+| Album       | yes               |                32 | yes               |                 32 | yes                   |                      2 | yes             |               34 |
+
+- After initial rendering of the final table 
+
+| column name | complete presence | complete row coun | official presence | official row count | non-official presence | non-official row count | merged presence | merged row count |
+|-------------+-------------------+-------------------+-------------------+--------------------+-----------------------+------------------------+-----------------+------------------|
+| Compilation | yes               |                 2 | yes               |                  2 | no                    |                        | yes             |                2 |
+| Album       | yes               |                34 | yes               |                 34 | yes                   |                      2 | yes             |               34 |
+
+2.)
+
+Fix the button text on the VA button on the initial page from
+
+#+begin_example
+'🧮 Various Artist RGs'
+#+end_example
+
+to plural
+
+#+begin_example
+'🧮 Various Artists RGs'
+#+end_example
+
+** bugs
+
+the toggle "CAA artwork count"-button is wrong on some h3 headers in "merged" view: it still shows the count from the "official" view
+
+- After initial rendering of the final table
+
+| column name  | complete presence | complete row count | complete artwork count | official presence | official row count | official artwork count | non-official presence | non-official row count | non-official artwork count | merged presence | merged row count | merged artwork count |
+|--------------+-------------------+--------------------+------------------------+-------------------+--------------------+------------------------+-----------------------+------------------------+----------------------------+-----------------+------------------+----------------------|
+| Album + Live | yes               |                 23 |                     23 | yes               |                 23 |                     23 | yes                   |                     13 |                          9 | yes             |               36 |                   22 |
+
+
+** samples
+
+| Alum + Compilation | yes               |                319 | yes                   | 111 + 319              |                 |                  |
 
 * make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
 

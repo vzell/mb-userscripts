@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.209+2026-03-17
+// @version      9.99.208+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2957,7 +2957,7 @@
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
                 { label: '🧮 Artist RGs',         params: { all: '1', va: '0' } },
-                { label: '🧮 Various Artists RGs', params: { all: '1', va: '1' } }
+                { label: '🧮 Various Artist RGs', params: { all: '1', va: '1' } }
             ],
             features: {
                 columnErasers: [
@@ -2978,7 +2978,7 @@
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
                 { mainLabel: '🧮 Artist RGs',         pre_fetch_type: 'Official', params: { all: '0', va: '0' } },
-                { mainLabel: '🧮 Various Artists RGs', pre_fetch_type: 'Official', params: { all: '0', va: '1' } },
+                { mainLabel: '🧮 Various Artist RGs', pre_fetch_type: 'Official', params: { all: '0', va: '1' } },
             ]
         },
         {
@@ -9577,7 +9577,7 @@
         if (conf.label.includes('Show all')) {
             // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
             eb.title = `Fetch all the table data from the MusicBrainz backend database`;
-        } else if (conf.label.includes('Various Artists RGs')) {
+        } else if (conf.label.includes('Various Artist RGs')) {
             // Must be checked BEFORE 'Artist RGs' because the VA label also contains 'Artist RGs'
             eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
         } else if (conf.label.includes('Artist RGs')) {
@@ -18030,70 +18030,40 @@
         const _container = document.getElementById('content') || document.body;
         const _allH3s = Array.from(_container.querySelectorAll('h3.mb-toggle-h3'));
 
-        // ── Restore any tables that were modified by a previous 'merged' pass ──
-        // The merged pass replaces each first-occurrence table's <tbody> with
-        // combined rows (cloneNode copies).  This leaves the DOM out of sync with
-        // groupedRows when switching away from merged view.  We restore every table
-        // that carries the data-mb-merged-restored attribute before applying the
-        // new section, so subsequent passes always start from a clean state.
-        if (section !== 'merged') {
-            _allH3s.forEach((_h3, _idx) => {
-                const _walkerR = (() => {
-                    let _w = _h3.nextElementSibling;
-                    while (_w && (_w.classList.contains('mb-caa-bigbox') ||
-                                  _w.classList.contains('mb-eaa-bigbox'))) {
-                        _w = _w.nextElementSibling;
-                    }
-                    return (_w && _w.classList.contains('tbl')) ? _w : null;
-                })();
-                if (_walkerR && _walkerR.dataset.mbMergedTbody === 'true' && groupedRows[_idx]) {
-                    const _tbodyR = _walkerR.querySelector('tbody');
-                    if (_tbodyR) {
-                        _tbodyR.innerHTML = '';
-                        const _fragR = document.createDocumentFragment();
-                        groupedRows[_idx].rows.forEach(r => _fragR.appendChild(r));
-                        _tbodyR.appendChild(_fragR);
-                    }
-                    _walkerR.dataset.mbTotalRows = String(groupedRows[_idx].rows.length);
-                    delete _walkerR.dataset.mbMergedTbody;
-                    // Restore h3 count stat to the group's own row count
-                    const _cStat = _h3.querySelector('.mb-row-count-stat');
-                    if (_cStat) _cStat.textContent = `(${groupedRows[_idx].rows.length})`;
-                }
-            });
-        }
-
         // ── Build per-category data for 'merged' mode ────────────────────────
         // 'merged' shows one h3/table per unique category name, combining ALL rows
         // from every same-named h3 group (official + non-official) into the first
         // occurrence's <tbody>.
         //
-        // IMPORTANT: _mergedRowsByName stores REFERENCES to the row DOM nodes from
-        // groupedRows.  The merged tbody fill uses cloneNode(true) on those references
-        // so the originals stay in groupedRows intact.  The first-occurrence table's
-        // tbody is then marked with data-mb-merged-tbody='true' so the restore pass
-        // above can repopulate it correctly when switching away from merged view.
+        // Category key source: h3_all_category_header_array[_idx] where _idx is the
+        // h3's position in the live DOM NodeList.  This is always in sync with
+        // groupedRows because renderGroupedTable creates h3s in groupedRows order.
+        //
+        // Pre-compute map: categoryName → first DOM index (the one that stays visible)
+        // and a combined row count map: categoryName → total rows across all same-named groups.
         const _mergedFirstIdxByName  = new Map(); // categoryName → first h3 DOM idx
-        const _mergedRowsByName      = new Map(); // categoryName → source row refs[]
+        const _mergedRowsByName      = new Map(); // categoryName → cloned rows[]
         const _mergedVisibleIndices  = new Set(); // h3 DOM indices that are shown
 
         if (section === 'merged') {
-            // Pass 1: find first-occurrence index and accumulate row references.
+            // Pass 1: find first-occurrence index and accumulate rows per category name.
             _allH3s.forEach((_h3, _idx) => {
-                // Use the array for the category name; fall back to text-node parsing.
+                // Use the array for the category name; fall back to stripping the h3
+                // text content of controls if the array is somehow shorter.
                 const _cat = (_idx < h3_all_category_header_array.length)
                     ? h3_all_category_header_array[_idx]
-                    : (Array.from(_h3.childNodes)
+                    : (_h3.querySelector('.mb-toggle-icon') && _h3.childNodes.length
+                        ? Array.from(_h3.childNodes)
                             .filter(n => n.nodeType === Node.TEXT_NODE)
-                            .map(n => n.textContent.trim()).join('')
-                            .replace(/^\s*[\u25bc\u25b2]\s*/u, '').trim() || 'Other');
+                            .map(n => n.textContent.trim()).join('').replace(/^\s*[\u25bc\u25b2]\s*/u, '').trim()
+                        : 'Other');
 
                 if (!_mergedFirstIdxByName.has(_cat)) {
                     _mergedFirstIdxByName.set(_cat, _idx);
                     _mergedVisibleIndices.add(_idx);
                     _mergedRowsByName.set(_cat, []);
                 }
-                // Accumulate row REFERENCES (not clones) — the tbody fill clones them.
+                // Accumulate rows from groupedRows for this category
                 if (groupedRows[_idx]) {
                     _mergedRowsByName.get(_cat).push(...groupedRows[_idx].rows);
                 }
@@ -18157,10 +18127,9 @@
                 if (_tbl) _tbl.style.display = 'none';
 
             } else if (section === 'all') {
-                // ── Restoring to 'all': leave table display + bigbox untouched ─
-                // The h3 click-handler owns their visibility state.
-                // The tbody restore is handled by the pre-pass above (data-mb-merged-tbody).
-                // Just patch mbTotalRows back to the group's own count.
+                // ── Restoring to 'all': leave table + bigbox display untouched ─
+                // The h3 click-handler owns their state; restoring h3 visibility
+                // is sufficient.  Patch mbTotalRows back to the group's own count.
                 if (_tbl && groupedRows[_idx]) {
                     _tbl.dataset.mbTotalRows = String(groupedRows[_idx].rows.length);
                 }
@@ -18171,35 +18140,29 @@
                 //    this category (pre-accumulated in _mergedRowsByName) ────────
                 const _cat = (_idx < h3_all_category_header_array.length)
                     ? h3_all_category_header_array[_idx] : '';
-                const _srcRows    = _mergedRowsByName.get(_cat) || [];
+                const _combinedRows = _mergedRowsByName.get(_cat) || [];
                 const _h3Icon     = _h3.querySelector('.mb-toggle-icon');
                 const _isExpanded = _h3Icon && _h3Icon.textContent === '▼';
 
                 if (_tbl) {
-                    // Fill tbody with cloneNode(true) copies of the source rows.
-                    // The source rows in _mergedRowsByName are REFERENCES to the
-                    // nodes in groupedRows[idx].rows — cloning them leaves groupedRows
-                    // intact so the restore pass (when leaving merged) can re-insert
-                    // the originals without needing to clone again.
+                    // Replace tbody content with combined rows (cloneNode so
+                    // groupedRows source rows remain intact for 'all' restore)
                     const _tbody = _tbl.querySelector('tbody');
                     if (_tbody) {
                         _tbody.innerHTML = '';
                         const _frag = document.createDocumentFragment();
-                        _srcRows.forEach(r => _frag.appendChild(r.cloneNode(true)));
+                        _combinedRows.forEach(r => _frag.appendChild(r.cloneNode(true)));
                         _tbody.appendChild(_frag);
                     }
 
                     _tbl.style.display = _isExpanded ? '' : 'none';
-                    _tbl.dataset.mbTotalRows   = String(_srcRows.length);
-                    // Mark this table so the restore pass knows to repopulate its
-                    // tbody from groupedRows when switching away from merged view.
-                    _tbl.dataset.mbMergedTbody = 'true';
+                    _tbl.dataset.mbTotalRows = String(_combinedRows.length);
 
                     // Update the h3 count stat to show the combined row count
                     const _countStat = _h3.querySelector('.mb-row-count-stat');
-                    if (_countStat) _countStat.textContent = `(${_srcRows.length})`;
+                    if (_countStat) _countStat.textContent = `(${_combinedRows.length})`;
 
-                    _sectionRowTotal += _srcRows.length;
+                    _sectionRowTotal += _combinedRows.length;
                 }
                 _bigboxes.forEach(b => {
                     if (_isExpanded) {

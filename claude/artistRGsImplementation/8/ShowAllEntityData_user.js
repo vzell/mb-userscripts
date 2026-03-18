@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.209+2026-03-17
+// @version      9.99.210+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -17862,6 +17862,53 @@
     }
 
     /**
+     * Rebuilds the CAA and EAA bigbox artwork strips for a single table after
+     * its tbody content has been replaced (e.g. by the 'merged' discography view
+     * fill or the subsequent restore pass).
+     *
+     * Mirrors the single-table path inside `_artInitPics` but operates on an
+     * already-known table element without the full querySelectorAll pass.
+     *
+     * Guards: `Lib.settings.sa_enable_caa_pics` must be true; `_caaQueue` must
+     * be initialised (initCaaPics must have run before this call).
+     *
+     * @param {HTMLTableElement} table  The table whose bigbox should be rebuilt.
+     */
+    function _artRebuildBigPicsForTable(table) {
+        if (!Lib.settings.sa_enable_caa_pics) return;
+        if (!_caaQueue) return; // queue not yet initialised
+
+        // Determine this table's DOM index among all table.tbl elements — the
+        // bigbox and toggle button are keyed by this index.
+        const _allTables = Array.from(document.querySelectorAll('table.tbl'));
+        const _tblIdx    = _allTables.indexOf(table);
+        if (_tblIdx === -1) return; // table not in DOM
+
+        for (const _ctx of [CAA_CTX, EAA_CTX]) {
+            const _hasCol = caaFindColumnByName(table, _ctx.column) !== -1;
+            const _hasAdd = !!(activeDefinition &&
+                               activeDefinition.features &&
+                               activeDefinition.features[_ctx.addFeature]);
+            if (!_hasCol && !_hasAdd) continue;
+
+            const { count: _cnt, firstImgUrl: _url } = _artCountLinks(_ctx, table);
+
+            if (_cnt === 0) {
+                // No links — clear stale bigbox and hide toggle button
+                const _staleBox = document.getElementById(_ctx.boxPrefix + '-' + _tblIdx);
+                if (_staleBox) { _staleBox.innerHTML = ''; _staleBox.style.display = 'none'; }
+                const _staleBtn = document.getElementById(_ctx.btnPrefix + '-' + _tblIdx);
+                if (_staleBtn) _staleBtn.style.display = 'none';
+                continue;
+            }
+
+            const _btnId = _artCreateOrUpdateToggleButton(_ctx, table, _tblIdx, _cnt, _url);
+            _artCreateOrUpdateRetryButton(_ctx, table, _tblIdx);
+            _artInitBigPics(_ctx, table, _tblIdx, _btnId);
+        }
+    }
+
+    /**
      * Injects four discography view-mode buttons into controlsContainer for
      * artist-releasegroups pages after the combined (all:'1') render completes
      * and the h3 category arrays have been built.
@@ -18059,6 +18106,8 @@
                     // Restore h3 count stat to the group's own row count
                     const _cStat = _h3.querySelector('.mb-row-count-stat');
                     if (_cStat) _cStat.textContent = `(${groupedRows[_idx].rows.length})`;
+                    // Rebuild the CAA/EAA bigbox to reflect the restored row set.
+                    _artRebuildBigPicsForTable(_walkerR);
                 }
             });
         }
@@ -18198,6 +18247,10 @@
                     // Update the h3 count stat to show the combined row count
                     const _countStat = _h3.querySelector('.mb-row-count-stat');
                     if (_countStat) _countStat.textContent = `(${_srcRows.length})`;
+
+                    // Rebuild the CAA/EAA bigbox for this table so the artwork
+                    // strip and toggle-button badge reflect the combined row set.
+                    _artRebuildBigPicsForTable(_tbl);
 
                     _sectionRowTotal += _srcRows.length;
                 }
