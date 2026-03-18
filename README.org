@@ -56200,10 +56200,6 @@ Another bug
 |                  |          |      |          |          |      |          |              |      |          |        |      |          |
 |------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
 
-** misc
-
-| Alum + Compilation | yes | 319 | yes | 111 + 319 |
-
 ** claude
 *** initial
 
@@ -56291,9 +56287,8 @@ Explain how is the current "Memory Usage" value calculated (based on what)
 |           | ▶ [collapsable per column multi-row list [column name,visibility,sort state,unique values,multi-row cells,filter state,resize state] |              |               |            |                |
 |           | Release,yes,descending,355,0,"live",manually - 601px                                                                                 |              |               |            |                |
 
-
 ** the stats panel should always stay in sync with the current page information
-** bugs
+** DONE bugs
 
 Some bugs 
 1.)
@@ -56316,7 +56311,7 @@ add a new configuration section in "const configSchema" for the Statistics panel
 "Escape" (but also the "X" icon) should clear the filter on first press and only when the filter filed is empty the
 whole dialog should be closed
 
-** bugs
+** DONE bugs
 
 some more bugs
 
@@ -56333,7 +56328,7 @@ filter string highlightning still onyl works for the first input character of a 
 the "clear the filter string first (x)" is not clickable at the very first rendering of the dialog with all defaults. It
 looks like the draggable function has taken over the x-button the very first time. After resizing it seems to work
 
-** bugs
+** DONE bugs
 
 1.)
 
@@ -56349,7 +56344,402 @@ and text
 
 the total artwork thumbnails present in the "toggle CAA artwork"-button, is missing in the "Total artworks" column, beside "Filtered rows"
 
-** fix CCA art work count + add them + total rows to summary, on the table level ist should be the filtered state and  artwork count per event/release
+** DONE fix CCA art work count + add them + total rows to summary, on the table level ist should be the filtered state and  artwork count per event/release
+
+some more bugs
+
+1.)
+
+Actually reintroduce the old "Table Detail" structure format
+
+#+begin_example
+  <tr>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; white-space: nowrap;">
+      <span style="font-size:0.8em;color:#555">h1
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle;">
+      <strong style="color:#1565c0">The Stone Pony
+      </strong>
+    </td>
+    <td title="No sub-table filter" style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; white-space: nowrap;">
+      <span style="color:#bbb">—
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; text-align: right; white-space: nowrap;">
+      <span style="font-weight:700">109
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; text-align: right; white-space: nowrap;">
+      <span style="color:#bbb">—
+      </span>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; white-space: nowrap;">
+      <span style="font-size:0.8em;color:#555">h2/h3
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle;">
+      <span style="font-weight:600">Events
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85);">
+      <span style="font-size:0.8em;color:#555">Table filter
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85); text-align: right;">
+      <span style="font-size:0.8em;color:#555">Filtered rows
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85); text-align: right;">
+      <span style="font-size:0.8em;color:#555">Total artworks
+      </span>
+    </td>
+  </tr>
+#+end_example
+
+instead of the current one
+
+#+begin_example
+  <tr>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; white-space: nowrap;">
+      <span style="font-size:0.8em;color:#555">Table
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85);">
+      <span style="font-size:0.8em;color:#555">Table filter
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85); text-align: right;">
+      <span style="font-size:0.8em;color:#555">Filtered rows
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85); text-align: right;">
+      <span style="font-size:0.8em;color:#555">Total artworks
+      </span>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-weight: 700;">
+      <strong style="color:#1565c0">Events
+      </strong>
+    </td>
+    <td title="No sub-table filter" style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; white-space: nowrap;">
+      <span style="color:#bbb">—
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; text-align: right; white-space: nowrap;">
+      <span style="font-weight:700">109
+      </span>
+    </td>
+    <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; text-align: right; white-space: nowrap;">
+      <span style="color:#bbb">—
+      </span>
+    </td>
+  </tr>
+#+end_example
+
+but
+
+- change the span
+
+#+begin_example
+<span style="font-size:0.8em;color:#555">h1
+      </span>
+#+end_example
+
+in general for "single"-table pageTypes to the last string "<yyyy>" in the attribute "data-label="Show all <xxx> for <yyyy>" from the button 
+
+#+begin_example
+<button type="button" title="Fetch all the table data from the MusicBrainz backend database (Ctrl+M, then 1)" data-label="Show all Events for Place" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(204, 255, 204); color: black;" class="">🧮¹ Show all Events for Place
+</button>
+#+end_example
+
+e.g. in this case to "Place"
+
+- and the span
+
+#+begin_example
+      <span style="font-size:0.8em;color:#555">h2/h3
+      </span>
+    </td>
+#+end_example
+
+to
+
+#+begin_example
+      <span style="font-size:0.8em;color:#555">Table name
+      </span>
+    </td>
+#+end_example
+
+2.)
+
+the total unfiltered artwork thumbnails (without filtering the table data in whatever way) should go in the column "CAA artwork count" in the following ascii table
+
+#+begin_example
+| Statistic                      | Value | Comment |
+|--------------------------------+-------+---------|
+| Network Loading time for CAA   |       |         |
+| IndexedDB Loading time for CAA |       |         |
+| Memory Usage                   |       |         |
+| Page Type                      |       |         |
+| Table Type                     |       |         |
+| Sub-tables                     |       |         |
+| CAA artwork count              |       |         |
+| Total columns                  |       |         |
+| Visible columns                |       |         |
+| Hidden columns                 |       |         |
+| Global Filter                  |       |         |
+| Table Filters                  |       |         |
+| Columns Filters                |       |         |
+| Resize Status                  |       |         |
+| Manually resized columns       |       |         |
+#+end_example
+
+** bugs - 6
+
+some more bugs
+
+1.)
+
+the total unfiltered artwork thumbnails (without filtering the table data in whatever way) should go in the column "CAA
+artwork count" in the following ascii table (it must be grabbed when the final page got rendered the first time, as
+there is NO filter involved at that time), on the page
+https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e that value is calulated the right way, but it does
+not change anymore over time (for the column which displays the filtered value, see below when we rename that column
+value appropriately)
+
+#+begin_example
+| Statistic                      | Value | Comment |
+|--------------------------------+-------+---------|
+| Network Loading time for CAA   |       |         |
+| IndexedDB Loading time for CAA |       |         |
+| Memory Usage                   |       |         |
+| Page Type                      |       |         |
+| Table Type                     |       |         |
+| Sub-tables                     |       |         |
+| Total table rows               |       | total number of unfiltered table rows |
+| Total CAA front artwork count  |       |         |
+| Total columns                  |       |         |
+| Visible columns                |       |         |
+| Hidden columns                 |       |         |
+| Global Filter                  |       | check the '🔍 Filter' column in the 'Table Detail' section below |
+| Sub-table Filters              |       |         |
+| Columns Filters                |       |         |
+| Resize Status                  |       |         |
+| Manually resized columns       |       |         |
+#+end_example
+
+2.)
+
+for "single"-table pageTypes the '<td title="No sub-table filter"' in
+
+#+begin_example
+<td title="No sub-table filter" style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; white-space: nowrap;">
+  <span style="color:#bbb">—
+  </span>
+</td>
+
+<td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85);">
+  <span style="font-size:0.8em;color:#555">Table filter
+  </span>
+</td>
+#+end_example
+
+should actually be replaced with the value of the "Global Filter" and the tooltip should actually tell exactly this fact.
+
+3.)
+
+The span
+
+#+begin_example
+<span style="font-size:0.8em;color:#555">Total artworks</span>
+#+end_example
+
+should be renamed to
+
+#+begin_example
+<span style="font-size:0.8em;color:#555">Filtered CCA artwork count</span>
+#+end_example
+
+in the following block (because this are the filtered rows wich still CAA thumbnail images
+
+#+begin_example
+<td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; text-align: right; white-space: nowrap;">🖼️
+  <span style="color:#1565c0;font-weight:700">122
+  </span>
+</td>
+<td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85); text-align: right;">
+  <span style="font-size:0.8em;color:#555">Total artworks
+  </span>
+</td>
+
+#+end_example
+
+
+4.)
+
+when resizing the UI larger with the resize handle and moving the mouse out of the dialog, the dialog closes immediately. That should NOT happen, please fix
+
+5.)
+
+In the following block
+
+#+begin_example
+            type: 'label-releases',
+            match: (path) => path.includes('/label'),
+            buttons: [ { label: 'Show all Releases for Label' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+#+end_example
+
+change the line
+
+#+begin_example
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+#+end_example
+
+to
+
+#+begin_example
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+#+end_example
+
+** bugs
+
+Some more bugs
+
+1.)
+
+Extract the following types of column counts
+
+#+begin_example
+| Total original columns         |       | total number of columns in original MusicBrainz page table |
+| Total synthetic columns        |       | total number of columns extracted from the original columns in the final rendered table |
+| Total columns                  |       | total effective number of columns in the final rendered table |
+#+end_example
+
+and render them in the final "Global Statistics" (for the "synthetic columns" check the configuration section for
+syntheticExtractor definitions)
+
+#+begin_example
+| Statistic                      | Value | Comment |
+|--------------------------------+-------+---------|
+| Network Loading time for CAA   |       |         |
+| IndexedDB Loading time for CAA |       |         |
+| Memory Usage                   |       |         |
+| Page Type                      |       |         |
+| Table Type                     |       |         |
+| Sub-tables                     |       |         |
+| Total table rows               |       | total number of unfiltered table rows |
+| Total CAA front artwork count  |       |         |
+| Total original columns         |       | total number of columns in original MusicBrainz page table |
+| Total synthetic columns        |       | total number of columns extracted from the original columns in the final rendered table |
+| Total columns                  |       | total effective number of columns in the final rendered table |
+| Visible columns                |       |         |
+| Hidden columns                 |       |         |
+| Global Filter                  |       |         |
+| Total Sub-table Filters        |       | check the '🔍 Filter' column in the 'Table Detail' sections below |
+| Total Columns Filters          |       | global number of filters active over all sub-tables |
+| Resize Status                  |       |         |
+| Total manually resized columns |       | total manually resized columns over all sub-tables |
+#+end_example
+
+2.) 
+
+the UI dialog is ONLY horizontally resizable, please fix
+
+3.) 
+
+in "multi"-table mode pageTypes, all the "Table Detail" representations should startout in collapsed mode inside the UI
+dialog
+
+4.)
+
+create a new section in "const configSchema" for "Table resize feature", move the current 
+
+#+begin_example
+        sa_enable_column_resizing: {
+            label: 'Enable Column Resizing',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable manual column resizing with mouse drag and "↔️ Resize" button'
+        },
+#+end_example
+
+section to it and add a boolean variable "sa_auto_resize_columns" (default: false) to it, with the implementation, when
+"true" emulate pressing the h1 header line button "Resize"
+
+5.) 
+
+additionally move the
+
+#+begin_example
+        sa_enable_stats_panel: {
+            label: 'Enable Quick Stats Panel',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "📊 Statistics" button for displaying table statistics'
+        },
+#+end_example
+
+to the
+
+#+begin_example
+        // ============================================================
+        // STATISTICS PANEL SECTION
+        // ============================================================
+#+end_example
+
+section
+
+and relocate
+
+in the block
+
+#+begin_example
+        // ============================================================
+        // LOAD AND SAVE DATA TO/FROM DISK SECTION
+        // ============================================================
+        // ============================================================
+        // STATISTICS PANEL SECTION
+        // ============================================================
+#+end_example
+
+the
+
+#+begin_example
+        // ============================================================
+        // LOAD AND SAVE DATA TO/FROM DISK SECTION
+        // ============================================================
+#+end_example
+
+right in front of the block
+
+#+begin_example
+        divider_save_load: {
+            type: 'divider',
+            label: '💾 LOAD AND SAVE DATA TO/FROM DISK'
+        },
+#+end_example
+
+
+* fix CCA art work count + add them + total rows to summary, on the table level ist should be the filtered state and  artwork count per event/release
+
+* remove 
+
+#+begin_example
+  <span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
+  </span>
+#+end_example
+
+from "Release" at https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
+
+
 
 * make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
 
