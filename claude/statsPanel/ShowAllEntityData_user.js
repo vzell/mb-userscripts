@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.211+2026-03-17
+// @version      9.99.212+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -7550,160 +7550,761 @@
     }
 
     /**
-     * Show table statistics panel
-     * Displays useful information about the current table state
+     * Show table statistics panel (revamped).
+     *
+     * Layout (single-table mode):
+     *   ┌─ Header bar: title + quick-filter input + close button ─────────────┐
+     *   │ § Global statistics table                                            │
+     *   │ § Per-table section (h1/h2 header info + row counts + artwork)      │
+     *   │   └ ▶ Collapsable per-column detail table                           │
+     *   └──────────────────────────────────────────────────────────────────────┘
+     *
+     * The panel is scrollable and all text rows are filterable via a quick-filter
+     * at the top that highlights matching strings.
+     *
+     * Memory Usage is reported as the JS heap size via `performance.memory`
+     * (Chromium-only; falls back to "n/a") rather than the old fictional
+     * "100 bytes × row count" estimate.
      */
     function showStatsPanel() {
-        // Check if panel already exists (toggle behavior)
+        // Toggle: remove if already open
         const existing = document.getElementById('mb-stats-panel');
-        if (existing) {
-            existing.remove();
-            return;
-        }
+        if (existing) { existing.remove(); return; }
 
         const tables = document.querySelectorAll('table.tbl');
-        if (tables.length === 0) {
+        if (!tables.length) {
             alert('No table found to show statistics');
-            Lib.warn('stats', 'No table found for statistics panel');
             return;
         }
 
-        // Collect statistics across ALL tables
-        let totalRowCount = 0;
-        let visibleRowCount = 0;
-        let totalColumnCount = 0;
-        let visibleColumnCount = 0;
-        const subTableCount = tables.length;
+        // ── 1. Gather global statistics ──────────────────────────────────────
 
-        tables.forEach(table => {
-            const rows = table.querySelectorAll('tbody tr');
-            totalRowCount += rows.length;
-            visibleRowCount += Array.from(rows).filter(r => r.style.display !== 'none').length;
+        // CAA fetch stats
+        const _cs  = (typeof _caaFetchStats !== 'undefined') ? _caaFetchStats : null;
+        const _caaElapsedMs = (_cs && _cs.startTime !== null)
+            ? (performance.now() - _cs.startTime) : null;
+        const _fmtMs = (ms) => {
+            if (ms === null || ms === undefined) return '—';
+            if (ms < 1000)   return `${Math.round(ms)}\u202fms`;
+            const s = ms / 1000;
+            if (s < 60)      return `${s.toFixed(1)}\u202fs`;
+            const m = Math.floor(s / 60);
+            return `${m}\u202fm\u202f${Math.round(s % 60)}\u202fs`;
+        };
+        const _caaNetwork = _cs
+            ? (_cs.icon.network + _cs.inline.network)
+            : null;
+        const _caaIdb     = _cs
+            ? (_cs.icon.idb + _cs.inline.idb)
+            : null;
+
+        // Memory (JS heap, Chromium-only)
+        const _mem = (performance && performance.memory)
+            ? performance.memory
+            : null;
+        const _fmtBytes = (b) => {
+            if (!b) return '—';
+            if (b < 1024)        return `${b}\u202fB`;
+            if (b < 1048576)     return `${(b/1024).toFixed(1)}\u202fKiB`;
+            if (b < 1073741824)  return `${(b/1048576).toFixed(1)}\u202fMiB`;
+            return `${(b/1073741824).toFixed(2)}\u202fGiB`;
+        };
+        const _memStr = _mem
+            ? `${_fmtBytes(_mem.usedJSHeapSize)} used / ${_fmtBytes(_mem.totalJSHeapSize)} total`
+            : '— (not available in this browser)';
+        const _memComment = _mem
+            ? 'JS heap via performance.memory (Chromium)'
+            : '';
+
+        // Aggregate row / column counts
+        let totalRows = 0, visibleRows = 0;
+        tables.forEach(t => {
+            const rs = t.querySelectorAll('tbody tr');
+            totalRows    += rs.length;
+            visibleRows  += Array.from(rs).filter(r => r.style.display !== 'none').length;
+        });
+        const hiddenRows = totalRows - visibleRows;
+
+        const firstTable = tables[0];
+        const headerRow  = firstTable.querySelector('thead tr:first-child');
+        let totalCols = 0, visibleCols = 0;
+        if (headerRow) {
+            const hs = Array.from(headerRow.cells);
+            totalCols   = hs.length;
+            visibleCols = hs.filter(h => h.style.display !== 'none').length;
+        }
+        const hiddenCols = totalCols - visibleCols;
+
+        const tableMode   = (activeDefinition && activeDefinition.tableMode) || 'single';
+        const subTblCount = tables.length;
+
+        // Filter stats
+        const _gfEl   = document.getElementById('mb-global-filter-input');
+        const _gfRaw  = _gfEl ? stripFilterPrefix(_gfEl.value || '') : '';
+        const _colFlt = Array.from(document.querySelectorAll('.mb-col-filter-input'))
+            .filter(i => stripColFilterPrefix(i.value)).length;
+        const _stFlt  = Array.from(document.querySelectorAll('.mb-subtable-filter-container input[type="text"]'))
+            .filter(i => i.value.trim()).length;
+
+        // Resize state
+        const _resizeStatus = (typeof isManuallyResized !== 'undefined' && isManuallyResized)
+            ? 'Manual ✏️'
+            : (typeof isAutoResized !== 'undefined' && isAutoResized)
+                ? 'Auto ⚡'
+                : 'None';
+
+        // Manually resized columns: count colgroup cols with explicit non-zero width set
+        let _manualResizedCount = 0;
+        tables.forEach(t => {
+            const cg = t.querySelector('colgroup');
+            if (cg) {
+                Array.from(cg.children).forEach(col => {
+                    const w = parseInt(col.style.width);
+                    if (w > 0) _manualResizedCount++;
+                });
+            }
         });
 
-        // Get column count from first table's header row (not filter row)
-        const firstTable = tables[0];
-        const headerRow = firstTable.querySelector('thead tr:first-child');
-        if (headerRow) {
-            const headers = Array.from(headerRow.cells);
-            totalColumnCount = headers.length;
-            visibleColumnCount = headers.filter(h => h.style.display !== 'none').length;
-        }
+        // ── 2. Build per-table column detail data ────────────────────────────
+        // For each table: name (from h3 or h2), filter state, row counts,
+        // artwork count, and per-column breakdown.
+        const _h1Text = (() => {
+            const h1 = document.querySelector('.artistheader h1, .rgheader h1, .labelheader h1, h1');
+            if (!h1) return '';
+            const bdi = h1.querySelector('bdi');
+            return (bdi ? bdi.textContent : h1.textContent).trim().replace(/\s+/g, ' ');
+        })();
 
-        // Calculate memory estimate (rough)
-        const avgRowSize = 100; // bytes per row (rough estimate)
-        const memoryKB = Math.round(totalRowCount * avgRowSize / 1024);
-
-        // Get filter status
-        const globalFilterInput = document.getElementById('mb-global-filter-input');
-        const globalFilter = globalFilterInput?.value || '';
-        const columnFilters = Array.from(document.querySelectorAll('.mb-col-filter-input'))
-            .filter(inp => stripColFilterPrefix(inp.value))
-            .length;
-
-        // Calculate percentages
-        const rowPercentage = totalRowCount > 0
-            ? Math.round((visibleRowCount / totalRowCount) * 100)
-            : 100;
-        const colPercentage = totalColumnCount > 0
-            ? Math.round((visibleColumnCount / totalColumnCount) * 100)
-            : 100;
-
-        // Count hidden items
-        const hiddenRows = totalRowCount - visibleRowCount;
-        const hiddenColumns = totalColumnCount - visibleColumnCount;
-
-        // Create panel
-        const statsPanel = document.createElement('div');
-        statsPanel.id = 'mb-stats-panel';
-        statsPanel.style.cssText = `
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: white;
-            border: 2px solid #4CAF50;
-            border-radius: 8px;
-            padding: 15px 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 10000;
-            font-size: 0.9em;
-            min-width: 280px;
-            max-width: 350px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        `;
-
-        statsPanel.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #4CAF50; padding-bottom: 10px;">
-                <strong style="font-size: 1.1em; color: #4CAF50;">📊 Table Statistics</strong>
-                <button id="mb-stats-close" style="background: none; border: none; font-size: 1.3em; cursor: pointer; color: #666; padding: 0; line-height: 1;">✕</button>
-            </div>
-            <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 15px; line-height: 1.8;">
-                <div style="font-weight: 600;">Sub-Tables:</div>
-                <div>${subTableCount} ${subTableCount === 1 ? 'table' : 'tables'}</div>
-
-                <div style="font-weight: 600;">Total Rows:</div>
-                <div>${totalRowCount.toLocaleString()}</div>
-
-                <div style="font-weight: 600;">Visible Rows:</div>
-                <div>${visibleRowCount.toLocaleString()} <span style="color: #666; font-size: 0.9em;">(${rowPercentage}%)</span></div>
-
-                <div style="font-weight: 600;">Filtered Out:</div>
-                <div style="color: ${hiddenRows > 0 ? '#f44336' : '#666'};">${hiddenRows.toLocaleString()}</div>
-
-                <div style="font-weight: 600;">Total Columns:</div>
-                <div>${totalColumnCount}</div>
-
-                <div style="font-weight: 600;">Visible Columns:</div>
-                <div>${visibleColumnCount} <span style="color: #666; font-size: 0.9em;">(${colPercentage}%)</span></div>
-
-                <div style="font-weight: 600;">Hidden Columns:</div>
-                <div style="color: ${hiddenColumns > 0 ? '#f44336' : '#666'};">${hiddenColumns}</div>
-
-                <div style="font-weight: 600;">Memory Usage:</div>
-                <div>~${memoryKB.toLocaleString()} KB</div>
-
-                <div style="font-weight: 600;">Global Filter:</div>
-                <div style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${globalFilter}">${globalFilter ? `"${globalFilter}"` : '<em style="color: #999;">none</em>'}</div>
-
-                <div style="font-weight: 600;">Column Filters:</div>
-                <div>${columnFilters || 0} active</div>
-
-                <div style="font-weight: 600;">Page Type:</div>
-                <div style="font-family: monospace; font-size: 0.85em;">${pageType || 'unknown'}</div>
-            </div>
-            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 0.85em; color: #666; text-align: center;">
-                Click outside or press Escape to close
-            </div>
-        `;
-
-        document.body.appendChild(statsPanel);
-
-        // Close button handler
-        document.getElementById('mb-stats-close').onclick = () => {
-            statsPanel.remove();
-        };
-
-        // Close on Escape
-        const closeOnEscape = (e) => {
-            if (e.key === 'Escape') {
-                statsPanel.remove();
-                document.removeEventListener('keydown', closeOnEscape);
-            }
-        };
-        document.addEventListener('keydown', closeOnEscape);
-
-        // Close on click outside (after a short delay)
-        setTimeout(() => {
-            const closeOnClickOutside = (e) => {
-                if (!statsPanel.contains(e.target)) {
-                    statsPanel.remove();
-                    document.removeEventListener('click', closeOnClickOutside);
+        const _tableData = Array.from(tables).map((tbl, tIdx) => {
+            // Table name from h2/h3 header
+            const _h2 = (() => {
+                const allH2 = Array.from(document.querySelectorAll('h2'));
+                let last = null;
+                for (const h of allH2) {
+                    if (h.compareDocumentPosition(tbl) & Node.DOCUMENT_POSITION_FOLLOWING) last = h;
+                    else break;
                 }
-            };
-            document.addEventListener('click', closeOnClickOutside);
-        }, 100);
+                if (!last) return '';
+                return Array.from(last.childNodes)
+                    .filter(n => n.nodeType === Node.TEXT_NODE)
+                    .map(n => n.textContent.trim()).join('').trim()
+                    || last.textContent.replace(/[\u25bc\u25b2▼▲]/g, '').replace(/\([^)]*\)/g, '').trim();
+            })();
+            const _h3 = (() => {
+                const h3 = findH3ForTable(tbl);
+                if (!h3) return '';
+                return Array.from(h3.childNodes)
+                    .filter(n => n.nodeType === Node.TEXT_NODE)
+                    .map(n => n.textContent.trim()).join('')
+                    .replace(/^\s*[\u25bc\u25b2]\s*/u, '').replace(/\([^)]*\)/g, '').trim();
+            })();
+            const _name = _h3 || _h2 || `Table ${tIdx + 1}`;
 
-        Lib.debug('stats', `Statistics panel displayed: ${visibleRows.length}/${allRows.length} rows, ${visibleColumns}/${totalColumns} columns`);
+            // Row counts
+            const _rs   = Array.from(tbl.querySelectorAll('tbody tr'));
+            const _total = _rs.length;
+            const _vis   = _rs.filter(r => r.style.display !== 'none').length;
+
+            // Sub-table filter value
+            const _stfInp = (() => {
+                const h3El = findH3ForTable(tbl);
+                if (!h3El) return '';
+                const inp = h3El.querySelector('.mb-subtable-filter-container input[type="text"]');
+                return inp ? inp.value.trim() : '';
+            })();
+
+            // Artwork count from toggle-button badge
+            const _caaBtn = document.getElementById('mb-caa-toggle-btn-' + tIdx);
+            const _caaBadge = _caaBtn ? _caaBtn.querySelector('.mb-caa-toggle-count') : null;
+            const _caaCount = _caaBadge ? (parseInt(_caaBadge.textContent, 10) || 0) : 0;
+
+            // Per-column detail
+            const _tHdrRow = tbl.querySelector('thead tr:first-child');
+            const _columns = _tHdrRow ? Array.from(_tHdrRow.cells).map((th, ci) => {
+                // Column name (strip sort icons, superscripts, resize handles)
+                const _thFlex = th.querySelector('.mb-col-hdr-flex');
+                const _rawName = (_thFlex || th).textContent
+                    .replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤]/g, '')
+                    .replace(/\d+\s*$/, '')
+                    .trim();
+                const _colName = _rawName || `Col ${ci + 1}`;
+
+                // Visibility
+                const _vis2 = th.style.display !== 'none';
+
+                // Sort state from sort-icon-btn text
+                const _sortBtns = th.querySelectorAll('.sort-icon-btn');
+                let _sortState = '⇅ none';
+                _sortBtns.forEach(btn => {
+                    const t2 = btn.textContent.trim().replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '');
+                    if (t2 === '▲') _sortState = '▲ asc';
+                    else if (t2 === '▼') _sortState = '▼ desc';
+                });
+
+                // Unique value count from .mb-col-uniq-count span
+                const _uqSpan = th.querySelector('.mb-col-uniq-count');
+                const _uqCount = _uqSpan ? (_uqSpan.textContent.trim() || '—') : '—';
+
+                // Multi-row cell count (rows with >1 li)
+                const _mrCount = (() => {
+                    let n = 0;
+                    tbl.querySelectorAll(`tbody tr`).forEach(row => {
+                        const cell = row.cells[ci];
+                        if (cell && cell.querySelectorAll('ul > li').length > 1) n++;
+                    });
+                    return n;
+                })();
+
+                // Column filter
+                const _cfRow = tbl.querySelector('thead tr.mb-col-filter-row');
+                const _cfInp = _cfRow
+                    ? _cfRow.querySelector(`.mb-col-filter-input[data-col-idx="${ci}"]`)
+                    : null;
+                const _cfVal = _cfInp ? stripColFilterPrefix(_cfInp.value || '') : '';
+
+                // Resize width from colgroup
+                const _cg  = tbl.querySelector('colgroup');
+                const _cgC = _cg ? _cg.children[ci] : null;
+                const _wPx = _cgC ? parseInt(_cgC.style.width) : 0;
+                const _wStr = _wPx > 0 ? `manually ${_wPx}\u202fpx` : 'default';
+
+                return {
+                    name:     _colName,
+                    visible:  _vis2,
+                    sort:     _sortState,
+                    unique:   _uqCount,
+                    multiRow: _mrCount,
+                    filter:   _cfVal,
+                    resize:   _wStr,
+                };
+            }) : [];
+
+            return { name: _name, h2: _h2, h3: _h3, total: _total,
+                     visible: _vis, filter: _stfInp, caaCount: _caaCount,
+                     columns: _columns };
+        });
+
+        // ── 3. Build the panel DOM ────────────────────────────────────────────
+        const panel = document.createElement('div');
+        panel.id = 'mb-stats-panel';
+        panel.style.cssText = [
+            'position:fixed', 'top:80px', 'right:16px',
+            'width:min(860px,92vw)',
+            'max-height:82vh',
+            'display:flex', 'flex-direction:column',
+            'background:#fff',
+            'border:2px solid #388e3c',
+            'border-radius:10px',
+            'box-shadow:0 6px 28px rgba(0,0,0,0.28)',
+            'z-index:10002',
+            'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif',
+            'font-size:0.88em',
+            'overflow:hidden',
+        ].join(';');
+
+        // ── Shared colour tokens ─────────────────────────────────────────────
+        const C = {
+            green:   '#388e3c',
+            greenL:  '#e8f5e9',
+            accent:  '#1565c0',
+            accentL: '#e3f2fd',
+            muted:   '#555',
+            alert:   '#c62828',
+            mark:    '#fff176',     // highlight colour
+            border:  '#c8e6c9',
+            th:      '#f1f8f1',
+        };
+
+        // ── Header bar ───────────────────────────────────────────────────────
+        const header = document.createElement('div');
+        header.style.cssText = `display:flex;align-items:center;gap:10px;
+            padding:10px 14px 8px;background:${C.green};border-radius:8px 8px 0 0;
+            flex-shrink:0;`;
+
+        const titleEl = document.createElement('span');
+        titleEl.style.cssText = `color:#fff;font-size:1.15em;font-weight:700;
+            letter-spacing:0.02em;flex-shrink:0;`;
+        titleEl.textContent = '📊 Statistics';
+
+        const qfWrap = document.createElement('span');
+        qfWrap.style.cssText = 'flex:1;display:flex;align-items:center;gap:6px;';
+
+        const qfLbl = document.createElement('span');
+        qfLbl.textContent = '🔍';
+        qfLbl.style.color = '#fff';
+
+        const qfInput = document.createElement('input');
+        qfInput.id          = 'mb-stats-qf';
+        qfInput.type        = 'text';
+        qfInput.placeholder = 'Quick-filter rows…';
+        qfInput.style.cssText = `flex:1;padding:3px 8px;border-radius:4px;border:1.5px solid #a5d6a7;
+            font-size:0.93em;outline:none;`;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✕';
+        closeBtn.title = 'Close (Esc)';
+        closeBtn.style.cssText = `background:rgba(255,255,255,0.15);border:none;border-radius:4px;
+            color:#fff;font-size:1.1em;cursor:pointer;padding:2px 7px;flex-shrink:0;
+            line-height:1;font-weight:700;`;
+        closeBtn.onmouseenter = () => closeBtn.style.background = 'rgba(255,255,255,0.35)';
+        closeBtn.onmouseleave = () => closeBtn.style.background = 'rgba(255,255,255,0.15)';
+
+        qfWrap.appendChild(qfLbl);
+        qfWrap.appendChild(qfInput);
+        header.appendChild(titleEl);
+        header.appendChild(qfWrap);
+        header.appendChild(closeBtn);
+
+        // ── Scrollable body ──────────────────────────────────────────────────
+        const body = document.createElement('div');
+        body.id = 'mb-stats-body';
+        body.style.cssText = 'overflow-y:auto;padding:12px 14px 16px;flex:1;';
+
+        // ── Helper: build a stats <table> from rows ──────────────────────────
+        // rows: array of { stat, value, comment?, highlight? }
+        const _mkTbl = (rows) => {
+            const t = document.createElement('table');
+            t.style.cssText = `width:100%;border-collapse:collapse;
+                margin-bottom:14px;font-size:0.92em;`;
+            t.dataset.statsSection = 'true';
+
+            const thead = document.createElement('thead');
+            const hr = document.createElement('tr');
+            ['Statistic', 'Value', 'Comment'].forEach((h, i) => {
+                const th = document.createElement('th');
+                th.textContent = h;
+                th.style.cssText = `background:${C.th};color:${C.green};font-size:0.82em;
+                    font-weight:700;letter-spacing:0.04em;text-transform:uppercase;
+                    padding:4px 8px;border:1px solid ${C.border};
+                    text-align:${i === 0 ? 'left' : 'left'};white-space:nowrap;`;
+                hr.appendChild(th);
+            });
+            thead.appendChild(hr);
+            t.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            rows.forEach(({ stat, value, comment = '' }) => {
+                const tr = document.createElement('tr');
+                tr.dataset.statsRow = 'true';
+                tr.style.cssText = 'transition:background 0.1s;';
+                tr.onmouseenter = () => tr.style.background = C.accentL;
+                tr.onmouseleave = () => tr.style.background = '';
+
+                const mkTd = (txt, bold = false, mono = false, colour = '') => {
+                    const td = document.createElement('td');
+                    td.style.cssText = `padding:4px 8px;border:1px solid ${C.border};
+                        vertical-align:top;
+                        ${bold  ? 'font-weight:600;' : ''}
+                        ${mono  ? 'font-family:monospace;font-size:0.9em;' : ''}
+                        ${colour ? `color:${colour};` : ''}`;
+                    td.innerHTML = txt; // safe — all values are script-built
+                    return td;
+                };
+
+                tr.appendChild(mkTd(stat, true));
+                tr.appendChild(mkTd(value, false, false));
+                tr.appendChild(mkTd(comment, false, false, C.muted));
+                tbody.appendChild(tr);
+            });
+            t.appendChild(tbody);
+            return t;
+        };
+
+        // ── Section heading helper ────────────────────────────────────────────
+        const _mkSectionHead = (icon, text) => {
+            const h = document.createElement('div');
+            h.style.cssText = `font-size:1.0em;font-weight:700;color:${C.green};
+                margin:10px 0 4px;padding:3px 0 3px 2px;
+                border-bottom:2px solid ${C.greenL};display:flex;align-items:center;gap:6px;`;
+            h.innerHTML = `<span style="font-size:1.1em">${icon}</span>
+                           <span>${text}</span>`;
+            return h;
+        };
+
+        // ── § Global statistics ──────────────────────────────────────────────
+        const globalRows = [
+            {
+                stat:    '🌐 Network loading time (CAA)',
+                value:   _cs && _cs.icon.network + _cs.inline.network > 0
+                             ? _fmtMs(_caaElapsedMs) : '—',
+                comment: _cs ? `${_cs.icon.network} icon + ${_cs.inline.network} inline images via network` : '',
+            },
+            {
+                stat:    '🗄️ IndexedDB loading time (CAA)',
+                value:   _cs && _cs.icon.idb + _cs.inline.idb > 0
+                             ? _fmtMs(_caaElapsedMs) : '—',
+                comment: _cs ? `${_cs.icon.idb} icon + ${_cs.inline.idb} inline images from IDB cache` : '',
+            },
+            {
+                stat:    '💾 Memory usage',
+                value:   _memStr,
+                comment: _memComment,
+            },
+            {
+                stat:    '📄 Page type',
+                value:   `<code style="font-size:0.9em">${pageType || 'unknown'}</code>`,
+                comment: '',
+            },
+            {
+                stat:    '🗂️ Table mode',
+                value:   `<code style="font-size:0.9em">${tableMode}</code>`,
+                comment: tableMode === 'multi' ? 'Multiple h3-grouped sub-tables' : 'Single consolidated table',
+            },
+            {
+                stat:    '📑 Sub-tables',
+                value:   String(subTblCount),
+                comment: subTblCount === 1 ? 'Single sub-table' : `${subTblCount} sub-tables`,
+            },
+            {
+                stat:    '⬛ Total columns',
+                value:   String(totalCols),
+                comment: '',
+            },
+            {
+                stat:    '👁️ Visible columns',
+                value:   String(visibleCols),
+                comment: hiddenCols > 0 ? `${hiddenCols} hidden` : 'All visible',
+            },
+            {
+                stat:    '🙈 Hidden columns',
+                value:   hiddenCols > 0
+                             ? `<span style="color:${C.alert};font-weight:600">${hiddenCols}</span>`
+                             : '0',
+                comment: hiddenCols > 0 ? 'Use 👁️ Visible menu to restore' : '',
+            },
+            {
+                stat:    '🔍 Global filter',
+                value:   _gfRaw
+                             ? `<em style="color:${C.accent}">"${_gfRaw}"</em>`
+                             : '<span style="color:#999">none</span>',
+                comment: '',
+            },
+            {
+                stat:    '📋 Sub-table filters',
+                value:   _stFlt > 0
+                             ? `<span style="color:${C.accent};font-weight:600">${_stFlt} active</span>`
+                             : '0',
+                comment: '',
+            },
+            {
+                stat:    '🔠 Column filters',
+                value:   _colFlt > 0
+                             ? `<span style="color:${C.accent};font-weight:600">${_colFlt} active</span>`
+                             : '0',
+                comment: '',
+            },
+            {
+                stat:    '↔️ Resize status',
+                value:   _resizeStatus,
+                comment: '',
+            },
+            {
+                stat:    '📐 Manually resized columns',
+                value:   String(_manualResizedCount),
+                comment: _manualResizedCount > 0 ? 'Column widths set via drag-handle' : '',
+            },
+        ];
+
+        body.appendChild(_mkSectionHead('🌍', 'Global Statistics'));
+        body.appendChild(_mkTbl(globalRows));
+
+        // ── § Per-table section ───────────────────────────────────────────────
+        body.appendChild(_mkSectionHead('🗃️', 'Table Detail'));
+
+        _tableData.forEach((td, tIdx) => {
+            // Outer wrapper card
+            const card = document.createElement('div');
+            card.dataset.statsCard = 'true';
+            card.style.cssText = `border:1px solid ${C.border};border-radius:6px;
+                margin-bottom:10px;overflow:hidden;`;
+
+            // Card header row (h1 / h2 / row counts / artwork)
+            const cardHdr = document.createElement('table');
+            cardHdr.style.cssText = `width:100%;border-collapse:collapse;
+                background:${C.greenL};font-size:0.9em;`;
+
+            const chRow = document.createElement('tr');
+            const _chTd = (txt, opts = {}) => {
+                const td2 = document.createElement('td');
+                td2.style.cssText = `padding:5px 8px;border-bottom:1px solid ${C.border};
+                    border-right:1px solid ${C.border};vertical-align:middle;
+                    ${opts.bold  ? 'font-weight:700;' : ''}
+                    ${opts.small ? 'font-size:0.84em;color:' + C.muted + ';' : ''}
+                    ${opts.mono  ? 'font-family:monospace;' : ''}
+                    ${opts.right ? 'text-align:right;' : ''}
+                    ${opts.nowrap? 'white-space:nowrap;' : ''}`;
+                if (opts.title) td2.title = opts.title;
+                td2.innerHTML = txt;
+                return td2;
+            };
+
+            chRow.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">h1</span>`,
+                { nowrap: true }
+            ));
+            chRow.appendChild(_chTd(
+                `<strong style="color:${C.accent}">${_h1Text || '—'}</strong>`,
+                {}
+            ));
+
+            const _filterCell = td.filter
+                ? `<em style="color:${C.accent}">"${td.filter}"</em>`
+                : '<span style="color:#bbb">—</span>';
+            chRow.appendChild(_chTd(_filterCell,
+                { nowrap: true, title: td.filter ? `Sub-table filter: "${td.filter}"` : 'No sub-table filter' }));
+
+            const _hiddenRows = td.total - td.visible;
+            const _rowCell = _hiddenRows > 0
+                ? `<span style="color:${C.accent};font-weight:700">${td.visible.toLocaleString()}</span>` +
+                  ` <span style="font-size:0.83em;color:${C.muted}">/ ${td.total.toLocaleString()}</span>`
+                : `<span style="font-weight:700">${td.total.toLocaleString()}</span>`;
+            chRow.appendChild(_chTd(_rowCell, { right: true, nowrap: true }));
+
+            const _artCell = td.caaCount > 0
+                ? `🖼️ <span style="color:${C.accent};font-weight:700">${td.caaCount.toLocaleString()}</span>`
+                : '<span style="color:#bbb">—</span>';
+            chRow.appendChild(_chTd(_artCell, { right: true, nowrap: true }));
+
+            const chRow2 = document.createElement('tr');
+            chRow2.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">h2/h3</span>`,
+                { nowrap: true }
+            ));
+            chRow2.appendChild(_chTd(
+                `<span style="font-weight:600">${td.name}</span>`,
+                {}
+            ));
+            // column headers row2
+            chRow2.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">Table filter</span>`,
+                { small: true }
+            ));
+            chRow2.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">Filtered rows</span>`,
+                { small: true, right: true }
+            ));
+            chRow2.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">Total artworks</span>`,
+                { small: true, right: true }
+            ));
+
+            cardHdr.appendChild(chRow);
+            cardHdr.appendChild(chRow2);
+            card.appendChild(cardHdr);
+
+            // Column detail collapsable
+            if (td.columns.length > 0) {
+                const colToggleBar = document.createElement('div');
+                colToggleBar.style.cssText = `padding:4px 8px;background:#f9f9f9;
+                    border-bottom:1px solid ${C.border};cursor:pointer;
+                    display:flex;align-items:center;gap:6px;
+                    font-size:0.84em;color:${C.muted};user-select:none;`;
+                colToggleBar.dataset.colExpanded = 'false';
+
+                const colIcon = document.createElement('span');
+                colIcon.textContent = '▶';
+                colIcon.style.cssText = 'font-size:0.8em;transition:transform 0.15s;display:inline-block;';
+
+                const colLabel = document.createElement('span');
+                colLabel.textContent =
+                    `Columns (${td.columns.length})  — name · visible · sort · unique values · multi-row · filter · resize`;
+
+                colToggleBar.appendChild(colIcon);
+                colToggleBar.appendChild(colLabel);
+
+                // Build column detail table (initially hidden)
+                const colDetail = document.createElement('div');
+                colDetail.style.cssText = 'display:none;overflow-x:auto;';
+                colDetail.dataset.colDetailOf = String(tIdx);
+
+                const colTbl = document.createElement('table');
+                colTbl.style.cssText = `width:100%;border-collapse:collapse;
+                    font-size:0.85em;font-family:monospace;`;
+
+                // thead
+                const colThead = document.createElement('thead');
+                const colHr    = document.createElement('tr');
+                ['#', 'Column name', '👁️ Vis', '↕ Sort',
+                 '📊 Unique', '🗋 Multi-row', '🔍 Filter', '↔️ Resize']
+                    .forEach(h => {
+                        const th2 = document.createElement('th');
+                        th2.textContent = h;
+                        th2.style.cssText = `background:${C.th};color:${C.muted};font-size:0.8em;
+                            padding:3px 6px;border:1px solid ${C.border};
+                            white-space:nowrap;font-weight:700;text-transform:uppercase;
+                            letter-spacing:0.03em;`;
+                        colHr.appendChild(th2);
+                    });
+                colThead.appendChild(colHr);
+                colTbl.appendChild(colThead);
+
+                const colTbody = document.createElement('tbody');
+                td.columns.forEach((col, ci) => {
+                    const cr = document.createElement('tr');
+                    cr.dataset.statsRow = 'true';
+                    cr.style.cssText = `background:${col.visible ? '' : '#fafafa'};
+                        ${col.visible ? '' : 'color:#aaa;'}`;
+                    cr.onmouseenter = () => { if (cr.dataset.qfHide !== 'true') cr.style.background = C.accentL; };
+                    cr.onmouseleave = () => { cr.style.background = col.visible ? '' : '#fafafa'; };
+
+                    const _mkColTd = (txt, opts2 = {}) => {
+                        const td3 = document.createElement('td');
+                        td3.style.cssText = `padding:3px 6px;border:1px solid ${C.border};
+                            vertical-align:middle;
+                            ${opts2.center ? 'text-align:center;' : ''}
+                            ${opts2.right  ? 'text-align:right;' : ''}
+                            white-space:nowrap;`;
+                        td3.innerHTML = txt;
+                        return td3;
+                    };
+
+                    cr.appendChild(_mkColTd(String(ci + 1), { center: true }));
+
+                    const _nameCell = col.visible
+                        ? `<strong>${col.name}</strong>`
+                        : `<span style="text-decoration:line-through;color:#aaa">${col.name}</span>`;
+                    cr.appendChild(_mkColTd(_nameCell));
+
+                    cr.appendChild(_mkColTd(
+                        col.visible
+                            ? '<span style="color:#388e3c">✔ yes</span>'
+                            : '<span style="color:#c62828">✘ no</span>',
+                        { center: true }
+                    ));
+
+                    const _sortColor = col.sort.startsWith('▲') ? C.accent
+                        : col.sort.startsWith('▼') ? C.alert : C.muted;
+                    cr.appendChild(_mkColTd(
+                        `<span style="color:${_sortColor}">${col.sort}</span>`,
+                        { center: true }
+                    ));
+
+                    cr.appendChild(_mkColTd(String(col.unique), { right: true }));
+                    cr.appendChild(_mkColTd(
+                        col.multiRow > 0
+                            ? `<span style="color:${C.accent}">${col.multiRow}</span>`
+                            : '<span style="color:#bbb">0</span>',
+                        { right: true }
+                    ));
+                    cr.appendChild(_mkColTd(
+                        col.filter
+                            ? `<em style="color:${C.accent}">"${col.filter}"</em>`
+                            : '<span style="color:#bbb">—</span>'
+                    ));
+                    cr.appendChild(_mkColTd(
+                        col.resize === 'default'
+                            ? '<span style="color:#bbb">default</span>'
+                            : `<span style="color:${C.accent}">${col.resize}</span>`
+                    ));
+
+                    colTbody.appendChild(cr);
+                });
+                colTbl.appendChild(colTbody);
+                colDetail.appendChild(colTbl);
+
+                // Toggle expand/collapse
+                colToggleBar.addEventListener('click', () => {
+                    const expanded = colToggleBar.dataset.colExpanded === 'true';
+                    colToggleBar.dataset.colExpanded = expanded ? 'false' : 'true';
+                    colIcon.style.transform  = expanded ? '' : 'rotate(90deg)';
+                    colDetail.style.display  = expanded ? 'none' : '';
+                });
+
+                card.appendChild(colToggleBar);
+                card.appendChild(colDetail);
+            }
+
+            body.appendChild(card);
+        });
+
+        panel.appendChild(header);
+        panel.appendChild(body);
+        document.body.appendChild(panel);
+
+        // ── Quick-filter logic ────────────────────────────────────────────────
+        // Highlights matched text in visible stats rows and hides non-matching rows.
+        const _applyQF = () => {
+            const q = qfInput.value.trim().toLowerCase();
+
+            // Remove stale highlights
+            panel.querySelectorAll('mark.mb-stats-hl').forEach(m => {
+                m.replaceWith(document.createTextNode(m.textContent));
+            });
+
+            // Stats table rows
+            panel.querySelectorAll('tr[data-stats-row]').forEach(row => {
+                if (!q) {
+                    row.style.display = '';
+                    return;
+                }
+                const text = row.textContent.toLowerCase();
+                const match = text.includes(q);
+                row.style.display = match ? '' : 'none';
+
+                if (match) {
+                    // Highlight within text nodes of tds
+                    row.querySelectorAll('td').forEach(td4 => {
+                        _highlightNode(td4, q);
+                    });
+                }
+            });
+
+            // Cards: hide entirely if no matching rows inside
+            panel.querySelectorAll('div[data-stats-card]').forEach(card2 => {
+                if (!q) { card2.style.display = ''; return; }
+                const hasMatch = card2.querySelector('tr[data-stats-row]:not([style*="display: none"])');
+                // Also check card header text
+                const hdrMatch = card2.querySelector('table')?.textContent.toLowerCase().includes(q);
+                card2.style.display = (hasMatch || hdrMatch) ? '' : 'none';
+            });
+        };
+
+        // Highlight text matches within a DOM node
+        const _highlightNode = (node, q) => {
+            Array.from(node.childNodes).forEach(child => {
+                if (child.nodeType === Node.TEXT_NODE) {
+                    const idx = child.textContent.toLowerCase().indexOf(q);
+                    if (idx === -1) return;
+                    const before = document.createTextNode(child.textContent.slice(0, idx));
+                    const mark   = document.createElement('mark');
+                    mark.className   = 'mb-stats-hl';
+                    mark.style.cssText = `background:${C.mark};border-radius:2px;padding:0 1px;`;
+                    mark.textContent = child.textContent.slice(idx, idx + q.length);
+                    const after  = document.createTextNode(child.textContent.slice(idx + q.length));
+                    child.parentNode.insertBefore(before, child);
+                    child.parentNode.insertBefore(mark,   child);
+                    child.parentNode.insertBefore(after,  child);
+                    child.parentNode.removeChild(child);
+                } else if (child.nodeType === Node.ELEMENT_NODE &&
+                           child.tagName !== 'MARK' &&
+                           child.tagName !== 'SCRIPT' &&
+                           child.tagName !== 'STYLE') {
+                    _highlightNode(child, q);
+                }
+            });
+        };
+
+        qfInput.addEventListener('input', _applyQF);
+        qfInput.focus();
+
+        // ── Close handlers ────────────────────────────────────────────────────
+        const _close = () => {
+            panel.remove();
+            document.removeEventListener('keydown', _onKey);
+            document.removeEventListener('click', _onClickOutside);
+        };
+        const _onKey = (e) => {
+            if (e.key === 'Escape') { e.stopPropagation(); _close(); }
+        };
+        const _onClickOutside = (e) => {
+            if (!panel.contains(e.target)) _close();
+        };
+
+        closeBtn.addEventListener('click', _close);
+        document.addEventListener('keydown', _onKey);
+        setTimeout(() => document.addEventListener('click', _onClickOutside), 120);
+
+        Lib.debug('stats', `Statistics panel displayed (${_tableData.length} table(s))`);
     }
 
     /**

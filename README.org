@@ -56106,16 +56106,9 @@ Another bug
 - when switching back from the "merged" view to the "un-official" view, the h2 artwork count is wrong, it's the same as for the "merged" view, but the individell artwork counts in the h2 rows are OK 
 - when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
-** samples
-*** version: 9.99.211+2026-03-17
-
-**** Global
-
-| Statistic                             | Value | Comment |
-|---------------------------------------+-------+---------|
-| Column Filters (total)                |       |         |
-| ▶ [per column multi-row list (count)] |       |         |
-
+* Statistics
+** version: 9.99.211+2026-03-17
+*** Global
 
 | Statistic                      | Value | Comment |
 |--------------------------------+-------+---------|
@@ -56129,15 +56122,20 @@ Another bug
 | Visible columns                |       |         |
 | Hidden columns                 |       |         |
 | Global Filter                  |       |         |
+| Table Filters                  |       |         |
+| Columns Filters                |       |         |
+| Resize Status                  |       |         |
+| Manually resized columns       |       |         |
 
-# Single table
+*** Single table
 
-| h1 header | Bruce Springsteen Official Live Archive (digital)                                                                         | Total rows | Total artworks |
-|-----------+---------------------------------------------------------------------------------------------------------------------------+------------+----------------|
-| h2 header | Releases                                                                                                                  |        124 |            119 |
-|           | ▶ [collapsable per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
+| h1 header | Bruce Springsteen Official Live Archive (digital)                                                                                    | Table filter | Filtered rows | Total rows | Total artworks |
+|-----------+--------------------------------------------------------------------------------------------------------------------------------------+--------------+---------------+------------+----------------|
+| h2 header | Releases                                                                                                                             | "nugs.net"   |             7 |        355 |            348 |
+|           | ▶ [collapsable per column multi-row list [column name,visibility,sort state,unique values,multi-row cells,filter state,resize state] |              |               |            |                |
+|           | Release,yes,descending,355,0,"live",manually - 601px                                                                                 |              |               |            |                |
 
-# Multiple table
+*** Multiple table
 
 | h1 header | Greetings From Asbury Park, N.J                                                                                           | Total rows | Total artworks |
 |-----------+---------------------------------------------------------------------------------------------------------------------------+------------+----------------|
@@ -56150,8 +56148,7 @@ Another bug
 |           | Bootleg release                                                                                                           |          1 |              1 |
 |           | ▶ [collapsable per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
 
-**** ArtistReleasegroups
-
+*** ArtistReleasegroups
 **** Offical
 ***** Summary
 
@@ -56164,18 +56161,18 @@ Another bug
 
 ***** Official
 
-| Sub-section name | Complete | Rows | Artworks | Official | Rows | Artworks | Non-official | Rows | Artworks | Merged | Rows | Artworks |
-|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
-| Album            | yes      |   22 |       21 | yes      |   22 |       21 | no           |      |          | yes    |   24 |       23 |
-| Album + Live     | yes      |  362 |      361 | yes      |  362 |      361 | no           |      |          | yes    | 1191 |     1156 |
-| Other            | yes      |    1 |        1 | yes      |    1 |        1 | no           |      |          | yes    |    1 |        1 |
-|                  |          |      |          |          |      |          |              |      |          |        |      |          |
-|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
-| Album            | yes      |    2 |        2 | no       |      |          | yes          |    2 |        2 | no     |      |          |
-| Album + Live     | yes      |  829 |      795 | no       |      |          | yes          |  829 |      795 | no     |      |          |
-| Album + Demo     | yes      |    5 |        5 | no       |      |          | yes          |    5 |        5 | yes    |    5 |        5 |
-|                  |          |      |          |          |      |          |              |      |          |        |      |          |
-|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
+| Sub-section name          | Complete | Rows | Artworks | Official | Rows | Artworks | Non-official | Rows | Artworks | Merged | Rows | Artworks |
+|---------------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
+| Album                     | yes      |   22 |       21 | yes      |   22 |       21 | no           |      |          | yes    |   24 |       23 |
+| Album + Live              | yes      |  362 |      361 | yes      |  362 |      361 | no           |      |          | yes    | 1191 |     1156 |
+| Other                     | yes      |    1 |        1 | yes      |    1 |        1 | no           |      |          | yes    |    1 |        1 |
+| <repeat for every column> |          |      |          |          |      |          |              |      |          |        |      |          |
+|---------------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
+| Album                     | yes      |    2 |        2 | no       |      |          | yes          |    2 |        2 | no     |      |          |
+| Album + Live              | yes      |  829 |      795 | no       |      |          | yes          |  829 |      795 | no     |      |          |
+| Album + Demo              | yes      |    5 |        5 | no       |      |          | yes          |    5 |        5 | yes    |    5 |        5 |
+| <repeat for every column> |          |      |          |          |      |          |              |      |          |        |      |          |
+|---------------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
 
 **** VA
 ***** Summary
@@ -56203,9 +56200,156 @@ Another bug
 |                  |          |      |          |          |      |          |              |      |          |        |      |          |
 |------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
 
-**** misc
+** misc
 
 | Alum + Compilation | yes | 319 | yes | 111 + 319 |
+
+** claude
+*** initial
+
+The '<div id="mb-stats-panel"' statistics panel needs a revamp. The current UI design should be followed. Please use as
+much unicode symbols/glyphs wherever possible. Also use different fonts/styles/sizes where it makes sense. If too much
+information is presented, make sure that the dialog is scollable and has a quickfilter at the top with highlightning
+support for match filter strings.
+
+1.)
+
+Lets start with the "single" table pages (we will later add support for "multi"-table pages and specifically the
+"multi"-table pages for the pageType "artist-releasegroups", which needs an even special treatment):
+
+After the quick filter dialog, there should be global section which should be layed out in a table form like in the following ascci art (org-mode table graphics)
+
+#+begin_example
+| Statistic                      | Value | Comment |
+|--------------------------------+-------+---------|
+| Network Loading time for CAA   |       |         |
+| IndexedDB Loading time for CAA |       |         |
+| Memory Usage                   |       |         |
+| Page Type                      |       |         |
+| Table Type                     |       |         |
+| Sub-tables                     |       |         |
+| Total columns                  |       |         |
+| Visible columns                |       |         |
+| Hidden columns                 |       |         |
+| Global Filter                  |       |         |
+| Table Filters                  |       |         |
+| Columns Filters                |       |         |
+| Resize Status                  |       |         |
+| Manually resized columns       |       |         |
+#+end_example
+
+Then follows the information about the single table itself, also layed out in a table form like in the following ascci art (org-mode table graphics)
+
+#+begin_example
+| h1 header | Bruce Springsteen Official Live Archive (digital)                                                                                    | Table filter | Filtered rows | Total rows | Total artworks |
+|-----------+--------------------------------------------------------------------------------------------------------------------------------------+--------------+---------------+------------+----------------|
+| h2 header | Releases                                                                                                                             | "nugs.net"   |             7 |        355 |            348 |
+|           | ▶ [collapsable per column multi-row list [column name,visibility,sort state,unique values,multi-row cells,filter state,resize state] |              |               |            |                |
+#+end_example
+
+The above row
+
+#+begin_example
+▶ [collapsable per column multi-row list [column name,visibility,sort state,unique values,multi-row cells,filter state,resize state]
+#+end_example
+
+should be rendered as a collapsable/uncollapsable inline table for the in this case "Releases" table-name (from the h2 header)
+Here is an example row value
+
+#+begin_example
+|Release|yes|descending|355|0|"live"|manually - 601px|
+#+end_example
+
+2.) 
+
+Explain how is the current "Memory Usage" value calculated (based on what)
+
+*** Global
+
+| Statistic                      | Value | Comment |
+|--------------------------------+-------+---------|
+| Network Loading time for CAA   |       |         |
+| IndexedDB Loading time for CAA |       |         |
+| Memory Usage                   |       |         |
+| Page Type                      |       |         |
+| Table Type                     |       |         |
+| Sub-tables                     |       |         |
+| Total columns                  |       |         |
+| Visible columns                |       |         |
+| Hidden columns                 |       |         |
+| Global Filter                  |       |         |
+| Table Filters                  |       |         |
+| Columns Filters                |       |         |
+| Resize Status                  |       |         |
+| Manually resized columns       |       |         |
+
+*** Single table
+
+| h1 header | Bruce Springsteen Official Live Archive (digital)                                                                                    | Table filter | Filtered rows | Total rows | Total artworks |
+|-----------+--------------------------------------------------------------------------------------------------------------------------------------+--------------+---------------+------------+----------------|
+| h2 header | Releases                                                                                                                             | "nugs.net"   |             7 |        355 |            348 |
+|           | ▶ [collapsable per column multi-row list [column name,visibility,sort state,unique values,multi-row cells,filter state,resize state] |              |               |            |                |
+|           | Release,yes,descending,355,0,"live",manually - 601px                                                                                 |              |               |            |                |
+
+
+** the stats panel should always stay in sync with the current page information
+** bugs
+
+Some bugs 
+1.)
+
+add dragging and resize support for the dialog and remember it's position in browser storage
+
+2.)
+
+filter string highlightning onyl works for the first input character of a filter string
+
+3.)
+
+"single" table pages the "Table Detail" should always start uncollpased when opening the dialog
+
+4.)
+
+add a new configuration section in "const configSchema" for the Statistics panel and add two new configuration settings for the currently hard coded values for 'scrollable panel (min(860px, 92vw) wide, 82vh tall)'
+
+5.) when inside the filter field and there is a currently a filter string in the filter field the first keyboard
+"Escape" (but also the "X" icon) should clear the filter on first press and only when the filter filed is empty the
+whole dialog should be closed
+
+** bugs
+
+some more bugs
+
+1.)
+
+please don't remove the code comments which had been there in your first implementation if they still make sense now (plese re-aad)
+
+2.) 
+
+filter string highlightning still onyl works for the first input character of a filter string
+
+3.)
+
+the "clear the filter string first (x)" is not clickable at the very first rendering of the dialog with all defaults. It
+looks like the draggable function has taken over the x-button the very first time. After resizing it seems to work
+
+** bugs
+
+1.)
+
+remove the column with the "h1", "h2/h3 identifiers entirely
+
+2.)
+
+add a slider (with text "Reset" in front, for increasing/decresing the fontsize used in the dialog or when pressing
+"Reset" reset everything to the default values) in the upper right corner right aligend with the "Global Statstics" icon
+and text
+
+3.)
+
+the total artwork thumbnails present in the "toggle CAA artwork"-button, is missing in the "Total artworks" column, beside "Filtered rows"
+
+** fix CCA art work count + add them + total rows to summary, on the table level ist should be the filtered state and  artwork count per event/release
 
 * make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
 
@@ -56304,4 +56448,6 @@ Table: 1 row (ok)
 
 * make the auto-resize always run by default but configurable
 
-* TODO reorder the tab/sub-table specific section alway last
+* TODO reorder the tab/sub-table specific section alway lasts
+
+* TODO Put "Legal name: Bruce Frederick Joseph Springsteen" below "h1 header" "~Person" for Artist-Releasegroup pages

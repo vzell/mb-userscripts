@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.212",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Statistics panel revamp (single-table mode): the old compact grid panel is replaced with a full-width scrollable panel (max 860 px, 82 vh) containing two sections. (1) Global Statistics table with 14 rows covering: 🌐 Network/🗄️ IndexedDB CAA loading time (from _caaFetchStats telemetry, split by tier), 💾 Memory usage (JS heap via performance.memory when available in Chromium; 'n/a' otherwise — replaces the old fictional 100-bytes-per-row estimate), 📄 Page type, 🗂️ Table mode, 📑 Sub-tables, ⬛/👁️/🙈 Total/Visible/Hidden columns, 🔍 Global filter, 📋 Sub-table filters, 🔠 Column filters, ↔️ Resize status, 📐 Manually resized columns. (2) Per-table detail section with a card per sub-table showing h1/h2-h3 header text, active table filter, filtered/total row count, and CAA artwork count in a header row, followed by a ▶ collapsable per-column table with 8 columns: #, Column name (strikethrough when hidden), 👁️ Visible, ↕ Sort direction (▲ asc / ▼ desc / ⇅ none), 📊 Unique value count, 🗋 Multi-row cell count, 🔍 Column filter value, ↔️ Resize state (manually N px or default). A quick-filter input at the top of the panel filters and highlights matching text across all rows in both sections. Panel closes on ✕ click, Escape key, or click outside."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.211",
       "date": "2026-03-17",
       "sections": [

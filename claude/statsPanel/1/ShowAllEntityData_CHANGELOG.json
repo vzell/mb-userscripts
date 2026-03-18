@@ -1,5 +1,52 @@
 [
     {
+      "version": "9.99.214",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Hotfix for 9.99.213: the `str_replace` that introduced the revamped `showStatsPanel` matched only the JSDoc opening signature, leaving the entire old function body (739 lines) as orphaned top-level code after the new function's closing brace. Tampermonkey's bundler rejected the file with 'Uncaught SyntaxError: Failed to execute appendChild on Node: Unexpected token function'. Fixed by surgically removing the orphaned block (lines 8451–9189 of the 9.99.213 build)."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.213",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Statistics panel — quick-filter highlight only worked for the first character of a multi-character query. Root cause: the previous `_highlightNode` implementation walked child nodes and mutated the DOM during the walk, so after inserting the first `<mark>` the remaining text nodes were already split and the loop lost track of where to find subsequent matches. Fixed by replacing the recursive walk with a `TreeWalker(SHOW_TEXT)` that first collects all leaf text nodes into a snapshot array, then processes each one independently — finding all occurrences of the query in that node's text in a single pass and replacing the node with a DocumentFragment containing alternating plain-text and `<mark>` nodes.",
+            "Statistics panel — per-table column detail tables now start UNCOLLAPSED (▼) when the panel opens, instead of collapsed (▶). `colToggleBar.dataset.colExpanded` is initialised to `'true'` and the detail `<div>` starts with no `display:none`.",
+            "Statistics panel — Escape key / ✕ icon two-press semantics: when the quick-filter field contains text, the first Escape (or clicking the ✕ icon next to the filter) now clears only the filter and keeps the panel open; a second Escape (or clicking the panel's ✕ close button) with an empty field closes the panel. Previously both keys always closed the panel."
+          ]
+        },
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Statistics panel — drag-to-move: the header bar is now a drag handle (cursor:grab). Dragging moves the panel within the viewport (clamped to bounds). Position is saved to GM storage key `sa_stats_panel_geometry` on drag-end.",
+            "Statistics panel — resize persistence: the panel has `resize:both` (native browser resize handle at bottom-right). A ResizeObserver saves geometry (top, left, width, height) to `sa_stats_panel_geometry` with a 300 ms debounce on every resize. Geometry is restored on next open, clamped to the current viewport.",
+            "Statistics panel — new configSchema section '📊 STATISTICS PANEL' added with two settings: `sa_stats_panel_width` (max width in px, default 860) and `sa_stats_panel_max_height` (max height in vh, default 82), replacing the previously hardcoded `min(860px,92vw)` / `82vh` values.",
+            "Statistics panel — a dedicated ✕ clear-filter button is added next to the quick-filter input (separate from the panel close button) so the filter can be cleared without accidentally closing the panel."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.212",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Statistics panel revamp (single-table mode): the old compact grid panel is replaced with a full-width scrollable panel (max 860 px, 82 vh) containing two sections. (1) Global Statistics table with 14 rows covering: 🌐 Network/🗄️ IndexedDB CAA loading time (from _caaFetchStats telemetry, split by tier), 💾 Memory usage (JS heap via performance.memory when available in Chromium; 'n/a' otherwise — replaces the old fictional 100-bytes-per-row estimate), 📄 Page type, 🗂️ Table mode, 📑 Sub-tables, ⬛/👁️/🙈 Total/Visible/Hidden columns, 🔍 Global filter, 📋 Sub-table filters, 🔠 Column filters, ↔️ Resize status, 📐 Manually resized columns. (2) Per-table detail section with a card per sub-table showing h1/h2-h3 header text, active table filter, filtered/total row count, and CAA artwork count in a header row, followed by a ▶ collapsable per-column table with 8 columns: #, Column name (strikethrough when hidden), 👁️ Visible, ↕ Sort direction (▲ asc / ▼ desc / ⇅ none), 📊 Unique value count, 🗋 Multi-row cell count, 🔍 Column filter value, ↔️ Resize state (manually N px or default). A quick-filter input at the top of the panel filters and highlights matching text across all rows in both sections. Panel closes on ✕ click, Escape key, or click outside."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.211",
       "date": "2026-03-17",
       "sections": [

@@ -1,3 +1,49 @@
+<div id="mb-stats-panel" style="position: fixed; top: 100px; right: 20px; background: white; border: 2px solid rgb(76, 175, 80); border-radius: 8px; padding: 15px 20px; box-shadow: rgba(0, 0, 0, 0.3) 0px 4px 12px; z-index: 10000; font-size: 0.9em; min-width: 280px; max-width: 350px; font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, sans-serif;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 2px solid #4CAF50; padding-bottom: 10px;">
+                <strong style="font-size: 1.1em; color: #4CAF50;">📊 Table Statistics</strong>
+                <button id="mb-stats-close" style="background: none; border: none; font-size: 1.3em; cursor: pointer; color: #666; padding: 0; line-height: 1;">✕</button>
+            </div>
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 15px; line-height: 1.8;">
+                <div style="font-weight: 600;">Sub-Tables:</div>
+                <div>1 table</div>
+
+                <div style="font-weight: 600;">Total Rows:</div>
+                <div>7</div>
+
+                <div style="font-weight: 600;">Visible Rows:</div>
+                <div>7 <span style="color: #666; font-size: 0.9em;">(100%)</span></div>
+
+                <div style="font-weight: 600;">Filtered Out:</div>
+                <div style="color: #666;">0</div>
+
+                <div style="font-weight: 600;">Total Columns:</div>
+                <div>21</div>
+
+                <div style="font-weight: 600;">Visible Columns:</div>
+                <div>21 <span style="color: #666; font-size: 0.9em;">(100%)</span></div>
+
+                <div style="font-weight: 600;">Hidden Columns:</div>
+                <div style="color: #666;">0</div>
+
+                <div style="font-weight: 600;">Memory Usage:</div>
+                <div>~1 KB</div>
+
+                <div style="font-weight: 600;">Global Filter:</div>
+                <div style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="🔍 nugs.net">"🔍 nugs.net"</div>
+
+                <div style="font-weight: 600;">Column Filters:</div>
+                <div>1 active</div>
+
+                <div style="font-weight: 600;">Page Type:</div>
+                <div style="font-family: monospace; font-size: 0.85em;">series-releases</div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid #ddd; font-size: 0.85em; color: #666; text-align: center;">
+                Click outside or press Escape to close
+            </div>
+</div>
+
+--
+
 <div style="display:flex;gap:20px;justify-content:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;">
                     <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;">
                         <input type="checkbox" id="sa-load-case"> Case Sensitive
