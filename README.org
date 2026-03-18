@@ -56182,29 +56182,30 @@ Another bug
 
 | h2: Section name         | Type         | Total rows | Total artworks |
 |--------------------------+--------------+------------+----------------|
-| Complete Discography     | complete     |        586 |            517 |
-| Official Discography     | official     |            |                |
-| Non-Official Discography | non-official |            |                |
-| Merged Discography       | merged       |            |                |
+| Complete Discography     | complete     |        586 |            529 |
+| Official Discography     | official     |        423 |            392 |
+| Non-Official Discography | non-official |        163 |            137 |
+| Merged Discography       | merged       |        586 |            529 |
 
 ***** Non-official
 
 | Sub-section name | Complete | Rows | Artworks | Official | Rows | Artworks | Non-official | Rows | Artworks | Merged | Rows | Artworks |
 |------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
-| Album            | yes      |   22 |       21 | yes      |   22 |       21 | no           |      |          | yes    |   24 |       23 |
-| Album + Live     | yes      |  362 |      361 | yes      |  362 |      361 | no           |      |          | yes    | 1191 |        0 |
-| Other            | yes      |    1 |        1 | yes      |    1 |        1 | no           |      |          | yes    |    1 |        0 |
+| Compilation      | YES      |    2 |        1 |          |    2 |        1 |              |      |          | yes    |    2 |        2 |
+| Album            | yes      |   32 |       30 | yes      |   32 |       30 | no           |      |          | yes    |   34 |       32 |
+| Album + DJ Mix   | yes      |    3 |        3 | yes      |    3 |        3 | no           |      |          | yes    |    3 |        3 |
+| Other            | yes      |    2 |        2 | yes      |    2 |        2 | no           |      |          | yes    |    2 |        2 |
 |                  |          |      |          |          |      |          |              |      |          |        |      |          |
 |------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
 | Album            | yes      |    2 |        2 | no       |      |          | yes          |    2 |        2 | no     |      |          |
-| Album + Live     | yes      |  829 |      795 | no       |      |          | yes          |  829 |      795 | no     |      |          |
-| Album + Demo     | yes      |    5 |        5 | no       |      |          | yes          |    5 |        5 | yes    |    5 |        0 |
+| Album + Live     | yes      |   13 |        9 | no       |      |          | yes          |   13 |        9 | no     |      |          |
+| Broadcast + Live | yes      |    1 |        1 | no       |      |          | yes          |    1 |        1 | yes    |    1 |        1 |
 |                  |          |      |          |          |      |          |              |      |          |        |      |          |
 |------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
 
 **** misc
 
-| Alum + Compilation | yes               |                319 | yes                   | 111 + 319              |                 |                  |
+| Alum + Compilation | yes | 319 | yes | 111 + 319 |
 
 * make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
 
