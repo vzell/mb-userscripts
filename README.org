@@ -56109,7 +56109,7 @@ Another bug
 ** samples
 *** version: 9.99.211+2026-03-17
 
-**** Official
+**** Global
 
 | Statistic                             | Value | Comment |
 |---------------------------------------+-------+---------|
@@ -56150,15 +56150,44 @@ Another bug
 |           | Bootleg release                                                                                               |          1 |              1 |
 |           | ▶ [per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
 
+**** ArtistReleasegroups
 
+**** Offical
+***** Summary
 
+| h2: Section name         | Type         | Total rows | Total artworks |
+|--------------------------+--------------+------------+----------------|
+| Complete Discography     | complete     |       2123 |           2067 |
+| Official Discography     | official     |        582 |            578 |
+| Non-Official Discography | non-official |       1541 |           1489 |
+| Merged Discography       | merged       |       2123 |           2067 |
 
-| Section name             | Type         | Total rows | Total artworks | broken |
-|--------------------------+--------------+------------+----------------+--------|
-| Complete Discography     | complete     |       2123 |           2067 |        |
-| Official Discography     | official     |        582 |            578 |        |
-| Non-Official Discography | non-official |       1541 |           1489 |        |
-| Merged Discography       | merged       |       2123 |            190 | yes    |
+***** Official
+
+| Sub-section name | Complete | Rows | Artworks | Official | Rows | Artworks | Non-official | Rows | Artworks | Merged | Rows | Artworks |
+|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
+| Album            | yes      |   22 |       21 | yes      |   22 |       21 | no           |      |          | yes    |   24 |       23 |
+| Album + Live     | yes      |  362 |      361 | yes      |  362 |      361 | no           |      |          | yes    | 1191 |     1156 |
+| Other            | yes      |    1 |        1 | yes      |    1 |        1 | no           |      |          | yes    |    1 |        1 |
+|                  |          |      |          |          |      |          |              |      |          |        |      |          |
+|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
+| Album            | yes      |    2 |        2 | no       |      |          | yes          |    2 |        2 | no     |      |          |
+| Album + Live     | yes      |  829 |      795 | no       |      |          | yes          |  829 |      795 | no     |      |          |
+| Album + Demo     | yes      |    5 |        5 | no       |      |          | yes          |    5 |        5 | yes    |    5 |        5 |
+|                  |          |      |          |          |      |          |              |      |          |        |      |          |
+|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
+
+**** VA
+***** Summary
+
+| h2: Section name         | Type         | Total rows | Total artworks |
+|--------------------------+--------------+------------+----------------|
+| Complete Discography     | complete     |        586 |            517 |
+| Official Discography     | official     |            |                |
+| Non-Official Discography | non-official |            |                |
+| Merged Discography       | merged       |            |                |
+
+***** Non-official
 
 | Sub-section name | Complete | Rows | Artworks | Official | Rows | Artworks | Non-official | Rows | Artworks | Merged | Rows | Artworks |
 |------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
@@ -56173,33 +56202,7 @@ Another bug
 |                  |          |      |          |          |      |          |              |      |          |        |      |          |
 |------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
 
-**** Non-official
-
-| Section name             | Type         | Total rows | Total artworks | broken |
-|--------------------------+--------------+------------+----------------+--------|
-| Complete Discography     | complete     |       2123 |           2067 |        |
-| Official Discography     | official     |        582 |            578 |        |
-| Non-Official Discography | non-official |       1541 |           1489 |        |
-| Merged Discography       | merged       |       2123 |            190 | yes    |
-
-| h2 section name | total rows | total artworks |
-|-----------------+------------+----------------|
-| Album + Live    |       2123 |           2067 |
-
-| Sub-section name | Complete | Rows | Artworks | Official | Rows | Artworks | Non-official | Rows | Artworks | Merged | Rows | Artworks |
-|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
-| Album            | yes      |   22 |       21 | yes      |   22 |       21 | no           |      |          | yes    |   24 |       23 |
-| Album + Live     | yes      |  362 |      361 | yes      |  362 |      361 | no           |      |          | yes    | 1191 |        0 |
-| Other            | yes      |    1 |        1 | yes      |    1 |        1 | no           |      |          | yes    |    1 |        0 |
-|                  |          |      |          |          |      |          |              |      |          |        |      |          |
-|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
-| Album            | yes      |    2 |        2 | no       |      |          | yes          |    2 |        2 | no     |      |          |
-| Album + Live     | yes      |  829 |      795 | no       |      |          | yes          |  829 |      795 | no     |      |          |
-| Album + Demo     | yes      |    5 |        5 | no       |      |          | yes          |    5 |        5 | yes    |    5 |        0 |
-|                  |          |      |          |          |      |          |              |      |          |        |      |          |
-|------------------+----------+------+----------+----------+------+----------+--------------+------+----------+--------+------+----------|
-
-
+**** misc
 
 | Alum + Compilation | yes               |                319 | yes                   | 111 + 319              |                 |                  |
 
