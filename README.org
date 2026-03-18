@@ -56096,8 +56096,15 @@ the toggle "CAA artwork count"-button is wrong on some h3 headers in "merged" vi
 
 | column name  | complete presence | complete row count | complete artwork count | official presence | official row count | official artwork count | non-official presence | non-official row count | non-official artwork count | merged presence | merged row count | merged artwork count |
 |--------------+-------------------+--------------------+------------------------+-------------------+--------------------+------------------------+-----------------------+------------------------+----------------------------+-----------------+------------------+----------------------|
-| Album + Live | yes               |                 23 |                     23 | yes               |                 23 |                     23 | yes                   |                     13 |                          9 | yes             |               36 |                   22 |
+| Album + Live | yes               |                 23 |                     23 | yes               |                 23 |                     23 | yes                   |                     13 |                          9 | yes             |               36 |                   23 |
 
+** bug
+
+Another bug
+
+- switching the first time to the "merged" view from any other view, the toggle "CAA artwork count"-buttons ALL show the right expected artwork counts
+- when switching back from the "merged" view to the "un-official" view, the h2 artwork count is wrong, it's the same as for the "merged" view, but the individell artwork counts in the h2 rows are OK 
+- when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
 ** samples
 
