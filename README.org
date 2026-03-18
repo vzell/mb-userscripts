@@ -56132,23 +56132,23 @@ Another bug
 
 # Single table
 
-| h1 header | Bruce Springsteen Official Live Archive (digital)                                                             | Total rows | Total artworks |
-|-----------+---------------------------------------------------------------------------------------------------------------+------------+----------------|
-| h2 header | Releases                                                                                                      |        124 |            119 |
-|           | ▶ [per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
+| h1 header | Bruce Springsteen Official Live Archive (digital)                                                                         | Total rows | Total artworks |
+|-----------+---------------------------------------------------------------------------------------------------------------------------+------------+----------------|
+| h2 header | Releases                                                                                                                  |        124 |            119 |
+|           | ▶ [collapsable per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
 
 # Multiple table
 
-| h1 header | Greetings From Asbury Park, N.J                                                                               | Total rows | Total artworks |
-|-----------+---------------------------------------------------------------------------------------------------------------+------------+----------------|
-| h2 header | Album                                                                                                         |        124 |            119 |
-|-----------+---------------------------------------------------------------------------------------------------------------+------------+----------------|
-| h3 header | Official release                                                                                              |        119 |            114 |
-|           | ▶ [per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
-|           | Promotion release                                                                                             |          4 |              4 |
-|           | ▶ [per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
-|           | Bootleg release                                                                                               |          1 |              1 |
-|           | ▶ [per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
+| h1 header | Greetings From Asbury Park, N.J                                                                                           | Total rows | Total artworks |
+|-----------+---------------------------------------------------------------------------------------------------------------------------+------------+----------------|
+| h2 header | Album                                                                                                                     |        124 |            119 |
+|-----------+---------------------------------------------------------------------------------------------------------------------------+------------+----------------|
+| h3 header | Official release                                                                                                          |        119 |            114 |
+|           | ▶ [collapsable per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
+|           | Promotion release                                                                                                         |          4 |              4 |
+|           | ▶ [collapsable per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
+|           | Bootleg release                                                                                                           |          1 |              1 |
+|           | ▶ [collapsable per column multi-row list [/visibility/sort state/unique values/multi-row cells/filter state/resize state] |            |                |
 
 **** ArtistReleasegroups
 
