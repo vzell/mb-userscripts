@@ -45836,10 +45836,12 @@ text) ? If yes, please implement
 
 
 * TODO Export
-** remove "▶" and others before exporting
+** TODO remove cruft before exporting
+*** "▶"
 ** add more formats, JSON, ORG
 *** DONE JSON
 *** DONE ORG-Mode
+*** DONE HTML
 *** XML
 *** Excel
 
@@ -45963,15 +45965,57 @@ Include a "Close" button and also "Escape" key closing of the popup.
     }
 #+end_example
 
-* TODO statistics panel
-** wrong stats
-** make it multitable aware
-** memory usage how is it counted
-** make it aware of the NEW Artist-Releasegroups
-** DONE create keyboard shorcut
-
 
 * TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
+** very strange
+*** the column lenght is calcuated wrong for the real "Title"
+
+#+begin_example
+C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now) (live, 1971‐07‐23: Guggenheim Bandshell, Damrosch Park, Lincoln Center, New York City, NY, USA)
+#+end_example
+
+The "Title" column breaks at 
+
+#+begin_example
+C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now) (live, 1971‐07‐23: Guggenheim Bandshell, Damrosch Park, Lincoln Center, New York
+#+end_example
+
+and the rest, is rendered in the next line
+
+#+begin_example
+City, NY, USA)
+#+end_example
+
+the same is true for the column "MB-Name"
+
+where the real value in the "MB-Name" column is "C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now)
+
+but it breaks at 
+
+#+begin_example
+C’Mon Billy, Break Up the Wine (Nothing
+#+end_example
+
+and the rest
+
+#+begin_example
+Can Stop Me Now)
+#+end_example
+
+is again rendererd in a new line
+
+*** column mismatch
+
+For the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148
+
+additionally there is also a column mismatch occuring after the row
+"https://musicbrainz.org/recording/370414e2-522c-403d-80b2-1c99a6e1010f" - "Dinner at Eight", the "Atttibutes" column
+value moves under "Artist" column
+
+
+It breaks
+
+** initial
 
 For example for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
@@ -52912,7 +52956,6 @@ Rename
 
 Do the same for the "Collapse" case
 
-
 * DONE add information that ALL CAA images have been loaded
 ** DONE initial
 
@@ -52995,6 +53038,16 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
   </span>
 </td>
 #+end_example
+
+
+* DONE remove ➕ from "Release"
+
+#+begin_example
+  <span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
+  </span>
+#+end_example
+
+from "Release" at https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
 
 
 
@@ -53773,9 +53826,6 @@ curl -v -L "https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d0
 curl -v -L https://archive.org/download/mbid-3ce46b79-5e8c-470a-bcdc-45f301d09f60/index.json | jq
 
 
-* The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
-
-
 * add shortcut filter for column "Event-Country" for "Europe" etc. in https://musicbrainz.org/work/cc8d858a-38ef-35b0-b83c-a5d26f04207b?direction=2&link_type_id=278&page=1
 
 
@@ -53797,7 +53847,7 @@ the final rendered pages which have columns with name "CAA"
 // @author       Michael Wiencek
 #+end_example
 
-* Reintroduce jesus2099 "Release events"
+* TODO Reintroduce jesus2099 "Release events"
 
 #+begin_example
         {
@@ -54204,10 +54254,6 @@ from "recorded at:	Tramps in Flatiron District, New York, New York, United State
 to the event parts extracted
 
 
-* "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
-
-
-
 * GOOD versions
 ** /doubleCAAimages
 
@@ -54216,12 +54262,18 @@ to the event parts extracted
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 
 * TODO for RGs CAA artwork also display the Release from where it's sourced
-* add menu to hover CAA picture, for different actions
+* TODO add menu to hover CAA picture, for different actions
 
 
 * TODO in debug log emit also the entity title
 
-* question: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
+
+* QUESTION: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
+
+* QUESTION: on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
+
+on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
+fetching of all paginated pages begins after pressing the "Show all.." action button
 
 
 * QUESTION: on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
@@ -54233,8 +54285,20 @@ fetching of all paginated pages begins after pressing the "Show all.." action bu
 
 * TODO Change all the entity links to open in a new tab
 
-* TODO remove the CAA toggle artwork button when rowcount inside the button = "0", but on forcefull reload from the net dislpay it again if the count > "0"
 
+* TODO Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images (count=0), but on forcefull reload from the net display it again if the count > "0"
+
+Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
+
+#+begin_example
+<button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
+  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3abf4aed-71c0-45a6-8140-d916553956d8/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+  <span class="mb-caa-toggle-count">0
+  </span>
+</button>
+#+end_example
+
+So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefull reload from the net dislpay it again if the count > "0"
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
 
@@ -54260,10 +54324,45 @@ entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no
 to give the user the chance to quickly filter either for rows with OR without images
 
 
+* TODO "CAA" column AND other columns where thumbnails are shown: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+** DONE initial
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
+the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
+is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
+matter what other information is there)
+
+also add a changelog
+
+** DONE doesn't work
+
+In the newly uploaded userscript,
+
+On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
+
+The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
+entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
+to give the user the chance to quickly filter either for rows with OR without images
+** TODO incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
+
+some more things to implement:
+
+- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
+  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
+  functionality right to the columns defined as
+
+#+begin_example
+            features: {
+                addCAA: '<column name>'
+            },
+#+end_example
+
 
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
-
-
 
 * DONE OBSOLETE: on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
 ** initial
@@ -54567,10 +54666,7 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 ** count in the "Official Artist Discography" is the same as the global count (im not sure when it happens, probably during filtering)
 
 
-* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just display ONE, actually make it a multi-row cell
-
-
-* TODO add information that ALL CAA images have been loaded
+* DONE add information that ALL CAA images have been loaded
 ** DONE initial
 
 add a non intrusive popup window which tells the end-user that ALL CAA image loading has happened, "CAA" column, "Title"
@@ -54605,8 +54701,7 @@ in the function
 
 Actually display ALL the different timeing information (for the different image load paths) in the "toast.textContent" ... make it multiline
 
-** TODO make the info box a little bit wider
-
+** DONE make the info box a little bit wider
 
 * DONE When saving, then loading from on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - "EP - official" - https://musicbrainz.org/release-group/025f5d35-e806-4932-80c0-df1b383fb363 - "Lonesome Day" is missing the CAA icon, but only inside the "CAA" column
 
@@ -54655,53 +54750,6 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
 #+end_example
 
 
-
-
-* on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
-
-on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
-fetching of all paginated pages begins after pressing the "Show all.." action button
-
-
-
-* TODO "CAA" column AND other columns where thumbnails are shown: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
-** DONE initial
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
-the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
-is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
-matter what other information is there)
-
-also add a changelog
-
-** DONE doesn't work
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
-entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
-to give the user the chance to quickly filter either for rows with OR without images
-
-* TODO incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
-
-some more things to implement:
-
-- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
-  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
-  functionality right to the columns defined as
-
-#+begin_example
-            features: {
-                addCAA: '<column name>'
-            },
-#+end_example
-  
 
 * DONE deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog*
 * DONE initial
@@ -55238,7 +55286,7 @@ Esc with panel closed → closes dialog
 persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store
 (push to history) button - (also for load from disk - dialog)
 
-* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
+* TODO on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
 ** initial
 
 on the pageType of URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
@@ -55542,6 +55590,7 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
+
 * TODO create a configurable extractMultiRowCell function on a source column: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events ==> "Area", "Country" columns
 
 #+begin_example
@@ -55614,28 +55663,14 @@ collapsableColumns: [ 'Location', '', ... ],
         }
 #+end_example
 
-* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just dispay ONE
+* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just display ONE, actually make it a multi-row cell
+* TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
 
-* TODO Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images (count 0)
-
-Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
-
-#+begin_example
-<button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
-  <img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/3abf4aed-71c0-45a6-8140-d916553956d8/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
-  <span class="mb-caa-toggle-count">0
-  </span>
-</button>
-#+end_example
-
-So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefull reload from the net dislpay it again if the count > "0"
-
-
-* TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlighning", "Clear all column filters", "Clear all filters"
-
+* TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
 
 * TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
+
 
 * TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
 
@@ -55667,14 +55702,12 @@ definitin it means centered 'C'
 
 - All "integerColumns" should horizontally/center aligned in their column data cells (default)
 
-* Length should actually be right aligned
+* TODO Length should actually be right aligned
 
 #+begin_example
 integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
 #+end_example
 
-
-* TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
 * TODO todos
 
@@ -56749,7 +56782,7 @@ for the above example URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a
 As a side effect when deducing these columns and their background color, you should also render the same background
 color for the column display in the "Table Detail" in the statistics UI panel
 
-** still bugs
+** DONE still bugs
 
 one enhancement
 
@@ -56770,12 +56803,17 @@ artwork load over the network has been performed. This has happened when the fun
 function _showCaaCompletionToast()
 #+end_example
 
+** bugs
+
+Still some bugs
+
+
 3.) row count wrong
 
 
 
 
-* maybe
+* maybe (or the synthetic columns per table in a specific pageType can be deduced from the following parameters in the "const pageDefinitions" definitions variable
 
 (or the synthetic columns per table in a specific pageType can be
 deduced from the following parameters in the "const pageDefinitions" definitions variable
@@ -56791,19 +56829,7 @@ deduced from the following parameters in the "const pageDefinitions" definitions
                 extractMainColumn: 'Release' // Specific header
 #+end_example
 
-* fix CCA art work count + add them + total rows to summary, on the table level ist should be the filtered state and  artwork count per event/release
-
-
-* DONE remove 
-
-#+begin_example
-  <span style="cursor: pointer; color: rgb(119, 119, 119); float: right;">➕
-  </span>
-#+end_example
-
-from "Release" at https://musicbrainz.org/label/3d995ca7-d9de-4404-b96e-4e007fc2be5e
-
-
+* fix CCA art work count + add them + total rows to summary - on the table level ist should be the filtered state and artwork count per event/release
 
 * make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
 
@@ -56821,29 +56847,92 @@ comumn cell level accordingly)
 
 1434 in 14 minutes 
 
-* DONE Statistics panel: ~207 KB us WRONG
 * test with the VA pass
 
-* TODO reintroduce the old "official RGs" button
+* test with Save/Load fomr disk for Artist-Releasegroups
+
+* DONE Statistics panel: ~207 KB us WRONG
+* DONE reintroduce the old "official RGs" button
+
+Please reintroduce in the variable "const pageDefinitions" in following current definition
 
 #+begin_example
         {
             type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+                { label: '🧮 Official RGs',        params: { all: '0', va: '0' } },
+                { label: '🧮 Official VA RGs',     params: { all: '0', va: '1' } },
+                { label: '🧮 Artist RGs',          params: { all: '1', va: '0' } },
+                { label: '🧮 Various Artists RGs', params: { all: '1', va: '1' } }
             ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+
 #+end_example
 
+the two buttons
 
-* TODO the "global filter info" box should read, "Globally filtered <n> rows [global:"<filter expression>"]
+#+begin_example
+                { label: '🧮 Official RGs',        params: { all: '0', va: '0' } },
+                { label: '🧮 Official VA RGs',     params: { all: '0', va: '1' } },
+#+end_example
+
+again, so it should look like (also fix the indentation of "params")
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs',          params: { all: '1', va: '0' } },
+                { label: '🧮 Various Artists RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+Also adjust the tooltip section accordingly again
+
+#+begin_example
+        // Add tooltip based on button label
+#+end_example
+
+- label: '🧮 Official RGs'  ==> tooltip "Fetch all official artist release groups from the MusicBrainz backend database"
+- label: '🧮 Official VA RGs'  ==> tooltip "Fetch all official various artists release groups from the MusicBrainz backend database"
+
+* DONE the "global filter info" box should read, "Globally filtered <n> rows [global:"<filter expression>"]
+* DONE make the auto-resize always run by default but configurable
+
 
 * counting and display wrong: actually with indexedDB cache
+
 
 * test with final rendered page (so all are display)
 ** starting with ALL rows fetched for officail an non-officail
@@ -56895,12 +56984,543 @@ column filter("MB-Name"): "of"
 Table: 1 row (ok)
 
 
-* TODO explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
-
 * rendering time for VA - 1057 4.33s minutes in network mode
 
-* DONE make the auto-resize always run by default but configurable
+* DONE Put "Legal name: Bruce Frederick Joseph Springsteen" below "h1 header" "~Person" for Artist-Releasegroup pages
 
-* TODO reorder the tab/sub-table specific section alway lasts
+Please also add a new boolean variable "sa_enable_legal_name_relocation_on_final_page" (default: true) to the newly
+introduced section "Page header configuration".
 
-* TODO Put "Legal name: Bruce Frederick Joseph Springsteen" below "h1 header" "~Person" for Artist-Releasegroup pages
+When the value is true, then on Musicbrainz pageTypes for artist-releasegroups e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f,
+
+on the final rendered page the following block for the "Legal name" if present
+
+#+begin_example
+<p><strong>Legal name:</strong> <!-- -->Bruce Frederick Joseph Springsteen</p>
+#+end_example
+
+should be rendered right below the
+
+#+begin_example
+<p class="subheader">
+  <span class="prefix">~
+  </span>
+  <!-- -->Person
+  <span id="mb-status-sentinel" style="display: inline-block; width: 0px; height: 0px; overflow: hidden; vertical-align: middle;">
+  </span>
+  <div id="mb-status-displays-container" style="display: inline-flex; align-items: center; gap: 8px; line-height: 1; vertical-align: middle; margin-left: 10px;">
+    <span id="mb-global-status-display" style="font-size: 0.95em; color: rgb(153, 153, 153); font-weight: bold; vertical-align: middle;">Loaded 22 pages (2123 rows) from MusicBrainz, Fetching time: 28.05s, Rendering time: 0.83s
+    </span>
+    <span id="mb-info-display" style="font-size: 0.95em; color: green; font-weight: bold; vertical-align: middle;">✓ Table density: Compact
+    </span>
+  </div>
+</p>
+#+end_example
+
+and remove it from the original location.
+
+* DONE relocate the following block of code in the variable "const configSchema"
+
+relocate the following block of code in the variable "const configSchema"
+
+#+begin_example
+        sa_enable_h1_comment_span_relocation_on_initial_page: {
+            label: "Relocate H1 comment-span alias block (initial page)",
+            type: "checkbox",
+            default: true,
+            description: "On the original MusicBrainz entity page (before any 'Show all' button is pressed), move the alias <i title='...'> block from the h1's <span class='comment'> into a dedicated italic line injected below the page title. Only affects release-group and event pages where MusicBrainz injects an alias marker directly inside the h1 element. Standard disambiguation comments (e.g. '(live)') that contain no <i title> are never touched."
+        },
+
+        sa_enable_h1_comment_span_relocation_on_final_page: {
+            label: "Relocate H1 comment-span alias block (final rendered page)",
+            type: "checkbox",
+            default: true,
+            description: "After the consolidated table has been rendered (i.e. after a 'Show all' button completes), re-apply the H1 comment-span relocation so the alias line remains visible below the page title on the final page view. Same structural rules as the initial-page variant: only acts when an <i title='...'> alias marker is present inside the h1's <span class='comment'>."
+        },
+#+end_example
+
+to a new section "Page header configuration"
+
+* DONE add a new export as HTML functionality
+** DONE initial
+
+add a new export as HTML functionality to the "Export"-button, when clicked the current page should be exported as HTML,
+by using the same infrastrucure as the other exporters. The fileextension should of course be ".html"
+
+** DONE support multiple sub-tables
+
+some more things todo:
+
+1.)
+
+When exporting to HTML, the '<div id="mb-show-all-controls-container"' shouldn't be exported to the final HTML file, only the actual h1 header title
+
+2.)
+
+When exporting to HTML, we should also support the case when all or individuell sub-tables are collapsed
+
+3.)
+
+add support for the JSON and Org-Mode exporter, when on pages of pageType "multi"-table, to export all sub-tables NOT
+only the first one.
+
+- for the JSON export each sub-table and it's data could be wrapped in a data strucure with the name of the sub-table derived from
+  the h3 header
+
+- for the Org-mode exporter, the name of the sub-table derived from the h3 header should be prepended as a comment in
+  front of each sub-table data org table block
+
+** DONE strip garbage
+
+please implement the following
+
+1.)
+
+for Org-Mode export change the comment symbol "#" to a "*" in front of each sub-table data org table block
+
+2.)
+
+for ALL exporters make sure to strip invisible metadata (like for example JSON documents in serialized form) from the table data cells before exporting
+
+3,)
+
+even for "single"-table mode pageTypes add the pendant to what we do in "multi"-table mode (- for the JSON export each sub-table and it's data could be wrapped in a data strucure with the name of the sub-table derived from
+  the h3 header
+
+- for the Org-mode exporter, the name of the sub-table derived from the h3 header should be prepended as a comment in
+  front of each sub-table data org table block)
+
+, but for "single"-table mode derive the table-name for the export from the h2 header line in front of the table (e.g. for https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events this would be "Events")
+
+and
+
+- for JSON exporter include it in something like
+
+#+begin_example
+  "tables": [
+    {
+      "name": "Events",
+      "headers": [
+      ...
+#+end_example
+
+- for Org-Mode exporter prepend the exported org-mode table with
+
+#+begin_example
+ * Events
+#+end_example
+
+** DONE strip really garbage
+
+still bugs
+
+1.)
+
+There is invisible garbage in some data cells like e.g.
+
+#+begin_example
+{"relations":[{"entity":{"isni_codes":[],"end_area":null,"entityType":"artist","sort_name":"Springsteen, Bruce","typeID":1,"end_date":null,"gender":null,"comment":"","id":813,"begin_area":null,"last_updated":"2023-12-23T16:00:34Z","name":"Bruce Springsteen","area":null,"ipi_codes":[],"gender_id":1,"editsPending":false,"begin_date":{"day":23,"year":1949,"month":9},"gid":"70248960-cb53-4ea4-943a-edb18f7d336f","end_area_id":null,"begin_area_id":28034,"ended":false},"roles":["guest performer"],"credit":""},{"entity":{"sort_name":"Little Steven and the Disciples of Soul","end_date":null,"typeID":2,"end_area":null,"entityType":"artist","isni_codes":[],"end_area_id":null,"gid":"9b29b47f-5004-4863-92c0-058b621dcea8","begin_area_id":null,"ended":false,"editsPending":false,"gender_id":null,"begin_date":{"month":null,"year":1982,"day":null},"area":null,"ipi_codes":[],"gender":null,"comment":"","last_updated":"2025-02-14T22:58:48Z","begin_area":null,"id":48823,"name":"Little Steven and the Disciples of Soul"},"roles":["main performer"],"credit":""},{"entity":{"area":null,"ipi_codes":[],"gender":null,"comment":"","last_updated":"2014-09-03T00:00:48Z","begin_area":null,"id":55142,"name":"Audrey Martells","gid":"733dd37c-eaff-4fe5-9055-95b2d76b2bd0","end_area_id":null,"begin_area_id":null,"ended":false,"editsPending":false,"gender_id":2,"begin_date":null,"end_area":null,"entityType":"artist","isni_codes":[],"sort_name":"Martells, Audrey","end_date":null,"typeID":1},"roles":["main performer"],"credit":""},{"credit":"","roles":["main performer"],"entity":{"area":null,"ipi_codes":[],"comment":"American saxophonist","last_updated":"2025-06-11T17:16:06Z","begin_area":null,"id":167191,"name":"Stan Harrison","gender":null,"ended":false,"begin_area_id":7707,"gid":"7a606d62-de1f-412f-9d5b-57ab4c17b5bc","end_area_id":null,"begin_date":{"year":1953,"month":12,"day":8},"gender_id":1,"editsPending":false,"entityType":"artist","end_area":null,"isni_codes":[],"end_date":null,"typeID":1,"sort_name":"Harrison, Stan"}},{"roles":["main performer"],"entity":{"isni_codes":[],"entityType":"artist","end_area":null,"end_date":null,"typeID":1,"sort_name":"Devine, Sara","comment":"American singer and songwriter","id":211785,"begin_area":null,"last_updated":"2024-04-26T10:21:26Z","name":"Sara Devine","gender":null,"ipi_codes":[],"area":null,"begin_date":{"day":9,"year":null,"month":9},"editsPending":false,"gender_id":2,"ended":false,"begin_area_id":null,"end_area_id":null,"gid":"0b7d3e2e-aa6a-4fa9-a378-c87ae6bf146c"},"credit":""},{"roles":["main performer"],"entity":{"end_area":null,"entityType":"artist","isni_codes":[],"sort_name":"Daley, Jack","end_date":null,"typeID":1,"ipi_codes":[],"area":null,"gender":null,"comment":"bass guitarist and producer","begin_area":null,"id":302378,"last_updated":"2023-01-04T09:14:31Z","name":"Jack Daley","end_area_id":null,"gid":"bac82cac-a752-4a4e-9ad6-fe3395e924f5","begin_area_id":null,"ended":false,"gender_id":1,"editsPending":false,"begin_date":null},"credit":""},{"entity":{"entityType":"artist","end_area":null,"isni_codes":[],"end_date":null,"typeID":1,"sort_name":"Little Steven","area":null,"ipi_codes":[],"begin_area":null,"last_updated":"2026-01-28T08:00:26Z","id":433395,"name":"Little Steven","comment":"","gender":null,"begin_area_id":5075,"ended":false,"end_area_id":null,"gid":"de53495e-ad5a-4c30-82ab-05e7e3ec7b4d","begin_date":{"day":22,"month":11,"year":1950},"editsPending":false,"gender_id":1},"roles":["main performer"],"credit":"Steven Van Zandt"},{"credit":"","entity":{"ipi_codes":[],"area":null,"gender":null,"begin_area":null,"id":442734,"last_updated":"2019-05-19T07:56:55Z","name":"Ravi Best","comment":"","end_area_id":null,"gid":"25796215-9ec7-4d7b-ab48-8cd39adc08b2","ended":false,"begin_area_id":null,"editsPending":false,"gender_id":1,"begin_date":null,"end_area":null,"entityType":"artist","isni_codes":[],"sort_name":"Best, Ravi","typeID":1,"end_date":null},"roles":["main performer"]},{"entity":{"ended":false,"begin_area_id":null,"gid":"535f0c88-70ac-4486-8aea-6e2fbb34b16c","end_area_id":null,"begin_date":null,"gender_id":1,"editsPending":false,"ipi_codes":[],"area":null,"begin_area":null,"last_updated":"2024-04-26T10:32:27Z","id":514761,"name":"Ron Tooley","comment":"American trumpeter","gender":null,"typeID":1,"end_date":null,"sort_name":"Tooley, Ron","entityType":"artist","end_area":null,"isni_codes":[]},"roles":["main performer"],"credit":""},{"credit":"","entity":{"end_date":null,"typeID":1,"sort_name":"Manion, Ed","entityType":"artist","end_area":null,"isni_codes":[],"begin_area_id":222,"ended":false,"gid":"6a3394ba-6888-4dd0-93f3-06c1e35749d8","end_area_id":null,"begin_date":{"year":1952,"month":2,"day":28},"editsPending":false,"gender_id":1,"area":null,"ipi_codes":[],"last_updated":"2023-01-14T13:00:31Z","begin_area":null,"name":"Ed Manion","id":742600,"comment":"American saxophonist","gender":null},"roles":["main performer"]},{"entity":{"name":"Marc Ribler","begin_area":null,"last_updated":"2013-02-04T03:08:07Z","id":974028,"comment":"","gender":null,"area":null,"ipi_codes":[],"begin_date":null,"editsPending":false,"gender_id":1,"begin_area_id":null,"ended":false,"gid":"ea772005-b24c-4368-be0f-3b44e8fa8f36","end_area_id":null,"isni_codes":[],"entityType":"artist","end_area":null,"end_date":null,"typeID":1,"sort_name":"Ribler, Marc"},"roles":["main performer"],"credit":""},{"credit":"","roles":["main performer"],"entity":{"begin_date":null,"editsPending":false,"gender_id":1,"ended":false,"begin_area_id":null,"gid":"286b737a-71b1-4499-9c1a-9e86a47c9647","end_area_id":null,"id":1052756,"begin_area":null,"name":"Rich Mercurio","last_updated":"2024-04-26T10:34:55Z","comment":"American drummer and percussionist","gender":null,"area":null,"ipi_codes":[],"typeID":1,"end_date":null,"sort_name":"Mercurio, Rich","isni_codes":[],"entityType":"artist","end_area":null}},{"credit":"","entity":{"ended":false,"begin_area_id":null,"end_area_id":null,"gid":"432fcd84-7594-468e-92ec-ea080adb477f","begin_date":null,"gender_id":1,"editsPending":false,"ipi_codes":[],"area":null,"comment":"","last_updated":"2025-04-28T06:15:02Z","begin_area":null,"id":1088628,"name":"Andy Burton","gender":null,"typeID":1,"end_date":null,"sort_name":"Burton, Andy","entityType":"artist","end_area":null,"isni_codes":[]},"roles":["main performer"]},{"credit":"Jessie Wagner","roles":["main performer"],"entity":{"end_area":null,"entityType":"artist","isni_codes":[],"sort_name":"Wagner‐Cowan, Jessica","end_date":null,"typeID":1,"ipi_codes":[],"area":null,"gender":null,"comment":"American vocalist and songwriter","begin_area":null,"name":"Jessica Wagner‐Cowan","last_updated":"2024-04-26T10:10:06Z","id":1202383,"end_area_id":null,"gid":"7051f147-0f98-4679-a929-0ca365de9793","begin_area_id":5299,"ended":false,"editsPending":false,"gender_id":2,"begin_date":null}},{"credit":"","roles":["main performer"],"entity":{"id":1385191,"begin_area":null,"name":"Mike Mancini","last_updated":"2024-04-26T10:29:41Z","comment":"American keyboard player","gender":null,"ipi_codes":[],"area":null,"begin_date":null,"editsPending":false,"gender_id":1,"ended":false,"begin_area_id":null,"gid":"078e680d-6d6c-46ce-8134-0bddeb9e5e35","end_area_id":null,"isni_codes":[],"entityType":"artist","end_area":null,"end_date":null,"typeID":1,"sort_name":"Mancini, Mike"}},{"credit":"","entity":{"entityType":"artist","end_area":null,"isni_codes":[],"end_date":null,"typeID":1,"sort_name":"Almonte, Anthony","ipi_codes":[],"area":null,"comment":"Puerto Rican singer and percussionist","last_updated":"2023-01-21T15:57:03Z","begin_area":null,"id":2398691,"name":"Anthony Almonte","gender":null,"ended":false,"begin_area_id":7020,"gid":"b0ab3979-4165-4e3e-b125-2d77f14080bd","end_area_id":null,"begin_date":{"month":3,"year":1992,"day":6},"editsPending":false,"gender_id":1},"roles":["main performer"]},{"roles":["main performer"],"entity":{"gid":"75c75041-11d8-4b9d-b724-e64f14e57489","end_area_id":null,"begin_area_id":null,"ended":false,"gender_id":1,"editsPending":false,"begin_date":null,"area":null,"ipi_codes":[],"gender":null,"comment":"American trumpeter, saxophonist and trombonist","name":"John Martin","begin_area":null,"last_updated":"2024-04-20T14:28:45Z","id":2731500,"sort_name":"Martin, John","end_date":null,"typeID":1,"end_area":null,"entityType":"artist","isni_codes":[]},"credit":""}]}
+#+end_example
+
+in the "Artists" column on the URL https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events which is NOT rendered but is still exported, please fix
+
+2.)
+
+on the URL https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events for example, the "Artists" column
+has actually beside it's name "Artists" also the string 105 in the column header (because it's the total number of
+multi-rows cells in this column). This value is currently exported as part of the column name, BUT ONYL the real column name should be exported, please fix
+
+3.)
+
+for "single"-table mode pageTypes e.g https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events the name
+used for the exported table (e.g.in Org-Mode what gets rendered as "* Events" prepende to the actual org mode table) is
+wrongly constructed right now.  so e.g. for the org-mode example, we get right now
+
+#+begin_example
+ * Table 1
+#+end_example
+
+instead of
+
+#+begin_example
+ * Events
+#+end_example
+
+But that string to use for the table name is easy to extract from the h2 header row before thead
+
+#+begin_example
+<span class="mb-row-count-stat">(<number of rows>)</span>
+#+end_example
+
+
+* TODO inform the user that the CSV exporter exports the first table in "multi"-table mode
+
+inform the user that the CSV exporter exports the first table in "multi"-table mode
+
+
+* TODO explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
+** DONE initial - for sub-table format "(<M> of <N>)" and "(<n> of <M>)/<N>" add dynamic tooltips
+
+- Please create a dynamic tooltip text for the following format "(<M> of <N>)" in the following span in the h3 header line of a sub-table
+
+#+begin_example
+<span class="mb-row-count-stat">(4 of 13)</span>
+#+end_example
+
+when a global filter alone is in effect, which tells the user 'There are <M> rows filtered from the full <N> rows in this sub-table as the effect of the global filter "<global filter expression>"' 
+
+- Please create two dynamic tooltip texts for the following format "(<n> of <M>)/<N>" on the following span in the h3 header line of a sub-table
+
+#+begin_example
+<span class="mb-row-count-stat">(3 of 4)/13</span>
+#+end_example
+
+on tooltip should show up when hovering over the bracketed part "(<n> of <M>)", the other one when hovering over the "<N>" part.
+ - The tooltip over the "<N>" part should be "There are <N> total rows unfiltered in this sub-table"
+ - The tooltip over the "(<n> of <M>)" part should be, when a global filter and a sub-table filter are both in effect, 'There are <n> rows filtered as the effect of the sub-table filter "<sub-table filter expression>" from the <M> rows already filtered by the global filter "<global filter expression>"'
+
+** DONE explain the rest of the formats in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
+
+there are bugs with the dynamic tooltip implementation from the last session:
+
+1.)
+
+the dynamic tooltip text for the following format h3 count rows format "(<M> of <N>)" is not always displayed
+
+2.)
+
+the two part dynamic tooltip text for the format "(<n> of <M>)/<N>" is cut of for the first part for ""(<n> of <M>)".
+So instead of showing
+
+#+begin_example
+3 rows filtered by the sub-table filter "<sub-table filter expression>" from the <M> rows already filtered by the global filter "<global filter expression>"
+#+end_example
+
+it just shows
+
+#+begin_example
+3 rows filtered by the sub-table filter
+#+end_example
+
+3.)
+
+when NO filter at all is in effect, the tooltip for just the format "<N>" should be "There are <N> total unfiltered rows in this table"
+
+** DONE bugs
+
+still bugs
+
+1.)
+
+in "multi"-table mode, when a global filter is active and on a specific sub-table there is NO sub-table filter in
+effect, but one or more column-level filters, the dynamic tooltip for the h3 count rows format of "(<M> of <N>)" for that specific sub-table should change
+
+#+begin_example
+"<M>" rows filtered by the sub-table column filters on columns "<list of column names with their respective column filter expressions>" from the <M> rows already filtered by the global filter "<global filter expression>"
+#+end_example
+
+The
+
+#+begin_example
+"<list of column names with their respective column filter expressions>"
+#+end_example
+
+could look like e.g
+
+#+begin_example
+'column name 2':"<column name 2 filter expression>", 'column name 5':"<column name 5 filter expression>", 'column name 6':"<column name 6 filter expression>", ...
+#+end_example
+
+** DONE still buggy
+
+still buggy
+
+1.)
+
+in "multi"-table mode, when a global filter is active and on a specific sub-table and there is NO sub-table filter in
+effect, but one or more column-level filters, the dynamic tooltip for the h3 count rows format of "(<M> of <N>)" for
+that specific sub-table
+
+#+begin_example
+"<M>" rows filtered by the sub-table column filters on columns "<list of column names with their respective column filter expressions>" from the <M> rows already filtered by the global filter "<global filter expression>"
+#+end_example
+
+is not reset to
+
+#+begin_example
+There are <M> rows filtered from the full <N> rows in this sub-table as the effect of the global filter "<global filter expression>"
+#+end_example
+
+when all the column level filters are reset
+
+** DONE There are 1 = There is 1
+
+a couple of small gliches:
+
+1.)
+
+adjust the tooltips for the case of just one row (plural to singular)
+
+#+begin_example
+"There are 1" === "There is 1"
+#+end_example
+
+2.)
+
+if for a specific sub-table all filter types are in effect, a global, a sub-table and one or more column level filters, the tooltip text for the format "(<n> of <n>)/<N>" should be
+
+#+begin_example
+There are "<n>" rows left after the global filter "<global filter expression>", the sub-table filter "<sub-table filter expression>" and the column level filters "<list of column names with their respective column filter expressions>" from <N> total unfiltered rows in this sub-table
+#+end_example
+
+** DONE remove numbers from column names
+
+when creating the list of column names with their filters e.g.
+
+#+begin_example
+'column name 2':"<column name 2 filter expression>", 'column name 5':"<column name 5 filter expression>", 'column name 6':"<column name 6 filter expression>", ...
+#+end_example
+
+write a helper function for extracting just the real column name. Most of the column headers also have a number in front
+of the glyph for the unique-value drop down menu for the number of unique values in the column, or in addition if a
+column is a multi-rows cell column, for the number of rows which have a multi-row cell.
+
+Right now e.g. I get typically as the tooltip when column filters are involved
+
+#+begin_example
+There are "3" rows left after the global filter "live", the sub-table filter "e st" and the column level filters 'Country/Date 1':"it" from 13 total unfiltered rows in this sub-table
+#+end_example
+
+The "1" after "Country/Date" which is the real column name is the 1 unique value in this column
+
+2.)
+
+extend the tooltip scenario (albeit much simpler) also to the case of "single"-table pageTypes, with the exception that
+now the count rows formats show up in the single table h2 header row.
+
+** DONE new bug
+
+now the extracted column names are ALL empty in both the "multi"- and "single"-table modes, so the New module-level
+helper removes too much (basically everything when trying to extract the real column name from the column header, e.g.
+
+#+begin_example
+<th data-col-name="Country/Date" style="cursor: default; position: relative;"><div class="mb-col-hdr-flex">Country/Date <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span><span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 1 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 1 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry"><span class="mb-col-uniq-count">1</span><span class="mb-col-uniq-btn">📊</span></span></div><div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;"></div></th>
+#+end_example
+
+In this case the real column name would be "Country/Date"
+
+** bug in mult-table
+
+bugs in multi-table mode:
+
+1.)
+
+In "multi"-table mode, after the final rendering of the page, when NO filter has been specified yet, the tooltips on the sub-table h3 header row counts doesn't show the 
+
+#+begin_example
+There are <N> rows total unfiltered in this sub-table
+#+end_example
+
+only after a filter on any level has been specified
+
+2.)
+
+the tooltip in "multi"-table mode on the summarization row count h2 header line right now shows the text (which is fine for "single"-mode tables, as there is just ONE table)
+
+#+begin_example
+There are <N> rows total unfiltered in this table
+#+end_example
+
+but the wording should be
+
+#+begin_example
+There are <N> rows total unfiltered in ALL sub-tables
+#+end_example
+
+for "multi"-table pages
+
+** still
+
+1.)
+
+The Initial tooltip is still missing on h3 during very first render of the page
+
+2.)
+
+please implement the same background colors in the tooltips for the filter expressions, as the actual background colors
+what the filter strings looks like when they are highlighted in the tables, e.g. orange for the global filter, green for the sub-table filter etc.
+
+** doub tooltips
+
+one last bug:
+
+The new colored tooltip shows up fine but is immediately overhovered by the tooltips from the complete h2/h3 lines
+
+#+begin_example
+h2.title = 'Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)';
+h3.title = 'Click to collapse/uncollapse sub-section (Ctrl+Click to toggle ALL sub-sections)';
+#+end_example
+
+
+** change hardcoded hightlight for col filter
+
+#+begin_example
+Global filter highlight: bg sa_global_filter_highlight_bg (default #FFD700), color sa_global_filter_highlight_color (default red)
+Column filter highlight: bg sa_column_filter_highlight_bg (default #add8e6), color sa_column_filter_highlight_color (default red)
+STF highlight: bg #90ee90 (hardcoded light green), color #000
+#+end_example
+
+
+* TODO statistics panel
+** wrong stats
+** make it multitable aware
+** memory usage how is it counted
+** make it aware of the NEW Artist-Releasegroups
+** DONE create keyboard shorcut
+
+
+
+* DONE reorder the tab/sub-table specific section always last
+** DONE initial
+
+On the final rendered page, always check if there are h2 header sections AFTER the h2 section for the actual table/sub-tables
+
+- e.g on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c there is an additional h2 header section
+
+#+begin_example
+<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
+#+end_example
+
+after the actual h2 header where all the table data resides
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Album<span class="mb-row-count-stat">(8 of 12)/124</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">12</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string (focus this field with 'Ctrl+G')" style="font-size: 1em; padding: 2px 6px; border: 2px solid orange; border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s; box-shadow: orange 0px 0px 2px 2px;"><span id="mb-global-filter-clear" title="Clear global filter" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid orange; border-right: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude Matches (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle ALL highlighting</button><button id="mb-clear-column-filters-btn" title="Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by 'Ctrl+Shift+G')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter [global:"bruce"]</span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+#+end_example
+
+- e.g. on https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 there are two additional h2 header sections
+
+#+begin_example
+<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
+#+end_example
+
+#+begin_example
+<h2 class="related-works mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Related works</h2>
+#+end_example
+
+If this happens relocate ALL these h2 sections before the h2 section where the data tables reside AND after any other h2
+sections which may already exist before the h2 section where the data tables reside
+
+** DONE bug
+
+a bug:
+
+The relocation has been done just with the h2 headers it self (with your last implementation) BUT NOT ONLY the h2
+headers itself, also the complete content after each h2 header up to the next h2 header (if there still is one) should
+be relocated
+
+** DONE make this feature configurable
+
+1.)
+
+rename the current "PAGE HEADER CONFIGURATION" section in the variable "const configSchema" to "PAGE HEADER AND BODY CONFIGURATION"
+
+2.)
+
+a new boolean variable "sa_enable_h2_section_relocation_on_final_page" (default: true) to the newly renamed "PAGE HEADER AND BODY CONFIGURATION" section
+
+Guard the current code after the line
+
+#+begin_example
+"// ── Trailing h2 relocation ───────────────────────────────────────────" 
+#+end_example
+
+to only be executed when the variable is true
+
+* DONE on "multi"-table pageTypes when filtering a sub-table with the sub-table specific filter field, the h2 header line (which displays and summarizes row counts over all the sub-tables) correctly displays the corresponding changed total count
+** initial
+
+on "multi"-table pageTypes when filtering a sub-table with the sub-table specific filter field, the h2 header line
+(which displays and summarizes row counts over all the sub-tables) correctly displays the corresponding changed total
+count
+
+But when clearing the sub-table filter field, the h2 header line count does not change, so it does NOT reflect the reset
+of the sub-table filter field (only the sub-table row count is reflected in it's h3 header line). Filtering on a column
+level filter field in a sub-table does NOT show this effect. After resetting a column level filter on a sub-table BOTH
+counts in the sub-table h3 header line and the global count in the h2 header line are correct. please fix
+
+** problem is
+
+#+begin_example
+Now I see the actual problem clearly. In clearSubFilter:
+
+Line 18764-18767: rows have data-mb-stf-hidden deleted and their display restored
+Line 18776: updateH2CountFromSubtables() is called
+In updateH2CountFromSubtables, the new guard at line 18922:
+jsif (!anySubtableFilterActive && !anyStfHiddenRows) return;After clearSubFilter runs, both anySubtableFilterActive is false (input cleared) AND anyStfHiddenRows is false (the delete row.dataset.mbStfHidden already ran on line 18766). So the function still returns early! The fix needs to bypass this check entirely when called from clearSubFilter.The cleanest fix: pass a {force: true} parameter to skip the guard, or simply always recalculate (remove the guard entirely and call updateH2Count unconditionally). The guard was only to avoid unnecessary work — it can be removed safely since the function is lightweight:Now let me also read the h2 relocation code for Bug 2:Viewed 2 files, ran a commandViewed 2 files, ran a commandNow I understand both bugs completely. Let me implement:Bug 1: The updateH2CountFromSubtables early-return guard is still wrong. When clearSubFilter calls it, mbStfHidden has already been deleted AND anySubtableFilterActive is false → returns early. Fix: remove the guard entirely. The function is called rarely (only on STF apply/clear) so the cost is negligible.Bug 2: After finalCleanup, find all h2 elements that come AFTER the data h2 (the one with .mb-row-count-stat) and move them to just before the data h2.Copy to working dirCopy to working dirFix Bug 1 — remove the guard entirely:
+#+end_example
+
+* DONE "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
+
+In the following code block
+
+#+begin_example
+        {
+            type: 'area-recordings',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Area' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+add the "columnExtractors" block
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+#+end_example
+
+so that it looks like
+
+#+begin_example
+        {
+            type: 'area-recordings',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Area' } ],
+            features: {
+                extractMainColumn: 'Title'
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+
+* DONE The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
+
+
+* batches in the last session from Opitz
+
+#+begin_example
+v9.99.219 — Stats panel: column-count rows, panel vertical resize, multi-table collapse, config schema (Resize section, auto-resize, stats panel settings)
+v9.99.220 — Stats panel: live artwork timing, CAA/EAA label fix, EAA artwork count, synthetic column bg detection + tinting
+v9.99.221 — Hotfix: missing { syntax error in globalRows
+v9.99.222 — Stats panel font size default 125%, persisted slider
+v9.99.223 — Official RGs / Official VA RGs buttons restored + tooltips
+v9.99.224 — HTML export format
+v9.99.225 — Export fixes: HTML controls-container strip, collapsed tables, JSON/Org-Mode multi-table
+v9.99.226 — Exporters: _exportCleanCellText (strips JSON blobs), _exportNameFor (h2 fallback), Org-Mode * headings, always-tables JSON structure
+v9.99.227 — Six bug fixes + page header config section + legal name relocation
+v9.99.228 — STF clear h2 fix (calls runFilter), trailing h2 relocation
+v9.99.229 — Trailing h2 relocation: move full section content, not just heading
+v9.99.230 — Renamed config section, sa_enable_h2_section_relocation guard, area-recordings video extractor, sub-table count tooltips
+v9.99.231 — Tooltip DOM property fix (quotes in filter expressions), (N) tooltip
+v9.99.232 — Column-filter-aware sub-table tooltips with column name+expression summary
+#+end_example
