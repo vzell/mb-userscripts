@@ -1,5 +1,30 @@
 [
     {
+      "version": "9.99.222",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Statistics panel font size: default startup font size raised from 88% to 125% (`_FS_DEFAULT = 125`). The slider maximum is also raised from 125% to 150% so the slider still has range above the new default.",
+            "Statistics panel font size: slider position is now persisted alongside position and size in GM storage key `sa_stats_panel_geometry` (new `fontSize` field). On the next open the stored font size is restored immediately via `_applyFs(_restoredFs)` — before the `setTimeout(0)` that restores position/size — so the panel never flickers at the wrong font size. The slider `input` event now calls `_saveGeo()` after each adjustment so the new size is saved immediately. The Reset button resets to the new 125% default."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.221",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Hotfix for 9.99.220: syntax error — `SyntaxError: Unexpected token ':'` at the '🔲 Total original columns' stat row in `globalRows`. The node heredoc script that wrote the globalRows block emitted the object comments and `stat:` key directly after the previous `},` without the required opening `{`. Fixed by inserting the missing `{` before the comment block. Additionally fixed a copy-paste error in the IDB comment string: `_cs.icon.idb` was used twice (`icon + icon`) instead of `icon + inline`."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.220",
       "date": "2026-03-17",
       "sections": [

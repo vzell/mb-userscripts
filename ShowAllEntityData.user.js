@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.220+2026-03-17
+// @version      9.99.222+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8061,7 +8061,7 @@
         // Reset restores body, panel width/height to their configured defaults.
         // The slider + label sit in a flex container that is right-aligned inside
         // the Global Statistics section heading row.
-        const _FS_MIN  = 65, _FS_MAX = 125, _FS_DEFAULT = 88; // percent of 1em
+        const _FS_MIN  = 65, _FS_MAX = 150, _FS_DEFAULT = 125; // percent of 1em
         let _curFs = _FS_DEFAULT;
 
         const _applyFs = (pct) => {
@@ -8107,7 +8107,10 @@
         fsSlider.title = 'Adjust dialog font size';
         fsSlider.style.cssText = `width:90px;cursor:pointer;accent-color:${C.green};`;
         fsSlider.addEventListener('mousedown', e => e.stopPropagation());
-        fsSlider.addEventListener('input', () => _applyFs(parseInt(fsSlider.value, 10)));
+        fsSlider.addEventListener('input', () => {
+            _applyFs(parseInt(fsSlider.value, 10));
+            _saveGeo(); // persist new font size alongside current position/size
+        });
 
         fsWrap.appendChild(fsResetBtn);
         fsWrap.appendChild(fsSlider);
@@ -8168,7 +8171,7 @@
                 value: _cs && (_cs.icon.idb + _cs.inline.idb) > 0
                     ? _fmtMs(_caaElapsedMs) : '—',
                 comment: _cs
-                    ? `${_cs.icon.idb} icon + ${_cs.icon.idb} inline from IDB cache`
+                    ? `${_cs.icon.idb} icon + ${_cs.inline.idb} inline from IDB cache`
                     : '',
             },
             {
@@ -8207,6 +8210,7 @@
                     ? `Unique artwork links across ${subTblCount} sub-table${subTblCount > 1 ? 's' : ''}`
                     : `Counting ${_artKey} links… (updates when loading completes)`,
             },
+            {
                 // Original columns: from snapshot (captured before synthetic injection
                 // if snapshot timing is good) or derived from live DOM via dataset.colName.
                 stat: '🔲 Total original columns',
@@ -8533,16 +8537,20 @@
         document.body.appendChild(panel);
 
         // ── 5. Geometry persistence ──────────────────────────────────────────
+        // Stored object: { top, left, width, height, fontSize }
+        // fontSize is stored as a percentage integer (e.g. 125) so it is
+        // restored alongside position/size on the next open.
         const _GEO_KEY = 'sa_stats_panel_geometry';
 
         const _saveGeo = () => {
             const r = panel.getBoundingClientRect();
             if (r.width < 10 || r.height < 10) return;
             GM_setValue(_GEO_KEY, {
-                top:    Math.round(r.top),
-                left:   Math.round(r.left),
-                width:  Math.round(r.width),
-                height: Math.round(r.height),
+                top:      Math.round(r.top),
+                left:     Math.round(r.left),
+                width:    Math.round(r.width),
+                height:   Math.round(r.height),
+                fontSize: _curFs,  // persist slider position
             });
         };
 
@@ -8551,15 +8559,23 @@
             const w  = Math.min(Math.max(g.width,  380), vw - 20);
             const h  = Math.min(Math.max(g.height, 200), vh - 20);
             return {
-                top:    Math.min(Math.max(g.top,  0), vh - 40),
-                left:   Math.min(Math.max(g.left, 0), vw - w),
-                width:  w,
-                height: h,
+                top:      Math.min(Math.max(g.top,  0), vh - 40),
+                left:     Math.min(Math.max(g.left, 0), vw - w),
+                width:    w,
+                height:   h,
+                fontSize: g.fontSize || _FS_DEFAULT,
             };
         };
 
-        // Restore saved geometry or default top-right position
+        // Restore saved geometry (position, size, font size) or fall back to
+        // defaults.  Font size is applied immediately (before the setTimeout so
+        // the panel never flickers at the wrong size), position/size after layout.
         const _storedGeo = GM_getValue(_GEO_KEY, null);
+        const _restoredFs = (_storedGeo && _storedGeo.fontSize)
+            ? Math.min(_FS_MAX, Math.max(_FS_MIN, _storedGeo.fontSize))
+            : _FS_DEFAULT;
+        _applyFs(_restoredFs); // sets body.style.fontSize + slider + label immediately
+
         setTimeout(() => {
             if (_storedGeo && _storedGeo.width && _storedGeo.height) {
                 const g = _clampGeo(_storedGeo);
