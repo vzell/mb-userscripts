@@ -57309,7 +57309,7 @@ helper removes too much (basically everything when trying to extract the real co
 
 In this case the real column name would be "Country/Date"
 
-** bug in mult-table
+** DONE bug in mult-table
 
 bugs in multi-table mode:
 
@@ -57339,7 +57339,7 @@ There are <N> rows total unfiltered in ALL sub-tables
 
 for "multi"-table pages
 
-** still
+** DONE still
 
 1.)
 

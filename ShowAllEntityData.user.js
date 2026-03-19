@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.219+2026-03-17
+// @version      9.99.220+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -7616,42 +7616,44 @@
         let _rows = 0;
         _tbls.forEach(t => { _rows += t.querySelectorAll('tbody tr').length; });
 
-        // Count total unique CAA artwork links via synchronous scan
-        let _caa = 0;
-        if (typeof _artCountLinks === 'function' &&
-            typeof CAA_CTX !== 'undefined') {
-            _tbls.forEach(t => { _caa += _artCountLinks(CAA_CTX, t).count || 0; });
+        // Resolve artwork context: EAA for addEAA pages, CAA for all others
+        const _artCtx = _getActiveArtCtx();
+
+        // Count total unique artwork links using the correct context
+        let _artCount = 0;
+        if (typeof _artCountLinks === 'function') {
+            _tbls.forEach(t => { _artCount += _artCountLinks(_artCtx, t).count || 0; });
         }
 
-        // Count original vs synthetic columns from the first table's header row.
-        // Synthetic columns are identified by th.dataset.colName being set (all three
-        // injectors — columnExtractors, syntheticColumnExtractors, extractMainColumn —
-        // set th.dataset.colName when they create a synthetic <th>).
-        // Original columns are all others (including the CAA column erased/replaced).
-        const _firstTbl   = _tbls[0];
-        const _headerRow  = _firstTbl
+        // Count original vs synthetic columns.
+        // Primary: th.dataset.colName set by all three cleanupHeaders injectors.
+        // Fallback: th.style.backgroundColor matching sa_ui_thead_th_synthetic_bg.
+        const _synthBg = (Lib.settings.sa_ui_thead_th_synthetic_bg || '#b8c8b8')
+            .replace(/\s/g, '').toLowerCase();
+        const _firstTbl  = _tbls[0];
+        const _headerRow = _firstTbl
             ? _firstTbl.querySelector('thead tr:first-child') : null;
         let _origCols = 0, _synthCols = 0;
         if (_headerRow) {
             Array.from(_headerRow.cells).forEach(th => {
-                if (th.dataset.colName) {
-                    // Injected by a column extractor — synthetic
-                    _synthCols++;
-                } else {
-                    _origCols++;
-                }
+                const _isSynth = !!th.dataset.colName ||
+                    (!!th.style.backgroundColor &&
+                     th.style.backgroundColor.replace(/\s/g, '').toLowerCase() === _synthBg);
+                if (_isSynth) _synthCols++;
+                else          _origCols++;
             });
         }
 
         _statsSnapshot.totalRows     = _rows;
-        _statsSnapshot.totalCaaCount = _caa;
+        _statsSnapshot.totalCaaCount = _artCount;
         _statsSnapshot.originalCols  = _origCols;
         _statsSnapshot.syntheticCols = _synthCols;
+        _statsSnapshot.artCtxKey     = _artCtx.key;
         _statsSnapshot.captured      = true;
 
         Lib.debug('stats',
-            `Stats snapshot captured: ${_rows} rows, ${_caa} CAA links, ` +
-            `${_origCols} original cols + ${_synthCols} synthetic cols`);
+            `Stats snapshot: ${_rows} rows, ${_artCount} ${_artCtx.key.toUpperCase()} links, ` +
+            `${_origCols} orig + ${_synthCols} synthetic cols`);
     }
 
     /**
@@ -7697,6 +7699,13 @@
         const _maxVh = (Lib.settings.sa_stats_panel_max_height || 82);
 
         // ── 1. Gather global statistics ──────────────────────────────────────
+
+        // Resolve active artwork context (EAA for addEAA pages, CAA otherwise).
+        // All artwork labels, counts, and row names in the panel are derived from
+        // this context so EAA pages show EAA everywhere instead of CAA.
+        const _artCtx    = _getActiveArtCtx();
+        const _artKey    = _artCtx.key.toUpperCase();          // 'CAA' or 'EAA'
+        const _artIsEaa  = _artCtx.key === 'eaa';
 
         const _cs  = (typeof _caaFetchStats !== 'undefined') ? _caaFetchStats : null;
         const _caaElapsedMs = (_cs && _cs.startTime !== null)
@@ -7774,6 +7783,10 @@
             return (bdi ? bdi.textContent : h1.textContent).trim().replace(/\s+/g, ' ');
         })();
 
+        // Synthetic column background color — used both for detection fallback
+        // and to tint synthetic columns in the Table Detail column breakdown.
+        const _synthBgColor = Lib.settings.sa_ui_thead_th_synthetic_bg || '#b8c8b8';
+
         const _tableData = Array.from(tables).map((tbl, tIdx) => {
             const _h2 = (() => {
                 const allH2 = Array.from(document.querySelectorAll('h2'));
@@ -7811,17 +7824,15 @@
                 return inp ? inp.value.trim() : '';
             })();
 
-            // Total unique artwork links for this table — use _artCountLinks so
-            // the count reflects all linked entities regardless of image-load state.
-            // Fall back to the toggle-button badge if _artCountLinks is unavailable.
+            // Filtered artwork count for this table — uses the active art context
+            // (CAA or EAA) so EAA pages count EAA links, not CAA links.
             const _caaCount = (() => {
-                if (typeof _artCountLinks === 'function' &&
-                    typeof CAA_CTX !== 'undefined') {
-                    return _artCountLinks(CAA_CTX, tbl).count || 0;
+                if (typeof _artCountLinks === 'function') {
+                    return _artCountLinks(_artCtx, tbl).count || 0;
                 }
-                // Fallback: read from the toggle-button badge (loaded images only)
-                const _btn   = document.getElementById('mb-caa-toggle-btn-' + tIdx);
-                const _badge = _btn ? _btn.querySelector('.mb-caa-toggle-count') : null;
+                // Fallback: toggle-button badge (loaded images only, async)
+                const _btn   = document.getElementById(_artCtx.btnPrefix + '-' + tIdx);
+                const _badge = _btn ? _btn.querySelector('.' + _artCtx.countClass) : null;
                 return _badge ? (parseInt(_badge.textContent, 10) || 0) : 0;
             })();
 
@@ -7834,6 +7845,13 @@
                 const _colName = _rawName || `Col ${ci + 1}`;
 
                 const _visible = th.style.display !== 'none';
+
+                // Detect synthetic column: dataset.colName set (primary) or
+                // backgroundColor matches the configured synthetic bg (fallback).
+                const _isSynth = !!th.dataset.colName ||
+                    (!!th.style.backgroundColor &&
+                     th.style.backgroundColor.replace(/\s/g, '').toLowerCase() ===
+                     _synthBgColor.replace(/\s/g, '').toLowerCase());
 
                 const _sortBtns = th.querySelectorAll('.sort-icon-btn');
                 let _sortState = '⇅ none';
@@ -7866,7 +7884,8 @@
                 const _wPx = _cgC ? parseInt(_cgC.style.width) : 0;
                 const _wStr = _wPx > 0 ? `manually ${_wPx}\u202fpx` : 'default';
 
-                return { name: _colName, visible: _visible, sort: _sortState,
+                return { name: _colName, visible: _visible, isSynth: _isSynth,
+                         sort: _sortState,
                          unique: _uqCount, multiRow: _mrCount,
                          filter: _cfVal, resize: _wStr };
             }) : [];
@@ -8094,49 +8113,50 @@
         fsWrap.appendChild(fsSlider);
         fsWrap.appendChild(fsLabel);
 
-        // ── Total CAA artwork count — use first-render snapshot ──────────
-        // The snapshot is captured once after the initial render completes so
-        // this value stays stable even when filters are subsequently applied.
+        // ── Total artwork count — snapshot (stable, unfiltered) ──────────────
+        // Uses the active art context (CAA or EAA) from the snapshot.
         const _totalCaaCount = _statsSnapshot.captured
             ? _statsSnapshot.totalCaaCount
             : (() => {
-                if (typeof _artCountLinks !== 'function' ||
-                    typeof CAA_CTX === 'undefined') return 0;
+                if (typeof _artCountLinks !== 'function') return 0;
                 let sum = 0;
-                tables.forEach(t => { sum += _artCountLinks(CAA_CTX, t).count || 0; });
+                tables.forEach(t => { sum += _artCountLinks(_artCtx, t).count || 0; });
                 return sum;
             })();
 
         // Snapshot total rows (unfiltered) — stable even after filters applied.
         const _snapshotTotalRows = _statsSnapshot.captured
             ? _statsSnapshot.totalRows
-            : totalRows; // fall back to current live count
+            : totalRows;
 
         // Original vs synthetic column counts — from snapshot when available.
-        // Live fallback: scan the first table's header; cells with dataset.colName
-        // set were injected by a column extractor (synthetic); all others are original.
         const { _origCols, _synthCols } = (() => {
             if (_statsSnapshot.captured) {
-                return {
-                    _origCols:  _statsSnapshot.originalCols,
-                    _synthCols: _statsSnapshot.syntheticCols,
-                };
+                return { _origCols: _statsSnapshot.originalCols,
+                         _synthCols: _statsSnapshot.syntheticCols };
             }
-            const _fTbl  = tables[0];
-            const _fHdr  = _fTbl ? _fTbl.querySelector('thead tr:first-child') : null;
+            const _fTbl = tables[0];
+            const _fHdr = _fTbl ? _fTbl.querySelector('thead tr:first-child') : null;
             let orig = 0, syn = 0;
+            const _sbg = _synthBgColor.replace(/\s/g, '').toLowerCase();
             if (_fHdr) {
                 Array.from(_fHdr.cells).forEach(th => {
-                    th.dataset.colName ? syn++ : orig++;
+                    const _s = !!th.dataset.colName ||
+                        (!!th.style.backgroundColor &&
+                         th.style.backgroundColor.replace(/\s/g, '').toLowerCase() === _sbg);
+                    _s ? syn++ : orig++;
                 });
             }
             return { _origCols: orig, _synthCols: syn };
         })();
 
         // ── Global statistics rows ────────────────────────────────────────────
+        // Artwork-related labels use _artKey ('CAA' or 'EAA') so EAA pages
+        // show EAA everywhere.  Loading times come from _caaFetchStats which
+        // tracks both CAA and EAA loads.
         const globalRows = [
             {
-                stat: '🌐 Network loading time (CAA)',
+                stat: `🌎 Network loading time (${_artKey})`,
                 value: _cs && (_cs.icon.network + _cs.inline.network) > 0
                     ? _fmtMs(_caaElapsedMs) : '—',
                 comment: _cs
@@ -8144,11 +8164,11 @@
                     : '',
             },
             {
-                stat: '🗄️ IndexedDB loading time (CAA)',
+                stat: `🗄️ IndexedDB loading time (${_artKey})`,
                 value: _cs && (_cs.icon.idb + _cs.inline.idb) > 0
                     ? _fmtMs(_caaElapsedMs) : '—',
                 comment: _cs
-                    ? `${_cs.icon.idb} icon + ${_cs.inline.idb} inline from IDB cache`
+                    ? `${_cs.icon.idb} icon + ${_cs.icon.idb} inline from IDB cache`
                     : '',
             },
             {
@@ -8173,22 +8193,20 @@
                 comment: subTblCount === 1 ? 'Single sub-table' : `${subTblCount} sub-tables`,
             },
             {
-                // Total unfiltered rows — snapshot value, stable after filters applied.
                 stat: '📋 Total table rows',
                 value: `<span style="font-weight:600">${_snapshotTotalRows.toLocaleString()}</span>`,
                 comment: 'Total number of unfiltered table rows',
             },
             {
-                // Total unique CAA front artwork links — snapshot value, never changes.
-                stat: '🖼️ Total CAA front artwork count',
+                // id used for live refresh from _showCaaCompletionToast when panel is open.
+                stat: `🖼️ Total ${_artKey} front artwork count`,
                 value: _totalCaaCount > 0
                     ? `<span style="color:${C.accent};font-weight:600">${_totalCaaCount.toLocaleString()}</span>`
-                    : '<span style="color:#999">0</span>',
+                    : '<span id="mb-stats-art-count-val" style="color:#999">—</span>',
                 comment: _totalCaaCount > 0
                     ? `Unique artwork links across ${subTblCount} sub-table${subTblCount > 1 ? 's' : ''}`
-                    : 'No CAA artwork columns found',
+                    : `Counting ${_artKey} links… (updates when loading completes)`,
             },
-            {
                 // Original columns: from snapshot (captured before synthetic injection
                 // if snapshot timing is good) or derived from live DOM via dataset.colName.
                 stat: '🔲 Total original columns',
@@ -8374,7 +8392,7 @@
                 `<span style="font-size:0.8em;color:${C.muted}">Filtered rows</span>`,
                 { small: true, right: true }));
             chRow2.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Filtered CAA artwork count</span>`,
+                `<span style="font-size:0.8em;color:${C.muted}">Filtered ${_artKey} artwork count</span>`,
                 { small: true, right: true }));
 
             cardHdr.appendChild(chRow);
@@ -8435,7 +8453,12 @@
                     const cr = document.createElement('tr');
                     cr.dataset.statsRow = 'true';
                     cr.onmouseenter = () => { if (!cr.dataset.qfHide) cr.style.background = C.accentL; };
-                    cr.onmouseleave = () => { cr.style.background = ''; };
+                    cr.onmouseleave = () => {
+                        cr.style.background = col.isSynth ? _synthBgColor + '55' : '';
+                    };
+
+                    // Apply synthetic column tint to the whole row background
+                    if (col.isSynth) cr.style.background = _synthBgColor + '55';
 
                     const _mkColTd = (txt, opts2 = {}) => {
                         const td3 = document.createElement('td');
@@ -8449,9 +8472,10 @@
                     };
 
                     cr.appendChild(_mkColTd(String(ci + 1), { center: true }));
+                    // Column name cell — tinted background for synthetic columns
                     cr.appendChild(_mkColTd(
                         col.visible
-                            ? `<strong>${col.name}</strong>`
+                            ? `<strong${col.isSynth ? ` style="color:${C.accent}"` : ''}>${col.name}</strong>`
                             : `<span style="text-decoration:line-through;color:#aaa">${col.name}</span>`
                     ));
                     cr.appendChild(_mkColTd(
@@ -12444,11 +12468,25 @@
     // panel to show the unfiltered total row count and the total CAA artwork
     // count at the time of the initial render, neither of which can be derived
     // from the live DOM once the user has applied filters.
+    // ── Active artwork context ────────────────────────────────────────────────
+    // Returns EAA_CTX for pages that use the Event Art Archive (addEAA feature),
+    // CAA_CTX for all others.  Used by the statistics panel and snapshot capture
+    // to ensure artwork counts and labels are correct for EAA-only pages.
+    function _getActiveArtCtx() {
+        if (activeDefinition &&
+            activeDefinition.features &&
+            activeDefinition.features.addEAA) {
+            return EAA_CTX;
+        }
+        return CAA_CTX;
+    }
+
     let _statsSnapshot = {
-        totalRows:       0,   // total table rows, no filter applied
-        totalCaaCount:   0,   // total unique CAA artwork links, initial render
-        originalCols:    0,   // columns from the original MusicBrainz page (pre-synthetic)
-        syntheticCols:   0,   // columns injected by columnExtractors / syntheticColumnExtractors
+        totalRows:       0,     // total table rows, no filter applied
+        totalCaaCount:   0,     // total unique artwork links (CAA or EAA), initial render
+        originalCols:    0,     // columns from the original MusicBrainz page (pre-synthetic)
+        syntheticCols:   0,     // columns injected by columnExtractors / syntheticColumnExtractors
+        artCtxKey:       'caa', // 'caa' or 'eaa' — resolved at capture time via _getActiveArtCtx()
         captured:        false,
     };
     let stopRequested = false;
@@ -28343,6 +28381,57 @@
         toast.addEventListener('click', dismiss);
         document.body.appendChild(toast);
         const timer = setTimeout(dismiss, duration);
+
+        // ── Live-update the Statistics panel if it is currently open ─────────
+        // By the time this toast fires, all artwork has loaded and _caaFetchStats
+        // has its final values.  If the stats panel is open we can fill in the
+        // loading-time rows and the total artwork count immediately.
+        const _statsPanel = document.getElementById('mb-stats-panel');
+        if (_statsPanel) {
+            // Re-capture the snapshot now that loading is complete (it may have
+            // been captured before image loads finished; force a fresh capture).
+            _statsSnapshot.captured = false;
+            _captureStatsSnapshot();
+
+            // Update the artwork-count placeholder if the value was '—' (panel
+            // opened before snapshot was ready).
+            const _artValEl = _statsPanel.querySelector('#mb-stats-art-count-val');
+            if (_artValEl && _statsSnapshot.totalCaaCount > 0) {
+                _artValEl.id      = ''; // prevent duplicate update
+                _artValEl.style.color      = ''; // clear the grey placeholder color
+                _artValEl.style.fontWeight = '600';
+                _artValEl.textContent = _statsSnapshot.totalCaaCount.toLocaleString();
+            }
+
+            // Update the loading-time rows by finding the stat rows that contain
+            // the timing placeholders and replacing '—' with the real elapsed time.
+            const _fmtMsLocal = (ms) => {
+                if (!ms) return '—';
+                if (ms < 1000)  return `${Math.round(ms)}\u202fms`;
+                const s = ms / 1000;
+                if (s < 60)    return `${s.toFixed(1)}\u202fs`;
+                const m = Math.floor(s / 60);
+                return `${m}\u202fm\u202f${Math.round(s % 60)}\u202fs`;
+            };
+            const _elapsed = (s.startTime !== null)
+                ? _fmtMsLocal(performance.now() - s.startTime) : null;
+            if (_elapsed) {
+                const _networkCount = s.icon.network + s.inline.network;
+                const _idbCount     = s.icon.idb     + s.inline.idb;
+                _statsPanel.querySelectorAll('tr[data-stats-row]').forEach(row => {
+                    const _statTd = row.querySelector('td:first-child');
+                    if (!_statTd) return;
+                    const _valTd = row.querySelector('td:nth-child(2)');
+                    if (!_valTd) return;
+                    const _statText = _statTd.textContent;
+                    if (_statText.includes('Network loading time') && _networkCount > 0) {
+                        if (_valTd.textContent.trim() === '—') _valTd.textContent = _elapsed;
+                    } else if (_statText.includes('IndexedDB loading time') && _idbCount > 0) {
+                        if (_valTd.textContent.trim() === '—') _valTd.textContent = _elapsed;
+                    }
+                });
+            }
+        }
     }
 
     /**

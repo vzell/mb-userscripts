@@ -1,5 +1,20 @@
 [
     {
+      "version": "9.99.220",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Statistics panel — Bug 1 (live artwork timing): the 'Network loading time' and 'IndexedDB loading time' rows in Global Statistics previously always showed '—' because `_caaFetchStats` is complete only after all images have loaded (async). Added a live-update hook at the end of `_showCaaCompletionToast`: when that function fires (indicating all artwork has loaded), it checks if the stats panel is open, forces a fresh `_captureStatsSnapshot()` call, updates any '—' timing cells by scanning for stat rows whose label contains 'Network loading time' / 'IndexedDB loading time', and fills in the elapsed time. Also updates the artwork count placeholder (`#mb-stats-art-count-val`) if the panel was opened before the count was known.",
+            "Statistics panel — Bug 2 (CAA/EAA label mismatch): all artwork-related strings in the statistics panel ('Network loading time (CAA)', 'IndexedDB loading time (CAA)', 'Total CAA front artwork count', 'Filtered CAA artwork count') were hardcoded to 'CAA'. On EAA pages (`addEAA: 'Event'`), these now correctly show 'EAA'. Fixed by adding `_getActiveArtCtx()` helper (returns `EAA_CTX` when `activeDefinition.features.addEAA` is set, `CAA_CTX` otherwise), deriving `_artKey = _artCtx.key.toUpperCase()` in `showStatsPanel`, and using `_artKey` in all stat row labels and the 'Filtered ${_artKey} artwork count' column header.",
+            "Statistics panel — Bug 3 (EAA artwork count shows 0/—): `_captureStatsSnapshot` and the live per-table count in `showStatsPanel` were calling `_artCountLinks(CAA_CTX, tbl)` unconditionally. On EAA-only pages (e.g. /events), the CAA column does not exist so `_artCountLinks(CAA_CTX)` returns 0. Fixed by using `_getActiveArtCtx()` in both `_captureStatsSnapshot` (stores the art context key in `_statsSnapshot.artCtxKey`) and in the per-table `_caaCount` computation in `showStatsPanel` (`_artCountLinks(_artCtx, tbl)`, button fallback uses `_artCtx.btnPrefix + '-' + tIdx` and `_artCtx.countClass`).",
+            "Statistics panel — Bug 4 (wrong original/synthetic column counts): the column classifier only checked `th.dataset.colName` (set by cleanupHeaders injectors). But `th.style.backgroundColor` set to `sa_ui_thead_th_synthetic_bg` is the most reliable marker since it is always set by all three injector paths. Fixed in both `_captureStatsSnapshot` and the live fallback in `showStatsPanel`: added `||` check comparing `th.style.backgroundColor` (normalised) against the configured synthetic bg color. The `isSynth` flag is now also stored on each column datum in `_tableData.columns`, and the Table Detail column breakdown applies a semi-transparent tint (`synthBgColor + '55'`) to synthetic column rows as a visual side-effect."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.219",
       "date": "2026-03-17",
       "sections": [
