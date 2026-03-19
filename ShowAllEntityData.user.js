@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.216+2026-03-17
+// @version      9.99.219+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -542,13 +542,6 @@
             description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
         },
 
-        sa_enable_column_resizing: {
-            label: 'Enable Column Resizing',
-            type: 'checkbox',
-            default: true,
-            description: 'Enable manual column resizing with mouse drag and "↔️ Resize" button'
-        },
-
         sa_enable_column_visibility: {
             label: 'Enable Column Visibility Toggle',
             type: 'checkbox',
@@ -561,13 +554,6 @@
             type: 'checkbox',
             default: true,
             description: 'Show/hide the "📏 Density" button for adjusting table spacing'
-        },
-
-        sa_enable_stats_panel: {
-            label: 'Enable Quick Stats Panel',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "📊 Statistics" button for displaying table statistics'
         },
 
         sa_enable_export: {
@@ -828,14 +814,42 @@
         },
 
         // ============================================================
-        // LOAD AND SAVE DATA TO/FROM DISK SECTION
+        // COLUMN RESIZE FEATURE SECTION
         // ============================================================
+        divider_column_resize: {
+            type: 'divider',
+            label: '↔️ COLUMN RESIZE FEATURE'
+        },
+
+        sa_enable_column_resizing: {
+            label: 'Enable Column Resizing',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable manual column resizing with mouse drag and the "↔️ Resize" button'
+        },
+
+        sa_auto_resize_columns: {
+            label: 'Auto-resize columns on load',
+            type: 'checkbox',
+            default: false,
+            description: 'When enabled, automatically triggers the "↔️ Resize" button ' +
+                         '(same as clicking it manually) immediately after the table is rendered, ' +
+                         'so columns are fitted to their content on every page load without manual clicks.'
+        },
+
         // ============================================================
         // STATISTICS PANEL SECTION
         // ============================================================
         divider_stats_panel: {
             type: 'divider',
             label: '📊 STATISTICS PANEL'
+        },
+
+        sa_enable_stats_panel: {
+            label: 'Enable Quick Stats Panel',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "📊 Statistics" button for displaying table statistics'
         },
 
         sa_stats_panel_width: {
@@ -856,6 +870,9 @@
             description: 'Maximum height of the 📊 Statistics panel as a percentage of the viewport height. Default: 82 vh.'
         },
 
+        // ============================================================
+        // LOAD AND SAVE DATA TO/FROM DISK SECTION
+        // ============================================================
         divider_save_load: {
             type: 'divider',
             label: '💾 LOAD AND SAVE DATA TO/FROM DISK'
@@ -2873,7 +2890,7 @@
             buttons: [ { label: 'Show all Releases for Label' } ],
             features: {
                 columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶'] }
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
                 ],
                 columnExtractors: [
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
@@ -7576,24 +7593,67 @@
     }
 
     /**
-     * Show table statistics panel (revamped).
+     * Captures a one-time snapshot of the unfiltered row count and total CAA
+     * artwork link count immediately after the first full render completes.
      *
-     * Layout (single-table mode):
-     *   ┌─ Header bar (drag handle): title + quick-filter input + close button ─┐
-     *   │ § Global statistics table                                              │
-     *   │ § Per-table section (h1/h2 header info + row counts + artwork)        │
-     *   │   └ ▶ Collapsable per-column detail table (starts uncollapsed)        │
-     *   └────────────────────────────────────────────────────────────────────────┘
+     * The snapshot is stored in `_statsSnapshot` (module-level) and is used by
+     * `showStatsPanel` to report stable, filter-independent baseline values:
+     *   • `_statsSnapshot.totalRows`     — total rows before any filter is applied
+     *   • `_statsSnapshot.totalCaaCount` — total unique CAA artwork links before
+     *                                      any filter narrows the visible rows
      *
-     * Features:
-     *   • Draggable via header bar, resizable via native resize handle
-     *   • Position/size persisted to GM storage under 'sa_stats_panel_geometry'
-     *   • Quick-filter highlights matching text and hides non-matching rows
-     *   • Per-table column tables start UNCOLLAPSED on open
-     *   • Escape (or ✕): first press clears filter when field has content,
-     *     second press (empty field) closes the panel
-     *   • Panel width/height limits driven by sa_stats_panel_width / sa_stats_panel_max_height
+     * Idempotent: the `captured` flag prevents re-capturing on subsequent
+     * filter / sort / view-switch re-renders.  Call from both the single-table
+     * path (after initCaaPics) and the renderGroupedTable tail (multi-table).
      */
+    function _captureStatsSnapshot() {
+        if (_statsSnapshot.captured) return;
+
+        const _tbls = document.querySelectorAll('table.tbl');
+        if (!_tbls.length) return;
+
+        // Count ALL tbody rows (not filtered) — display:none rows included
+        let _rows = 0;
+        _tbls.forEach(t => { _rows += t.querySelectorAll('tbody tr').length; });
+
+        // Count total unique CAA artwork links via synchronous scan
+        let _caa = 0;
+        if (typeof _artCountLinks === 'function' &&
+            typeof CAA_CTX !== 'undefined') {
+            _tbls.forEach(t => { _caa += _artCountLinks(CAA_CTX, t).count || 0; });
+        }
+
+        // Count original vs synthetic columns from the first table's header row.
+        // Synthetic columns are identified by th.dataset.colName being set (all three
+        // injectors — columnExtractors, syntheticColumnExtractors, extractMainColumn —
+        // set th.dataset.colName when they create a synthetic <th>).
+        // Original columns are all others (including the CAA column erased/replaced).
+        const _firstTbl   = _tbls[0];
+        const _headerRow  = _firstTbl
+            ? _firstTbl.querySelector('thead tr:first-child') : null;
+        let _origCols = 0, _synthCols = 0;
+        if (_headerRow) {
+            Array.from(_headerRow.cells).forEach(th => {
+                if (th.dataset.colName) {
+                    // Injected by a column extractor — synthetic
+                    _synthCols++;
+                } else {
+                    _origCols++;
+                }
+            });
+        }
+
+        _statsSnapshot.totalRows     = _rows;
+        _statsSnapshot.totalCaaCount = _caa;
+        _statsSnapshot.originalCols  = _origCols;
+        _statsSnapshot.syntheticCols = _synthCols;
+        _statsSnapshot.captured      = true;
+
+        Lib.debug('stats',
+            `Stats snapshot captured: ${_rows} rows, ${_caa} CAA links, ` +
+            `${_origCols} original cols + ${_synthCols} synthetic cols`);
+    }
+
     /**
      * Show table statistics panel (revamped).
      *
@@ -7847,8 +7907,8 @@
             'z-index:10002',
             'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif',
             'font-size:0.88em',
-            'overflow:hidden',
-            'resize:both',           // native resize handle (bottom-right corner)
+            'overflow:auto',          // must NOT be hidden — overflow:hidden disables vertical resize
+            'resize:both',            // native resize handle (bottom-right corner)
             'min-width:380px',
             'min-height:200px',
         ].join(';');
@@ -8034,7 +8094,46 @@
         fsWrap.appendChild(fsSlider);
         fsWrap.appendChild(fsLabel);
 
-        // ── § Global Statistics ──────────────────────────────────────────────
+        // ── Total CAA artwork count — use first-render snapshot ──────────
+        // The snapshot is captured once after the initial render completes so
+        // this value stays stable even when filters are subsequently applied.
+        const _totalCaaCount = _statsSnapshot.captured
+            ? _statsSnapshot.totalCaaCount
+            : (() => {
+                if (typeof _artCountLinks !== 'function' ||
+                    typeof CAA_CTX === 'undefined') return 0;
+                let sum = 0;
+                tables.forEach(t => { sum += _artCountLinks(CAA_CTX, t).count || 0; });
+                return sum;
+            })();
+
+        // Snapshot total rows (unfiltered) — stable even after filters applied.
+        const _snapshotTotalRows = _statsSnapshot.captured
+            ? _statsSnapshot.totalRows
+            : totalRows; // fall back to current live count
+
+        // Original vs synthetic column counts — from snapshot when available.
+        // Live fallback: scan the first table's header; cells with dataset.colName
+        // set were injected by a column extractor (synthetic); all others are original.
+        const { _origCols, _synthCols } = (() => {
+            if (_statsSnapshot.captured) {
+                return {
+                    _origCols:  _statsSnapshot.originalCols,
+                    _synthCols: _statsSnapshot.syntheticCols,
+                };
+            }
+            const _fTbl  = tables[0];
+            const _fHdr  = _fTbl ? _fTbl.querySelector('thead tr:first-child') : null;
+            let orig = 0, syn = 0;
+            if (_fHdr) {
+                Array.from(_fHdr.cells).forEach(th => {
+                    th.dataset.colName ? syn++ : orig++;
+                });
+            }
+            return { _origCols: orig, _synthCols: syn };
+        })();
+
+        // ── Global statistics rows ────────────────────────────────────────────
         const globalRows = [
             {
                 stat: '🌐 Network loading time (CAA)',
@@ -8074,9 +8173,41 @@
                 comment: subTblCount === 1 ? 'Single sub-table' : `${subTblCount} sub-tables`,
             },
             {
+                // Total unfiltered rows — snapshot value, stable after filters applied.
+                stat: '📋 Total table rows',
+                value: `<span style="font-weight:600">${_snapshotTotalRows.toLocaleString()}</span>`,
+                comment: 'Total number of unfiltered table rows',
+            },
+            {
+                // Total unique CAA front artwork links — snapshot value, never changes.
+                stat: '🖼️ Total CAA front artwork count',
+                value: _totalCaaCount > 0
+                    ? `<span style="color:${C.accent};font-weight:600">${_totalCaaCount.toLocaleString()}</span>`
+                    : '<span style="color:#999">0</span>',
+                comment: _totalCaaCount > 0
+                    ? `Unique artwork links across ${subTblCount} sub-table${subTblCount > 1 ? 's' : ''}`
+                    : 'No CAA artwork columns found',
+            },
+            {
+                // Original columns: from snapshot (captured before synthetic injection
+                // if snapshot timing is good) or derived from live DOM via dataset.colName.
+                stat: '🔲 Total original columns',
+                value: String(_origCols),
+                comment: 'Columns from the original MusicBrainz page table',
+            },
+            {
+                stat: '✨ Total synthetic columns',
+                value: _synthCols > 0
+                    ? `<span style="color:${C.accent};font-weight:600">${_synthCols}</span>`
+                    : '0',
+                comment: _synthCols > 0
+                    ? 'Columns extracted/injected from original columns'
+                    : 'No synthetic columns configured for this page type',
+            },
+            {
                 stat: '⬛ Total columns',
-                value: String(totalCols),
-                comment: '',
+                value: `<span style="font-weight:600">${totalCols}</span>`,
+                comment: 'Total effective columns in the final rendered table',
             },
             {
                 stat: '👁️ Visible columns',
@@ -8095,10 +8226,10 @@
                 value: _gfRaw
                     ? `<em style="color:${C.accent}">"${_gfRaw}"</em>`
                     : '<span style="color:#999">none</span>',
-                comment: '',
+                comment: "check the '🔍 Filter' column in the 'Table Detail' section below",
             },
             {
-                stat: '📋 Sub-table filters',
+                stat: '📂 Sub-table filters',
                 value: _stFlt > 0
                     ? `<span style="color:${C.accent};font-weight:600">${_stFlt} active</span>`
                     : '0',
@@ -8140,9 +8271,27 @@
             card.style.cssText = `border:1px solid ${C.border};border-radius:6px;
                 margin-bottom:10px;overflow:hidden;`;
 
-            // Card header: single row — table name | filter | row count | artworks
-            // The h1/h2/h3 identifier column has been removed; the table name
-            // (derived from h3 or h2) is shown directly as the first data cell.
+            // ── Card header: original two-row structure ───────────────────────
+            //
+            // Row 1 (data): [entity-type | h1 value | filter value | row count | artwork count]
+            // Row 2 (labels): [Table name label | table name | Table filter | Filtered rows | Total artworks]
+            //
+            // The "entity-type" label in row 1 col 1 is derived from the last
+            // word of `data-label` on the first action button, e.g.:
+            //   "Show all Events for Place" → "Place"
+            // Falls back to "h1" when no action button is found or the label
+            // does not match the "Show all X for Y" pattern.
+            const _entityTypeLabel = (() => {
+                // allActionButtons is module-level — populated during init
+                const btn = (typeof allActionButtons !== 'undefined' && allActionButtons.length)
+                    ? allActionButtons[0] : null;
+                if (!btn) return 'h1';
+                const lbl = btn.dataset.label || '';
+                // Match "Show all <X> for <Y>" — capture the last word/phrase after "for "
+                const m = lbl.match(/\bfor\s+(.+)$/i);
+                return (m && m[1].trim()) ? m[1].trim() : 'h1';
+            })();
+
             const cardHdr = document.createElement('table');
             cardHdr.style.cssText = `width:100%;border-collapse:collapse;
                 background:${C.greenL};font-size:0.9em;`;
@@ -8160,70 +8309,92 @@
                 return td2;
             };
 
-            // ── Column-header row (labels) ────────────────────────────────────
-            const chLabelRow = document.createElement('tr');
-            chLabelRow.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Table</span>`,
+            // ── Row 1: entity-type label | h1 value | filter | row count | artwork ──
+            const chRow = document.createElement('tr');
+
+            // Col 1: entity-type label (e.g. "Place", "Artist", …)
+            chRow.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">${_entityTypeLabel}</span>`,
                 { nowrap: true }));
-            chLabelRow.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Table filter</span>`,
-                { small: true }));
-            chLabelRow.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Filtered rows</span>`,
-                { small: true, right: true }));
-            chLabelRow.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Total artworks</span>`,
-                { small: true, right: true }));
 
-            // ── Data row ──────────────────────────────────────────────────────
-            const chDataRow = document.createElement('tr');
+            // Col 2: h1 entity name
+            chRow.appendChild(_chTd(
+                `<strong style="color:${C.accent}">${_h1Text || '—'}</strong>`, {}));
 
-            // Table name (from h3 or h2)
-            chDataRow.appendChild(_chTd(
-                `<strong style="color:${C.accent}">${td.name}</strong>`,
-                { bold: true }));
-
-            // Active sub-table filter
-            chDataRow.appendChild(_chTd(
-                td.filter
-                    ? `<em style="color:${C.accent}">"${td.filter}"</em>`
+            // Col 3: active filter value for this table.
+            // For single-table pages there is no per-table sub-table filter;
+            // the global filter applies to the whole page.  Show the global
+            // filter value here with a tooltip that explains the source.
+            const _filterVal  = td.filter || _gfRaw || '';
+            const _filterSrc  = td.filter  ? 'Sub-table filter'
+                              : _gfRaw     ? 'Global filter'
+                              : '';
+            chRow.appendChild(_chTd(
+                _filterVal
+                    ? `<em style="color:${C.accent}">"${_filterVal}"</em>`
                     : '<span style="color:#bbb">—</span>',
                 { nowrap: true,
-                  title: td.filter ? `Sub-table filter: "${td.filter}"` : 'No sub-table filter'
-                }));
+                  title: _filterVal
+                    ? `${_filterSrc}: "${_filterVal}"`
+                    : 'No filter active' }));
 
-            // Row count (filtered / total)
+            // Col 4: row count (filtered / total)
             const _hiddenRows = td.total - td.visible;
-            chDataRow.appendChild(_chTd(
+            chRow.appendChild(_chTd(
                 _hiddenRows > 0
                     ? `<span style="color:${C.accent};font-weight:700">${td.visible.toLocaleString()}</span>` +
                       ` <span style="font-size:0.83em;color:${C.muted}">/ ${td.total.toLocaleString()}</span>`
                     : `<span style="font-weight:700">${td.total.toLocaleString()}</span>`,
                 { right: true, nowrap: true }));
 
-            // Artwork count (total unique links from _artCountLinks)
-            chDataRow.appendChild(_chTd(
+            // Col 5: artwork count (total unique links from _artCountLinks)
+            chRow.appendChild(_chTd(
                 td.caaCount > 0
                     ? `🖼️ <span style="color:${C.accent};font-weight:700">${td.caaCount.toLocaleString()}</span>`
                     : '<span style="color:#bbb">—</span>',
                 { right: true, nowrap: true }));
 
-            cardHdr.appendChild(chLabelRow);
-            cardHdr.appendChild(chDataRow);
+            // ── Row 2: "Table name" label | table name | column labels ─────────
+            const chRow2 = document.createElement('tr');
+
+            // Col 1: "Table name" label (replaces old "h2/h3")
+            chRow2.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">Table name</span>`,
+                { nowrap: true }));
+
+            // Col 2: table name (from h3 or h2)
+            chRow2.appendChild(_chTd(
+                `<span style="font-weight:600">${td.name}</span>`, {}));
+
+            // Col 3–5: column-header labels (muted, small)
+            chRow2.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">Active filter</span>`,
+                { small: true }));
+            chRow2.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">Filtered rows</span>`,
+                { small: true, right: true }));
+            chRow2.appendChild(_chTd(
+                `<span style="font-size:0.8em;color:${C.muted}">Filtered CAA artwork count</span>`,
+                { small: true, right: true }));
+
+            cardHdr.appendChild(chRow);
+            cardHdr.appendChild(chRow2);
             card.appendChild(cardHdr);
 
-            // Column detail — starts EXPANDED (uncollapsed) on every open
+            // Column detail — starts EXPANDED for single-table pages, COLLAPSED for
+            // multi-table pages (which may have many sub-tables — starting all expanded
+            // would produce an overwhelming wall of column data on first open).
             if (td.columns.length > 0) {
+                const _startExpanded = (tableMode !== 'multi');
                 const colToggleBar = document.createElement('div');
                 colToggleBar.style.cssText = `padding:4px 8px;background:#f9f9f9;
                     border-bottom:1px solid ${C.border};cursor:pointer;
                     display:flex;align-items:center;gap:6px;
                     font-size:0.84em;color:${C.muted};user-select:none;`;
-                // Start expanded: dataset.colExpanded = 'true'
-                colToggleBar.dataset.colExpanded = 'true';
+                colToggleBar.dataset.colExpanded = _startExpanded ? 'true' : 'false';
 
                 const colIcon = document.createElement('span');
-                colIcon.textContent = '▼'; // starts expanded → ▼
+                colIcon.textContent = _startExpanded ? '▼' : '▶';
                 colIcon.style.cssText = 'font-size:0.8em;transition:transform 0.15s;display:inline-block;';
 
                 const colLabel = document.createElement('span');
@@ -8234,7 +8405,9 @@
                 colToggleBar.appendChild(colLabel);
 
                 const colDetail = document.createElement('div');
-                colDetail.style.cssText = 'overflow-x:auto;'; // starts VISIBLE (no display:none)
+                colDetail.style.cssText = _startExpanded
+                    ? 'overflow-x:auto;'             // visible when expanded
+                    : 'overflow-x:auto;display:none;'; // hidden when collapsed
                 colDetail.dataset.colDetailOf = String(tIdx);
 
                 const colTbl = document.createElement('table');
@@ -8562,6 +8735,7 @@
             document.removeEventListener('mousemove', _onDragMove);
             document.removeEventListener('mouseup',   _onDragEnd);
             document.removeEventListener('click',     _onClickOutside);
+            document.removeEventListener('mousedown', _onDocMousedown);
         };
 
         // qfClearBtn: always clears the filter, never closes the panel.
@@ -8600,9 +8774,36 @@
         // Click outside: close if the click target is not inside the panel.
         // Registered with a short delay so the opening click does not
         // immediately trigger it.
+        //
+        // Bug-fix: when the user drags the native resize handle (bottom-right
+        // corner) outside the panel bounds, the browser fires a `click` event
+        // on the document with a target outside the panel — which would
+        // incorrectly close it.  We suppress that by tracking whether the most
+        // recent `mousedown` started inside the panel.  If it did, we ignore
+        // the first outside `click` that follows (the one produced by the
+        // mouseup after the resize drag).
+        let _lastMousedownInPanel = false;
+        const _onPanelMousedown = () => { _lastMousedownInPanel = true; };
+        panel.addEventListener('mousedown', _onPanelMousedown);
+
         const _onClickOutside = (e) => {
-            if (!panel.contains(e.target)) _close();
+            if (panel.contains(e.target)) return; // click inside — ignore
+            if (_lastMousedownInPanel) {
+                // The click was the tail of a drag that started inside the panel
+                // (e.g. resizing via the native handle).  Reset the flag and do
+                // NOT close — the user merely released the mouse outside.
+                _lastMousedownInPanel = false;
+                return;
+            }
+            _close();
         };
+
+        // Reset the in-panel flag on any mousedown outside, so a genuine
+        // outside click (not a drag release) still closes the panel.
+        const _onDocMousedown = (e) => {
+            if (!panel.contains(e.target)) _lastMousedownInPanel = false;
+        };
+        document.addEventListener('mousedown', _onDocMousedown);
 
         document.addEventListener('keydown', _onKey);
         setTimeout(() => document.addEventListener('click', _onClickOutside), 150);
@@ -12236,6 +12437,20 @@
     // it automatically. Reset to 0 at the start of every new fetch / disk-load.
     let _mbRowIdxCounter = 0;
     let isLoaded = false;
+
+    // ── First-render statistics snapshot ────────────────────────────────────
+    // These values are captured once when the initial fetch-and-render pipeline
+    // completes (before any filter is applied).  They are used by the Statistics
+    // panel to show the unfiltered total row count and the total CAA artwork
+    // count at the time of the initial render, neither of which can be derived
+    // from the live DOM once the user has applied filters.
+    let _statsSnapshot = {
+        totalRows:       0,   // total table rows, no filter applied
+        totalCaaCount:   0,   // total unique CAA artwork links, initial render
+        originalCols:    0,   // columns from the original MusicBrainz page (pre-synthetic)
+        syntheticCols:   0,   // columns injected by columnExtractors / syntheticColumnExtractors
+        captured:        false,
+    };
     let stopRequested = false;
 
     // ── Artist-Releasegroups discography view state ──────────────────────────
@@ -17382,6 +17597,16 @@
                 document.querySelectorAll('table.tbl').forEach(table => {
                     makeColumnsResizable(table);
                 });
+
+                // sa_auto_resize_columns: emulate pressing the Resize button on load.
+                // Uses setTimeout(0) so the button and column widths are fully set up
+                // before the auto-resize measurement pass runs.
+                if (Lib.settings.sa_auto_resize_columns && !isAutoResized) {
+                    setTimeout(() => {
+                        Lib.debug('resize', 'sa_auto_resize_columns: triggering auto-resize on load');
+                        toggleAutoResizeColumns();
+                    }, 0);
+                }
             }
 
             // Add column visibility toggle for all tables
@@ -17472,6 +17697,13 @@
                     _caaQueue.onIdle(_showCaaCompletionToast);
                 }
             }
+
+            // ── Capture first-render statistics snapshot (once only) ──────────
+            // Must run after initCaaPics() so _artCountLinks can scan the CAA
+            // column links.  The `captured` guard prevents re-capturing on
+            // subsequent filter / sort re-renders (single-table path only;
+            // multi-table path captures at the end of renderGroupedTable).
+            _captureStatsSnapshot();
 
             // Initialise the Unicode character picker (builds menu DOM once, idempotent)
             initSaUnicodeCharsFeature();
@@ -18758,6 +18990,11 @@
         }
 
         Lib.debug('render', 'Finished renderGroupedTable.');
+
+        // ── Capture first-render statistics snapshot (once only) ─────────────
+        // Must run after initCaaPics() so _artCountLinks can scan CAA links.
+        // The `captured` guard prevents re-capturing on filter / sort re-renders.
+        _captureStatsSnapshot();
 
         // Show the save button now that data is rendered
         if (Lib.settings.sa_enable_save_load) {

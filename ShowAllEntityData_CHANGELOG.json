@@ -1,5 +1,56 @@
 [
     {
+      "version": "9.99.219",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Statistics panel — Bug 1 (new column-count rows): Global Statistics table now shows three column-count rows after 'Total CAA front artwork count': '🔲 Total original columns' (columns from the original MusicBrainz page table, identified as headers without `dataset.colName`), '✨ Total synthetic columns' (columns injected by columnExtractors / syntheticColumnExtractors / extractMainColumn, all of which set `th.dataset.colName`), and '⬛ Total columns' (total effective columns = original + synthetic). Values are sourced from the first-render `_statsSnapshot` (captured after `cleanupHeaders` runs) with a live-scan fallback.",
+            "Statistics panel — Bug 2 (panel only horizontally resizable): the panel used `overflow:hidden` which prevents the native browser resize handle from working vertically. Changed to `overflow:auto`; the inner body `div` already has `overflow-y:auto` for scrolling, so visual behavior is unchanged.",
+            "Statistics panel — Bug 3 (multi-table cards start expanded): in multi-table mode pages, each Table Detail card's column breakdown now starts COLLAPSED (▶) to avoid an overwhelming wall of data. Single-table pages continue to start EXPANDED (▼). `_startExpanded = (tableMode !== 'multi')` controls the initial `colToggleBar.dataset.colExpanded` and `colDetail.style.display`."
+          ]
+        },
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Config schema — new '↔️ COLUMN RESIZE FEATURE' section: `sa_enable_column_resizing` (moved from '🎨 UI FEATURES') and new `sa_auto_resize_columns` (boolean, default false). When `sa_auto_resize_columns` is true, `toggleAutoResizeColumns()` is called automatically via `setTimeout(0)` after the table is rendered — equivalent to manually clicking the '↔️ Resize' button on every page load.",
+            "Config schema — `sa_enable_stats_panel` moved from '🎨 UI FEATURES' to the '📊 STATISTICS PANEL' section where it logically belongs alongside the panel dimension settings.",
+            "Config schema — section ordering is now: … → '↔️ COLUMN RESIZE FEATURE' → '📊 STATISTICS PANEL' → '💾 LOAD AND SAVE DATA TO/FROM DISK' → … The '// LOAD AND SAVE DATA TO/FROM DISK SECTION' comment block now sits directly in front of `divider_save_load` as requested."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.218",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Statistics panel — Bug 1 (Global Stats): '🖼️ CAA artwork count' row renamed to '🖼️ Total CAA front artwork count' and '📋 Total table rows' row added (after Sub-tables). Both values are now sourced from a new first-render snapshot (`_statsSnapshot`) captured once by `_captureStatsSnapshot()` immediately after the initial render pipeline completes (called from both the single-table CAA-init path and the `renderGroupedTable` tail). The snapshot stores `totalRows` and `totalCaaCount` before any filter is applied, so re-opening the stats panel after filtering shows the stable baseline values rather than the filtered counts. A `captured` flag prevents re-capturing on subsequent filter/sort/view-switch re-renders.",
+            "Statistics panel — Bug 2 (Table Detail card): the 'Active filter' column in the card header (formerly 'Table filter') now shows the global filter value for single-table pages (where no per-table sub-table filter exists). The tooltip indicates the filter source: 'Sub-table filter: ...' or 'Global filter: ...' or 'No filter active'. The column label in row 2 was renamed from 'Table filter' to 'Active filter' to reflect this broader semantics.",
+            "Statistics panel — Bug 3: label 'Total artworks' in the Table Detail card header renamed to 'Filtered CAA artwork count' to accurately describe that the value shown is the count of CAA artwork links in the currently-filtered (visible) rows, not the unfiltered total (which now appears in the Global Statistics section).",
+            "Statistics panel — Bug 4: closing the panel when resizing via the native `resize:both` handle and releasing outside the panel bounds. Root cause: the browser fires a `click` event after `mouseup` at the release position (which is outside the panel), triggering `_onClickOutside` and closing the panel. Fixed with a `_lastMousedownInPanel` flag: a `mousedown` listener on the panel sets the flag true; the `_onClickOutside` handler checks the flag and suppresses the close if the drag started inside the panel, then clears the flag. A separate `document.mousedown` listener resets the flag on any click that starts genuinely outside, so normal outside-clicks still close the panel.",
+            "label-releases pageDefinition — `columnErasers` for the 'Release' source column now includes '➕' in addition to '▶', removing the plus-button glyphs from the Release cell text alongside the expand button glyphs."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.217",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Statistics panel — Table Detail card header: restored the original two-row structure. Row 1 (data): entity-type label | h1 entity name | active sub-table filter | row count | artwork count. Row 2 (labels): 'Table name' | table name from h3/h2 | 'Table filter' | 'Filtered rows' | 'Total artworks'. The entity-type label in row 1 col 1 is now derived from the last segment of the first action button's `data-label` attribute — e.g. 'Show all Events for Place' → 'Place'; 'Show all Releases for Artist' → 'Artist'. Falls back to 'h1' if no action button is found or the label does not match the 'Show all X for Y' pattern. The old 'h2/h3' label in row 2 col 1 is replaced with 'Table name'.",
+            "Statistics panel — '🖼️ CAA artwork count' row added to the Global Statistics table (after Sub-tables). Value is the sum of `_artCountLinks(CAA_CTX, tbl).count` across all sub-tables — a synchronous link scan that counts all unique artwork entity-href links regardless of image-load state. Previously this information was absent from the global section; the per-table artwork count in Table Detail was already correct (using _artCountLinks since 9.99.216), but there was no aggregate row in the global summary."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.216",
       "date": "2026-03-17",
       "sections": [
