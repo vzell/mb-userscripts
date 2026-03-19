@@ -56461,7 +56461,7 @@ the total unfiltered artwork thumbnails (without filtering the table data in wha
 | Manually resized columns       |       |         |
 #+end_example
 
-** bugs - 6
+** DONE bugs - 6
 
 some more bugs
 
@@ -56570,7 +56570,7 @@ to
                     { sourceColumn: 'Release', erasers: ['▶', '➕'] }
 #+end_example
 
-** bugs
+** DONE bugs
 
 Some more bugs
 
@@ -56688,15 +56688,108 @@ right in front of the block
         },
 #+end_example
 
-** bugs
+** DONE bugs
 
 more bugs
 
 1.)
 
-On pageTypes where artwork images coming frmo the EAA (not CAA) like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+please render the artwork loading time information to the statistics UI panel also as soon as the first time a complete
+artwork load over the network has been performed. This has happened when the function
+
+#+begin_example
+function _showCaaCompletionToast()
+#+end_example
+
+is called. At least at that time we know the loading values and can fill in the "Network Loading time for CAA" column in
+the "Global Statistics" section
+
+2.)
+
+On pageTypes (all "single"-table) where artwork images coming from the EAA (not CAA), identified by
+
+#+begin_example
+addEAA: 'Event'
+#+end_example
+
+in the "const pageDefinitions" definitions section e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+the string occurence "CAA" in the statistics dialog should be made variable depending if the pageType represents "EAA"
+or "CAA" related data. So all current CAA strings shoulbd be rendered as EAA when on "EAA" related pages (addEAA: 'Event')
+
+3.)
+
+Compared to pageTypes which involves "CAA" image artwork (like e.g. on
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 where the statistics panel at least shows an
+artwork count at all, albeit with a samll bug we can tackle later), on
+e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events where the column "Total CAA front
+artwork count" should display 71 EAA images without filterng ANY rows, it shows NOTHING at all. So on event related
+pages something is wrong with the artwork detection count, please fix
+
+When for example the global filter has the value of "USA", then there are only 19 rows left which show an EAA image, in that case the UI statitsics panel should still show 71 as the "Total EAA front artwork count" (after fixing the CAA<->EAA mismatch, see point 2.)
+but the "Filtered EAA artwork count" column should display now the value of 19 in the following sectio
+
+#+begin_example
+<td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; text-align: right; white-space: nowrap;"><span style="color:#bbb">—</span></td>
+<td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85); text-align: right;"><span style="font-size:0.8em;color:#555">Filtered EAA artwork count</span></td>
+#+end_example
+
+4.)
+
+there is bug when counting the "Total original columns" and "Total synthetic columns" in a table,
+e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events They can for example be distinguished
+from each other by their configurable background color. Synthetic columns get their background color from the
+"sa_ui_thead_th_synthetic_bg" setting in the configuration variable "const configSchema"
+
+for the above example URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events the values should be:
+
+- "Total original columns": 6
+- "Total synthetic columns": 3
+
+As a side effect when deducing these columns and their background color, you should also render the same background
+color for the column display in the "Table Detail" in the statistics UI panel
+
+** still bugs
+
+one enhancement
+
+1.)
+
+please during initial rendering of the statistics UI panel, start with a base fontSize of what currently can only be
+achieved by dragging the slider to 125%. The currint initial fontSize is way too samll for reading comfortabley.
+
+So the starting fontSize should already by 125% what we have now. Also persist the slider position when the user has
+change something, together with the resize information in browser storage
+
+2.)
+
+please render the artwork loading time information to the statistics UI panel also as soon as the first time a complete
+artwork load over the network has been performed. This has happened when the function
+
+#+begin_example
+function _showCaaCompletionToast()
+#+end_example
+
+3.) row count wrong
 
 
+
+
+* maybe
+
+(or the synthetic columns per table in a specific pageType can be
+deduced from the following parameters in the "const pageDefinitions" definitions variable
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
+                extractMainColumn: 'Release' // Specific header
+#+end_example
 
 * fix CCA art work count + add them + total rows to summary, on the table level ist should be the filtered state and  artwork count per event/release
 
