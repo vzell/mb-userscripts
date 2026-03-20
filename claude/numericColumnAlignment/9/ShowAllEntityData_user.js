@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.251+2026-03-20
+// @version      9.99.250+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2663,9 +2663,7 @@
                 const splitChar = entry.align;
 
                 const rawText = cell.textContent.trim();
-                // Use lastIndexOf so that '[H:]M:S' always splits at the M/S boundary,
-                // and 'N.M' splits at the only separator — lastIndexOf handles both.
-                const splitIdx  = rawText.lastIndexOf(splitChar);
+                const splitIdx  = rawText.indexOf(splitChar);
                 const leftText  = splitIdx !== -1 ? rawText.slice(0, splitIdx)  : '';
                 const rightText = splitIdx !== -1 ? rawText.slice(splitIdx + 1) : rawText;
 
@@ -2760,35 +2758,29 @@
         if (!splitDescs.length || !rows.length) return;
 
         for (const entry of splitDescs) {
-            // Pass 1: find the max left AND right character counts in this column.
-            // Setting min-width on BOTH spans makes every .mb-ic-wrap the same total
-            // width, so `text-align:center` on the <td> places the separator at an
-            // identical horizontal position across all rows regardless of value length.
-            let maxLeftLen  = 0;
-            let maxRightLen = 0;
+            // Pass 1: find the maximum left-part character count in this column
+            let maxLeftLen = 0;
             for (const row of rows) {
                 const cell = row.cells[entry.colIdx];
                 if (!cell) continue;
-                const ls = cell.querySelector('.mb-ic-left');
-                const rs = cell.querySelector('.mb-ic-right');
-                if (ls) maxLeftLen  = Math.max(maxLeftLen,  ls.textContent.length);
-                if (rs) maxRightLen = Math.max(maxRightLen, rs.textContent.length);
+                const leftSpan = cell.querySelector('.mb-ic-left');
+                if (!leftSpan) continue;
+                const len = leftSpan.textContent.length;
+                if (len > maxLeftLen) maxLeftLen = len;
             }
 
-            if (maxLeftLen === 0 && maxRightLen === 0) continue;
+            if (maxLeftLen === 0) continue; // all values have no left part — nothing to align
 
-            // Pass 2: apply uniform min-width to both left and right spans
-            const minWL = maxLeftLen  > 0 ? `${maxLeftLen}ch`  : '';
-            const minWR = maxRightLen > 0 ? `${maxRightLen}ch` : '';
+            // Pass 2: apply min-width to every left span in this column
+            const minW = `${maxLeftLen}ch`;
             for (const row of rows) {
                 const cell = row.cells[entry.colIdx];
                 if (!cell) continue;
-                const ls = cell.querySelector('.mb-ic-left');
-                const rs = cell.querySelector('.mb-ic-right');
-                if (ls && minWL) ls.style.minWidth = minWL;
-                if (rs && minWR) rs.style.minWidth = minWR;
+                const leftSpan = cell.querySelector('.mb-ic-left');
+                if (leftSpan) leftSpan.style.minWidth = minW;
             }
-            Lib.debug('render', `finalizeSplitAlignedColumns: column "${entry.sourceColumn}"(splitChar='${entry.align}') → left=${maxLeftLen}ch right=${maxRightLen}ch across ${rows.length} rows`);
+
+            Lib.debug('render', `finalizeSplitAlignedColumns: column "${entry.sourceColumn}"(splitChar='${entry.align}') → max left-part=${maxLeftLen}ch across ${rows.length} rows`);
         }
     }
 
@@ -18962,6 +18954,35 @@ ${sections.join('\n')}
     }
 
     /**
+    /**
+     * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+     * in the document that removes `[class="treleases"]` elements the instant they
+     * are inserted into the rendered table.
+     *
+     * Background: the jesus2099 "mb. SUPER MIND CONTROL Ⅱ X TURBO" userscript
+     * injects a node such as:
+     *   <… class="treleases" title="SUPER MIND CONTROL Ⅱ X TURBO">
+     * into Length cells of the *live* rendered table — AFTER our render pipeline
+     * has already finished.  Because our pass-1 (applyIntegerColumnStyling) runs
+     * during row import (before the rows hit the DOM) and our pass-2
+     * (finalizeColonAlignedColumns) runs just before render, neither pass can see
+     * the annotation; the only reliable interception point is a MutationObserver
+     * that fires synchronously as each node is added.
+     *
+     * The observer:
+     *   - watches `childList` and `subtree` on each `table.tbl tbody`
+     *   - for every added node, checks whether it or any of its descendants
+     *     carries `class="treleases"` (exact match) — the attribute value used by
+     *     the jesus2099 script
+     *   - removes the offending element immediately, before the browser paints
+     *
+     * Called once after each `renderFinalTable` / `renderGroupedTable` completes.
+     * A module-level `WeakSet` prevents double-observing the same tbody across
+     * repeated re-renders.
+     *
+     * @returns {void}
+     */
+    /**
      * _repairTreleasesTd — re-styles a <td class="treleases"> in place.
      *
      * Jesus2099's "mb. SUPER MIND CONTROL Ⅱ X TURBO" mutates Length cells of
@@ -18997,8 +19018,7 @@ ${sections.join('\n')}
 
         if (isSplit) {
             const splitChar = desc.align;
-            // Use lastIndexOf: '[H:]M:S' splits at M/S boundary; single-separator works too.
-            const splitIdx  = rawText.lastIndexOf(splitChar);
+            const splitIdx  = rawText.indexOf(splitChar);
             const leftText  = splitIdx !== -1 ? rawText.slice(0, splitIdx)  : '';
             const rightText = splitIdx !== -1 ? rawText.slice(splitIdx + 1) : rawText;
 
@@ -19025,21 +19045,18 @@ ${sections.join('\n')}
             td.appendChild(wrap);
             td.dataset.mbIntColStyled = '1';
 
-            // Re-sync min-width for both left and right spans across the whole column
+            // Re-sync min-width for the whole column
             const table = tr.closest('table.tbl');
-            if (table) {
-                let maxLeft = 0, maxRight = 0;
+            if (table && leftText.length > 0) {
+                let maxLeft = leftText.length;
                 table.querySelectorAll('tbody tr').forEach(r => {
                     const ls = r.cells[colIdx]?.querySelector('.mb-ic-left');
-                    const rs = r.cells[colIdx]?.querySelector('.mb-ic-right');
-                    if (ls) maxLeft  = Math.max(maxLeft,  ls.textContent.length);
-                    if (rs) maxRight = Math.max(maxRight, rs.textContent.length);
+                    if (ls) maxLeft = Math.max(maxLeft, ls.textContent.length);
                 });
+                const minW = `${maxLeft}ch`;
                 table.querySelectorAll('tbody tr').forEach(r => {
                     const ls = r.cells[colIdx]?.querySelector('.mb-ic-left');
-                    const rs = r.cells[colIdx]?.querySelector('.mb-ic-right');
-                    if (ls && maxLeft)  ls.style.minWidth = `${maxLeft}ch`;
-                    if (rs && maxRight) rs.style.minWidth = `${maxRight}ch`;
+                    if (ls) ls.style.minWidth = minW;
                 });
             }
         } else {

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.251+2026-03-20
+// @version      9.99.249+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2569,11 +2569,7 @@
             // Valid values: 'L' (left), 'R' (right), 'C' (center, default),
             // ':' (colon-split decimal alignment — left part right-aligned,
             //      right part left-aligned, separator ':' centred between them).
-            // 'L','R','C' = standard alignment; any other single char = split-align separator
-            align:        (['L', 'R', 'C'].includes(entry.align) ||
-                           (typeof entry.align === 'string' && entry.align.length === 1 &&
-                            !['L','R','C'].includes(entry.align)))
-                          ? entry.align : 'C',
+            align:        (['L', 'R', 'C', ':'].includes(entry.align)) ? entry.align : 'C',
             colIdx:       -1
         }));
     }
@@ -2654,20 +2650,16 @@
             // Idempotent: skip cells already styled (safe across re-render cycles)
             if (cell.dataset.mbIntColStyled === '1') continue;
 
-            const _isSplit = entry.align !== 'L' && entry.align !== 'R' && entry.align !== 'C';
-
-            if (_isSplit) {
-                // ── Split-character alignment (pass 1: structure only, no widths) ───
-                // The split char is centred in the column; left part grows right to
-                // meet it; right part grows left away from it.
-                const splitChar = entry.align;
+            if (entry.align === ':') {
+                // ── Colon-split alignment (pass 1: structure only, no widths) ──────
+                // The ':' is centered in the column by centering the inline-block
+                // wrapper inside the <td>.  The left part grows right to meet the
+                // colon; the right part grows left away from it.
 
                 const rawText = cell.textContent.trim();
-                // Use lastIndexOf so that '[H:]M:S' always splits at the M/S boundary,
-                // and 'N.M' splits at the only separator — lastIndexOf handles both.
-                const splitIdx  = rawText.lastIndexOf(splitChar);
-                const leftText  = splitIdx !== -1 ? rawText.slice(0, splitIdx)  : '';
-                const rightText = splitIdx !== -1 ? rawText.slice(splitIdx + 1) : rawText;
+                const colonIdx = rawText.indexOf(':');
+                const leftText  = colonIdx !== -1 ? rawText.slice(0, colonIdx)  : '';
+                const rightText = colonIdx !== -1 ? rawText.slice(colonIdx + 1) : rawText;
 
                 cell.textContent = ''; // clear
                 // Center the inline-block wrapper — this puts ':' at the column center
@@ -2684,12 +2676,12 @@
                 spanLeft.style.cssText =
                     'display:inline-block; text-align:right;' +
                     'font-variant-numeric:tabular-nums;';
-                // min-width set to '' here; finalizeSplitAlignedColumns sets it to Nch
+                // min-width set to '' here; finalizeColonAlignedColumns sets it to Nch
                 spanLeft.textContent = leftText;
 
                 const spanSep = document.createElement('span');
                 spanSep.className = 'mb-ic-sep';
-                spanSep.textContent = splitChar;
+                spanSep.textContent = ':';
 
                 const spanRight = document.createElement('span');
                 spanRight.className = 'mb-ic-right';
@@ -2710,14 +2702,13 @@
                 // Centre the inline-block anchor within the column
                 cell.style.textAlign = 'center';
 
-                // Wrap content in an inline-block span.
-                // mb-ic-val class lets finalizeRLCColumnWidths compute uniform min-width.
+                // Wrap existing cell content in an inline-block span with content alignment
                 const span = document.createElement('span');
-                span.className = 'mb-ic-val';
                 span.style.cssText =
                     'display:inline-block;' +
                     `text-align:${contentAlign};` +
-                    'font-variant-numeric:tabular-nums;';
+                    'font-variant-numeric:tabular-nums;' +
+                    'min-width:var(--mb-int-col-min-width, 2ch);';
 
                 // Move all child nodes into the span
                 while (cell.firstChild) span.appendChild(cell.firstChild);
@@ -2753,83 +2744,34 @@
      * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
      *   - Runtime list from buildActiveIntegerColumns(), with colIdx resolved.
      */
-    function finalizeSplitAlignedColumns(rows, descriptors) {
-        const splitDescs = descriptors.filter(
-            e => e.colIdx !== -1 && e.align !== 'L' && e.align !== 'R' && e.align !== 'C'
-        );
-        if (!splitDescs.length || !rows.length) return;
+    function finalizeColonAlignedColumns(rows, descriptors) {
+        const colonDescs = descriptors.filter(e => e.align === ':' && e.colIdx !== -1);
+        if (!colonDescs.length || !rows.length) return;
 
-        for (const entry of splitDescs) {
-            // Pass 1: find the max left AND right character counts in this column.
-            // Setting min-width on BOTH spans makes every .mb-ic-wrap the same total
-            // width, so `text-align:center` on the <td> places the separator at an
-            // identical horizontal position across all rows regardless of value length.
-            let maxLeftLen  = 0;
-            let maxRightLen = 0;
+        for (const entry of colonDescs) {
+            // Pass 1: find the maximum left-part character count in this column
+            let maxLeftLen = 0;
             for (const row of rows) {
                 const cell = row.cells[entry.colIdx];
                 if (!cell) continue;
-                const ls = cell.querySelector('.mb-ic-left');
-                const rs = cell.querySelector('.mb-ic-right');
-                if (ls) maxLeftLen  = Math.max(maxLeftLen,  ls.textContent.length);
-                if (rs) maxRightLen = Math.max(maxRightLen, rs.textContent.length);
+                const leftSpan = cell.querySelector('.mb-ic-left');
+                if (!leftSpan) continue;
+                const len = leftSpan.textContent.length;
+                if (len > maxLeftLen) maxLeftLen = len;
             }
 
-            if (maxLeftLen === 0 && maxRightLen === 0) continue;
+            if (maxLeftLen === 0) continue; // all values have no left part — nothing to align
 
-            // Pass 2: apply uniform min-width to both left and right spans
-            const minWL = maxLeftLen  > 0 ? `${maxLeftLen}ch`  : '';
-            const minWR = maxRightLen > 0 ? `${maxRightLen}ch` : '';
+            // Pass 2: apply min-width to every left span in this column
+            const minW = `${maxLeftLen}ch`;
             for (const row of rows) {
                 const cell = row.cells[entry.colIdx];
                 if (!cell) continue;
-                const ls = cell.querySelector('.mb-ic-left');
-                const rs = cell.querySelector('.mb-ic-right');
-                if (ls && minWL) ls.style.minWidth = minWL;
-                if (rs && minWR) rs.style.minWidth = minWR;
+                const leftSpan = cell.querySelector('.mb-ic-left');
+                if (leftSpan) leftSpan.style.minWidth = minW;
             }
-            Lib.debug('render', `finalizeSplitAlignedColumns: column "${entry.sourceColumn}"(splitChar='${entry.align}') → left=${maxLeftLen}ch right=${maxRightLen}ch across ${rows.length} rows`);
-        }
-    }
 
-    /**
-     * finalizeRLCColumnWidths — pass 2 for L / R / C integer columns.
-     *
-     * For each L/R/C integerColumns descriptor, scans all collected rows to
-     * find the maximum `.mb-ic-val` text length in that column, then sets
-     * `min-width:Nch` on every value span so all values occupy the same
-     * horizontal block.  Without this pass a right-aligned '86' and '124'
-     * would sit at different positions even though both spans are centred
-     * in the <td>, because the spans auto-size to content width.
-     *
-     * @param {HTMLTableRowElement[]}                                       rows
-     * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
-     */
-    function finalizeRLCColumnWidths(rows, descriptors) {
-        const rlcDescs = descriptors.filter(
-            e => e.colIdx !== -1 && (e.align === 'L' || e.align === 'R' || e.align === 'C')
-        );
-        if (!rlcDescs.length || !rows.length) return;
-
-        for (const entry of rlcDescs) {
-            let maxLen = 0;
-            for (const row of rows) {
-                const cell = row.cells[entry.colIdx];
-                if (!cell) continue;
-                const span = cell.querySelector('.mb-ic-val');
-                if (!span) continue;
-                const len = span.textContent.trim().length;
-                if (len > maxLen) maxLen = len;
-            }
-            if (maxLen === 0) continue;
-            const minW = `${maxLen}ch`;
-            for (const row of rows) {
-                const cell = row.cells[entry.colIdx];
-                if (!cell) continue;
-                const span = cell.querySelector('.mb-ic-val');
-                if (span) span.style.minWidth = minW;
-            }
-            Lib.debug('render', `finalizeRLCColumnWidths: column "${entry.sourceColumn}"(align='${entry.align}') → min-width=${maxLen}ch across ${rows.length} rows`);
+            Lib.debug('render', `finalizeColonAlignedColumns: column "${entry.sourceColumn}" → max left-part=${maxLeftLen}ch across ${rows.length} rows`);
         }
     }
 
@@ -3306,7 +3248,6 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
                 ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 extractMainColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -3335,7 +3276,6 @@
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'CAA' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
@@ -3354,7 +3294,6 @@
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'CAA' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
@@ -3548,7 +3487,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'}, {sourceColumn: '#', align: '.'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'}, {sourceColumn: '#', align: 'L'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
                 addCAA: 'Release title',
                 extractMainColumn: 'Release title'
@@ -16924,8 +16863,7 @@ ${sections.join('\n')}
 
             // Finalize colon-aligned columns on the filtered subset before re-render
             if (Lib.settings.sa_enable_numeric_alignment !== false) {
-                finalizeSplitAlignedColumns(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
-                finalizeRLCColumnWidths(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
+                finalizeColonAlignedColumns(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
             }
             renderGroupedTable(filteredArray, pageType === 'artist-releasegroups', globalQuery || 're-run');
 
@@ -16968,8 +16906,7 @@ ${sections.join('\n')}
             singleTableFilteredCount = filteredRows.length; // capture before async render
             // Finalize colon-aligned columns on the filtered subset before re-render
             if (Lib.settings.sa_enable_numeric_alignment !== false) {
-                finalizeSplitAlignedColumns(filteredRows, activeIntegerColumns);
-                finalizeRLCColumnWidths(filteredRows, activeIntegerColumns);
+                finalizeColonAlignedColumns(filteredRows, activeIntegerColumns);
             }
             renderFinalTable(filteredRows);
             updateH2Count(filteredRows.length, totalAbsolute);
@@ -18668,16 +18605,14 @@ ${sections.join('\n')}
                 groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
                 // Finalize colon-aligned columns before render so colons line up
                 if (Lib.settings.sa_enable_numeric_alignment !== false) {
-                    finalizeSplitAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
-                    finalizeRLCColumnWidths(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
+                    finalizeColonAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                 }
                 await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
             } else {
                 originalAllRows = [...allRows];
                 // Finalize colon-aligned columns before render so colons line up
                 if (Lib.settings.sa_enable_numeric_alignment !== false) {
-                    finalizeSplitAlignedColumns(allRows, activeIntegerColumns);
-                    finalizeRLCColumnWidths(allRows, activeIntegerColumns);
+                    finalizeColonAlignedColumns(allRows, activeIntegerColumns);
                 }
                 await renderFinalTable(allRows);
                 document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
@@ -18962,151 +18897,62 @@ ${sections.join('\n')}
     }
 
     /**
-     * _repairTreleasesTd — re-styles a <td class="treleases"> in place.
-     *
-     * Jesus2099's "mb. SUPER MIND CONTROL Ⅱ X TURBO" mutates Length cells of
-     * the live rendered table: it sets class="treleases", a plugin title,
-     * `style="text-align:right"`, and replaces the text with a precise time
-     * (e.g. "0:28.000").  The cell is NOT a new element — it is the existing
-     * <td> mutated in place.  Removing it would shift every subsequent column.
-     * Instead: extract the new text, strip Jesus2099's overrides, re-apply our
-     * split/L/R/C alignment, and re-sync min-width across the whole column.
-     *
-     * @param {HTMLTableCellElement} td
+     * High-performance batch renderer for large datasets
+     * Uses DocumentFragment, chunked rendering, and progress updates
+     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
      */
-    function _repairTreleasesTd(td) {
-        const rawText = td.textContent.trim();
-        const tr      = td.parentElement;
-        if (!tr) return;
-        const colIdx = Array.from(tr.cells).indexOf(td);
-        const desc   = activeIntegerColumns.find(e => e.colIdx === colIdx);
-
-        // Strip Jesus2099's overrides before applying our own styling
-        td.removeAttribute('class');
-        td.removeAttribute('title');
-        td.style.cssText = '';
-        delete td.dataset.mbIntColStyled;
-        td.textContent = '';
-
-        if (!desc || Lib.settings.sa_enable_numeric_alignment === false) {
-            td.textContent = rawText;
-            return;
-        }
-
-        const isSplit = desc.align !== 'L' && desc.align !== 'R' && desc.align !== 'C';
-
-        if (isSplit) {
-            const splitChar = desc.align;
-            // Use lastIndexOf: '[H:]M:S' splits at M/S boundary; single-separator works too.
-            const splitIdx  = rawText.lastIndexOf(splitChar);
-            const leftText  = splitIdx !== -1 ? rawText.slice(0, splitIdx)  : '';
-            const rightText = splitIdx !== -1 ? rawText.slice(splitIdx + 1) : rawText;
-
-            td.style.textAlign = 'center';
-            const wrap = document.createElement('span');
-            wrap.className = 'mb-ic-wrap';
-            wrap.style.cssText = 'display:inline-block; white-space:nowrap;';
-
-            const sl = document.createElement('span');
-            sl.className = 'mb-ic-left';
-            sl.style.cssText = 'display:inline-block; text-align:right; font-variant-numeric:tabular-nums;';
-            sl.textContent = leftText;
-
-            const ss = document.createElement('span');
-            ss.className = 'mb-ic-sep';
-            ss.textContent = splitChar;
-
-            const sr = document.createElement('span');
-            sr.className = 'mb-ic-right';
-            sr.style.cssText = 'display:inline-block; text-align:left; font-variant-numeric:tabular-nums;';
-            sr.textContent = rightText;
-
-            wrap.appendChild(sl); wrap.appendChild(ss); wrap.appendChild(sr);
-            td.appendChild(wrap);
-            td.dataset.mbIntColStyled = '1';
-
-            // Re-sync min-width for both left and right spans across the whole column
-            const table = tr.closest('table.tbl');
-            if (table) {
-                let maxLeft = 0, maxRight = 0;
-                table.querySelectorAll('tbody tr').forEach(r => {
-                    const ls = r.cells[colIdx]?.querySelector('.mb-ic-left');
-                    const rs = r.cells[colIdx]?.querySelector('.mb-ic-right');
-                    if (ls) maxLeft  = Math.max(maxLeft,  ls.textContent.length);
-                    if (rs) maxRight = Math.max(maxRight, rs.textContent.length);
-                });
-                table.querySelectorAll('tbody tr').forEach(r => {
-                    const ls = r.cells[colIdx]?.querySelector('.mb-ic-left');
-                    const rs = r.cells[colIdx]?.querySelector('.mb-ic-right');
-                    if (ls && maxLeft)  ls.style.minWidth = `${maxLeft}ch`;
-                    if (rs && maxRight) rs.style.minWidth = `${maxRight}ch`;
-                });
-            }
-        } else {
-            const contentAlignMap = { L: 'left', R: 'right', C: 'center' };
-            td.style.textAlign = 'center';
-            const span = document.createElement('span');
-            span.className = 'mb-ic-val';
-            span.style.cssText =
-                'display:inline-block;' +
-                `text-align:${contentAlignMap[desc.align] || 'center'};` +
-                'font-variant-numeric:tabular-nums;';
-            span.textContent = rawText;
-            td.appendChild(span);
-            td.dataset.mbIntColStyled = '1';
-
-            const table = tr.closest('table.tbl');
-            if (table && rawText.length > 0) {
-                let maxLen = rawText.length;
-                table.querySelectorAll('tbody tr').forEach(r => {
-                    const vs = r.cells[colIdx]?.querySelector('.mb-ic-val');
-                    if (vs) maxLen = Math.max(maxLen, vs.textContent.trim().length);
-                });
-                const minW = `${maxLen}ch`;
-                table.querySelectorAll('tbody tr').forEach(r => {
-                    const vs = r.cells[colIdx]?.querySelector('.mb-ic-val');
-                    if (vs) vs.style.minWidth = minW;
-                });
-            }
-        }
-        Lib.debug('render', `_repairTreleasesTd: col=${colIdx} repaired with "${rawText}"`);
-    }
-
+    /**
+     * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+     * in the document that removes `[class="treleases"]` elements the instant they
+     * are inserted into the rendered table.
+     *
+     * Background: the jesus2099 "mb. SUPER MIND CONTROL Ⅱ X TURBO" userscript
+     * injects a node such as:
+     *   <… class="treleases" title="SUPER MIND CONTROL Ⅱ X TURBO">
+     * into Length cells of the *live* rendered table — AFTER our render pipeline
+     * has already finished.  Because our pass-1 (applyIntegerColumnStyling) runs
+     * during row import (before the rows hit the DOM) and our pass-2
+     * (finalizeColonAlignedColumns) runs just before render, neither pass can see
+     * the annotation; the only reliable interception point is a MutationObserver
+     * that fires synchronously as each node is added.
+     *
+     * The observer:
+     *   - watches `childList` and `subtree` on each `table.tbl tbody`
+     *   - for every added node, checks whether it or any of its descendants
+     *     carries `class="treleases"` (exact match) — the attribute value used by
+     *     the jesus2099 script
+     *   - removes the offending element immediately, before the browser paints
+     *
+     * Called once after each `renderFinalTable` / `renderGroupedTable` completes.
+     * A module-level `WeakSet` prevents double-observing the same tbody across
+     * repeated re-renders.
+     *
+     * @returns {void}
+     */
     const _observedTbodies = new WeakSet();
     function initTreleasesObserver() {
         document.querySelectorAll('table.tbl tbody').forEach(tbody => {
-            if (_observedTbodies.has(tbody)) return;
+            if (_observedTbodies.has(tbody)) return; // already watching this tbody
             _observedTbodies.add(tbody);
 
             const observer = new MutationObserver(mutations => {
                 for (const mutation of mutations) {
-                    if (mutation.type === 'childList') {
-                        for (const node of mutation.addedNodes) {
-                            if (node.nodeType !== Node.ELEMENT_NODE) continue;
-                            if (node.classList?.contains('treleases')) {
-                                _repairTreleasesTd(node);
-                            } else {
-                                node.querySelectorAll('[class="treleases"]')
-                                    .forEach(el => _repairTreleasesTd(el));
-                            }
-                        }
-                    } else if (mutation.type === 'attributes') {
-                        // Jesus2099 mutates an existing <td>'s class to 'treleases'
-                        const node = mutation.target;
-                        if (node.nodeType === Node.ELEMENT_NODE &&
-                            node.classList?.contains('treleases')) {
-                            _repairTreleasesTd(node);
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType !== Node.ELEMENT_NODE) continue;
+                        // Check the node itself and all its descendants
+                        const targets = node.classList?.contains('treleases')
+                            ? [node]
+                            : Array.from(node.querySelectorAll('[class="treleases"]'));
+                        if (targets.length) {
+                            targets.forEach(el => el.remove());
+                            Lib.debug('render', `initTreleasesObserver: removed ${targets.length} treleases node(s)`);
                         }
                     }
                 }
             });
 
-            // childList: td replacement; attributes/class: in-place mutation
-            observer.observe(tbody, {
-                childList: true, subtree: true,
-                attributes: true, attributeFilter: ['class']
-            });
-            Lib.debug('render', 'initTreleasesObserver: watching tbody (childList+attributes)');
+            observer.observe(tbody, { childList: true, subtree: true });
+            Lib.debug('render', 'initTreleasesObserver: watching tbody for treleases injections');
         });
     }
 
@@ -24695,15 +24541,13 @@ ${sections.join('\n')}
                 if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
                     // Finalize colon-aligned columns before render so colons line up
                     if (Lib.settings.sa_enable_numeric_alignment !== false) {
-                        finalizeSplitAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
-                        finalizeRLCColumnWidths(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
+                        finalizeColonAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                     }
                     await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
                 } else if (allRows.length > 0 || loadedRowCount === 0) {
                     // Finalize colon-aligned columns before render so colons line up
                     if (Lib.settings.sa_enable_numeric_alignment !== false) {
-                        finalizeSplitAlignedColumns(allRows, activeIntegerColumns);
-                        finalizeRLCColumnWidths(allRows, activeIntegerColumns);
+                        finalizeColonAlignedColumns(allRows, activeIntegerColumns);
                     }
                     await renderFinalTable(allRows);
                     document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);

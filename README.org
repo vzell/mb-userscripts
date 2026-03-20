@@ -53837,7 +53837,6 @@ Inspect the uploaded userscript "addRGsFromAbove.js" and extract the contents to
 the final rendered pages which have columns with name "CAA"
 
 * TODO add "Relationships" column support again, but configurable 
-
 * TODO add 'Batch-add "performance of" relationships' userscript functionality on final rendered pages
 
 #+begin_example
@@ -54364,6 +54363,269 @@ some more things to implement:
 
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
 
+
+* DONE OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
+** initial
+
+given the fact that the following action button (also it's labeled '🧮 Non-official RGs')
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+            ],
+#+end_example
+
+produces on the final rendered page, both the "official" and "non-offical" sub-tables with the different types of releases (like "Album", "Album + Live", etc)
+
+and the following action button 
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+            ],
+#+end_example
+
+actually produces ONLY the "official" sub-tables.
+
+Create a definition for a new action button with label '🧮 Artist RGs',
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+that when clicked iterates over the "all: ['1', '0']" array, so in effect downloads first both the "official" and
+"non-offical" sub-tables (the are also rendered in the order) and thern 'subtracts' the sub-tables for the "official" releases.
+
+Now 'subtracts' in this context means, we need to now where in the list of "all" sub-tables, the "non-official" ones
+start. We can deduce this from the names of the sub-tables in the "official" releases download path, by comparing these names with the names from the "all" path (which fetches "official" and
+"non-offical" sub-tables). As soon as we can't match the h3 header namees from these pathes, we know that the official sub-tables start.
+
+When this happens a new h2 header with name "Non-Official Artist Discography" should be rendered before the sub-tables for the non-official case.
+The original h2 header which preceeds the "official" sub-tables, should then be renamed from "Discography" to "Official Artist Discography"
+
+** why is the h2 header "Wikipedia" missing
+
+A couple of observations:
+
+1.)
+
+First of all one question, and maybe you can fix it:
+
+why is the h2 header "Wikipedia" missing
+
+#+begin_example
+<div class="wikipedia-extract"><h2 class="wikipedia">Wikipedia</h2><div class="wikipedia-extract-body wikipedia-extract-collapsed"><p class="mw-empty-elt">
+#+end_example
+
+on the following pageType with the following labels:
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+but it's there on the new label '🧮 Official RGs'
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+            ],
+#+end_example
+
+which you just added support for
+
+** A couple of observations regarding the new label implmentation
+
+2.)
+
+In the implementation for the new label '🧮 Official RGs' the 2 phase fetching and diffing works, but there are a couple of bugs:
+
+a.)
+
+the collapsable sidebar feature is not honoured
+
+b.)
+
+The original table columns do not honour the configured background color, e.g we get 
+
+c.)
+
+NONE of the h2 header lines in the final rendered is clickable to support the collapse/uncollapase feature. Please fix
+
+d.)
+
+The newly inserted h2 header line "Non-Official Artist Discography" is missing all the buttons and filter field
+
+#+begin_example
+<h2 class="mb-toggle-h2" title="Click to collapse/uncollapse section" style="cursor: pointer; user-select: none; margin-top: 1.4em;">Non-Official Artist Discography</h2>
+#+end_example
+
+Compare it to the h2 header line for the "Official Artist Discography"
+
+#+begin_example
+<h2 class="discography">Official Artist Discography<span class="mb-row-count-stat">(2123)</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">560</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: none;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global, ALL sub-table and ALL column filters in all sub-tables (except filter from 'Loading from Disk') — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status"></span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+#+end_example
+
+please fix
+
+e.)
+
+the row count 2123 in the h2 header line for the "Official Artist Discography"
+
+#+begin_example
+<span class="mb-row-count-stat">(2123)</span>
+#+end_example
+
+represents the total rowcount in both, the "Official Artist Discography" and "Non-Official Artist Discography"
+
+Please fix
+
+f.)
+
+The following navigation container exists 2 times below the final rendered sub-table
+
+#+begin_example
+<nav><ul class="pagination"><li><span>Previous</span></li><li class="separator"></li><li><a class="sel" href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1"><strong>1</strong></a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2">2</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=3">3</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=4">4</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=5">5</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=6">6</a></li><li class="separator"></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2">Next</a></li></ul></nav>
+#+end_example
+
+It shouldn't be there. I think normally the cleanup routines remove it. Please fix
+
+** small fixes
+
+a couple of fixes:
+
+1.)
+
+rename the labels in the following block from
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+to
+
+#+begin_example
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
+                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
+                { label: '🧮 All official RGs', params: { all: '1', va: '0' } },
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+                { label: '🧮 All official VA RGs', params: { all: '1', va: '1' } }
+            ],
+#+end_example
+
+and add before the line
+
+#+begin_example
+                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
+#+end_example
+
+the new label '🧮 VA RGs'
+
+#+begin_example
+                { label: '🧮 VA RGs', params: { all: all: ['1', '0'],, va: '1' } }
+#+end_example
+
+also adjust the naming in the the following section
+
+#+begin_example
+        // Add tooltip based on button label
+#+end_example
+
+2.)
+
+the h2 header line
+
+has the following controls
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">746</span></button>
+<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+<span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global, ALL sub-table and ALL column filters in all sub-tables (except filter from 'Loading from Disk') — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span><span id="mb-sort-status-display" class="mb-sort-status" style="color: orange;"></span></span></span>
+#+end_example
+
+which seems to work globally over both sub-table areas, the sub-tables below the h2 header line "Official Artist Discography" and "Non-Official Artist Discography"
+
+I want to have the same controls also for the h2 header line "Non-Official Artist Discography".
+
+Both controls should only work on their h2 header line respectively (so locally over it's h2 area)
+
+There should be a synthetic h2 header line right above the h2 header line for "Official Artist Discography" with the
+same controls, which should work on the real global level (like what the current h2 header line for ""Official Artist Discography"" is doing right now)
+
+It should get a new configurable background color (default dark green) in the the configuration section in the variable "const configSchema" 
+
+** DONE last fix
+
+a couple of more bugs
+
+1.)
+
+The new action buttons 1 and 3 should get the green background color when succesfully loading all the pages
+
+2.)
+
+The Global super-header h2 line doesn't react on click events.It should collapse/uncollapse the "Official Artist Discography" and "Non-Official Artist Discography" h2 header areas
+
+3.)
+
+both the "Official Artist Discography" and "Non-Official Artist Discography" h2 header filter fields work fine, but the filter string in the resulting filtered rows should also be highlighted 
+
+4.)
+
+also the following controls are still missing on both the "Official Artist Discography" and "Non-Official Artist Discography" h2 header lines
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">746</span></button>
+<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+#+end_example
+
+and from the filter container the additional checkboxes for "Case sensitive", "regexp" and "exclude" filtering functionality
+
+** DONE rename "All official" to just "All" , same for VA
+** TODO the page guards are also missing
+** TODO count in the "Official Artist Discography" is the same as the global count (I' not sure when it happens, probably during filtering)
+
 * DONE OBSOLETE: on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f - non-official distinguish the non-official h3 headers somehow from the official ones - e.g. "EP - official" and "EP - unofficial" - or even  better remove ALL the subtable from official button 2 click
 ** initial
 
@@ -54665,7 +54927,6 @@ and from the filter container the additional checkboxes for "Case sensitive", "r
 
 ** count in the "Official Artist Discography" is the same as the global count (im not sure when it happens, probably during filtering)
 
-
 * DONE add information that ALL CAA images have been loaded
 ** DONE initial
 
@@ -54748,8 +55009,6 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
   </span>
 </td>
 #+end_example
-
-
 
 * DONE deduce entity information from loaded filename, or even better, when saving to disk, encode meta information about entity, and when loading present that in a metainfo box inside the "Load from Disk" dialog*
 * DONE initial
@@ -55324,270 +55583,6 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
 ** remove the sub-tables from the DOM before starting to fetch any CAA images
 
 
-* DONE OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
-** initial
-
-given the fact that the following action button (also it's labeled '🧮 Non-official RGs')
-
-#+begin_example
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-            ],
-#+end_example
-
-produces on the final rendered page, both the "official" and "non-offical" sub-tables with the different types of releases (like "Album", "Album + Live", etc)
-
-and the following action button 
-
-#+begin_example
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-            ],
-#+end_example
-
-actually produces ONLY the "official" sub-tables.
-
-Create a definition for a new action button with label '🧮 Artist RGs',
-
-#+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
-            ],
-#+end_example
-
-that when clicked iterates over the "all: ['1', '0']" array, so in effect downloads first both the "official" and
-"non-offical" sub-tables (the are also rendered in the order) and thern 'subtracts' the sub-tables for the "official" releases.
-
-Now 'subtracts' in this context means, we need to now where in the list of "all" sub-tables, the "non-official" ones
-start. We can deduce this from the names of the sub-tables in the "official" releases download path, by comparing these names with the names from the "all" path (which fetches "official" and
-"non-offical" sub-tables). As soon as we can't match the h3 header namees from these pathes, we know that the official sub-tables start.
-
-When this happens a new h2 header with name "Non-Official Artist Discography" should be rendered before the sub-tables for the non-official case.
-The original h2 header which preceeds the "official" sub-tables, should then be renamed from "Discography" to "Official Artist Discography"
-
-** why is the h2 header "Wikipedia" missing
-
-A couple of observations:
-
-1.)
-
-First of all one question, and maybe you can fix it:
-
-why is the h2 header "Wikipedia" missing
-
-#+begin_example
-<div class="wikipedia-extract"><h2 class="wikipedia">Wikipedia</h2><div class="wikipedia-extract-body wikipedia-extract-collapsed"><p class="mw-empty-elt">
-#+end_example
-
-on the following pageType with the following labels:
-
-#+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
-            ],
-#+end_example
-
-but it's there on the new label '🧮 Official RGs'
-
-#+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-            ],
-#+end_example
-
-which you just added support for
-
-** A couple of observations regarding the new label implmentation
-
-2.)
-
-In the implementation for the new label '🧮 Official RGs' the 2 phase fetching and diffing works, but there are a couple of bugs:
-
-a.)
-
-the collapsable sidebar feature is not honoured
-
-b.)
-
-The original table columns do not honour the configured background color, e.g we get 
-
-c.)
-
-NONE of the h2 header lines in the final rendered is clickable to support the collapse/uncollapase feature. Please fix
-
-d.)
-
-The newly inserted h2 header line "Non-Official Artist Discography" is missing all the buttons and filter field
-
-#+begin_example
-<h2 class="mb-toggle-h2" title="Click to collapse/uncollapse section" style="cursor: pointer; user-select: none; margin-top: 1.4em;">Non-Official Artist Discography</h2>
-#+end_example
-
-Compare it to the h2 header line for the "Official Artist Discography"
-
-#+begin_example
-<h2 class="discography">Official Artist Discography<span class="mb-row-count-stat">(2123)</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">560</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: none;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global, ALL sub-table and ALL column filters in all sub-tables (except filter from 'Loading from Disk') — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status"></span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
-#+end_example
-
-please fix
-
-e.)
-
-the row count 2123 in the h2 header line for the "Official Artist Discography"
-
-#+begin_example
-<span class="mb-row-count-stat">(2123)</span>
-#+end_example
-
-represents the total rowcount in both, the "Official Artist Discography" and "Non-Official Artist Discography"
-
-Please fix
-
-f.)
-
-The following navigation container exists 2 times below the final rendered sub-table
-
-#+begin_example
-<nav><ul class="pagination"><li><span>Previous</span></li><li class="separator"></li><li><a class="sel" href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1"><strong>1</strong></a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2">2</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=3">3</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=4">4</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=5">5</a></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=6">6</a></li><li class="separator"></li><li><a href="https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=2">Next</a></li></ul></nav>
-#+end_example
-
-It shouldn't be there. I think normally the cleanup routines remove it. Please fix
-
-** small fixes
-
-a couple of fixes:
-
-1.)
-
-rename the labels in the following block from
-
-#+begin_example
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 Non-official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 Non-official VA RGs', params: { all: '1', va: '1' } }
-            ],
-#+end_example
-
-to
-
-#+begin_example
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official/VA views handled by specific buttons)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Artist RGs', params: { all: ['1', '0'], va: '0' } },
-                { label: '🧮 Official RGs', params: { all: '0', va: '0' } },
-                { label: '🧮 All official RGs', params: { all: '1', va: '0' } },
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-                { label: '🧮 All official VA RGs', params: { all: '1', va: '1' } }
-            ],
-#+end_example
-
-and add before the line
-
-#+begin_example
-                { label: '🧮 Official VA RGs', params: { all: '0', va: '1' } },
-#+end_example
-
-the new label '🧮 VA RGs'
-
-#+begin_example
-                { label: '🧮 VA RGs', params: { all: all: ['1', '0'],, va: '1' } }
-#+end_example
-
-also adjust the naming in the the following section
-
-#+begin_example
-        // Add tooltip based on button label
-#+end_example
-
-2.)
-
-the h2 header line
-
-has the following controls
-
-#+begin_example
-<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">746</span></button>
-<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
-<span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter (✕)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude matches (Global Filter)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting on/off" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand all collapsed multi-row cells in every collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span>▶ Expand</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter highlighting on/off (global/sub-table filters and ALL column filters in all sub-tables)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-clear-column-filters-btn" title="Clear all column-specific filter inputs — global action (Shift+Esc)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global, ALL sub-table and ALL column filters in all sub-tables (except filter from 'Loading from Disk') — also triggered by Ctrl+Shift+G" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span><span id="mb-sort-status-display" class="mb-sort-status" style="color: orange;"></span></span></span>
-#+end_example
-
-which seems to work globally over both sub-table areas, the sub-tables below the h2 header line "Official Artist Discography" and "Non-Official Artist Discography"
-
-I want to have the same controls also for the h2 header line "Non-Official Artist Discography".
-
-Both controls should only work on their h2 header line respectively (so locally over it's h2 area)
-
-There should be a synthetic h2 header line right above the h2 header line for "Official Artist Discography" with the
-same controls, which should work on the real global level (like what the current h2 header line for ""Official Artist Discography"" is doing right now)
-
-It should get a new configurable background color (default dark green) in the the configuration section in the variable "const configSchema" 
-
-** DONE last fix
-
-a couple of more bugs
-
-1.)
-
-The new action buttons 1 and 3 should get the green background color when succesfully loading all the pages
-
-2.)
-
-The Global super-header h2 line doesn't react on click events.It should collapse/uncollapse the "Official Artist Discography" and "Non-Official Artist Discography" h2 header areas
-
-3.)
-
-both the "Official Artist Discography" and "Non-Official Artist Discography" h2 header filter fields work fine, but the filter string in the resulting filtered rows should also be highlighted 
-
-4.)
-
-also the following controls are still missing on both the "Official Artist Discography" and "Non-Official Artist Discography" h2 header lines
-
-#+begin_example
-<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">746</span></button>
-<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
-#+end_example
-
-and from the filter container the additional checkboxes for "Case sensitive", "regexp" and "exclude" filtering functionality
-
-** DONE rename "All official" to just "All" , same for VA
-** TODO the page guards are also missing
-
-** TODO count in the "Official Artist Discography" is the same as the global count (I' not sure when it happens, probably during filtering)
-
-
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
 
@@ -55669,226 +55664,8 @@ collapsableColumns: [ 'Location', '', ... ],
 
 * TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
 
+
 * TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
-
-
-* TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
-** question
-
-In the uploaded userscript, is it possible to align generally in a table a numeric column centered inside a data cell,
-but still left or right align the numbers overall when rendering them. SO the whole colomn of numbers itself is lets say
-right aligned to itself, but as a whole centered in the middle of the table column. If this is possible, how is such an aligment feature called ?
-
-Technique: centered inline-block + right/left/centered-aligned (R/L/C) content
-
-#+begin_example
-                integerColumns: [ {sourceColumn: 'Year', align: 'C'} ],
-                integerColumns: [ {sourceColumn: 'Releases', align: 'R'} ],
-                integerColumns: [ {sourceColumn: 'Year', align: 'R'} ],
-                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
-                integerColumns: [ {sourceColumn: 'Track'} ],
-                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'} ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                integerColumns: [ {sourceColumn: '#', align: 'L'} ],
-#+end_example
-
-** todo
-
-add a new feature, based on the Technique: centered inline-block + right/left/centered-aligned (R/L/C) content
-
-There is a new parameter "integerColumns" in the variable "const pageDefinitions" for different pageType definitions, e.g
-
-#+begin_example
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
-#+end_example
-
-The implementation of "integerColumns" should be: during rendering of a table column which matches a "sourceColumn" from
-the above definition, the "sourceColumn" itslef sould be centered-inline block in the table, but the cell content
-aligement should be left 'L', right 'R' or centered 'C' (default). Also when "align:" is missing in the definition it
-means centered 'C'
-
-- maybe also rewrite the following function in terms of the new "integerColumns" feature
-  
-#+begin_example
-        // --- Helper: is a column name numeric? ---------------------------------
-        const isNumericCol = (name) =>
-            name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
-            name.includes('Length') || name.includes('#');
-#+end_example
-
-** bug for DD, MM
-
-change the definition for
-
-#+begin_example
-{sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}
-#+end_example
-
-to
-
-#+begin_example
-{sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}
-#+end_example
-
-** fix missing
-
-add
-
-#+begin_src bash
-integerColumns: [ {sourceColumn: 'Releases', align: 'R'} ],
-#+end_src
-
-to the "artist-releasegroups" definition, so that it looks like
-
-#+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Official RGs',         params: { all: '0', va: '0' } },
-                { label: '🧮 Official VA RGs',      params: { all: '0', va: '1' } },
-                { label: '🧮 Artist RGs',           params: { all: '1', va: '0' } },
-                { label: '🧮 Various Artists RGs',  params: { all: '1', va: '1' } }
-            ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
-                ],
-                integerColumns: [ {sourceColumn: 'Year', align: 'C'}, {sourceColumn: 'Releases', align: 'R'} ],
-                collapsableColumns: [ 'CAA' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi' // native tables, h3 headers
-        },
-#+end_example
-
-** is it possible to align according a special character like ":"
-
-is it possible to align according a special character like ":"
-
-#+begin_example
- 13:57.000
-  9:59
- 10:05
-#+end_example
-
-so that in each row the ":" character of each 'numeric string' sits exactly below each other
-
-** align lenght
-
-change the definition for
-
-#+begin_example
-                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
-#+end_example
-
-to
-
-#+begin_example
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-#+end_example
-
-and 
-Algorithm:
- - Scan column
- - Split at :
- - Compute max width of left part
- - Render with padded left side OR split spans
-
-#+begin_example
-Example: 13:57.000
-
-Split each value into:
-
-left part (before :) → right-aligned
-
-right part (after :) → left-aligned
-
-Example structure
-<td class="time">
-  <span class="left">13</span><span class="sep">:</span><span class="right">57.000</span>
-</td>
-#+end_example
-   
-This is exactly like “decimal alignment” but for the character ":"   
-
-** align, in such a way that ":" should be centered inside the table column 
-
-align, in such a way that the ":" character of a typical value like "10:05" is centered inline-block
-
-** jesus
-
-when a "Length" column has the following class and title attached to it
-
-#+begin_example
-'class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO"'
-#+end_example
-
-remove it, before doing any alignment regarding the new functinality with ":"
-
-
-#+begin_example
-https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
-
-<td class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO" style="text-align: right;">5:42.000
-</td>
-
-<td>5:46</td>
-#+end_example
-
-* later
-
-
---
-
-"Releases" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-
-#+end_example
-<td class="c" data-mb-int-col-styled="1" style="text-align: center;">
-  <span style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: var(--mb-int-col-min-width, 2ch);">104
-  </span>
-</td>
-
-#+begin_example
-https://musicbrainz.org/recording/a599d6d5-b78a-4d0b-aee9-7f9011db56dd
-
-<td data-mb-int-col-styled="1" style="text-align: center;">
-  <span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;">
-    <span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">4
-    </span>
-    <span class="mb-ic-sep">:
-    </span>
-    <span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">35
-    </span>
-  </span>
-</td>
-
-
-<td data-mb-int-col-styled="1" style="text-align: center;">
-  <span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;">
-    <span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">4
-    </span>
-    <span class="mb-ic-sep">:
-    </span>
-    <span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">43.706
-    </span>
-  </span>
-</td>
-#+end_example
-
-
-* TODO todos
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
 
 
 * TODO fix Artist-Releasegroup pages
@@ -56985,16 +56762,14 @@ artwork load over the network has been performed. This has happened when the fun
 function _showCaaCompletionToast()
 #+end_example
 
-** bugs
+** TODO column (standard/synthetic) row count wrong
 
 Still some bugs
 
-
-3.) row count wrong
-
+3.) column row count wrong
 
 
-* TODO add a button to the statistics panel for exporting in HTML
+** TODO add a button to the statistics panel for exporting in HTML
 
 
 * maybe (or the synthetic columns per table in a specific pageType can be deduced from the following parameters in the "const pageDefinitions" definitions variable
@@ -57034,6 +56809,7 @@ comumn cell level accordingly)
 * test with the VA pass
 
 * test with Save/Load fomr disk for Artist-Releasegroups
+
 
 * DONE Statistics panel: ~207 KB us WRONG
 * DONE reintroduce the old "official RGs" button
@@ -57113,62 +56889,6 @@ Also adjust the tooltip section accordingly again
 
 * DONE the "global filter info" box should read, "Globally filtered <n> rows [global:"<filter expression>"]
 * DONE make the auto-resize always run by default but configurable
-
-
-* counting and display wrong: actually with indexedDB cache
-
-
-* test with final rendered page (so all are display)
-** starting with ALL rows fetched for officail an non-officail
-
-# "Discography": 1941 of 1946/2123  [artwork 567]   
-
-** switching to official
-
-# h2 header line: "Official Discography" (582 of 2123) [artwork 2067]
-# h2 header line: "Discography" (582) [artwork 578]                         original: OK
-
-** switching to non-official
-
-# h2 header line: "Non-Official Discography" (1541 of 2123) [artwork 2067]
-# h2 header line: "Discography" (2123) [artwork 2067]               original: OK
-
-- the row display, if uncollapsed all sub-tables is correct, but some sub-tables have a count in the h3 header of the
-  sub-table which render in the format
-
-#+begin_example
-(<actual rows in sub-table of the un-official case> of <actual rows in sub-table of the official case>)
-#+end_example
-
-e.g in the sub-table with name "Album + Compilation (168 of 36)"
-
-** filtering tests
-
-                ok                                                                ok
-# Album (3 of 8)/22 "[artwork] 3"  "of"  [ ]cc   <buttons> (ok)          Filtered 8 rows [MB-Name:"the"]
-
-#+begin_example
-global filter: "bruce"
-sub-header("Album") filter: "of"
-column filter("MB-Name"): "the"
-#+end_example
-
-==> then switch to
-
-#+begin_example
-global filter: "bruce"
-sub-header("Album") filter: "the" [cc]
-column filter("MB-Name"): "of"
-#+end_example
-
-# "Official Discography": 1939 of 1941/2123  [artwork 567]
-                ok                                                                ok
-# Album (1 of 3)/22 "[artwork] 1"  "the"  [x]cc   <buttons> (ok)          Filtered 3 rows [MB-Name:"of"]
-
-Table: 1 row (ok)
-
-
-* rendering time for VA - 1057 4.33s minutes in network mode
 
 * DONE Put "Legal name: Bruce Frederick Joseph Springsteen" below "h1 header" "~Person" for Artist-Releasegroup pages
 
@@ -57335,6 +57055,640 @@ But that string to use for the table name is easy to extract from the h2 header 
 #+begin_example
 <span class="mb-row-count-stat">(<number of rows>)</span>
 #+end_example
+
+* DONE reorder the tab/sub-table specific section always last
+** DONE initial
+
+On the final rendered page, always check if there are h2 header sections AFTER the h2 section for the actual table/sub-tables
+
+- e.g on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c there is an additional h2 header section
+
+#+begin_example
+<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
+#+end_example
+
+after the actual h2 header where all the table data resides
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Album<span class="mb-row-count-stat">(8 of 12)/124</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">12</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string (focus this field with 'Ctrl+G')" style="font-size: 1em; padding: 2px 6px; border: 2px solid orange; border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s; box-shadow: orange 0px 0px 2px 2px;"><span id="mb-global-filter-clear" title="Clear global filter" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid orange; border-right: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude Matches (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle ALL highlighting</button><button id="mb-clear-column-filters-btn" title="Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by 'Ctrl+Shift+G')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter [global:"bruce"]</span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+#+end_example
+
+- e.g. on https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 there are two additional h2 header sections
+
+#+begin_example
+<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
+#+end_example
+
+#+begin_example
+<h2 class="related-works mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Related works</h2>
+#+end_example
+
+If this happens relocate ALL these h2 sections before the h2 section where the data tables reside AND after any other h2
+sections which may already exist before the h2 section where the data tables reside
+
+** DONE bug
+
+a bug:
+
+The relocation has been done just with the h2 headers it self (with your last implementation) BUT NOT ONLY the h2
+headers itself, also the complete content after each h2 header up to the next h2 header (if there still is one) should
+be relocated
+
+** DONE make this feature configurable
+
+1.)
+
+rename the current "PAGE HEADER CONFIGURATION" section in the variable "const configSchema" to "PAGE HEADER AND BODY CONFIGURATION"
+
+2.)
+
+a new boolean variable "sa_enable_h2_section_relocation_on_final_page" (default: true) to the newly renamed "PAGE HEADER AND BODY CONFIGURATION" section
+
+Guard the current code after the line
+
+#+begin_example
+"// ── Trailing h2 relocation ───────────────────────────────────────────" 
+#+end_example
+
+to only be executed when the variable is true
+
+* DONE on "multi"-table pageTypes when filtering a sub-table with the sub-table specific filter field, the h2 header line (which displays and summarizes row counts over all the sub-tables) correctly displays the corresponding changed total count
+** initial
+
+on "multi"-table pageTypes when filtering a sub-table with the sub-table specific filter field, the h2 header line
+(which displays and summarizes row counts over all the sub-tables) correctly displays the corresponding changed total
+count
+
+But when clearing the sub-table filter field, the h2 header line count does not change, so it does NOT reflect the reset
+of the sub-table filter field (only the sub-table row count is reflected in it's h3 header line). Filtering on a column
+level filter field in a sub-table does NOT show this effect. After resetting a column level filter on a sub-table BOTH
+counts in the sub-table h3 header line and the global count in the h2 header line are correct. please fix
+
+** problem is
+
+#+begin_example
+Now I see the actual problem clearly. In clearSubFilter:
+
+Line 18764-18767: rows have data-mb-stf-hidden deleted and their display restored
+Line 18776: updateH2CountFromSubtables() is called
+In updateH2CountFromSubtables, the new guard at line 18922:
+jsif (!anySubtableFilterActive && !anyStfHiddenRows) return;After clearSubFilter runs, both anySubtableFilterActive is false (input cleared) AND anyStfHiddenRows is false (the delete row.dataset.mbStfHidden already ran on line 18766). So the function still returns early! The fix needs to bypass this check entirely when called from clearSubFilter.The cleanest fix: pass a {force: true} parameter to skip the guard, or simply always recalculate (remove the guard entirely and call updateH2Count unconditionally). The guard was only to avoid unnecessary work — it can be removed safely since the function is lightweight:Now let me also read the h2 relocation code for Bug 2:Viewed 2 files, ran a commandViewed 2 files, ran a commandNow I understand both bugs completely. Let me implement:Bug 1: The updateH2CountFromSubtables early-return guard is still wrong. When clearSubFilter calls it, mbStfHidden has already been deleted AND anySubtableFilterActive is false → returns early. Fix: remove the guard entirely. The function is called rarely (only on STF apply/clear) so the cost is negligible.Bug 2: After finalCleanup, find all h2 elements that come AFTER the data h2 (the one with .mb-row-count-stat) and move them to just before the data h2.Copy to working dirCopy to working dirFix Bug 1 — remove the guard entirely:
+#+end_example
+
+* DONE "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
+
+In the following code block
+
+#+begin_example
+        {
+            type: 'area-recordings',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Area' } ],
+            features: {
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+add the "columnExtractors" block
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+#+end_example
+
+so that it looks like
+
+#+begin_example
+        {
+            type: 'area-recordings',
+            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Area' } ],
+            features: {
+                extractMainColumn: 'Title'
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+* DONE The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
+
+* DONE batches in the last session from Opitz
+
+#+begin_example
+v9.99.219 — Stats panel: column-count rows, panel vertical resize, multi-table collapse, config schema (Resize section, auto-resize, stats panel settings)
+v9.99.220 — Stats panel: live artwork timing, CAA/EAA label fix, EAA artwork count, synthetic column bg detection + tinting
+v9.99.221 — Hotfix: missing { syntax error in globalRows
+v9.99.222 — Stats panel font size default 125%, persisted slider
+v9.99.223 — Official RGs / Official VA RGs buttons restored + tooltips
+v9.99.224 — HTML export format
+v9.99.225 — Export fixes: HTML controls-container strip, collapsed tables, JSON/Org-Mode multi-table
+v9.99.226 — Exporters: _exportCleanCellText (strips JSON blobs), _exportNameFor (h2 fallback), Org-Mode * headings, always-tables JSON structure
+v9.99.227 — Six bug fixes + page header config section + legal name relocation
+v9.99.228 — STF clear h2 fix (calls runFilter), trailing h2 relocation
+v9.99.229 — Trailing h2 relocation: move full section content, not just heading
+v9.99.230 — Renamed config section, sa_enable_h2_section_relocation guard, area-recordings video extractor, sub-table count tooltips
+v9.99.231 — Tooltip DOM property fix (quotes in filter expressions), (N) tooltip
+v9.99.232 — Column-filter-aware sub-table tooltips with column name+expression summary
+#+end_example
+
+* DONE numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
+** question
+
+In the uploaded userscript, is it possible to align generally in a table a numeric column centered inside a data cell,
+but still left or right align the numbers overall when rendering them. SO the whole colomn of numbers itself is lets say
+right aligned to itself, but as a whole centered in the middle of the table column. If this is possible, how is such an aligment feature called ?
+
+Technique: centered inline-block + right/left/centered-aligned (R/L/C) content
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Year', align: 'C'} ],
+                integerColumns: [ {sourceColumn: 'Releases', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'Year', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'Track'} ],
+                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                integerColumns: [ {sourceColumn: '#', align: 'L'} ],
+#+end_example
+
+** todo
+
+add a new feature, based on the Technique: centered inline-block + right/left/centered-aligned (R/L/C) content
+
+There is a new parameter "integerColumns" in the variable "const pageDefinitions" for different pageType definitions, e.g
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
+#+end_example
+
+The implementation of "integerColumns" should be: during rendering of a table column which matches a "sourceColumn" from
+the above definition, the "sourceColumn" itslef sould be centered-inline block in the table, but the cell content
+aligement should be left 'L', right 'R' or centered 'C' (default). Also when "align:" is missing in the definition it
+means centered 'C'
+
+- maybe also rewrite the following function in terms of the new "integerColumns" feature
+  
+#+begin_example
+        // --- Helper: is a column name numeric? ---------------------------------
+        const isNumericCol = (name) =>
+            name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
+            name.includes('Length') || name.includes('#');
+#+end_example
+
+** bug for DD, MM
+
+change the definition for
+
+#+begin_example
+{sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}
+#+end_example
+
+to
+
+#+begin_example
+{sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}
+#+end_example
+
+** fix missing
+
+add
+
+#+begin_src bash
+integerColumns: [ {sourceColumn: 'Releases', align: 'R'} ],
+#+end_src
+
+to the "artist-releasegroups" definition, so that it looks like
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs',         params: { all: '0', va: '0' } },
+                { label: '🧮 Official VA RGs',      params: { all: '0', va: '1' } },
+                { label: '🧮 Artist RGs',           params: { all: '1', va: '0' } },
+                { label: '🧮 Various Artists RGs',  params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Year', align: 'C'}, {sourceColumn: 'Releases', align: 'R'} ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+** is it possible to align according a special character like ":"
+
+is it possible to align according a special character like ":"
+
+#+begin_example
+ 13:57.000
+  9:59
+ 10:05
+#+end_example
+
+so that in each row the ":" character of each 'numeric string' sits exactly below each other
+
+** align lenght
+
+change the definition for
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
+#+end_example
+
+to
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+#+end_example
+
+and 
+Algorithm:
+ - Scan column
+ - Split at :
+ - Compute max width of left part
+ - Render with padded left side OR split spans
+
+#+begin_example
+Example: 13:57.000
+
+Split each value into:
+
+left part (before :) → right-aligned
+
+right part (after :) → left-aligned
+
+Example structure
+<td class="time">
+  <span class="left">13</span><span class="sep">:</span><span class="right">57.000</span>
+</td>
+#+end_example
+   
+This is exactly like “decimal alignment” but for the character ":"   
+
+** align, in such a way that ":" should be centered inside the table column 
+
+align, in such a way that the ":" character of a typical value like "10:05" is centered inline-block
+
+** jesus
+
+when a "Length" column has the following class and title attached to it
+
+#+begin_example
+'class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO"'
+#+end_example
+
+remove it, before doing any alignment regarding the new functinality with ":"
+
+
+#+begin_example
+https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
+
+<td class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO" style="text-align: right;">5:42.000
+</td>
+
+<td>5:46</td>
+#+end_example
+
+** make configurable
+
+Please add a new section "Numeric column alignment" in the variable "const configSchema".
+
+Please also add a new boolean variable "sa_enable_numeric_alignment" (default: true) to the newly introduced section
+"Numeric column alignment".
+
+When the value is true, enable the feature of numeric column alignment we just introduced, otherwise leave these columns
+as is.
+
+** bugs
+
+still bugs
+
+1.)
+
+On the following pageTypes 
+
+#+begin_example
+type: 'artist-relationships'
+type: 'artist-relationships-filtered'
+#+end_example
+
+their definitions are missing the parameter for "integerColumns" columns, please insert (like in other pageTypes)
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+#+end_example
+
+2.)
+
+- for the pageType "type: 'artist-releasegroups'"
+
+also "{sourceColumn: 'Releases', align: 'R'}" is set,
+  
+#+begin_example
+integerColumns: [ {sourceColumn: 'Year', align: 'C'}, {sourceColumn: 'Releases', align: 'R'} ],
+#+end_example
+
+it's NOT right aligned, see for example the following two row cells
+
+#+begin_example
+<td class="c" data-mb-int-col-styled="1" style="text-align: center;"><span style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: var(--mb-int-col-min-width, 2ch);">124</span></td>
+<td class="c" data-mb-int-col-styled="1" style="text-align: center;"><span style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: var(--mb-int-col-min-width, 2ch);">86</span></td>
+#+end_example
+
+Please explain and fix.
+
+3.)
+
+a.)
+
+the pageType
+
+#+begin_example
+        {
+            type: 'work-recordings-filtered',
+#+end_example
+
+is missing the parameter definition
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+#+end_example
+
+Should be the same as for type: "'work-recordings'"
+
+b.)
+
+On URLs of type https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c
+
+as soon as we sort on the "Length" column, the whole column seems to vanish, because now the "MB-Name" and all the
+following shifted to the left.
+
+It is probably because of the jesus2099 plugin which kicks in and fetches the exact time in the format
+"<minutes>:<seconds>.<thousends_of_a_second>" (plus tagges teh data cell with 'class="treleases"' and a plugin specific
+tooltip title ""SUPER MIND CONTROL Ⅱ X TURBO"
+
+#+begin_example
+<td class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO" style="text-align: right;">0:28.000</td>
+#+end_example
+
+The current implementation in
+
+#+begin_example
+    function initTreleasesObserver() {
+#+end_example
+
+is probably broken
+
+4.)
+
+On URLs of type https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+
+a.)
+
+change in the page definition of "type: 'recording-releases',"
+
+#+begin_example
+        {
+            type: 'recording-releases',
+            match: (path) => path.includes('/recording'),
+            buttons: [ { label: 'Show all Releases for Recording' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'}, {sourceColumn: '#', align: 'L'} ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
+                addCAA: 'Release title',
+                extractMainColumn: 'Release title'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+the following "sourceColumn: '#'"
+
+#+begin_example
+{sourceColumn: '#', align: 'L'}
+#+end_example
+
+to be aligned on the '.' character
+
+#+begin_example
+{sourceColumn: '#', align: '.'}
+#+end_example
+
+b.)
+
+the "Length" column as a whole is centered, but the cell values are NOT aligned on the ":" character.
+
+Could it be that it's because the cell values can be in two different formats:
+
+- "<minutes>:<seconds>.<thousends_of_a_second>"
+
+#+begin_example
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">5</span><span class="mb-ic-sep">:</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">44.226</span></span></td>
+#+end_example
+
+- "<minutes>:<seconds>"
+  
+#+begin_example
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">5</span><span class="mb-ic-sep">:</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">41</span></span></td>
+#+end_example
+
+Please fix, they should still be aligned with the ":" character (but centered as a whole column)
+
+5.)
+
+Please relocate the following documentation to where it belongs
+
+#+begin_example
+    /**
+     * High-performance batch renderer for large datasets
+     * Uses DocumentFragment, chunked rendering, and progress updates
+     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
+     */
+#+end_example
+
+** fix placement of JSDoc blocks
+
+some bugs
+
+1.)
+
+the "Length" column can actually also be in the following format: 
+
+- "[<hour>:]<minutes>:<seconds>[.<thousends_of_a_second>]"
+
+So there can optionally be a colon separated hour in front of the minutes, e.g.
+
+#+begin_example
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">2</span><span class="mb-ic-sep">:</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">02:05</span></span></td>
+#+end_example
+
+the alignment should always be on the colon ":" which separates "<minutes>" and "<seconds>"
+
+2.)
+
+On https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+
+the "#" column is STILL not aligned on the "." character, eg. see the following two consecutive row cells where it happens
+
+#+begin_example
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">1</span><span class="mb-ic-sep">.</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">12</span></span></td>
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">1</span><span class="mb-ic-sep">.</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">1</span></span></td>
+#+end_example
+
+
+same for the "Length" column, it's STILL not aligned on the ":" character e.g. see the following two consecutive row cells where it happens
+
+#+begin_example
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">5</span><span class="mb-ic-sep">:</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">44.226</span></span></td>
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">5</span><span class="mb-ic-sep">:</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">44</span></span></td>
+#+end_example
+
+Both columns "#" and "Length" are centered inline-block aligned as a whole so.
+
+
+And on https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278 
+
+we get on the "Length" column (ALSO NOT aligned on the ":" character")
+
+#+begin_example
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">?</span><span class="mb-ic-sep">:</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">??</span></span></td>
+<td style="text-align: center;" data-mb-int-col-styled="1"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">0</span><span class="mb-ic-sep">:</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">28.000</span></span></td>
+<td data-mb-int-col-styled="1" style="text-align: center;"><span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;"><span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">0</span><span class="mb-ic-sep">:</span><span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">53</span></span></td>
+#+end_example
+
+3.)
+
+please fix the placement of the following comment block, somehow it looks concatenated from different function decsriptions.
+
+#+begin_example
+    /**
+    /**
+     * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+     * in the document that removes `[class="treleases"]` elements the instant they
+     * are inserted into the rendered table.
+     *
+     * Background: the jesus2099 "mb. SUPER MIND CONTROL Ⅱ X TURBO" userscript
+     * injects a node such as:
+     *   <… class="treleases" title="SUPER MIND CONTROL Ⅱ X TURBO">
+     * into Length cells of the *live* rendered table — AFTER our render pipeline
+     * has already finished.  Because our pass-1 (applyIntegerColumnStyling) runs
+     * during row import (before the rows hit the DOM) and our pass-2
+     * (finalizeColonAlignedColumns) runs just before render, neither pass can see
+     * the annotation; the only reliable interception point is a MutationObserver
+     * that fires synchronously as each node is added.
+     *
+     * The observer:
+     *   - watches `childList` and `subtree` on each `table.tbl tbody`
+     *   - for every added node, checks whether it or any of its descendants
+     *     carries `class="treleases"` (exact match) — the attribute value used by
+     *     the jesus2099 script
+     *   - removes the offending element immediately, before the browser paints
+     *
+     * Called once after each `renderFinalTable` / `renderGroupedTable` completes.
+     * A module-level `WeakSet` prevents double-observing the same tbody across
+     * repeated re-renders.
+     *
+     * @returns {void}
+     */
+    /**
+     * _repairTreleasesTd — re-styles a <td class="treleases"> in place.
+     *
+     * Jesus2099's "mb. SUPER MIND CONTROL Ⅱ X TURBO" mutates Length cells of
+     * the live rendered table: it sets class="treleases", a plugin title,
+     * `style="text-align:right"`, and replaces the text with a precise time
+     * (e.g. "0:28.000").  The cell is NOT a new element — it is the existing
+     * <td> mutated in place.  Removing it would shift every subsequent column.
+     * Instead: extract the new text, strip Jesus2099's overrides, re-apply our
+     * split/L/R/C alignment, and re-sync min-width across the whole column.
+     *
+     * @param {HTMLTableCellElement} td
+     */
+#+end_example
+
+
+* counting and display wrong: actually with indexedDB cache
+
+* test with final rendered page (so all are display)
+** starting with ALL rows fetched for officail an non-officail
+
+# "Discography": 1941 of 1946/2123  [artwork 567]   
+
+** switching to official
+
+# h2 header line: "Official Discography" (582 of 2123) [artwork 2067]
+# h2 header line: "Discography" (582) [artwork 578]                         original: OK
+
+** switching to non-official
+
+# h2 header line: "Non-Official Discography" (1541 of 2123) [artwork 2067]
+# h2 header line: "Discography" (2123) [artwork 2067]               original: OK
+
+- the row display, if uncollapsed all sub-tables is correct, but some sub-tables have a count in the h3 header of the
+  sub-table which render in the format
+
+#+begin_example
+(<actual rows in sub-table of the un-official case> of <actual rows in sub-table of the official case>)
+#+end_example
+
+e.g in the sub-table with name "Album + Compilation (168 of 36)"
+
+** filtering tests
+
+                ok                                                                ok
+# Album (3 of 8)/22 "[artwork] 3"  "of"  [ ]cc   <buttons> (ok)          Filtered 8 rows [MB-Name:"the"]
+
+#+begin_example
+global filter: "bruce"
+sub-header("Album") filter: "of"
+column filter("MB-Name"): "the"
+#+end_example
+
+==> then switch to
+
+#+begin_example
+global filter: "bruce"
+sub-header("Album") filter: "the" [cc]
+column filter("MB-Name"): "of"
+#+end_example
+
+# "Official Discography": 1939 of 1941/2123  [artwork 567]
+                ok                                                                ok
+# Album (1 of 3)/22 "[artwork] 1"  "the"  [x]cc   <buttons> (ok)          Filtered 3 rows [MB-Name:"of"]
+
+Table: 1 row (ok)
+
+
+* rendering time for VA - 1057 4.33s minutes in network mode
 
 
 * TODO inform the user that the CSV exporter exports the first table in "multi"-table mode
@@ -57575,95 +57929,168 @@ STF highlight: bg #90ee90 (hardcoded light green), color #000
 #+end_example
 
 
-* DONE reorder the tab/sub-table specific section always last
-** DONE initial
+* TODO multi-row cols in "multi"-table pageTypes not collapsable/uncollapsable anymore on artist-releasegroup pages
 
-On the final rendered page, always check if there are h2 header sections AFTER the h2 section for the actual table/sub-tables
+There is a bug that multi-row columns in "multi"-table pageTypes are not collapsable/uncollapsable anymore on the complete table and column header level:
 
-- e.g on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c there is an additional h2 header section
+e.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the column "Label" is such a multi-row column
 
-#+begin_example
-<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
-#+end_example
-
-after the actual h2 header where all the table data resides
+and clicking on the table level button
 
 #+begin_example
-<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Album<span class="mb-row-count-stat">(8 of 12)/124</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">12</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string (focus this field with 'Ctrl+G')" style="font-size: 1em; padding: 2px 6px; border: 2px solid orange; border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s; box-shadow: orange 0px 0px 2px 2px;"><span id="mb-global-filter-clear" title="Clear global filter" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid orange; border-right: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude Matches (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle ALL highlighting</button><button id="mb-clear-column-filters-btn" title="Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by 'Ctrl+Shift+G')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter [global:"bruce"]</span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+<button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button>
 #+end_example
 
-- e.g. on https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7 there are two additional h2 header sections
+or column header level button
 
 #+begin_example
-<h2 class="relationships mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Relationships</h2>
+<span class="mb-col-collapse-hdr-btn" data-col-index="6" title="Expand ALL multi-row Label cells (7) in this table column" role="button" aria-expanded="false" aria-label="Expand all multi-row cells in: Label" style="margin-left: auto;"><span class="mb-col-collapse-glyph">▶</span><span class="mb-col-collapse-count">7</span><span class="mb-col-collapse-rack">▤</span></span>
+#+end_example
+
+has NO effect, but it works in the cell itselg, so clicking
+
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all multi-row cell items (2)" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed"><span class="mb-cell-collapse-glyph">▶</span><span class="mb-cell-collapse-count">2</span><span class="mb-cell-collapse-rack">▤</span></span>
+#+end_example
+
+for example works
+
+
+* TODO move "Enable Save/Load to Disk" to explicit section
+
+move the block
+
+#+begin_example
+        sa_enable_save_load: {
+            label: 'Enable Save/Load to Disk',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
+        },
+#+end_example
+
+to the beginning of the "// LOAD AND SAVE DATA TO/FROM DISK SECTION" section
+
+* TODO add "Total Tracks" to "type: 'area-releases'"
+
+add the following missing parameter block 
+
+#+begin_example
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+#+end_example
+
+to the pageType definition from "type: 'area-releases'"
+
+* TODO https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278&page=1 needs "video" column
+
+* TODO on https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events "toggle EAA button" changes place with (row count)
+
+* TODO missing - JSDoc: * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+
+#+begin_example
+    /**
+     * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+     * in the document that removes `[class="treleases"]` elements the instant they
+     * are inserted into the rendered table.
+     *
+     * Background: the jesus2099 "mb. SUPER MIND CONTROL Ⅱ X TURBO" userscript
+     * injects a node such as:
+     *   <… class="treleases" title="SUPER MIND CONTROL Ⅱ X TURBO">
+     * into Length cells of the *live* rendered table — AFTER our render pipeline
+     * has already finished.  Because our pass-1 (applyIntegerColumnStyling) runs
+     * during row import (before the rows hit the DOM) and our pass-2
+     * (finalizeColonAlignedColumns) runs just before render, neither pass can see
+     * the annotation; the only reliable interception point is a MutationObserver
+     * that fires synchronously as each node is added.
+     *
+     * The observer:
+     *   - watches `childList` and `subtree` on each `table.tbl tbody`
+     *   - for every added node, checks whether it or any of its descendants
+     *     carries `class="treleases"` (exact match) — the attribute value used by
+     *     the jesus2099 script
+     *   - removes the offending element immediately, before the browser paints
+     *
+     * Called once after each `renderFinalTable` / `renderGroupedTable` completes.
+     * A module-level `WeakSet` prevents double-observing the same tbody across
+     * repeated re-renders.
+     *
+     * @returns {void}
+     */
 #+end_example
 
 #+begin_example
-<h2 class="related-works mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▲</span>Related works</h2>
+    /**
+     * High-performance batch renderer for large datasets
+     * Uses DocumentFragment, chunked rendering, and progress updates
+     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
+     */
+    async function renderFinalTable(rows) {
 #+end_example
 
-If this happens relocate ALL these h2 sections before the h2 section where the data tables reside AND after any other h2
-sections which may already exist before the h2 section where the data tables reside
 
-** DONE bug
+* TODO todos
 
-a bug:
+In the newly uploaded userscript,
 
-The relocation has been done just with the h2 headers it self (with your last implementation) BUT NOT ONLY the h2
-headers itself, also the complete content after each h2 header up to the next h2 header (if there still is one) should
-be relocated
-
-** DONE make this feature configurable
+a couple of things are still missing (also add a changelog):
 
 1.)
 
-rename the current "PAGE HEADER CONFIGURATION" section in the variable "const configSchema" to "PAGE HEADER AND BODY CONFIGURATION"
+move the block
+
+#+begin_example
+        sa_enable_save_load: {
+            label: 'Enable Save/Load to Disk',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
+        },
+#+end_example
+
+to the beginning of the "// LOAD AND SAVE DATA TO/FROM DISK SECTION" section
 
 2.)
 
-a new boolean variable "sa_enable_h2_section_relocation_on_final_page" (default: true) to the newly renamed "PAGE HEADER AND BODY CONFIGURATION" section
-
-Guard the current code after the line
+add the following missing parameter block 
 
 #+begin_example
-"// ── Trailing h2 relocation ───────────────────────────────────────────" 
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
 #+end_example
 
-to only be executed when the variable is true
+to the pageType definition from "type: 'area-releases'"
 
-* DONE on "multi"-table pageTypes when filtering a sub-table with the sub-table specific filter field, the h2 header line (which displays and summarizes row counts over all the sub-tables) correctly displays the corresponding changed total count
-** initial
+3.)
 
-on "multi"-table pageTypes when filtering a sub-table with the sub-table specific filter field, the h2 header line
-(which displays and summarizes row counts over all the sub-tables) correctly displays the corresponding changed total
-count
-
-But when clearing the sub-table filter field, the h2 header line count does not change, so it does NOT reflect the reset
-of the sub-table filter field (only the sub-table row count is reflected in it's h3 header line). Filtering on a column
-level filter field in a sub-table does NOT show this effect. After resetting a column level filter on a sub-table BOTH
-counts in the sub-table h3 header line and the global count in the h2 header line are correct. please fix
-
-** problem is
-
-#+begin_example
-Now I see the actual problem clearly. In clearSubFilter:
-
-Line 18764-18767: rows have data-mb-stf-hidden deleted and their display restored
-Line 18776: updateH2CountFromSubtables() is called
-In updateH2CountFromSubtables, the new guard at line 18922:
-jsif (!anySubtableFilterActive && !anyStfHiddenRows) return;After clearSubFilter runs, both anySubtableFilterActive is false (input cleared) AND anyStfHiddenRows is false (the delete row.dataset.mbStfHidden already ran on line 18766). So the function still returns early! The fix needs to bypass this check entirely when called from clearSubFilter.The cleanest fix: pass a {force: true} parameter to skip the guard, or simply always recalculate (remove the guard entirely and call updateH2Count unconditionally). The guard was only to avoid unnecessary work — it can be removed safely since the function is lightweight:Now let me also read the h2 relocation code for Bug 2:Viewed 2 files, ran a commandViewed 2 files, ran a commandNow I understand both bugs completely. Let me implement:Bug 1: The updateH2CountFromSubtables early-return guard is still wrong. When clearSubFilter calls it, mbStfHidden has already been deleted AND anySubtableFilterActive is false → returns early. Fix: remove the guard entirely. The function is called rarely (only on STF apply/clear) so the cost is negligible.Bug 2: After finalCleanup, find all h2 elements that come AFTER the data h2 (the one with .mb-row-count-stat) and move them to just before the data h2.Copy to working dirCopy to working dirFix Bug 1 — remove the guard entirely:
-#+end_example
-
-* DONE "video" icon - https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings - "shooting location for"
-
-In the following code block
+the following pageType definitions
 
 #+begin_example
         {
-            type: 'area-recordings',
-            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Area' } ],
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
             features: {
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'work-recordings',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work' } ],
+            features: {
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 extractMainColumn: 'Title'
             },
             tableMode: 'multi',
@@ -57671,7 +58098,7 @@ In the following code block
         },
 #+end_example
 
-add the "columnExtractors" block
+need the synthetic "video" column parameter
 
 #+begin_example
                 columnExtractors: [
@@ -57679,44 +58106,28 @@ add the "columnExtractors" block
                 ],
 #+end_example
 
-so that it looks like
+4.)
+
+There is a bug that multi-row columns in "multi"-table pageTypes are not collapsable/uncollapsable anymore on the complete table and column header level:
+
+e.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the column "Label" is such a multi-row column
+
+and clicking on the table level button
 
 #+begin_example
-        {
-            type: 'area-recordings',
-            match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Area' } ],
-            features: {
-                extractMainColumn: 'Title'
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
+<button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button>
 #+end_example
 
-* DONE The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
-
-* DONE batches in the last session from Opitz
+or column header level button
 
 #+begin_example
-v9.99.219 — Stats panel: column-count rows, panel vertical resize, multi-table collapse, config schema (Resize section, auto-resize, stats panel settings)
-v9.99.220 — Stats panel: live artwork timing, CAA/EAA label fix, EAA artwork count, synthetic column bg detection + tinting
-v9.99.221 — Hotfix: missing { syntax error in globalRows
-v9.99.222 — Stats panel font size default 125%, persisted slider
-v9.99.223 — Official RGs / Official VA RGs buttons restored + tooltips
-v9.99.224 — HTML export format
-v9.99.225 — Export fixes: HTML controls-container strip, collapsed tables, JSON/Org-Mode multi-table
-v9.99.226 — Exporters: _exportCleanCellText (strips JSON blobs), _exportNameFor (h2 fallback), Org-Mode * headings, always-tables JSON structure
-v9.99.227 — Six bug fixes + page header config section + legal name relocation
-v9.99.228 — STF clear h2 fix (calls runFilter), trailing h2 relocation
-v9.99.229 — Trailing h2 relocation: move full section content, not just heading
-v9.99.230 — Renamed config section, sa_enable_h2_section_relocation guard, area-recordings video extractor, sub-table count tooltips
-v9.99.231 — Tooltip DOM property fix (quotes in filter expressions), (N) tooltip
-v9.99.232 — Column-filter-aware sub-table tooltips with column name+expression summary
+<span class="mb-col-collapse-hdr-btn" data-col-index="6" title="Expand ALL multi-row Label cells (7) in this table column" role="button" aria-expanded="false" aria-label="Expand all multi-row cells in: Label" style="margin-left: auto;"><span class="mb-col-collapse-glyph">▶</span><span class="mb-col-collapse-count">7</span><span class="mb-col-collapse-rack">▤</span></span>
 #+end_example
 
-* TODO multi-row cols in "multi"-table pageTypes not collapsable/uncollapsable anymore on artist-releasegroup pages
+has NO effect, but it works in the cell itselg, so clicking
 
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all multi-row cell items (2)" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed"><span class="mb-cell-collapse-glyph">▶</span><span class="mb-cell-collapse-count">2</span><span class="mb-cell-collapse-rack">▤</span></span>
+#+end_example
+
+for example works
