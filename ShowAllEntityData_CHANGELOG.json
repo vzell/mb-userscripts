@@ -1,5 +1,58 @@
 [
     {
+      "version": "9.99.226",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "All exporters (CSV, JSON, Org-Mode) — invisible metadata stripped from cells: sort-key spans (`mb-caa-sort-key`, `mb-cancelled-sort-key`, `mb-video-sort-key`, and any other `display:none` descendants) were previously included in exported cell text via plain `textContent`. Added shared `_exportCleanCellText(cell)` utility: clones the cell, removes all `[style*=\"display:none\"]` descendants and script UI widgets (sort buttons, uniq-count wraps, resize handles, CAA/EAA toggle buttons, inline placeholders), then returns `clone.textContent.trim()`. All three text-based exporters now call this instead of `cell.textContent` directly.",
+            "Org-Mode export — section heading symbol changed from `#` to `*`: `#` is an Org-Mode comment character, not a heading. Section headings are now proper Org outline entries (`* Events`, `* Album`, etc.) making the exported file a valid navigable Org document."
+          ]
+        },
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "JSON export — unified `tables` structure for both single and multi-table pages. Previously single-table pages used a flat `{ meta, headers, rows }` structure and multi-table used `{ meta, tables: […] }`. Now always `{ meta, tables: [{ name, headers, rows }, …] }` regardless of table count. `name` is derived from the h2 heading (single-table) or h3 heading (multi-table) via the new shared `_exportNameFor(tbl, idx)` utility.",
+            "Org-Mode export — section heading (`* Name`) now emitted for both single and multi-table pages. Single-table pages previously emitted no heading; now a `* Events` (or whatever h2 heading precedes the table) is prepended before the table, making the output structure consistent.",
+            "Added two shared module-level export utilities: `_exportCleanCellText(cell)` (strips hidden metadata, returns clean text) and `_exportNameFor(tbl, idx)` (derives clean heading text from the h2/h3 preceding the table, with index fallback). Both are reused by CSV, JSON, Org-Mode, and HTML exporters."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.225",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "HTML export — Bug 1: the exported page title included the entire contents of the `#mb-show-all-controls-container` div (all button labels, filter inputs, etc.) because it was reading `h1.textContent` directly and the script injects the controls bar inside the `<h1>` element. Fixed by cloning the h1, removing `#mb-show-all-controls-container` and any other `[id^=\"mb-\"]` / `[class^=\"mb-\"]` elements from the clone, then reading `clone.textContent`.",
+            "HTML export — Bug 2: collapsed sub-tables were omitted from the export because the table list was filtered by `t.style.display !== 'none'`. Collapsing is a viewing preference and should not exclude content from export. Fixed by removing the display filter — all `table.tbl` elements are now exported; only individual rows hidden by active filters (display:none on `<tr>`) are skipped."
+          ]
+        },
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "JSON export — multi-table support: on pages with `tableMode: 'multi'` (or multiple `table.tbl` elements), the exported structure now uses `{ meta, tables: [{ name, headers, rows }, …] }` instead of the single-table `{ meta, headers, rows }` flat structure. `name` is derived from the h2/h3 heading that precedes each sub-table. Single-table pages continue to use the original flat structure (backward-compatible).",
+            "Org-Mode export — multi-table support: on multi-table pages, each sub-table is exported as a separate pipe-delimited Org table preceded by a `# SubTableName` comment line (derived from the h3 heading). Sub-tables are separated by a blank line. The metadata comment block is emitted once at the top. Single-table pages continue to emit a single table (backward-compatible)."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.224",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Export — new 'HTML' format added to the 💾 Export dropdown (after Org-Mode). Calls `exportTableToHTML()` which produces a fully self-contained `.html` file using the same `showExportDialog` / `_assembleExportFilename` infrastructure as CSV, JSON, and Org-Mode. Features: (1) Preserves full cell innerHTML — hyperlinks and inline markup are kept intact, not flattened to plain text; (2) Images (`<img>`) are replaced with their alt text or a 🖼️ placeholder so the export is purely textual; (3) Script UI widgets (sort buttons, unique-value badges, resize handles, CAA/EAA toggle buttons) are stripped from the cloned cells before serialisation; (4) Multi-table pages are fully exported — each visible `table.tbl` becomes its own `<section>` with the h2/h3 heading above it; (5) An embedded minimal CSS stylesheet gives the output a clean MusicBrainz-style appearance (green headers, hover highlight, border-collapse) without any external dependencies; (6) Metadata (timestamp, URL, page type, entity name, button label, script name) is embedded as an HTML comment block immediately before `<body>`; (7) Page h1 title is used as both `<title>` and the `<h1>` at the top of the exported page, with a hyperlink back to the source URL."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.223",
       "date": "2026-03-17",
       "sections": [

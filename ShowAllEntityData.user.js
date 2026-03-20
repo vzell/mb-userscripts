@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.223+2026-03-17
+// @version      9.99.226+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -5410,6 +5410,68 @@
      * Exports only visible rows and columns
      * Generates filename with timestamp and page type
      */
+    /**
+     * Extract clean plain-text from a table cell for export.
+     *
+     * Strips ALL invisible metadata injected by the script before reading the
+     * cell's text content:
+     *   • Any descendant element with inline `display:none` (sort-key spans
+     *     such as `.mb-caa-sort-key`, `.mb-cancelled-sort-key`,
+     *     `.mb-video-sort-key`, and any future variants).
+     *   • Script UI widgets injected into cells
+     *     (`.sort-icon-btn`, `.mb-col-uniq-wrap`, `.column-resizer`,
+     *      CAA/EAA toggle buttons, inline-pic placeholders).
+     *
+     * @param {HTMLElement} cell   Live cell element (`<td>` or `<th>`).
+     * @returns {string}           Clean, whitespace-normalised text.
+     */
+    function _exportCleanCellText(cell) {
+        const clone = cell.cloneNode(true);
+        // Remove elements that are explicitly hidden (sort-key spans, etc.)
+        clone.querySelectorAll('[style*="display: none"], [style*="display:none"]')
+             .forEach(el => el.remove());
+        // Remove script UI widgets that may appear in cells
+        clone.querySelectorAll(
+            '.sort-icon-btn, .mb-col-uniq-wrap, .column-resizer, ' +
+            '.mb-caa-art-toggle-btn, .mb-eaa-art-toggle-btn, ' +
+            '.mb-caa-inline-ph, .mb-eaa-inline-ph, ' +
+            '.mb-subtable-collapse-btn, .mb-subtable-vis-btn'
+        ).forEach(el => el.remove());
+        return clone.textContent.trim().replace(/\s+/g, ' ');
+    }
+
+    /**
+     * Derive a clean heading text for export from the h2/h3 element that
+     * immediately precedes `tbl` in the DOM.  Used by JSON and Org-Mode
+     * exporters to name each exported sub-table / section.
+     *
+     * Search order: walks backward through `previousElementSibling` until it
+     * finds an H2 or H3 (any depth of intervening non-table siblings is
+     * skipped).  Stops at another TABLE or H1 to avoid crossing section
+     * boundaries.
+     *
+     * @param {HTMLTableElement} tbl   The table being exported.
+     * @param {number}           idx   0-based fallback index.
+     * @returns {string}               Clean heading text.
+     */
+    function _exportNameFor(tbl, idx) {
+        let el = tbl.previousElementSibling;
+        while (el) {
+            if (/^H[23]$/.test(el.tagName)) {
+                // Text nodes only — strips icons, count badges, etc.
+                const txt = Array.from(el.childNodes)
+                    .filter(n => n.nodeType === Node.TEXT_NODE)
+                    .map(n => n.textContent.trim()).join('')
+                    .replace(/^\s*[\u25bc\u25b2]\s*/u, '')
+                    .replace(/\([^)]*\)/g, '').trim();
+                return txt || el.textContent.replace(/[\u25bc\u25b2▼▲]/g, '').trim();
+            }
+            if (el.tagName === 'TABLE' || el.tagName === 'H1') break;
+            el = el.previousElementSibling;
+        }
+        return `Table ${idx + 1}`;
+    }
+
     function exportTableToCSV() {
         const table = document.querySelector('table.tbl');
         if (!table) { alert('No table found to export'); Lib.error('export', 'No table found for CSV export'); return; }
@@ -5422,7 +5484,9 @@
         if (headerRow) {
             Array.from(headerRow.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                let headerText = cell.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim();
+                // Strip sort/UI glyphs from header text
+                let headerText = _exportCleanCellText(cell)
+                    .replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim();
                 headers.push(headerText);
             });
             rows.push(headers);
@@ -5436,7 +5500,7 @@
             const cells = [];
             Array.from(row.cells).forEach(cell => {
                 if (cell.style.display === 'none') return;
-                let text = cell.textContent.trim().replace(/\s+/g, ' ').replace(/"/g, '""');
+                let text = _exportCleanCellText(cell).replace(/"/g, '""');
                 if (text.includes(',') || text.includes('\n') || text.includes('"')) text = `"${text}"`;
                 cells.push(text);
             });
@@ -5471,111 +5535,454 @@
     /**
      * Export table to JSON format
      */
+    /**
+     * Export table(s) to JSON format.
+     *
+     * Always uses the unified `tables` structure — both single-table and
+     * multi-table pages:
+     *   {
+     *     "meta": { … },
+     *     "tables": [
+     *       { "name": "Events", "headers": […], "rows": [{…}, …] },
+     *       …
+     *     ]
+     *   }
+     *
+     * `name` is derived from the h2 heading (single-table) or h3 heading
+     * (multi-table) that precedes each sub-table in the DOM.
+     *
+     * Invisible metadata (sort-key spans, UI widgets) is stripped from every
+     * cell via `_exportCleanCellText` before serialisation.
+     */
     function exportTableToJSON() {
-        const table = document.querySelector('table.tbl');
-        if (!table) { alert('No table found to export'); Lib.error('export', 'No table found for JSON export'); return; }
+        const allTables = Array.from(document.querySelectorAll('table.tbl'));
+        if (!allTables.length) { alert('No table found to export'); Lib.error('export', 'No table found for JSON export'); return; }
         Lib.debug('export', 'Starting JSON export...');
 
-        const data = { meta: _buildExportMetaObject(), headers: [], rows: [] };
-
-        const headerRow = table.querySelector('thead tr:first-child');
-        if (headerRow) {
-            Array.from(headerRow.cells).forEach(cell => {
-                if (cell.style.display === 'none') return;
-                data.headers.push(cell.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' '));
-            });
+        /**
+         * Extract visible, clean headers from `tbl`.
+         * @param {HTMLTableElement} tbl
+         * @returns {string[]}
+         */
+        function _extractHeaders(tbl) {
+            const headerRow = tbl.querySelector('thead tr:first-child');
+            if (!headerRow) return [];
+            return Array.from(headerRow.cells)
+                .filter(c => c.style.display !== 'none')
+                .map(c => _exportCleanCellText(c)
+                    .replace(/[⇅▲▼📊▶◀▤]/g, '').trim());
         }
 
-        const dataRows = table.querySelectorAll('tbody tr');
-        let rowsExported = 0, rowsSkipped = 0;
-        dataRows.forEach(row => {
-            if (row.style.display === 'none') { rowsSkipped++; return; }
-            const rowData = {};
-            Array.from(row.cells).forEach((cell, index) => {
-                if (cell.style.display === 'none') return;
-                const headerIndex = Array.from(row.cells).filter((c, i) => i <= index && c.style.display !== 'none').length - 1;
-                const headerName = data.headers[headerIndex] || `Column${index}`;
-                rowData[headerName] = cell.textContent.trim().replace(/\s+/g, ' ');
+        /**
+         * Extract visible data rows from `tbl`, keyed by `headers`.
+         * @param {HTMLTableElement} tbl
+         * @param {string[]}         headers
+         * @returns {{ rows: object[], exported: number, skipped: number }}
+         */
+        function _extractRows(tbl, headers) {
+            const rows = [];
+            let exported = 0, skipped = 0;
+            tbl.querySelectorAll('tbody tr').forEach(row => {
+                if (row.style.display === 'none') { skipped++; return; }
+                const rowData = {};
+                let visIdx = 0;
+                Array.from(row.cells).forEach(cell => {
+                    if (cell.style.display === 'none') return;
+                    const key = headers[visIdx] || `Column${visIdx}`;
+                    rowData[key] = _exportCleanCellText(cell);
+                    visIdx++;
+                });
+                if (Object.keys(rowData).length > 0) { rows.push(rowData); exported++; }
             });
-            if (Object.keys(rowData).length > 0) { data.rows.push(rowData); rowsExported++; }
+            return { rows, exported, skipped };
+        }
+
+        let totalExported = 0, totalSkipped = 0;
+
+        // Always use the tables array — uniform structure for single and multi.
+        const tables = allTables.map((tbl, tIdx) => {
+            const name    = _exportNameFor(tbl, tIdx);
+            const headers = _extractHeaders(tbl);
+            const { rows, exported, skipped } = _extractRows(tbl, headers);
+            totalExported += exported;
+            totalSkipped  += skipped;
+            return { name, headers, rows };
         });
 
-        Lib.debug('export', `JSON: ${rowsExported} rows exported, ${rowsSkipped} skipped`);
+        const data = { meta: _buildExportMetaObject(), tables };
+
+        Lib.debug('export', `JSON: ${totalExported} rows exported across ${allTables.length} table(s), ${totalSkipped} skipped`);
 
         const json = JSON.stringify(data, null, 2);
-        const { filename } = _assembleExportFilename('json', rowsExported);
+        const { filename } = _assembleExportFilename('json', totalExported);
 
         const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
         const url  = URL.createObjectURL(blob);
 
         showExportDialog({
             format:      'JSON',
-            description: 'JavaScript Object Notation — structured data with a top-level <code>meta</code> object, ' +
-                         'a <code>headers</code> array, and a <code>rows</code> array of objects keyed by column name. ' +
-                         'Metadata is embedded natively as a <code>meta</code> property.',
+            description: 'JavaScript Object Notation — top-level <code>meta</code> object and a <code>tables</code> array. ' +
+                         'Each entry has <code>name</code> (from the h2/h3 heading), ' +
+                         '<code>headers</code>, and <code>rows</code> (objects keyed by column name). ' +
+                         'Invisible metadata (sort-key spans, UI widgets) is stripped from all cell values.',
             mimeType:    'application/json;charset=utf-8;',
             extension:   'json',
             blobUrl:     url,
             filename,
-            rowsExported,
-            rowsTotal:   rowsExported + rowsSkipped,
+            rowsExported: totalExported,
+            rowsTotal:    totalExported + totalSkipped,
             triggerButton: document.getElementById('mb-export-btn'),
         });
     }
 
     /**
-     * Export table to Emacs Org-Mode format
+     * Export table(s) to Emacs Org-Mode format.
+     *
+     * Every table — whether from a single-table or multi-table page — is
+     * preceded by an Org first-level heading (`* Name`) derived from the h2
+     * heading (single-table) or h3 heading (multi-table) that precedes the
+     * table in the DOM.  This makes the output a valid Org document with
+     * proper outline structure.
+     *
+     *   # Exported: …
+     *   # URL: …
+     *   …
+     *
+     *   * Events
+     *   | Time | Event | Location | … |
+     *   |------+-------+----------+---|
+     *   | …    | …     | …        | … |
+     *
+     * Multiple sub-tables are separated by a blank line.
+     * Invisible metadata (sort-key spans, UI widgets) is stripped via
+     * `_exportCleanCellText` before serialisation.
      */
     function exportTableToOrgMode() {
-        const table = document.querySelector('table.tbl');
-        if (!table) { alert('No table found to export'); Lib.error('export', 'No table found for Org-Mode export'); return; }
+        const allTables = Array.from(document.querySelectorAll('table.tbl'));
+        if (!allTables.length) { alert('No table found to export'); Lib.error('export', 'No table found for Org-Mode export'); return; }
         Lib.debug('export', 'Starting Org-Mode export...');
 
-        const rows = [];
-        const headerRow = table.querySelector('thead tr:first-child');
-        if (headerRow) {
-            const headers = [];
-            Array.from(headerRow.cells).forEach(cell => {
-                if (cell.style.display === 'none') return;
-                headers.push(cell.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' '));
+        /**
+         * Build the pipe-delimited Org-Mode lines for a single `tbl`.
+         * @param {HTMLTableElement} tbl
+         * @returns {{ lines: string[], exported: number, skipped: number }}
+         */
+        function _buildOrgLines(tbl) {
+            const lines = [];
+            const headerRow = tbl.querySelector('thead tr:first-child');
+            if (headerRow) {
+                const headers = [];
+                Array.from(headerRow.cells).forEach(cell => {
+                    if (cell.style.display === 'none') return;
+                    headers.push(_exportCleanCellText(cell)
+                        .replace(/[⇅▲▼📊▶◀▤]/g, '').trim());
+                });
+                lines.push('| ' + headers.join(' | ') + ' |');
+                // Org separator: use + between columns like org-table convention
+                lines.push('|' + headers.map(() => '---').join('+') + '|');
+            }
+            let exported = 0, skipped = 0;
+            tbl.querySelectorAll('tbody tr').forEach(row => {
+                if (row.style.display === 'none') { skipped++; return; }
+                const cells = [];
+                Array.from(row.cells).forEach(cell => {
+                    if (cell.style.display === 'none') return;
+                    cells.push(_exportCleanCellText(cell).replace(/\|/g, '\\vert'));
+                });
+                if (cells.length > 0) { lines.push('| ' + cells.join(' | ') + ' |'); exported++; }
             });
-            rows.push('| ' + headers.join(' | ') + ' |');
-            rows.push('|' + headers.map(() => '---').join('|') + '|');
+            return { lines, exported, skipped };
         }
 
-        const dataRows = table.querySelectorAll('tbody tr');
-        let rowsExported = 0, rowsSkipped = 0;
-        dataRows.forEach(row => {
-            if (row.style.display === 'none') { rowsSkipped++; return; }
-            const cells = [];
-            Array.from(row.cells).forEach(cell => {
-                if (cell.style.display === 'none') return;
-                cells.push(cell.textContent.trim().replace(/\s+/g, ' ').replace(/\|/g, '\\vert'));
-            });
-            if (cells.length > 0) { rows.push('| ' + cells.join(' | ') + ' |'); rowsExported++; }
+        const metaBlock = _buildExportMetaLines('# ');
+        const sections  = [];
+        let totalExported = 0, totalSkipped = 0;
+
+        allTables.forEach((tbl, tIdx) => {
+            const name  = _exportNameFor(tbl, tIdx);
+            const { lines, exported, skipped } = _buildOrgLines(tbl);
+            totalExported += exported;
+            totalSkipped  += skipped;
+            // Org first-level heading with * — same for both single and multi-table
+            sections.push(`* ${name}\n` + lines.join('\n'));
         });
 
-        Lib.debug('export', `Org-Mode: ${rowsExported} rows exported, ${rowsSkipped} skipped`);
+        Lib.debug('export', `Org-Mode: ${totalExported} rows exported across ${allTables.length} table(s), ${totalSkipped} skipped`);
 
-        // Build meta comment block (# lines) and prepend before the table
-        const metaLines = _buildExportMetaLines('# ');
-        const orgContent = metaLines + rows.join('\n');
-
-        const { filename } = _assembleExportFilename('org', rowsExported);
+        // Meta comment block once at the top; sections separated by a blank line
+        const orgContent = metaBlock + sections.join('\n\n');
+        const { filename } = _assembleExportFilename('org', totalExported);
 
         const blob = new Blob([orgContent], { type: 'text/plain;charset=utf-8;' });
         const url  = URL.createObjectURL(blob);
 
         showExportDialog({
             format:      'Org-Mode',
-            description: 'Emacs Org-Mode table — pipe-delimited table compatible with <code>org-mode</code> and <code>org-table</code>. ' +
-                         'Metadata is prepended as <code>#&nbsp;comment</code> lines before the table header.',
+            description: 'Emacs Org-Mode document — each table is an Org first-level heading (<code>* Name</code>) ' +
+                         'followed by a pipe-delimited table. Heading names are derived from the h2/h3 heading ' +
+                         'preceding each sub-table. Invisible metadata (sort-key spans, UI widgets) is stripped ' +
+                         'from all cell values. Metadata is prepended once as <code>#&nbsp;comment</code> lines.',
             mimeType:    'text/plain;charset=utf-8;',
             extension:   'org',
             blobUrl:     url,
             filename,
-            rowsExported,
-            rowsTotal:   rowsExported + rowsSkipped,
+            rowsExported: totalExported,
+            rowsTotal:    totalExported + totalSkipped,
+            triggerButton: document.getElementById('mb-export-btn'),
+        });
+    }
+
+    /**
+     * Export visible table data as a self-contained HTML file.
+     *
+     * Differences from other exporters:
+     *   • Preserves full cell innerHTML (links, spans, thumbnails stripped to
+     *     plain anchor text — images are replaced with their alt text or '🖼️').
+     *   • Handles multi-table pages: each visible `table.tbl` is wrapped in its
+     *     own `<section>` with the h2/h3 heading above it.
+     *   • Metadata is embedded as an HTML comment block before `<body>`.
+     *   • A minimal embedded stylesheet gives the output a clean MusicBrainz-like
+     *     appearance without requiring any external resources.
+     *
+     * Cell content strategy: cloneNode the cell, strip `<img>` tags (replace with
+     * alt / '🖼️'), strip hidden elements (display:none), then use innerHTML so
+     * anchors, bold text, and other inline markup are preserved in the export.
+     */
+    function exportTableToHTML() {
+        // Export ALL tables — include collapsed ones (collapsed is a viewing preference,
+        // not an exclusion signal).  Rows still hidden by active filters are skipped.
+        const tables = Array.from(document.querySelectorAll('table.tbl'));
+        if (!tables.length) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for HTML export');
+            return;
+        }
+        Lib.debug('export', 'Starting HTML export…');
+
+        /**
+         * Sanitise a cloned cell for HTML output:
+         *   • Remove elements that are invisible (display:none).
+         *   • Replace <img> with its alt text or a 🖼️ placeholder.
+         *   • Remove sort/filter/resize UI widgets (.sort-icon-btn,
+         *     .mb-col-uniq-wrap, .column-resizer, .mb-col-hdr-flex icons).
+         * @param {HTMLElement} cell   Original live cell element.
+         * @returns {string}          Sanitised inner HTML string.
+         */
+        function _sanitiseCell(cell) {
+            const clone = cell.cloneNode(true);
+
+            // Remove hidden child elements
+            clone.querySelectorAll('[style*="display: none"], [style*="display:none"]')
+                 .forEach(el => el.remove());
+
+            // Remove UI-only widgets injected by the script
+            clone.querySelectorAll(
+                '.sort-icon-btn, .mb-col-uniq-wrap, .column-resizer, ' +
+                '.mb-caa-art-toggle-btn, .mb-eaa-art-toggle-btn, ' +
+                '.mb-caa-inline-ph, .mb-eaa-inline-ph'
+            ).forEach(el => el.remove());
+
+            // Replace <img> with alt text (or emoji placeholder)
+            clone.querySelectorAll('img').forEach(img => {
+                const alt = (img.alt || '').trim();
+                img.replaceWith(document.createTextNode(alt || '🖼️'));
+            });
+
+            return clone.innerHTML.trim();
+        }
+
+        /**
+         * Returns the h2/h3 heading text immediately preceding `table` in the DOM.
+         * @param {HTMLTableElement} tbl
+         * @returns {string}
+         */
+        function _headingFor(tbl) {
+            let el = tbl.previousElementSibling;
+            while (el) {
+                if (/^H[23]$/.test(el.tagName)) {
+                    return Array.from(el.childNodes)
+                        .filter(n => n.nodeType === Node.TEXT_NODE)
+                        .map(n => n.textContent.trim()).join('')
+                        .replace(/^\s*[\u25bc\u25b2]\s*/u, '')
+                        .replace(/\([^)]*\)/g, '').trim()
+                        || el.textContent.replace(/[\u25bc\u25b2▼▲]/g, '').trim();
+                }
+                // Stop at another table or a section boundary
+                if (el.tagName === 'TABLE' || el.tagName === 'H1') break;
+                el = el.previousElementSibling;
+            }
+            return '';
+        }
+
+        // ── Build HTML ───────────────────────────────────────────────────────
+        const now  = new Date();
+        const meta = _buildExportMetaObject();
+
+        // Metadata as HTML comment
+        const metaComment = [
+            '<!--',
+            `  Exported:     ${now.toLocaleString()} (${now.toISOString()})`,
+            `  URL:          ${meta.url}`,
+            `  Page type:    ${meta.pageType || '—'}`,
+            `  Entity:       ${meta.entityName || '—'}`,
+            `  Button:       ${meta.buttonLabel || '—'}`,
+            `  Script:       ${meta.script}`,
+            '-->',
+        ].join('\n');
+
+        // Minimal self-contained stylesheet
+        const css = `
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 0.9em;
+            color: #333;
+            margin: 0;
+            padding: 16px 24px 32px;
+            background: #fff;
+        }
+        h1 { font-size: 1.4em; margin: 0 0 4px; color: #1a1a1a; }
+        .export-meta { font-size: 0.78em; color: #888; margin-bottom: 20px; }
+        .export-meta a { color: #1565c0; }
+        section { margin-bottom: 32px; }
+        section h2, section h3 {
+            font-size: 1.05em;
+            color: #388e3c;
+            margin: 0 0 6px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #c8e6c9;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 0.9em;
+        }
+        thead th {
+            background: #f1f8f1;
+            color: #388e3c;
+            font-weight: 700;
+            text-align: left;
+            padding: 5px 8px;
+            border: 1px solid #c8e6c9;
+            white-space: nowrap;
+        }
+        tbody tr:nth-child(even) { background: #fafafa; }
+        tbody tr:hover { background: #e3f2fd; }
+        tbody td {
+            padding: 4px 8px;
+            border: 1px solid #e0e0e0;
+            vertical-align: top;
+        }
+        a { color: #1565c0; }
+        .row-count { font-size: 0.8em; color: #888; font-weight: normal; }
+        `;
+
+        // Page title from h1 — clone and strip the script's controls container
+        // (#mb-show-all-controls-container) which is injected inside the h1 element,
+        // so only the actual artist/label/release name text is used as the title.
+        const h1El = document.querySelector('.artistheader h1, .rgheader h1, .labelheader h1, h1');
+        const pageTitle = (() => {
+            if (!h1El) return meta.entityName || 'MusicBrainz Export';
+            const clone = h1El.cloneNode(true);
+            // Remove the script controls container and any other injected UI
+            const ctrl = clone.querySelector('#mb-show-all-controls-container');
+            if (ctrl) ctrl.remove();
+            // Also remove any other script-injected elements (progress bar, etc.)
+            clone.querySelectorAll('[id^="mb-"], [class^="mb-"]').forEach(el => el.remove());
+            return clone.textContent.trim().replace(/\s+/g, ' ');
+        })();
+        const exportUrl = meta.url;
+
+        let totalRowsExported = 0, totalRowsSkipped = 0;
+
+        // Build one <section> per visible table
+        const sections = tables.map((tbl, tIdx) => {
+            const heading = _headingFor(tbl) || (tables.length > 1 ? `Table ${tIdx + 1}` : '');
+
+            // Headers (visible only)
+            const headerRow = tbl.querySelector('thead tr:first-child');
+            const headers = headerRow
+                ? Array.from(headerRow.cells)
+                    .filter(th => th.style.display !== 'none')
+                    .map(th => {
+                        const clean = _sanitiseCell(th);
+                        // Strip remaining sort/control text via textContent fallback
+                        const txt = th.textContent.replace(/[⇅▲▼📊▶◀▤⁰¹²³⁴⁵⁶⁷⁸⁹0-9]/g, '').trim();
+                        return `<th>${txt || clean || '&nbsp;'}</th>`;
+                    })
+                : [];
+
+            // Data rows (visible only)
+            let rowsExp = 0, rowsSkip = 0;
+            const dataRows = [];
+            tbl.querySelectorAll('tbody tr').forEach(row => {
+                if (row.style.display === 'none') { rowsSkip++; return; }
+                const cells = Array.from(row.cells)
+                    .filter(td => td.style.display !== 'none')
+                    .map(td => `<td>${_sanitiseCell(td) || '&nbsp;'}</td>`);
+                if (cells.length) {
+                    dataRows.push(`<tr>${cells.join('')}</tr>`);
+                    rowsExp++;
+                }
+            });
+
+            totalRowsExported += rowsExp;
+            totalRowsSkipped  += rowsSkip;
+
+            const headTag = tables.length > 1 ? 'h3' : 'h2';
+            const headHtml = heading
+                ? `<${headTag}>${heading} <span class="row-count">(${rowsExp.toLocaleString()} rows)</span></${headTag}>`
+                : '';
+
+            return `    <section>
+      ${headHtml}
+      <table>
+        <thead><tr>${headers.join('')}</tr></thead>
+        <tbody>${dataRows.join('\n        ')}</tbody>
+      </table>
+    </section>`;
+        });
+
+        const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${pageTitle}</title>
+  <style>${css}</style>
+</head>
+${metaComment}
+<body>
+  <h1>${pageTitle}</h1>
+  <p class="export-meta">
+    Exported ${now.toLocaleDateString()} &nbsp;·&nbsp;
+    <a href="${exportUrl}" target="_blank" rel="noopener">${exportUrl}</a>
+  </p>
+${sections.join('\n')}
+</body>
+</html>`;
+
+        Lib.debug('export',
+            `HTML: ${totalRowsExported} rows exported across ${tables.length} table(s), ` +
+            `${totalRowsSkipped} skipped`);
+
+        const { filename } = _assembleExportFilename('html', totalRowsExported);
+
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+        const url  = URL.createObjectURL(blob);
+
+        showExportDialog({
+            format:      'HTML',
+            description: 'Self-contained HTML file — preserves hyperlinks and inline markup. ' +
+                         'Includes an embedded stylesheet for a clean MusicBrainz-style appearance. ' +
+                         'Metadata is embedded as an HTML comment before <code>&lt;body&gt;</code>. ' +
+                         'All visible tables are included (one <code>&lt;section&gt;</code> each).',
+            mimeType:    'text/html;charset=utf-8;',
+            extension:   'html',
+            blobUrl:     url,
+            filename,
+            rowsExported: totalRowsExported,
+            rowsTotal:    totalRowsExported + totalRowsSkipped,
             triggerButton: document.getElementById('mb-export-btn'),
         });
     }
@@ -6086,9 +6493,10 @@
         exportMenu.appendChild(menuHeader);
 
         const exportFormats = [
-            { label: 'CSV', description: 'Comma-separated values for Excel/Sheets', handler: exportTableToCSV },
-            { label: 'JSON', description: 'JavaScript Object Notation', handler: exportTableToJSON },
-            { label: 'Org-Mode', description: 'Emacs Org-Mode table format', handler: exportTableToOrgMode }
+            { label: 'CSV',      description: 'Comma-separated values for Excel/Sheets',        handler: exportTableToCSV },
+            { label: 'JSON',     description: 'JavaScript Object Notation',                      handler: exportTableToJSON },
+            { label: 'Org-Mode', description: 'Emacs Org-Mode table format',                    handler: exportTableToOrgMode },
+            { label: 'HTML',     description: 'Self-contained HTML with links &amp; styling',   handler: exportTableToHTML },
         ];
 
         // Store menu items for keyboard navigation
