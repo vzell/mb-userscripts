@@ -57929,7 +57929,7 @@ STF highlight: bg #90ee90 (hardcoded light green), color #000
 #+end_example
 
 
-* TODO multi-row cols in "multi"-table pageTypes not collapsable/uncollapsable anymore on artist-releasegroup pages
+* DONE multi-row cols in "multi"-table pageTypes not collapsable/uncollapsable anymore on artist-releasegroup pages
 
 There is a bug that multi-row columns in "multi"-table pageTypes are not collapsable/uncollapsable anymore on the complete table and column header level:
 
@@ -57955,8 +57955,7 @@ has NO effect, but it works in the cell itselg, so clicking
 
 for example works
 
-
-* TODO move "Enable Save/Load to Disk" to explicit section
+* DONE move "Enable Save/Load to Disk" to explicit section
 
 move the block
 
@@ -57971,7 +57970,7 @@ move the block
 
 to the beginning of the "// LOAD AND SAVE DATA TO/FROM DISK SECTION" section
 
-* TODO add "Total Tracks" to "type: 'area-releases'"
+* DONE add "Total Tracks" to "type: 'area-releases'"
 
 add the following missing parameter block 
 
@@ -57985,7 +57984,45 @@ add the following missing parameter block
 
 to the pageType definition from "type: 'area-releases'"
 
-* TODO https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278&page=1 needs "video" column
+* DONE https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278&page=1 needs "video" column
+
+the following pageType definitions
+
+#+begin_example
+        {
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
+            features: {
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'work-recordings',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work' } ],
+            features: {
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+need the synthetic "video" column parameter
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+#+end_example
+
 
 * TODO on https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events "toggle EAA button" changes place with (row count)
 
@@ -58031,103 +58068,9 @@ to the pageType definition from "type: 'area-releases'"
     async function renderFinalTable(rows) {
 #+end_example
 
-
 * TODO todos
 
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
 
-1.)
-
-move the block
-
-#+begin_example
-        sa_enable_save_load: {
-            label: 'Enable Save/Load to Disk',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
-        },
-#+end_example
-
-to the beginning of the "// LOAD AND SAVE DATA TO/FROM DISK SECTION" section
-
-2.)
-
-add the following missing parameter block 
-
-#+begin_example
-                    {
-                        sourceColumn:    'Tracks',
-                        extractor:       'sumTracks',
-                        syntheticColumns: ['Total Tracks']
-                    },
-#+end_example
-
-to the pageType definition from "type: 'area-releases'"
-
-3.)
-
-the following pageType definitions
-
-#+begin_example
-        {
-            type: 'work-recordings-filtered',
-            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
-            features: {
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
-                ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'work-recordings',
-            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work' } ],
-            features: {
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-#+end_example
-
-need the synthetic "video" column parameter
-
-#+begin_example
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-#+end_example
-
-4.)
-
-There is a bug that multi-row columns in "multi"-table pageTypes are not collapsable/uncollapsable anymore on the complete table and column header level:
-
-e.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the column "Label" is such a multi-row column
-
-and clicking on the table level button
-
-#+begin_example
-<button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button>
-#+end_example
-
-or column header level button
-
-#+begin_example
-<span class="mb-col-collapse-hdr-btn" data-col-index="6" title="Expand ALL multi-row Label cells (7) in this table column" role="button" aria-expanded="false" aria-label="Expand all multi-row cells in: Label" style="margin-left: auto;"><span class="mb-col-collapse-glyph">▶</span><span class="mb-col-collapse-count">7</span><span class="mb-col-collapse-rack">▤</span></span>
-#+end_example
-
-has NO effect, but it works in the cell itselg, so clicking
-
-#+begin_example
-<span class="mb-cell-collapse-toggle" title="Show all multi-row cell items (2)" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed"><span class="mb-cell-collapse-glyph">▶</span><span class="mb-cell-collapse-count">2</span><span class="mb-cell-collapse-rack">▤</span></span>
-#+end_example
-
-for example works
