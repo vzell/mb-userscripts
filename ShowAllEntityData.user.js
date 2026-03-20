@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.251+2026-03-20
+// @version      9.99.252+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -613,13 +613,6 @@
             label: '🎨 UI FEATURES'
         },
 
-        sa_enable_save_load: {
-            label: 'Enable Save/Load to Disk',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
-        },
-
         sa_enable_column_visibility: {
             label: 'Enable Column Visibility Toggle',
             type: 'checkbox',
@@ -954,6 +947,13 @@
         divider_save_load: {
             type: 'divider',
             label: '💾 LOAD AND SAVE DATA TO/FROM DISK'
+        },
+
+        sa_enable_save_load: {
+            label: 'Enable Save/Load to Disk',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
         },
 
         // --- Filename construction options ---
@@ -3081,7 +3081,12 @@
                     extractMainColumn: 'Release',
                     features: {
                         columnExtractors: [
-                            { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                            { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                            {
+                                sourceColumn:    'Tracks',
+                                extractor:       'sumTracks',
+                                syntheticColumns: ['Total Tracks']
+                            },
                         ],
                         syntheticColumnExtractors: [
                             { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
@@ -3303,6 +3308,9 @@
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
                 ],
@@ -3316,6 +3324,9 @@
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Work' } ],
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 extractMainColumn: 'Title'
             },
@@ -4705,13 +4716,23 @@
             if (hdrBtns.length === 0) return;
 
             // ▶ = some/all collapsed → expand all; ◀ = all expanded → collapse all.
-            const targetExpand = btn.textContent.startsWith('▶');
+            const _g = btn.querySelector('.mb-col-collapse-glyph');
+            const targetExpand = (_g ? _g.textContent : btn.textContent).startsWith('▶');
 
             hdrBtns.forEach(hdrBtn => {
-                const btnExpanded = hdrBtn.getAttribute('aria-expanded') === 'true';
-                if (btnExpanded !== targetExpand) {
-                    hdrBtn.click(); // drives all cells in that column via delegation
-                }
+                const colIdx = parseInt(hdrBtn.dataset.colIndex, 10);
+                if (isNaN(colIdx)) return;
+                Array.from(table.querySelectorAll('tbody tr')).forEach(tr => {
+                    const td = tr.cells[colIdx];
+                    if (!td) return;
+                    const toggle = td.querySelector('.mb-cell-collapse-toggle');
+                    if (!toggle) return;
+                    _applyCollapseState(toggle, targetExpand);
+                });
+                // Sync header button glyph + aria-expanded
+                const hg = hdrBtn.querySelector('.mb-col-collapse-glyph');
+                if (hg) hg.textContent = targetExpand ? '▼' : '▶';
+                hdrBtn.setAttribute('aria-expanded', targetExpand ? 'true' : 'false');
             });
 
             btn.innerHTML = makeCollapseExpandBtnHTML(!targetExpand);
@@ -22071,6 +22092,73 @@ ${sections.join('\n')}
      * Must be called from `renderGroupedTable` after the `dataArray.forEach`
      * loop completes — both on initial render and on every filter re-run.
      */
+    /**
+     * _applyCollapseState — expand or collapse a single multi-row cell toggle
+     * WITHOUT dispatching a synthetic click event.
+     *
+     * Calling `toggle.click()` from within another click handler is suppressed
+     * by some browsers / userscript managers because the dispatched MouseEvent
+     * has `isTrusted = false`.  This helper replicates the delegation-handler
+     * logic from `ensureCollapseDelegate` directly so that mass-expand /
+     * mass-collapse from column-header, sub-table, and global collapse buttons
+     * works in all environments.
+     *
+     * @param {HTMLSpanElement} toggle  - The `.mb-cell-collapse-toggle` span.
+     * @param {boolean}         expand  - true → expand; false → collapse.
+     */
+    function _applyCollapseState(toggle, expand) {
+        const td = toggle.closest('td');
+        if (!td) return;
+        const ul = td.querySelector(':scope > ul') || td.querySelector('ul');
+        if (!ul) return;
+        const lis = Array.from(ul.querySelectorAll(':scope > li'));
+        if (lis.length < 2) return;
+
+        const currentExpanded = toggle.getAttribute('aria-expanded') === 'true';
+        if (currentExpanded === expand) return; // already at target state
+
+        lis.slice(1).forEach(li => { li.style.display = expand ? '' : 'none'; });
+
+        const glyphEl = toggle.querySelector('.mb-cell-collapse-glyph');
+        if (glyphEl) glyphEl.textContent = expand ? '▼' : '▶';
+        else toggle.textContent = expand ? '▼' : '▶';
+
+        toggle.title = expand
+            ? `Collapse multi-row cell back to display just the first item (${lis.length} total)`
+            : `Show all multi-row cell items (${lis.length})`;
+        toggle.setAttribute('aria-expanded', expand ? 'true' : 'false');
+        toggle.setAttribute('aria-label',
+            expand ? `Collapse: showing all ${lis.length} items`
+                   : `Expand: ${lis.length} items are collapsed`);
+
+        // Sync expandedCells for restore-on-re-render
+        const tr     = toggle.closest('tr');
+        const rowIdx = tr ? tr.dataset.mbRowIdx : undefined;
+        if (rowIdx !== undefined) {
+            const colIdx = Array.from(tr.cells).indexOf(td);
+            if (colIdx >= 0) {
+                const key = `${rowIdx}:${colIdx}`;
+                if (expand) expandedCells.set(key, true);
+                else        expandedCells.delete(key);
+            }
+        }
+
+        // Update hidden-match indicator
+        const hasHiddenMatch = !expand && lis.slice(1).some(li =>
+            li.querySelector(
+                '.mb-global-filter-highlight,' +
+                '.mb-column-filter-highlight,' +
+                '.mb-pre-filter-highlight'
+            )
+        );
+        toggle.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
+
+        // Keep per-sub-table and global button tint in sync
+        const tbl = td.closest('table.tbl');
+        if (tbl) updateSubTableCollapseButton(tbl);
+        updateGlobalCollapseButtonHighlight(tbl || null);
+    }
+
     function rewireGlobalCollapseButtonMulti() {
         const globalBtn = document.getElementById('mb-col-collapse-all-btn');
         if (!globalBtn) return;
@@ -22103,11 +22191,21 @@ ${sections.join('\n')}
             const targetExpand = globalBtn.textContent.startsWith('▶');
 
             allHdrBtns.forEach(btn => {
-                // Use aria-expanded to determine current state.
-                const btnExpanded = btn.getAttribute('aria-expanded') === 'true';
-                if (btnExpanded !== targetExpand) {
-                    btn.click(); // drives all cells in that column via delegation
-                }
+                const colIdx = parseInt(btn.dataset.colIndex, 10);
+                if (isNaN(colIdx)) return;
+                const tbl = btn.closest('table.tbl');
+                if (!tbl) return;
+                Array.from(tbl.querySelectorAll('tbody tr')).forEach(tr => {
+                    const td = tr.cells[colIdx];
+                    if (!td) return;
+                    const toggle = td.querySelector('.mb-cell-collapse-toggle');
+                    if (!toggle) return;
+                    _applyCollapseState(toggle, targetExpand);
+                });
+                // Sync header button glyph + aria-expanded
+                const g = btn.querySelector('.mb-col-collapse-glyph');
+                if (g) g.textContent = targetExpand ? '▼' : '▶';
+                btn.setAttribute('aria-expanded', targetExpand ? 'true' : 'false');
             });
 
             globalBtn.innerHTML = makeCollapseExpandBtnHTML(!targetExpand);
@@ -22683,18 +22781,14 @@ ${sections.join('\n')}
                 // ▼▤ = currently expanded  → click to collapse all cells.
                 const targetExpand = collapseHdrBtn.getAttribute('aria-expanded') !== 'true';
 
-                // Drive every cell toggle in this column to the target state.
-                // Use toggle.click() so the delegation listener handles each
-                // one (updates <li> visibility + toggle icon) — no duplication.
+                // Drive every cell toggle in this column directly (avoids isTrusted
+                // synthetic-event suppression in some browsers / userscript managers).
                 Array.from(table.querySelectorAll('tbody tr')).forEach(tr => {
                     const td = tr.cells[colIndex];
                     if (!td) return;
                     const toggle = td.querySelector('.mb-cell-collapse-toggle');
                     if (!toggle) return;
-                    const cellExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                    if (cellExpanded !== targetExpand) {
-                        toggle.click(); // caught by ensureCollapseDelegate()
-                    }
+                    _applyCollapseState(toggle, targetExpand);
                 });
 
                 // Flip header button glyph (child span) and tooltip.
@@ -22759,11 +22853,18 @@ ${sections.join('\n')}
                         const targetExpand = globalBtn.textContent.startsWith('▶');
 
                         collapseHdrBtns.forEach(btn => {
-                            // Use aria-expanded to determine current state.
-                            const btnExpanded = btn.getAttribute('aria-expanded') === 'true';
-                            if (btnExpanded !== targetExpand) {
-                                btn.click(); // drives all cells in that column
-                            }
+                            const colIdx = parseInt(btn.dataset.colIndex, 10);
+                            if (isNaN(colIdx)) return;
+                            Array.from(table.querySelectorAll('tbody tr')).forEach(tr => {
+                                const td = tr.cells[colIdx];
+                                if (!td) return;
+                                const toggle = td.querySelector('.mb-cell-collapse-toggle');
+                                if (!toggle) return;
+                                _applyCollapseState(toggle, targetExpand);
+                            });
+                            const g = btn.querySelector('.mb-col-collapse-glyph');
+                            if (g) g.textContent = targetExpand ? '▼' : '▶';
+                            btn.setAttribute('aria-expanded', targetExpand ? 'true' : 'false');
                         });
 
                         globalBtn.innerHTML = makeCollapseExpandBtnHTML(!targetExpand);
