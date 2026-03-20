@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.227+2026-03-17
+// @version      9.99.228+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -18772,8 +18772,20 @@ ${sections.join('\n')}
 
             updateInputStyle();      // ← reset green border / box-shadow
             updateSubTableRowCount();
-            // Sync h2 badge with 3-tier subtable totals
-            if (typeof updateH2CountFromSubtables === 'function') updateH2CountFromSubtables();
+
+            // Sync h2 badge: re-run the full filter pipeline so the h2 badge
+            // reflects the state from global + column filters (with no STF active).
+            // updateH2CountFromSubtables() cannot be used here — by the time it runs,
+            // mbStfHidden has been deleted and the STF input is empty, so all its
+            // guards return the wrong 3-tier format.  runFilter() recalculates the
+            // correct (filtered of total) counts from the global/column filter state.
+            if (typeof runFilter === 'function') {
+                runFilter();
+            } else if (typeof updateH2CountFromSubtables === 'function') {
+                // Fallback if runFilter is not accessible (should not occur)
+                updateH2CountFromSubtables();
+            }
+
             // Update per-subtable button visibility now that the STF is empty
             if (typeof window.updateFilterButtonsVisibility === 'function') {
                 window.updateFilterButtonsVisibility();
@@ -18903,23 +18915,14 @@ ${sections.join('\n')}
 
         if (tables.length === 0) return;
 
-        // Previously this function returned early when no sub-table filter was
-        // active, assuming updateH2Count() had already set the correct total.
-        // But when a filter is CLEARED the STF input is already empty by the
-        // time this function runs — the early return prevented the h2 from
-        // reflecting the restored full count.  We now always recalculate so
-        // both applying and clearing a STF produce a correct h2 badge.
-        const anySubtableFilterActive = Array.from(
-            document.querySelectorAll('.mb-subtable-filter-container.visible input[type="text"]')
-        ).some(inp => inp.value.trim() !== '');
-
-        // Only skip when no STF is active AND no rows have the STF-hidden marker
-        // (i.e. all rows are visible from the STF perspective).
-        const anyStfHiddenRows = tables.some(t =>
-            t.querySelector('tbody tr[data-mb-stf-hidden]') !== null
-        );
-
-        if (!anySubtableFilterActive && !anyStfHiddenRows) return;
+        // Always recalculate — do NOT guard on anySubtableFilterActive or
+        // anyStfHiddenRows.  Both guards fail when called from clearSubFilter:
+        //   • the STF input is already empty before this function runs, so
+        //     anySubtableFilterActive is false;
+        //   • clearSubFilter deletes data-mb-stf-hidden before calling us, so
+        //     anyStfHiddenRows is also false.
+        // The function is called infrequently (only on STF apply/clear/clear-all)
+        // so the cost of always recalculating is negligible.
 
         let sumTotal    = 0;
         let sumDenominator = 0;
@@ -18938,7 +18941,7 @@ ${sections.join('\n')}
             sumVisible     += visible;
         });
 
-        // Pass (locally, globally, absolute-total) to updateH2Count
+        // Pass (locally-visible, denominator, absolute-total) to updateH2Count
         updateH2Count(sumVisible, sumDenominator, sumTotal);
     }
 
@@ -22586,6 +22589,43 @@ ${sections.join('\n')}
             } catch (_legalErr) {
                 Lib.debug('cleanup', 'Legal name relocation skipped:', _legalErr);
             }
+        }
+
+        // ── Trailing h2 relocation ───────────────────────────────────────────
+        // Some pages have h2 sections (Relationships, Related works, etc.) that
+        // MusicBrainz renders AFTER the data-table h2.  Move all such trailing
+        // h2s to immediately before the data-table h2, after any h2s that were
+        // already there.  This keeps the page structure logical without hiding
+        // content.
+        //
+        // Strategy:
+        //   1. Identify the "data h2" — the one with .mb-row-count-stat.
+        //   2. Collect all h2s in #content that follow it in DOM order.
+        //   3. Insert them directly before the data h2, in their original
+        //      relative order (preserving document order among themselves).
+        try {
+            const _content = document.getElementById('content');
+            if (_content) {
+                const _allH2s = Array.from(_content.querySelectorAll('h2'));
+                const _dataH2 = _allH2s.find(h => h.querySelector('.mb-row-count-stat'));
+                if (_dataH2) {
+                    // Collect h2s that appear after the data h2 in DOM order
+                    const _trailing = _allH2s.filter(h =>
+                        h !== _dataH2 &&
+                        (_dataH2.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)
+                    );
+                    if (_trailing.length > 0) {
+                        // Insert each trailing h2 before the data h2 (in original order)
+                        _trailing.forEach(h2 => {
+                            _dataH2.parentNode.insertBefore(h2, _dataH2);
+                        });
+                        Lib.debug('cleanup',
+                            `Relocated ${_trailing.length} trailing h2(s) before data h2`);
+                    }
+                }
+            }
+        } catch (_h2Err) {
+            Lib.debug('cleanup', 'Trailing h2 relocation skipped:', _h2Err);
         }
     }
 

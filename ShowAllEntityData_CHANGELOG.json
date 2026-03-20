@@ -1,5 +1,18 @@
 [
     {
+      "version": "9.99.228",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Multi-table STF clear — Bug 1 (h2 count not updated when sub-table filter cleared): Two previous attempts used `updateH2CountFromSubtables()` from `clearSubFilter`, but that function always produced the wrong 3-tier `(N of N)/N` format after clearing because by the time it ran, both `data-mb-stf-hidden` markers and the STF input value had already been cleared — making all its guards return the same bad result. Root fix: `clearSubFilter` now calls `runFilter()` directly after restoring rows. `runFilter` re-evaluates the active global + column filters and sets the h2 badge via the standard 2-tier `updateH2Count(filtered, total)` path, which is exactly the correct display when no STF is active.",
+            "Trailing h2 relocation: on the final rendered page, `finalCleanup` now detects h2 elements in `#content` that appear after the data h2 (identified by `.mb-row-count-stat`) and moves them all to immediately before the data h2, preserving their relative order among themselves. This fixes pages like release-group and recording pages where MusicBrainz renders 'Relationships' and 'Related works' h2 sections after the data table h2."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.227",
       "date": "2026-03-17",
       "sections": [
