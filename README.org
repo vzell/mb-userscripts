@@ -55671,7 +55671,6 @@ collapsableColumns: [ 'Location', '', ... ],
 
 * TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
-
 * TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
 
 add a new feature
@@ -57158,7 +57157,7 @@ But that string to use for the table name is easy to extract from the h2 header 
 inform the user that the CSV exporter exports the first table in "multi"-table mode
 
 
-* TODO explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
+* TODO tooltps - explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
 ** DONE initial - for sub-table format "(<M> of <N>)" and "(<n> of <M>)/<N>" add dynamic tooltips
 
 - Please create a dynamic tooltip text for the following format "(<M> of <N>)" in the following span in the h3 header line of a sub-table
@@ -57350,7 +57349,7 @@ The Initial tooltip is still missing on h3 during very first render of the page
 please implement the same background colors in the tooltips for the filter expressions, as the actual background colors
 what the filter strings looks like when they are highlighted in the tables, e.g. orange for the global filter, green for the sub-table filter etc.
 
-** doub tooltips
+** DONE double tooltips
 
 one last bug:
 
@@ -57361,8 +57360,24 @@ h2.title = 'Click to collapse/uncollapse section (Ctrl+Click to toggle ALL secti
 h3.title = 'Click to collapse/uncollapse sub-section (Ctrl+Click to toggle ALL sub-sections)';
 #+end_example
 
+** configurable tooltips
 
-** change hardcoded hightlight for col filter
+add some new features:
+
+1.)
+
+add a new "Tooltips" configuration section in the variable "const configSchema"
+
+2.)
+
+add a new boolean (default: true) which when true enables the whole h2/h3 row count tooltip feature we just introduced otherwise the standard h2/h3 row tooltip should take over
+
+3.)
+
+add a new configurable foreground and background color (default are the curretn values) for the h2/h3 row count tooltips
+
+
+* change hardcoded hightlight for col filter
 
 #+begin_example
 Global filter highlight: bg sa_global_filter_highlight_bg (default #FFD700), color sa_global_filter_highlight_color (default red)
