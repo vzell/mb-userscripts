@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.229+2026-03-17
+// @version      9.99.230+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -117,11 +117,11 @@
         },
 
         // ============================================================
-        // PAGE HEADER CONFIGURATION SECTION
+        // PAGE HEADER AND BODY CONFIGURATION SECTION
         // ============================================================
         divider_page_header: {
             type: 'divider',
-            label: '🏷️ PAGE HEADER CONFIGURATION'
+            label: '🏷️ PAGE HEADER AND BODY CONFIGURATION'
         },
 
         sa_enable_h1_comment_span_relocation_on_initial_page: {
@@ -143,6 +143,13 @@
             type: "checkbox",
             default: true,
             description: "On artist-releasegroups pages (e.g. /artist/…), after the consolidated table is rendered, move the 'Legal name: …' paragraph from its default location (further down the page) to immediately below the subheader paragraph that contains the status display. Only fires when the Legal name paragraph is present on the page."
+        },
+
+        sa_enable_h2_section_relocation_on_final_page: {
+            label: "Relocate trailing h2 sections before data table (final rendered page)",
+            type: "checkbox",
+            default: true,
+            description: "After the consolidated table is rendered, move any h2 sections that MusicBrainz renders after the data-table h2 (e.g. 'Relationships', 'Related works') to immediately before the data h2. Each section — the h2 heading plus all sibling elements up to the next h2 — is relocated as a unit, preserving the original section order. This keeps all non-data sections grouped above the data table for easier navigation."
         },
 
         // ============================================================
@@ -2772,7 +2779,10 @@
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Area' } ],
             features: {
-                extractMainColumn: 'Title'
+                extractMainColumn: 'Title',
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
             },
             tableMode: 'multi',
             non_paginated: true
@@ -18600,18 +18610,49 @@ ${sections.join('\n')}
             // Numerator: rows currently visible (passes all filters)
             const visible = allTbodyRows.filter(r => r.style.display !== 'none').length;
 
-            if (filterInput.value) {
-                // Subtable filter active: (locally of globally)/total
-                // When globally_filtered already equals total, omit the /total suffix
-                // to avoid redundant information (mirrors the h3 initial-render behaviour).
+            // Global filter expression (stripped of mode prefix)
+            const _gfEl  = document.getElementById('mb-global-filter-input');
+            const _gfVal = _gfEl ? (typeof stripFilterPrefix === 'function'
+                ? stripFilterPrefix(_gfEl.value || '')
+                : (_gfEl.value || '')) : '';
+
+            // Sub-table filter expression
+            const _stfVal = filterInput ? filterInput.value.trim() : '';
+
+            if (_stfVal) {
+                // Sub-table filter active: (visible of denominator)/total
+                // Split into two titled spans so each part has its own tooltip.
+                // When denominator === total the global filter has no effect, so
+                // omit the /total suffix (no need for a separate N tooltip either).
+                countStat.title = ''; // clear any whole-span title
                 if (denominator === total) {
-                    countStat.textContent = `(${visible} of ${denominator})`;
+                    // STF only, no global filter narrowing
+                    const _tip = _gfVal
+                        ? `${visible} rows match the sub-table filter "${_stfVal}" from ${denominator} rows already filtered by the global filter "${_gfVal}"`
+                        : `${visible} rows match the sub-table filter "${_stfVal}" from ${denominator} rows in this sub-table`;
+                    countStat.innerHTML =
+                        `<span title="${_tip}">(${visible} of ${denominator})</span>`;
                 } else {
-                    countStat.textContent = `(${visible} of ${denominator})/${total}`;
+                    // Both STF and global filter active: (n of M)/N
+                    const _tipBracketed = `${visible} rows filtered by the sub-table filter "${_stfVal}" from the ${denominator} rows already filtered by the global filter "${_gfVal}"`;
+                    const _tipTotal     = `${total} total rows unfiltered in this sub-table`;
+                    countStat.innerHTML =
+                        `<span title="${_tipBracketed}">(${visible} of ${denominator})</span>` +
+                        `/<span title="${_tipTotal}">${total}</span>`;
                 }
             } else {
-                // No subtable filter active: (globally_filtered of total) or plain (total)
-                countStat.textContent = (denominator === total) ? `(${denominator})` : `(${denominator} of ${total})`;
+                // No sub-table filter active: (globally_filtered of total) or plain (total)
+                if (denominator === total) {
+                    countStat.title   = '';
+                    countStat.innerHTML = `(${denominator})`;
+                } else {
+                    // Global filter only: (M of N) with a single tooltip on the whole span
+                    const _tipGlobal = _gfVal
+                        ? `${denominator} rows filtered from the full ${total} rows in this sub-table by the global filter "${_gfVal}"`
+                        : `${denominator} of ${total} rows visible in this sub-table`;
+                    countStat.title   = _tipGlobal;
+                    countStat.innerHTML = `(${denominator} of ${total})`;
+                }
             }
         }
 
@@ -22597,15 +22638,7 @@ ${sections.join('\n')}
         // — the h2 heading AND all sibling elements that follow it up to the next
         // h2 — to immediately before the data-table h2.  Sections that were
         // already before the data h2 are left in place.
-        //
-        // Strategy:
-        //   1. Find the "data h2" — the one carrying .mb-row-count-stat.
-        //   2. Collect trailing h2s (those that follow the data h2 in DOM order).
-        //   3. For each trailing h2 (processed in reverse document order so the
-        //      first trailing section ends up immediately before the data h2):
-        //      a. Gather the h2 itself plus every following sibling up to (but
-        //         not including) the next h2 sibling — this is the section content.
-        //      b. insertBefore each node in the section in front of the data h2.
+        if (Lib.settings.sa_enable_h2_section_relocation_on_final_page) {
         try {
             const _content = document.getElementById('content');
             if (_content) {
@@ -22650,6 +22683,7 @@ ${sections.join('\n')}
         } catch (_h2Err) {
             Lib.debug('cleanup', 'Trailing h2 relocation skipped:', _h2Err);
         }
+        } // end sa_enable_h2_section_relocation_on_final_page
     }
 
     /**

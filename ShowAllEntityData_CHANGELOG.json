@@ -1,5 +1,20 @@
 [
     {
+      "version": "9.99.230",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes / Changes",
+          "items": [
+            "Config schema — '🏷️ PAGE HEADER CONFIGURATION' section renamed to '🏷️ PAGE HEADER AND BODY CONFIGURATION'.",
+            "Config schema — new boolean `sa_enable_h2_section_relocation_on_final_page` (default true) added to the renamed section. The trailing-h2 section relocation code in `finalCleanup` is now guarded by this setting.",
+            "pageDefinitions — `area-recordings`: added `columnExtractors: [{ sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }]` to match the video-column extraction present on other recording page types.",
+            "Sub-table row-count stat tooltips: `updateSubTableRowCount` now sets context-sensitive `title` attributes on `.mb-row-count-stat` spans in h3 headers. Three formats: (1) plain `(N)` — no tooltip; (2) global-filter-only `(M of N)` — single tooltip on the whole span: 'M rows filtered from N total rows by global filter \"…\"'; (3) STF + global filter `(n of M)/N` — two separately titled `<span>` children: the bracketed `(n of M)` part gets 'n rows filtered by sub-table filter \"…\" from M rows already filtered by global filter \"…\"', and the `/N` part gets 'N total unfiltered rows in this sub-table'."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.229",
       "date": "2026-03-17",
       "sections": [
