@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.226+2026-03-17
+// @version      9.99.227+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -109,6 +109,21 @@
             description: "Automatically collapse the sidebar when the consolidated view is first rendered, freeing up horizontal space immediately. Only takes effect when 'Collabsable sidebar' is also enabled."
         },
 
+        sa_enable_event_parts_extractor: {
+            label: "Enable 'Event Parts' synthetic column extractor",
+            type: "checkbox",
+            default: true,
+            description: "Parse the recording 'Comment' field as structured live-performance metadata, splitting it into synthetic columns: Event-Type, Event-Date, Event-Detail, Event-Venue, Event-Venue-Detail, Event-City, Event-State, Event-Country. Only active on pages that declare the 'eventParts' extractor (e.g. Work-Recordings pages). Disable to suppress these extra columns entirely."
+        },
+
+        // ============================================================
+        // PAGE HEADER CONFIGURATION SECTION
+        // ============================================================
+        divider_page_header: {
+            type: 'divider',
+            label: '🏷️ PAGE HEADER CONFIGURATION'
+        },
+
         sa_enable_h1_comment_span_relocation_on_initial_page: {
             label: "Relocate H1 comment-span alias block (initial page)",
             type: "checkbox",
@@ -123,11 +138,11 @@
             description: "After the consolidated table has been rendered (i.e. after a 'Show all' button completes), re-apply the H1 comment-span relocation so the alias line remains visible below the page title on the final page view. Same structural rules as the initial-page variant: only acts when an <i title='...'> alias marker is present inside the h1's <span class='comment'>."
         },
 
-        sa_enable_event_parts_extractor: {
-            label: "Enable 'Event Parts' synthetic column extractor",
+        sa_enable_legal_name_relocation_on_final_page: {
+            label: "Relocate legal name below subheader (final rendered page)",
             type: "checkbox",
             default: true,
-            description: "Parse the recording 'Comment' field as structured live-performance metadata, splitting it into synthetic columns: Event-Type, Event-Date, Event-Detail, Event-Venue, Event-Venue-Detail, Event-City, Event-State, Event-Country. Only active on pages that declare the 'eventParts' extractor (e.g. Work-Recordings pages). Disable to suppress these extra columns entirely."
+            description: "On artist-releasegroups pages (e.g. /artist/…), after the consolidated table is rendered, move the 'Legal name: …' paragraph from its default location (further down the page) to immediately below the subheader paragraph that contains the status display. Only fires when the Legal name paragraph is present on the page."
         },
 
         // ============================================================
@@ -5418,6 +5433,9 @@
      *   • Any descendant element with inline `display:none` (sort-key spans
      *     such as `.mb-caa-sort-key`, `.mb-cancelled-sort-key`,
      *     `.mb-video-sort-key`, and any future variants).
+     *   • `<script type="application/json">` elements — MusicBrainz/React inlines
+     *     serialised relation JSON directly in table cells; this data must not
+     *     appear in exports.
      *   • Script UI widgets injected into cells
      *     (`.sort-icon-btn`, `.mb-col-uniq-wrap`, `.column-resizer`,
      *      CAA/EAA toggle buttons, inline-pic placeholders).
@@ -5427,6 +5445,9 @@
      */
     function _exportCleanCellText(cell) {
         const clone = cell.cloneNode(true);
+        // Remove inline JSON data blobs (React/MusicBrainz relation scripts)
+        clone.querySelectorAll('script[type="application/json"], script')
+             .forEach(el => el.remove());
         // Remove elements that are explicitly hidden (sort-key spans, etc.)
         clone.querySelectorAll('[style*="display: none"], [style*="display:none"]')
              .forEach(el => el.remove());
@@ -5442,33 +5463,61 @@
 
     /**
      * Derive a clean heading text for export from the h2/h3 element that
-     * immediately precedes `tbl` in the DOM.  Used by JSON and Org-Mode
-     * exporters to name each exported sub-table / section.
+     * precedes `tbl`.  Used by JSON and Org-Mode exporters to name each
+     * exported sub-table / section.
      *
-     * Search order: walks backward through `previousElementSibling` until it
-     * finds an H2 or H3 (any depth of intervening non-table siblings is
-     * skipped).  Stops at another TABLE or H1 to avoid crossing section
-     * boundaries.
+     * For single-table pages the table may not have an h2/h3 as an immediate
+     * `previousElementSibling` (other elements like filter wrappers sit between
+     * them).  In that case we fall back to the h2 in the `#content` area that
+     * carries `.mb-row-count-stat` — the main data section heading that
+     * MusicBrainz always renders above the data table.
      *
      * @param {HTMLTableElement} tbl   The table being exported.
      * @param {number}           idx   0-based fallback index.
      * @returns {string}               Clean heading text.
      */
     function _exportNameFor(tbl, idx) {
+        /**
+         * Extract the visible text from an h2/h3 element, stripping collapse
+         * icons, row-count stat spans, and other injected UI.
+         * @param {Element} h
+         * @returns {string}
+         */
+        function _cleanHeading(h) {
+            const clone = h.cloneNode(true);
+            // Remove row-count stat span (e.g. "(355)")
+            clone.querySelectorAll('.mb-row-count-stat').forEach(el => el.remove());
+            // Remove injected UI (toggle icons, filter containers, etc.)
+            clone.querySelectorAll('[id^="mb-"], [class^="mb-"]').forEach(el => el.remove());
+            return clone.textContent
+                .replace(/^\s*[\u25bc\u25b2▼▲]\s*/u, '')
+                .replace(/\([^)]*\)/g, '')
+                .trim();
+        }
+
+        // Walk backward through previousElementSibling (works for multi-table
+        // pages where each sub-table has an h3 directly before it)
         let el = tbl.previousElementSibling;
         while (el) {
             if (/^H[23]$/.test(el.tagName)) {
-                // Text nodes only — strips icons, count badges, etc.
-                const txt = Array.from(el.childNodes)
-                    .filter(n => n.nodeType === Node.TEXT_NODE)
-                    .map(n => n.textContent.trim()).join('')
-                    .replace(/^\s*[\u25bc\u25b2]\s*/u, '')
-                    .replace(/\([^)]*\)/g, '').trim();
-                return txt || el.textContent.replace(/[\u25bc\u25b2▼▲]/g, '').trim();
+                const txt = _cleanHeading(el);
+                if (txt) return txt;
             }
             if (el.tagName === 'TABLE' || el.tagName === 'H1') break;
             el = el.previousElementSibling;
         }
+
+        // Fallback for single-table pages: find the h2 in the same #content
+        // section that has an mb-row-count-stat span — this is the main data
+        // section heading MusicBrainz always renders above the table.
+        const content = tbl.closest('#content') || document;
+        const allH2 = Array.from(content.querySelectorAll('h2'));
+        const dataH2 = allH2.find(h => h.querySelector('.mb-row-count-stat'));
+        if (dataH2) {
+            const txt = _cleanHeading(dataH2);
+            if (txt) return txt;
+        }
+
         return `Table ${idx + 1}`;
     }
 
@@ -18854,11 +18903,23 @@ ${sections.join('\n')}
 
         if (tables.length === 0) return;
 
+        // Previously this function returned early when no sub-table filter was
+        // active, assuming updateH2Count() had already set the correct total.
+        // But when a filter is CLEARED the STF input is already empty by the
+        // time this function runs — the early return prevented the h2 from
+        // reflecting the restored full count.  We now always recalculate so
+        // both applying and clearing a STF produce a correct h2 badge.
         const anySubtableFilterActive = Array.from(
             document.querySelectorAll('.mb-subtable-filter-container.visible input[type="text"]')
         ).some(inp => inp.value.trim() !== '');
 
-        if (!anySubtableFilterActive) return; // h2 already correct from updateH2Count()
+        // Only skip when no STF is active AND no rows have the STF-hidden marker
+        // (i.e. all rows are visible from the STF perspective).
+        const anyStfHiddenRows = tables.some(t =>
+            t.querySelector('tbody tr[data-mb-stf-hidden]') !== null
+        );
+
+        if (!anySubtableFilterActive && !anyStfHiddenRows) return;
 
         let sumTotal    = 0;
         let sumDenominator = 0;
@@ -22498,6 +22559,33 @@ ${sections.join('\n')}
         // re-renders and any other path that calls finalCleanup().
         if (Lib.settings.sa_enable_h1_comment_span_relocation_on_final_page) {
             applyH1CommentSpanRelocation('final');
+        }
+
+        // ── Legal name relocation (artist-releasegroups pages) ───────────────
+        // Move the "Legal name: …" paragraph to immediately below the subheader
+        // (the <p class="subheader"> that holds the status display container).
+        // This makes the legal name visible alongside the artist type/period
+        // info rather than buried further down the page.
+        if (Lib.settings.sa_enable_legal_name_relocation_on_final_page &&
+            pageType === 'artist-releasegroups') {
+            try {
+                // Find the Legal name paragraph — MusicBrainz renders it as:
+                //   <p><strong>Legal name:</strong> <!-- -->Bruce Frederick…</p>
+                const _legalP = Array.from(document.querySelectorAll('#content p'))
+                    .find(p => {
+                        const strong = p.querySelector('strong');
+                        return strong && strong.textContent.trim() === 'Legal name:';
+                    });
+                const _subheader = document.querySelector('p.subheader');
+                if (_legalP && _subheader && !_legalP.dataset.mbLegalMoved) {
+                    // Insert the paragraph immediately after the subheader
+                    _subheader.insertAdjacentElement('afterend', _legalP);
+                    _legalP.dataset.mbLegalMoved = 'true'; // idempotent guard
+                    Lib.debug('cleanup', 'Legal name paragraph relocated below subheader');
+                }
+            } catch (_legalErr) {
+                Lib.debug('cleanup', 'Legal name relocation skipped:', _legalErr);
+            }
         }
     }
 

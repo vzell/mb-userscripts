@@ -1,5 +1,27 @@
 [
     {
+      "version": "9.99.227",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Exporters — Bug 1 (invisible JSON garbage in cells): MusicBrainz/React inlines serialised relation data as `<script type=\"application/json\">` elements directly inside table cells (e.g. the 'Artists' column on event pages). These were included verbatim when reading `textContent`, producing multi-kilobyte JSON blobs in exports. Fixed by removing all `script` elements from the cloned cell in `_exportCleanCellText` before reading `textContent`.",
+            "Exporters — Bug 2 (column number in header): column headers like 'Artists 105' included the unique-value count number as part of the exported column name. The unique-value count badge is rendered inside `.mb-col-uniq-wrap` which `_exportCleanCellText` already strips — but `_exportNameFor`'s `_cleanHeading` now also strips `.mb-row-count-stat` spans and all `[id^=mb-]`/`[class^=mb-]` elements from heading clones.",
+            "Exporters — Bug 3 (single-table pages show 'Table 1' instead of section name): `_exportNameFor` walked `previousElementSibling` which on single-table pages hits filter wrappers and other injected elements before finding an h2, returning the fallback 'Table N'. Fixed by adding a second-pass fallback: search `#content` for the h2 carrying `.mb-row-count-stat` (the main data section heading MusicBrainz always renders), clean it with `_cleanHeading`, and return its text. This gives 'Events', 'Releases', etc. on all single-table pages.",
+            "Multi-table filter — Bug 4 (h2 count not updated when STF cleared): `updateH2CountFromSubtables` returned early with `if (!anySubtableFilterActive) return` — but when clearing the filter the input is already empty before this check runs, so the h2 badge stayed at the filtered count. Fixed by also checking `anyStfHiddenRows` (whether any rows still carry `data-mb-stf-hidden`): the early return is now only skipped when BOTH no STF is active AND no rows are STF-hidden, ensuring the h2 is correctly updated when a filter is cleared."
+          ]
+        },
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Config schema — new '🏷️ PAGE HEADER CONFIGURATION' section: `sa_enable_h1_comment_span_relocation_on_initial_page` and `sa_enable_h1_comment_span_relocation_on_final_page` moved here from the '🔬 EXPERIMENTAL FEATURES' section.",
+            "Config schema — new boolean `sa_enable_legal_name_relocation_on_final_page` (default true) added to '🏷️ PAGE HEADER CONFIGURATION'. When true, on artist-releasegroups pages the 'Legal name: …' paragraph is moved from its default location further down the page to immediately after `<p class=\"subheader\">` (which contains the fetch-status and info displays), making it visible alongside artist type/period info. An `data-mb-legal-moved` attribute guards idempotency across re-renders."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.226",
       "date": "2026-03-17",
       "sections": [
