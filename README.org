@@ -55671,26 +55671,43 @@ collapsableColumns: [ 'Location', '', ... ],
 
 * TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
-* TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
 
-add a new feature
+* TODO numeric columns "DD","MM", "YYY",  ... should be centered aligned in the data cells like currently the "Releases" column (actually "Releases" gets render by the MB stylesheet, it seems, it's already centered on the initial page)
+** question
+
+In the uploaded userscript, is it possible to align generally in a table a numeric column centered inside a data cell,
+but still left or right align the numbers overall when rendering them. SO the whole colomn of numbers itself is lets say
+right aligned to itself, but as a whole centered in the middle of the table column. If this is possible, how is such an aligment feature called ?
+
+Technique: centered inline-block + right/left/centered-aligned (R/L/C) content
 
 #+begin_example
-                integerColumns: [ {sourceColumn: 'Year', align: 'C'}} ],
+                integerColumns: [ {sourceColumn: 'Year', align: 'C'} ],
                 integerColumns: [ {sourceColumn: 'Releases', align: 'R'} ],
-                integerColumns: [ {sourceColumn: 'Year'}, {sourceColumn: 'Releases', align: 'R'} ],
-                integerColumns: [ {sourceColumn: 'Length', align: 'L'} ],
+                integerColumns: [ {sourceColumn: 'Year', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
                 integerColumns: [ {sourceColumn: 'Track'} ],
-                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'}} ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 integerColumns: [ {sourceColumn: '#', align: 'L'} ],
 #+end_example
 
-The implementation of integerColumns is, during rendering of a table column which matches a sourceColumn from the array,
-the column cell aligement should be left 'L', right 'R' or centered 'C' (default). Also when "align:" is missing in the
-definitin it means centered 'C'
+** todo
 
-- maybe rewrite the following function in terms of the new "integerColumns" feature
+add a new feature, based on the Technique: centered inline-block + right/left/centered-aligned (R/L/C) content
+
+There is a new parameter "integerColumns" in the variable "const pageDefinitions" for different pageType definitions, e.g
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
+#+end_example
+
+The implementation of "integerColumns" should be: during rendering of a table column which matches a "sourceColumn" from
+the above definition, the "sourceColumn" itslef sould be centered-inline block in the table, but the cell content
+aligement should be left 'L', right 'R' or centered 'C' (default). Also when "align:" is missing in the definition it
+means centered 'C'
+
+- maybe also rewrite the following function in terms of the new "integerColumns" feature
   
 #+begin_example
         // --- Helper: is a column name numeric? ---------------------------------
@@ -55699,12 +55716,171 @@ definitin it means centered 'C'
             name.includes('Length') || name.includes('#');
 #+end_example
 
-- All "integerColumns" should horizontally/center aligned in their column data cells (default)
+** bug for DD, MM
 
-* TODO Length should actually be right aligned
+change the definition for
 
 #+begin_example
-integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
+{sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}
+#+end_example
+
+to
+
+#+begin_example
+{sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}
+#+end_example
+
+** fix missing
+
+add
+
+#+begin_src bash
+integerColumns: [ {sourceColumn: 'Releases', align: 'R'} ],
+#+end_src
+
+to the "artist-releasegroups" definition, so that it looks like
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Official RGs',         params: { all: '0', va: '0' } },
+                { label: '🧮 Official VA RGs',      params: { all: '0', va: '1' } },
+                { label: '🧮 Artist RGs',           params: { all: '1', va: '0' } },
+                { label: '🧮 Various Artists RGs',  params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Year', align: 'C'}, {sourceColumn: 'Releases', align: 'R'} ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+** is it possible to align according a special character like ":"
+
+is it possible to align according a special character like ":"
+
+#+begin_example
+ 13:57.000
+  9:59
+ 10:05
+#+end_example
+
+so that in each row the ":" character of each 'numeric string' sits exactly below each other
+
+** align lenght
+
+change the definition for
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
+#+end_example
+
+to
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+#+end_example
+
+and 
+Algorithm:
+ - Scan column
+ - Split at :
+ - Compute max width of left part
+ - Render with padded left side OR split spans
+
+#+begin_example
+Example: 13:57.000
+
+Split each value into:
+
+left part (before :) → right-aligned
+
+right part (after :) → left-aligned
+
+Example structure
+<td class="time">
+  <span class="left">13</span><span class="sep">:</span><span class="right">57.000</span>
+</td>
+#+end_example
+   
+This is exactly like “decimal alignment” but for the character ":"   
+
+** align, in such a way that ":" should be centered inside the table column 
+
+align, in such a way that the ":" character of a typical value like "10:05" is centered inline-block
+
+** jesus
+
+when a "Length" column has the following class and title attached to it
+
+#+begin_example
+'class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO"'
+#+end_example
+
+remove it, before doing any alignment regarding the new functinality with ":"
+
+
+#+begin_example
+https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
+
+<td class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO" style="text-align: right;">5:42.000
+</td>
+
+<td>5:46</td>
+#+end_example
+
+* later
+
+
+--
+
+"Releases" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+
+#+end_example
+<td class="c" data-mb-int-col-styled="1" style="text-align: center;">
+  <span style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: var(--mb-int-col-min-width, 2ch);">104
+  </span>
+</td>
+
+#+begin_example
+https://musicbrainz.org/recording/a599d6d5-b78a-4d0b-aee9-7f9011db56dd
+
+<td data-mb-int-col-styled="1" style="text-align: center;">
+  <span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;">
+    <span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">4
+    </span>
+    <span class="mb-ic-sep">:
+    </span>
+    <span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">35
+    </span>
+  </span>
+</td>
+
+
+<td data-mb-int-col-styled="1" style="text-align: center;">
+  <span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;">
+    <span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 1ch;">4
+    </span>
+    <span class="mb-ic-sep">:
+    </span>
+    <span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums;">43.706
+    </span>
+  </span>
+</td>
 #+end_example
 
 
@@ -56818,6 +56994,8 @@ Still some bugs
 
 
 
+* TODO add a button to the statistics panel for exporting in HTML
+
 
 * maybe (or the synthetic columns per table in a specific pageType can be deduced from the following parameters in the "const pageDefinitions" definitions variable
 
@@ -57539,3 +57717,4 @@ v9.99.230 — Renamed config section, sa_enable_h2_section_relocation guard, are
 v9.99.231 — Tooltip DOM property fix (quotes in filter expressions), (N) tooltip
 v9.99.232 — Column-filter-aware sub-table tooltips with column name+expression summary
 #+end_example
+

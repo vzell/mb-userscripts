@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.240+2026-03-17
+// @version      9.99.247+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2518,6 +2518,243 @@
     }
 
     /**
+     * Derives the runtime integer-column descriptor list from a merged
+     * activeDefinition object.
+     *
+     * `features.integerColumns` is an array of descriptor objects:
+     *   { sourceColumn: string, align?: 'L' | 'R' | 'C' }
+     *
+     * During table rendering, each cell in a matching column is styled using the
+     * "centered inline-block + content-align" technique: the <td> itself is given
+     * `text-align:center` so the inner span is centered inside the column, while
+     * the inner span receives the per-column content alignment (left / right /
+     * center).  When `align` is absent it defaults to 'C' (centered).
+     *
+     * Each returned descriptor gains a `colIdx` property initialised to -1; the
+     * actual column index is filled in during the header-scanning pass.
+     * `colIdx` MUST be resolved against the FINAL column list (original headers
+     * minus excluded + all synthetic column names) so that synthetic columns such
+     * as DD / MM / YYYY are correctly addressed.
+     *
+     * @param {object} def - Merged activeDefinition (the resolved page definition object)
+     * @returns {Array<{sourceColumn: string, align: string, colIdx: number}>}
+     */
+    function buildActiveIntegerColumns(def) {
+        const features = def?.features || {};
+        if (!Array.isArray(features.integerColumns)) return [];
+        return features.integerColumns.map(entry => ({
+            sourceColumn: entry.sourceColumn,
+            // Valid values: 'L' (left), 'R' (right), 'C' (center, default),
+            // ':' (colon-split decimal alignment — left part right-aligned,
+            //      right part left-aligned, separator ':' centred between them).
+            align:        (['L', 'R', 'C', ':'].includes(entry.align)) ? entry.align : 'C',
+            colIdx:       -1
+        }));
+    }
+
+    /**
+     * Applies the centered inline-block + content-alignment technique to every
+     * cell in a data row whose column index matches an integerColumns descriptor.
+     *
+     * Technique — "centered inline-block + R/L/C content":
+     *   • The <td> itself gets `text-align:center` so the inner <span> is
+     *     horizontally centred inside the column, giving all values a common
+     *     visual anchor regardless of their width.
+     *   • A `<span style="display:inline-block; text-align:{contentAlign}; …">`
+     *     wraps the cell's original content and carries the per-column content
+     *     alignment (left / right / centre).
+     *   • `font-variant-numeric:tabular-nums` ensures digit columns (DD, MM,
+     *     YYYY, #, Length, …) align on decimal points when right-aligned.
+     *   • `min-width` is set via a CSS custom property `--mb-int-col-min-width`
+     *     (default 2ch) so callers can override per-column widths via CSS without
+     *     touching this function.
+     *
+     * Must be called AFTER all synthetic cells have been appended to the row so
+     * that the cell count matches the final header count and colIdx is valid.
+     *
+     * @param {HTMLTableRowElement}                                       row
+     *   - The fully assembled data row (original + synthetic cells appended).
+     * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
+     *   - Runtime list built by buildActiveIntegerColumns(), with colIdx resolved
+     *     against the final column list (including synthetic column headers).
+     */
+    /**
+     * applyIntegerColumnStyling — pass 1 (per-row, called during import).
+     *
+     * For align 'L' | 'R' | 'C':
+     *   Wraps the cell content in a single centered inline-block <span> with the
+     *   declared text-align.  See the JSDoc on buildActiveIntegerColumns for the
+     *   full technique description.
+     *
+     * For align ':' (colon-split / decimal-separator alignment):
+     *   Splits the cell's text content at the FIRST ':' character and produces
+     *   three child spans wrapped in a single `display:inline-block` container:
+     *
+     *     <td style="text-align:center">                    ← centers the wrapper
+     *       <span class="mb-ic-wrap">                       ← display:inline-block anchor
+     *         <span class="mb-ic-left" > left part </span>  ← display:inline-block, text-align:right
+     *         <span class="mb-ic-sep"  > :         </span>  ← literal separator, the visual center
+     *         <span class="mb-ic-right"> right part</span>  ← display:inline-block, text-align:left
+     *       </span>
+     *     </td>
+     *
+     *   The ':' separator sits exactly at the horizontal center of the column
+     *   because the wrapper is centered by the <td>'s `text-align:center`.
+     *   `mb-ic-left` grows rightward (right-aligned) to meet the colon;
+     *   `mb-ic-right` grows leftward (left-aligned) away from it.
+     *
+     *   The LEFT span carries only the text node; its `min-width` is set to '' at
+     *   this stage.  A second pass — `finalizeColonAlignedColumns` — scans all
+     *   collected rows, determines the maximum left-part character count for each
+     *   colon-align column, and sets `min-width:Nch` on every `.mb-ic-left` span
+     *   so that colons line up perfectly across all rows.
+     *
+     *   Values that contain no ':' are treated as pure right parts (the left span
+     *   is empty); this handles empty cells and non-time values gracefully.
+     *
+     * Idempotency: `cell.dataset.mbIntColStyled = '1'` prevents double-wrapping
+     * across re-render cycles.
+     *
+     * @param {HTMLTableRowElement}                                       row
+     * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
+     */
+    function applyIntegerColumnStyling(row, descriptors) {
+        if (!descriptors.length) return;
+        for (const entry of descriptors) {
+            if (entry.colIdx === -1) continue; // column not present on this page
+            const cell = row.cells[entry.colIdx];
+            if (!cell) continue;
+
+            // Idempotent: skip cells already styled (safe across re-render cycles)
+            if (cell.dataset.mbIntColStyled === '1') continue;
+
+            if (entry.align === ':') {
+                // ── Colon-split alignment (pass 1: structure only, no widths) ──────
+                // The ':' is centered in the column by centering the inline-block
+                // wrapper inside the <td>.  The left part grows right to meet the
+                // colon; the right part grows left away from it.
+
+                const rawText = cell.textContent.trim();
+                const colonIdx = rawText.indexOf(':');
+                const leftText  = colonIdx !== -1 ? rawText.slice(0, colonIdx)  : '';
+                const rightText = colonIdx !== -1 ? rawText.slice(colonIdx + 1) : rawText;
+
+                cell.textContent = ''; // clear
+                // Center the inline-block wrapper — this puts ':' at the column center
+                cell.style.textAlign = 'center';
+
+                // Outer wrapper: inline-block so the three spans sit on one line
+                // and the whole unit is centred by the td's text-align:center
+                const wrap = document.createElement('span');
+                wrap.className = 'mb-ic-wrap';
+                wrap.style.cssText = 'display:inline-block; white-space:nowrap;';
+
+                const spanLeft = document.createElement('span');
+                spanLeft.className = 'mb-ic-left';
+                spanLeft.style.cssText =
+                    'display:inline-block; text-align:right;' +
+                    'font-variant-numeric:tabular-nums;';
+                // min-width set to '' here; finalizeColonAlignedColumns sets it to Nch
+                spanLeft.textContent = leftText;
+
+                const spanSep = document.createElement('span');
+                spanSep.className = 'mb-ic-sep';
+                spanSep.textContent = ':';
+
+                const spanRight = document.createElement('span');
+                spanRight.className = 'mb-ic-right';
+                spanRight.style.cssText =
+                    'display:inline-block; text-align:left;' +
+                    'font-variant-numeric:tabular-nums;';
+                spanRight.textContent = rightText;
+
+                wrap.appendChild(spanLeft);
+                wrap.appendChild(spanSep);
+                wrap.appendChild(spanRight);
+                cell.appendChild(wrap);
+            } else {
+                // ── Standard centered inline-block + L / R / C ────────────────────
+                const contentAlignMap = { L: 'left', R: 'right', C: 'center' };
+                const contentAlign    = contentAlignMap[entry.align] || 'center';
+
+                // Centre the inline-block anchor within the column
+                cell.style.textAlign = 'center';
+
+                // Wrap existing cell content in an inline-block span with content alignment
+                const span = document.createElement('span');
+                span.style.cssText =
+                    'display:inline-block;' +
+                    `text-align:${contentAlign};` +
+                    'font-variant-numeric:tabular-nums;' +
+                    'min-width:var(--mb-int-col-min-width, 2ch);';
+
+                // Move all child nodes into the span
+                while (cell.firstChild) span.appendChild(cell.firstChild);
+                cell.appendChild(span);
+            }
+
+            cell.dataset.mbIntColStyled = '1';
+        }
+    }
+
+    /**
+     * finalizeColonAlignedColumns — pass 2 (post-collection, called once per
+     * render cycle, just before renderFinalTable / renderGroupedTable).
+     *
+     * For every integerColumns descriptor with `align: ':'`:
+     *   1. Iterates every collected row and reads the text length of its
+     *      `.mb-ic-left` span in the target column.
+     *   2. Determines the maximum left-part character count across all rows.
+     *   3. Sets `min-width:Nch` on every `.mb-ic-left` span in that column so
+     *      that the `:` separator aligns vertically for all values regardless of
+     *      the width of the left part.
+     *
+     * Works for both single-table pages (pass `allRows`) and multi-table pages
+     * (pass `groupedRows.flatMap(g => g.rows)`).
+     *
+     * Must be called AFTER all rows have been imported (so the full set is known)
+     * and BEFORE the rows are inserted into the DOM (so widths are set before
+     * first paint).  Idempotent: re-calling on the same rows is safe because
+     * min-width is simply overwritten with the same computed value.
+     *
+     * @param {HTMLTableRowElement[]}                                       rows
+     *   - Flat array of all collected data rows for this render cycle.
+     * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
+     *   - Runtime list from buildActiveIntegerColumns(), with colIdx resolved.
+     */
+    function finalizeColonAlignedColumns(rows, descriptors) {
+        const colonDescs = descriptors.filter(e => e.align === ':' && e.colIdx !== -1);
+        if (!colonDescs.length || !rows.length) return;
+
+        for (const entry of colonDescs) {
+            // Pass 1: find the maximum left-part character count in this column
+            let maxLeftLen = 0;
+            for (const row of rows) {
+                const cell = row.cells[entry.colIdx];
+                if (!cell) continue;
+                const leftSpan = cell.querySelector('.mb-ic-left');
+                if (!leftSpan) continue;
+                const len = leftSpan.textContent.length;
+                if (len > maxLeftLen) maxLeftLen = len;
+            }
+
+            if (maxLeftLen === 0) continue; // all values have no left part — nothing to align
+
+            // Pass 2: apply min-width to every left span in this column
+            const minW = `${maxLeftLen}ch`;
+            for (const row of rows) {
+                const cell = row.cells[entry.colIdx];
+                if (!cell) continue;
+                const leftSpan = cell.querySelector('.mb-ic-left');
+                if (leftSpan) leftSpan.style.minWidth = minW;
+            }
+
+            Lib.debug('render', `finalizeColonAlignedColumns: column "${entry.sourceColumn}" → max left-part=${maxLeftLen}ch across ${rows.length} rows`);
+        }
+    }
+
+
+    /**
      * applyRenderMultiRowCells — converts comma-separated cell content into a
      * <ul><li> multi-row structure for every column declared in the page
      * definition's `features.renderMultiRowCell` array.
@@ -2671,7 +2908,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
                 extractMainColumn: 'Release' // Specific header
             },
@@ -2769,8 +3006,7 @@
                         syntheticColumnExtractors: [
                             { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                         ],
-                        integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                        integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'} ],
+                        integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                         renderMultiRowCell: [ 'Label', 'Catalog#' ],
                         collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
                     }
@@ -2913,8 +3149,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
                 addCAA: 'Release',
                 extractMainColumn: 'Release'
@@ -2969,8 +3204,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
                 addCAA: 'Release',
                 extractMainColumn: 'Release'
@@ -3001,7 +3235,7 @@
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Work' } ],
             features: {
-                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 extractMainColumn: 'Title'
             },
             tableMode: 'multi',
@@ -3079,7 +3313,7 @@
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
                     { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
                 ],
-                integerColumns: [ {sourceColumn: 'Year', align: 'C'} ],
+                integerColumns: [ {sourceColumn: 'Year', align: 'C'}, {sourceColumn: 'Releases', align: 'R'} ],
                 collapsableColumns: [ 'CAA' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
@@ -3115,8 +3349,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                 renderMultiRowCell: [ 'Label', 'Catalog#' ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
                 addCAA: 'Release',
@@ -3136,7 +3369,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
-                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'Release groups', 'CAA' ],
                 addCAA: 'Release groups',
                 extractMainColumn: 'Name'
@@ -3181,8 +3414,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                integerColumns: [ {sourceColumn: 'Total Tracks', align: 'R'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                 renderMultiRowCell: [ 'Label', 'Catalog#' ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
                 addCAA: 'Release',
@@ -3233,9 +3465,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'C'}, {sourceColumn: 'MM', align: 'C'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                integerColumns: [ {sourceColumn: 'Length', align: 'R'} ],
-                integerColumns: [ {sourceColumn: '#', align: 'L'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'}, {sourceColumn: '#', align: 'L'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
                 addCAA: 'Release title',
                 extractMainColumn: 'Release title'
@@ -11246,6 +11476,13 @@ ${sections.join('\n')}
     // Columns listed here have their comma-separated content converted to <ul><li> multi-row cells.
     let activeRenderMultiRowCols = [];
 
+    // Runtime integer-column list populated by buildActiveIntegerColumns() in startFetchingProcess.
+    // Each entry: { sourceColumn, align, colIdx }
+    // colIdx is resolved against the FINAL column list (original minus excluded + synthetics)
+    // AFTER the header-scanning pass so that synthetic columns (e.g. DD, MM, YYYY) are addressable.
+    // Columns listed here receive the centered inline-block + L/R/C content-alignment technique.
+    let activeIntegerColumns = [];
+
     // --- UI Elements ---
     const controlsContainer = document.createElement('div');
     controlsContainer.id = 'mb-show-all-controls-container';
@@ -16602,6 +16839,8 @@ ${sections.join('\n')}
                 totalFiltered += matches.length;
             });
 
+            // Finalize colon-aligned columns on the filtered subset before re-render
+            finalizeColonAlignedColumns(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
             renderGroupedTable(filteredArray, pageType === 'artist-releasegroups', globalQuery || 're-run');
 
             /* Restore focus & scroll for column filters */
@@ -16641,6 +16880,8 @@ ${sections.join('\n')}
             _singleColRxErrors = matchCtx.colFilters._rxErrors || [];
             const filteredRows = allRows.map(row => row.cloneNode(true)).filter(row => testRowMatch(row, matchCtx));
             singleTableFilteredCount = filteredRows.length; // capture before async render
+            // Finalize colon-aligned columns on the filtered subset before re-render
+            finalizeColonAlignedColumns(filteredRows, activeIntegerColumns);
             renderFinalTable(filteredRows);
             updateH2Count(filteredRows.length, totalAbsolute);
 
@@ -17171,6 +17412,14 @@ ${sections.join('\n')}
             Lib.debug('init', `renderMultiRowCell configured: [${activeRenderMultiRowCols.map(e => `"${e.columnName}"`).join(', ')}]`);
         }
 
+        // Build the integer-column styling list from the merged activeDefinition.
+        // colIdx is resolved later (after header scanning) against the final column list,
+        // so synthetic columns such as DD / MM / YYYY are correctly addressable.
+        activeIntegerColumns = buildActiveIntegerColumns(activeDefinition);
+        if (activeIntegerColumns.length) {
+            Lib.debug('init', `integerColumns configured: [${activeIntegerColumns.map(e => `"${e.sourceColumn}"(${e.align})`).join(', ')}]`);
+        }
+
         const activeBtn = e.target;
         // Now access properties from the NEW activeDefinition
         const overrideParams = activeDefinition.params || null;
@@ -17610,6 +17859,11 @@ ${sections.join('\n')}
                     // Reset column indices for all active render-multi-row-cell columns before scanning.
                     activeRenderMultiRowCols.forEach(entry => { entry.colIdx = -1; });
 
+                    // Reset integer-column colIdx before scanning each page.
+                    // colIdx for integerColumns is resolved against the FINAL column list
+                    // (after the header loop), not here — this reset just clears stale values.
+                    activeIntegerColumns.forEach(entry => { entry.colIdx = -1; });
+
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
                         headerNames[idx] = txt; // Store the name
@@ -17658,9 +17912,46 @@ ${sections.join('\n')}
                 const multiRowSummary = activeRenderMultiRowCols.length
                     ? activeRenderMultiRowCols.map(e => `"${e.columnName}"@${e.colIdx}`).join(', ')
                     : 'none';
+                // Build the final column name list for integerColumns colIdx resolution.
+                // This must run AFTER the header-scan loop so indicesToExclude is complete
+                // and AFTER syntheticColumns are known so synthetic columns (DD/MM/YYYY…)
+                // can be addressed.  The order mirrors the row-assembly order:
+                //   original headers (minus excluded) → extractor synthetics → synthetic-
+                //   column-extractor synthetics → MB-Name / Comment (when configured).
+                if (activeIntegerColumns.length) {
+                    const _excludedSet = new Set(indicesToExclude);
+                    const _finalColNames = [];
+                    // 1. Original headers that survive exclusion
+                    headerNames.forEach((name, idx) => {
+                        if (!_excludedSet.has(idx)) _finalColNames.push(name);
+                    });
+                    // 2. Synthetic columns from primary column extractors
+                    activeColumnExtractors.forEach(entry => {
+                        entry.syntheticColumns.forEach(cn => _finalColNames.push(cn));
+                    });
+                    // 3. Synthetic columns from synthetic-column extractors (second pass)
+                    activeSyntheticColumnExtractors.forEach(entry => {
+                        entry.syntheticColumns.forEach(cn => _finalColNames.push(cn));
+                    });
+                    // 4. MB-Name / Comment (when extractMainColumn is configured)
+                    if (mainColIdx !== -1) {
+                        _finalColNames.push('MB-Name');
+                        _finalColNames.push('Comment');
+                    }
+                    // Resolve colIdx for each integerColumns descriptor
+                    activeIntegerColumns.forEach(entry => {
+                        const idx = _finalColNames.indexOf(entry.sourceColumn);
+                        if (idx !== -1) entry.colIdx = idx;
+                        else Lib.warn('indices', `integerColumns: column "${entry.sourceColumn}" not found in final column list — styling skipped`);
+                    });
+                }
+
+                const intColSummary = activeIntegerColumns.length
+                    ? activeIntegerColumns.map(e => `"${e.sourceColumn}"(${e.align})@${e.colIdx}`).join(', ')
+                    : 'none';
                 Lib.debug(
                     'indices',
-                    `Detected indices → mainColIdx=${mainColIdx} (${headerNames[mainColIdx] || 'N/A'}), extractors=[${extractorSummary}], syntheticExtractors=[${syntheticExtractorSummary}], erasers=[${eraserSummary}], renderMultiRow=[${multiRowSummary}], excluded=[${indicesToExclude.join(',')}] for pageType: ${pageType}`
+                    `Detected indices → mainColIdx=${mainColIdx} (${headerNames[mainColIdx] || 'N/A'}), extractors=[${extractorSummary}], syntheticExtractors=[${syntheticExtractorSummary}], erasers=[${eraserSummary}], renderMultiRow=[${multiRowSummary}], integerColumns=[${intColSummary}], excluded=[${indicesToExclude.join(',')}] for pageType: ${pageType}`
                 );
 
                 let rowsInThisPage = 0;
@@ -17837,6 +18128,10 @@ ${sections.join('\n')}
                                     newRow.appendChild(tdComment);
                                 }
                                 // ── end shared synthetic-column pipeline ─────────────────────────
+
+                                // 6. Apply integer-column styling (centered inline-block + L/R/C).
+                                // Must run AFTER all synthetic cells are appended so colIdx is valid.
+                                applyIntegerColumnStyling(newRow, activeIntegerColumns);
 
                                 currentGroup.rows.push(newRow);
                                 newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
@@ -18073,6 +18368,10 @@ ${sections.join('\n')}
                                         newRow.appendChild(tdComment);
                                     }
 
+                                    // 6. Apply integer-column styling (centered inline-block + L/R/C).
+                                    // Must run AFTER all synthetic cells are appended so colIdx is valid.
+                                    applyIntegerColumnStyling(newRow, activeIntegerColumns);
+
                                     // ── Resolve entity-type suffix on first data row ──────────────
                                     // On the first data row for a pending subh group, read the
                                     // entity type from the Title column link (mainColIdx) and
@@ -18274,9 +18573,13 @@ ${sections.join('\n')}
             // Backup original order for tri-state sorting
             if (activeDefinition.tableMode === 'multi') {
                 groupedRows.forEach(g => { g.originalRows = [...g.rows]; });
+                // Finalize colon-aligned columns before render so colons line up
+                finalizeColonAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                 await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
             } else {
                 originalAllRows = [...allRows];
+                // Finalize colon-aligned columns before render so colons line up
+                finalizeColonAlignedColumns(allRows, activeIntegerColumns);
                 await renderFinalTable(allRows);
                 document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
                 const mainTable = document.querySelector('table.tbl');
@@ -18564,6 +18867,61 @@ ${sections.join('\n')}
      * Uses DocumentFragment, chunked rendering, and progress updates
      * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
      */
+    /**
+     * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+     * in the document that removes `[class="treleases"]` elements the instant they
+     * are inserted into the rendered table.
+     *
+     * Background: the jesus2099 "mb. SUPER MIND CONTROL Ⅱ X TURBO" userscript
+     * injects a node such as:
+     *   <… class="treleases" title="SUPER MIND CONTROL Ⅱ X TURBO">
+     * into Length cells of the *live* rendered table — AFTER our render pipeline
+     * has already finished.  Because our pass-1 (applyIntegerColumnStyling) runs
+     * during row import (before the rows hit the DOM) and our pass-2
+     * (finalizeColonAlignedColumns) runs just before render, neither pass can see
+     * the annotation; the only reliable interception point is a MutationObserver
+     * that fires synchronously as each node is added.
+     *
+     * The observer:
+     *   - watches `childList` and `subtree` on each `table.tbl tbody`
+     *   - for every added node, checks whether it or any of its descendants
+     *     carries `class="treleases"` (exact match) — the attribute value used by
+     *     the jesus2099 script
+     *   - removes the offending element immediately, before the browser paints
+     *
+     * Called once after each `renderFinalTable` / `renderGroupedTable` completes.
+     * A module-level `WeakSet` prevents double-observing the same tbody across
+     * repeated re-renders.
+     *
+     * @returns {void}
+     */
+    const _observedTbodies = new WeakSet();
+    function initTreleasesObserver() {
+        document.querySelectorAll('table.tbl tbody').forEach(tbody => {
+            if (_observedTbodies.has(tbody)) return; // already watching this tbody
+            _observedTbodies.add(tbody);
+
+            const observer = new MutationObserver(mutations => {
+                for (const mutation of mutations) {
+                    for (const node of mutation.addedNodes) {
+                        if (node.nodeType !== Node.ELEMENT_NODE) continue;
+                        // Check the node itself and all its descendants
+                        const targets = node.classList?.contains('treleases')
+                            ? [node]
+                            : Array.from(node.querySelectorAll('[class="treleases"]'));
+                        if (targets.length) {
+                            targets.forEach(el => el.remove());
+                            Lib.debug('render', `initTreleasesObserver: removed ${targets.length} treleases node(s)`);
+                        }
+                    }
+                }
+            });
+
+            observer.observe(tbody, { childList: true, subtree: true });
+            Lib.debug('render', 'initTreleasesObserver: watching tbody for treleases injections');
+        });
+    }
+
     async function renderFinalTable(rows) {
         const rowCount = Array.isArray(rows) ? rows.length : 0;
         Lib.debug('render', `Starting renderFinalTable with ${rowCount} rows.`);
@@ -18612,6 +18970,10 @@ ${sections.join('\n')}
         // classes, so tints must be repainted after every render.
         const tintEntry = multiSortTintRegistry.get('main_table');
         if (tintEntry) tintEntry.applyTints();
+
+        // Install (or re-confirm) the MutationObserver that strips jesus2099 treleases
+        // nodes from Length cells the instant they are injected into the live tbody.
+        initTreleasesObserver();
     }
 
     /**
@@ -19934,11 +20296,11 @@ ${sections.join('\n')}
         if (Lib.settings.sa_enable_save_load) {
             saveToDiskBtn.style.display = 'inline-block';
         }
-    }
 
-    /**
-     * Rebuilds the CAA and EAA bigbox artwork strips for a single table after
-     * its tbody content has been replaced (e.g. by the 'merged' discography view
+        // Install (or re-confirm) the MutationObserver that strips jesus2099 treleases
+        // nodes from Length cells the instant they are injected into any live tbody.
+        initTreleasesObserver();
+    }
      * fill or the subsequent restore pass).
      *
      * Mirrors the single-table path inside `_artInitPics` but operates on an
@@ -22373,9 +22735,20 @@ ${sections.join('\n')}
             th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim() : '';
 
         // --- Helper: is a column name numeric? ---------------------------------
-        const isNumericCol = (name) =>
-            name.includes('Year') || name.includes('Releases') || name.includes('Track') ||
-            name.includes('Length') || name.includes('#');
+        // Primary source: activeIntegerColumns declared in the page definition's
+        // `features.integerColumns`.  Any column listed there is considered numeric
+        // and will use locale-numeric comparison during sorting.
+        // Fallback heuristic (legacy): applied only for columns not covered by the
+        // page definition, so that pages without an integerColumns declaration keep
+        // their existing sort behaviour.
+        const _intColNameSet = new Set(activeIntegerColumns.map(e => e.sourceColumn));
+        const isNumericCol = (name) => {
+            if (_intColNameSet.has(name)) return true;
+            // Legacy heuristic for pages that have no integerColumns declaration
+            return name.includes('Year') || name.includes('Releases') ||
+                   name.includes('Track') || name.includes('Length') ||
+                   name.includes('#');
+        };
 
         // -----------------------------------------------------------------------
         headers.forEach((th, index) => {
@@ -24125,8 +24498,12 @@ ${sections.join('\n')}
 
                 // Render
                 if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
+                    // Finalize colon-aligned columns before render so colons line up
+                    finalizeColonAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                     await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
                 } else if (allRows.length > 0 || loadedRowCount === 0) {
+                    // Finalize colon-aligned columns before render so colons line up
+                    finalizeColonAlignedColumns(allRows, activeIntegerColumns);
                     await renderFinalTable(allRows);
                     document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
                     const mainTable = document.querySelector('table.tbl');
