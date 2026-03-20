@@ -57718,3 +57718,5 @@ v9.99.231 — Tooltip DOM property fix (quotes in filter expressions), (N) toolt
 v9.99.232 — Column-filter-aware sub-table tooltips with column name+expression summary
 #+end_example
 
+* TODO multi-row cols in "multi"-table pageTypes not collapsable/uncollapsable anymore on artist-releasegroup pages
+
