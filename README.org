@@ -56101,6 +56101,13 @@ Another bug
 - when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
 
+* TODO statistics panel
+** wrong stats
+** make it multitable aware
+** memory usage how is it counted
+** make it aware of the NEW Artist-Releasegroups
+** DONE create keyboard shorcut
+
 * TODO Statistics
 ** version: 9.99.211+2026-03-17
 *** Global
@@ -57157,7 +57164,7 @@ But that string to use for the table name is easy to extract from the h2 header 
 inform the user that the CSV exporter exports the first table in "multi"-table mode
 
 
-* TODO tooltps - explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
+* TODO tooltips - explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
 ** DONE initial - for sub-table format "(<M> of <N>)" and "(<n> of <M>)/<N>" add dynamic tooltips
 
 - Please create a dynamic tooltip text for the following format "(<M> of <N>)" in the following span in the h3 header line of a sub-table
@@ -57360,7 +57367,7 @@ h2.title = 'Click to collapse/uncollapse section (Ctrl+Click to toggle ALL secti
 h3.title = 'Click to collapse/uncollapse sub-section (Ctrl+Click to toggle ALL sub-sections)';
 #+end_example
 
-** configurable tooltips
+** DONE configurable tooltips
 
 add some new features:
 
@@ -57376,6 +57383,10 @@ add a new boolean (default: true) which when true enables the whole h2/h3 row co
 
 add a new configurable foreground and background color (default are the curretn values) for the h2/h3 row count tooltips
 
+** TODO add colors to the actual counts and add the background filter colors as the forground for the filter types
+
+add colors to the actual counts and add the background filter colors as the forground for the filter types
+
 
 * change hardcoded hightlight for col filter
 
@@ -57384,15 +57395,6 @@ Global filter highlight: bg sa_global_filter_highlight_bg (default #FFD700), col
 Column filter highlight: bg sa_column_filter_highlight_bg (default #add8e6), color sa_column_filter_highlight_color (default red)
 STF highlight: bg #90ee90 (hardcoded light green), color #000
 #+end_example
-
-
-* TODO statistics panel
-** wrong stats
-** make it multitable aware
-** memory usage how is it counted
-** make it aware of the NEW Artist-Releasegroups
-** DONE create keyboard shorcut
-
 
 
 * DONE reorder the tab/sub-table specific section always last
@@ -57517,11 +57519,9 @@ so that it looks like
         },
 #+end_example
 
-
 * DONE The video column only should have the absolute minimum width necessary to accomodate the sort icons, unique dropdown icon and column name even when initially rendered
 
-
-* batches in the last session from Opitz
+* DONE batches in the last session from Opitz
 
 #+begin_example
 v9.99.219 — Stats panel: column-count rows, panel vertical resize, multi-table collapse, config schema (Resize section, auto-resize, stats panel settings)
