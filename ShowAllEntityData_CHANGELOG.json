@@ -1,5 +1,126 @@
 [
     {
+      "version": "9.99.239",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Colored count-stat tooltip — h2/h3 native title conflict: the `.mb-row-count-stat` span is a child of the h2/h3 element whose `title` attribute reads 'Click to collapse/uncollapse section …'. The browser renders both the native h2/h3 title tooltip and the custom `#mb-stat-tooltip` simultaneously, with the native one obscuring the custom one. Fixed in `_initStatTooltip`: on `mouseover` of a count-stat span, the nearest h2/h3 ancestor's `title` is saved into `data-mbtt-saved-title` and cleared to `''`; on `mouseout` the saved value is restored and the data attribute deleted. This suppresses the native browser tooltip exclusively while the cursor is over the count-stat span, without permanently altering the collapse behaviour."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.238",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Multi-table h3 tooltip — Bug 1 (initial tooltip missing on first render): `_updateSubTableH3Tooltip(table)` was placed before `container.appendChild(h3/table)` so `findH3ForTable` couldn't locate the h3 (table not yet in DOM). Moved to immediately after the DOM insertion block."
+          ]
+        },
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Rich colored tooltips on `.mb-row-count-stat` spans: replaced plain-text native `title` attributes with a custom `#mb-stat-tooltip` floating div system. Filter expressions are now rendered with the same highlight background/text colors used in table cell highlighting: global filter → `.mbtt-gf` (gold bg, red text matching `sa_global_filter_highlight_bg/color`); sub-table filter → `.mbtt-stf` (light green bg, black text); column filter → `.mbtt-cf` (light blue bg, red text matching `sa_column_filter_highlight_bg/color`). CSS custom properties on `#mb-stat-tooltip` pick up the user-configured colors via the settings-driven stylesheet.",
+            "New `_mbttSpan(expr, type)` helper: HTML-escapes the filter expression and wraps it in `<span class=\"mbtt-{type}\">…</span>`. Used by both `_buildH2CountTooltip` and `_updateSubTableH3Tooltip` to produce the colored HTML stored in `data-mbtt`.",
+            "New `_initStatTooltip()` function: creates the singleton `#mb-stat-tooltip` div and installs three delegated event listeners (`mouseover`, `mouseout`, `mousemove`) on `document` using capture. The tooltip appears on hover over any `.mb-row-count-stat[data-mbtt]` element and follows the cursor with viewport-boundary clamping. Called once after the main CSS stylesheet is injected."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.237",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Multi-table h3 tooltip — Bug 1 (no tooltip on initial render): `_updateSubTableH3Tooltip` was only called from `updateSubTableRowCount` (STF events) and `runFilter` (filter events). On the initial render — where `renderGroupedTable` builds the h3 via `h3.innerHTML = '…<span class=\"mb-row-count-stat\">(N)</span>'` — no tooltip was set. Fixed by calling `_updateSubTableH3Tooltip(table)` immediately after `table.dataset.mbTotalRows = group.rows.length` in both the initial-render branch (new h3) and the filter-update branch (existing h3, where `countStat.textContent` was set without a tooltip).",
+            "Multi-table h2 tooltip — Bug 2 (wording 'in this table' vs 'in ALL sub-tables'): `_buildH2CountTooltip` now checks `activeDefinition.tableMode === 'multi'` and uses `_tableLabel = 'in ALL sub-tables'` for multi-table pages and `'in this table'` for single-table pages. The `_tableLabel` variable is appended to all tooltip variants (plain N, global-only, column-only, global+column)."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.236",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Column name extraction — `_cleanColHeaderText` fix: the previous implementation removed all `[class^=\"mb-\"]` descendants from a cloned `<th>`, but the column label text lives inside `.mb-col-hdr-flex` (which itself starts with `mb-`), so the entire text was erased, producing empty column names in all tooltips. Fixed with a three-tier resolution: (1) `th.dataset.colName` — set by `makeTableSortableUnified` on every processed header (original and synthetic) and by the synthetic-column injectors; this is the authoritative source when present. (2) First text node of `.mb-col-hdr-flex` — the column name is the first child text node of the flex container, before the sort and unique-value spans. (3) Clone fallback — removes only the specific named elements (`.mb-col-uniq-wrap`, `.sort-icon-btn`, `.column-resizer`, `.mb-col-hdr-flex`) from the clone and reads remaining `textContent`. (4) Last resort — glyph-stripping regex."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.235",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes / Changes",
+          "items": [
+            "Column name extraction — new `_cleanColHeaderText(th)` module-level helper: clones the `<th>`, removes `.mb-col-uniq-wrap` (unique-value dropdown + count badge), `.sort-icon-btn`, `.column-resizer`, and all `[class^=\"mb-\"]` children, then reads `textContent`. Replaces the previous `textContent.replace(/[⇅▲▼📊▶◀▤⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '')` regex which stripped digits from legitimate column names (e.g. 'Country/Date 1' where '1' was the unique-value badge count, not part of the name). Now used in `_updateSubTableH3Tooltip` for column-filter name resolution.",
+            "Single-table h2 count-stat tooltip — new `_buildH2CountTooltip(filteredCount, totalCount, absoluteTotal)` module-level helper: builds context-sensitive tooltip text for the `.mb-row-count-stat` span in the h2 header, mirroring the h3 tooltip logic. Called from `updateH2Count` immediately after `span.textContent = countText` — sets `span.title` via DOM property. Cases: plain `(N)` → 'There is/are N row(s) total unfiltered'; `(M of N)` with global filter only → 'There is/are M … after global filter \"…\" from N total'; with column filters only → 'There is/are M … after column filters …'; with both → combined message. Uses `_cleanColHeaderText` for column names and the `_nR(n)` / `_r(n)` singular helpers."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.234",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Sub-table row-count tooltips — singular/plural: 'There are 1 rows' is now 'There is 1 row'. Added `_nRows(n)` helper that returns 'There is N row' for N=1 and 'There are N rows' otherwise. All count references in tooltip strings (visible, denom, total) apply the same `n === 1 ? 'row' : 'rows'` ternary.",
+            "Sub-table row-count tooltips — all-three-filters case: when global filter, sub-table filter, and column-level filters are all simultaneously active (`_denom !== _total` AND `_stfVal` AND `_activeCol.length > 0`), the bracketed `(n of M)` tooltip now reads: 'There are n rows left after the global filter \"…\", the sub-table filter \"…\" and the column level filters \\'col\\':\\\"expr\\\" from N total unfiltered rows in this sub-table'. Previously the column filters were silently ignored in the STF-active branch."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.233",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Sub-table row-count tooltips — column-filter clear not reflected: the tooltip on `(M of N)` correctly showed column-filter info when filters were applied, but was not reset to the global-filter-only tooltip when column filters were cleared. Root cause: `updateSubTableRowCount` (inside each STF closure) was only wired to STF events — column filter changes go through `runFilter` → `renderGroupedTable`, which never called `updateSubTableRowCount`. Fix: extracted all tooltip logic into a new module-level `_updateSubTableH3Tooltip(tbl)` function that reads the current global filter, STF value, and column filters directly from the live DOM (no closure dependencies). `updateSubTableRowCount` now delegates to this helper. `runFilter`'s per-table status-update loop (lines 16440–16470) now calls `_updateSubTableH3Tooltip(table)` after the filter-status span update, so every column-filter apply or clear triggers an immediate tooltip refresh."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.232",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "Sub-table row-count tooltips — column-filter awareness: `updateSubTableRowCount` now inspects the active column-level filter inputs on each specific sub-table (`thead tr.mb-col-filter-row .mb-col-filter-input`) and resolves column names from the corresponding header cells by `data-col-idx`. The `(M of N)` tooltip (no STF active, but rows are filtered) now has three distinct messages: (1) column filters only: 'There are M rows filtered by the sub-table column filters on \\'col A\\':\"expr\", \\'col B\\':\"expr\" from N total rows'; (2) global + column filters: 'There are M rows filtered by the column filters on … from N rows, further narrowed by the global filter \"…\"'; (3) global filter only (unchanged): 'There are M rows filtered from N rows … by the global filter \"…\"'. Column filter expressions are read via `stripFilterPrefix` and set only as DOM `.title` properties — never interpolated into HTML — so any character in a filter expression is safe."
+          ]
+        }
+      ]
+    },
+    {
+      "version": "9.99.231",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Sub-table row-count tooltips — Bug 1 (tooltip not always shown on '(M of N)'): the tooltip text was set via `countStat.title = _tipGlobal` and then immediately overwritten by `countStat.innerHTML = '(M of N)'` — innerHTML resets all properties including title. Fixed by switching to `countStat.textContent` (which does not reset title) for the global-filter-only case, and by rebuilding all cases with `countStat.textContent = ''; countStat.title = ''` first.",
+            "Sub-table row-count tooltips — Bug 2 (truncated tooltip on '(n of M)/N'): tooltip text was embedded as `title=\"...\"` inside an innerHTML string. Any `\"` character in the filter expression (e.g. a search term containing a quote) terminates the HTML attribute, truncating the tooltip at that point. Fixed by replacing all `innerHTML` usage with imperative DOM construction: a `_mkSpan(text, title)` helper creates `<span>` nodes and sets `.title` as a DOM property (not an HTML attribute string), so any character — quotes, angle brackets, backslashes — appears correctly in the tooltip.",
+            "Sub-table row-count tooltips — Bug 3 (no tooltip on plain '(N)'): the unfiltered `(N)` case had no tooltip. Now sets `countStat.title = 'There are N total unfiltered rows in this sub-table'`."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.230",
       "date": "2026-03-17",
       "sections": [

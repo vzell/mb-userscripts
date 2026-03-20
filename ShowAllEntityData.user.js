@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.230+2026-03-17
+// @version      9.99.239+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -5435,6 +5435,53 @@
      * Exports only visible rows and columns
      * Generates filename with timestamp and page type
      */
+    /**
+     * Extract the real display name from a column header `<th>` element.
+     *
+     * Resolution order (stops at the first non-empty result):
+     *   1. `th.dataset.colName` — set by `makeTableSortableUnified` on every
+     *      header it processes (both original and synthetic columns) and by the
+     *      synthetic-column injectors in `cleanupHeaders`.  This is always the
+     *      authoritative clean name when present.
+     *   2. First text node inside `.mb-col-hdr-flex` — the flex container is the
+     *      first child of the `<th>` after `makeTableSortableUnified` runs; its
+     *      first child is a text node containing the column name followed by a
+     *      space.
+     *   3. Fallback: clone the `<th>`, remove all `[class^="mb-"]` children and
+     *      `.column-resizer`, return `textContent`.
+     *
+     * @param {HTMLElement} th  Live `<th>` element.
+     * @returns {string}        Clean column name, whitespace-normalised.
+     */
+    function _cleanColHeaderText(th) {
+        // 1. dataset.colName — most reliable; set on all processed headers
+        if (th.dataset && th.dataset.colName) {
+            return th.dataset.colName.trim();
+        }
+
+        // 2. First text node of .mb-col-hdr-flex (before sort/uniq spans)
+        const _flex = th.querySelector('.mb-col-hdr-flex');
+        if (_flex) {
+            for (const node of _flex.childNodes) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const txt = node.textContent.trim();
+                    if (txt) return txt;
+                }
+            }
+        }
+
+        // 3. Clone fallback: strip known UI children, read remaining text
+        const clone = th.cloneNode(true);
+        clone.querySelectorAll(
+            '.mb-col-uniq-wrap, .sort-icon-btn, .column-resizer, .mb-col-hdr-flex'
+        ).forEach(el => el.remove());
+        const fallback = clone.textContent.trim().replace(/\s+/g, ' ');
+        if (fallback) return fallback;
+
+        // Last resort: raw textContent stripped of known glyph characters
+        return th.textContent.replace(/[⇅▲▼📊▶◀▤⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
+    }
+
     /**
      * Extract clean plain-text from a table cell for export.
      *
@@ -12116,6 +12163,27 @@ ${sections.join('\n')}
         .mb-mscol-hdr-6 { background-color: rgba(180, 160, 255, 0.60) !important; }
         .mb-mscol-hdr-7 { background-color: rgba(255, 220, 180, 0.60) !important; }
         .mb-row-count-stat { color: blue; font-weight: bold; margin-left: 8px; }
+        .mb-row-count-stat { cursor: help; }
+        #mb-stat-tooltip {
+            position: fixed;
+            z-index: 99999;
+            max-width: 520px;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border: 1px solid #45475a;
+            border-radius: 6px;
+            padding: 7px 11px;
+            font-size: 0.82em;
+            font-family: sans-serif;
+            line-height: 1.5;
+            pointer-events: none;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.45);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        #mb-stat-tooltip .mbtt-gf  { background: var(--mbtt-gf-bg,  #FFD700); color: var(--mbtt-gf-col, red);   border-radius: 2px; padding: 0 3px; }
+        #mb-stat-tooltip .mbtt-stf { background: var(--mbtt-stf-bg, #90ee90); color: var(--mbtt-stf-col, #000);  border-radius: 2px; padding: 0 3px; }
+        #mb-stat-tooltip .mbtt-cf  { background: var(--mbtt-cf-bg,  #add8e6); color: var(--mbtt-cf-col, red);   border-radius: 2px; padding: 0 3px; }
 
         /* ── CAA / EAA multi-row art cell ────────────────────────────────────
            ul.mb-caa-art-ul  : root list in the td; contains li-0 (summary,
@@ -12212,6 +12280,14 @@ ${sections.join('\n')}
         .mb-global-filter-highlight {
             color: ${Lib.settings.sa_global_filter_highlight_color};
             background-color: ${Lib.settings.sa_global_filter_highlight_bg};
+        }
+        #mb-stat-tooltip {
+            --mbtt-gf-bg:  ${Lib.settings.sa_global_filter_highlight_bg  || '#FFD700'};
+            --mbtt-gf-col: ${Lib.settings.sa_global_filter_highlight_color || 'red'};
+            --mbtt-stf-bg: #90ee90;
+            --mbtt-stf-col: #000;
+            --mbtt-cf-bg:  ${Lib.settings.sa_column_filter_highlight_bg  || '#add8e6'};
+            --mbtt-cf-col: ${Lib.settings.sa_column_filter_highlight_color || 'red'};
         }
         .mb-pre-filter-highlight {
             color: ${Lib.settings.sa_pre_filter_highlight_color};
@@ -12672,6 +12748,7 @@ ${sections.join('\n')}
         }
     `;
     document.head.appendChild(style);
+    _initStatTooltip(); // create the custom #mb-stat-tooltip hover system once
 
     if (headerContainer.tagName === 'A') {
         // Resolve the owning <h1> and append at the END so that any pre-existing
@@ -14996,6 +15073,157 @@ ${sections.join('\n')}
      * @param {number} filteredCount - Number of rows currently visible after filtering
      * @param {number} totalCount - Total number of rows in the table
      */
+    /**
+     * Build the tooltip string for the `.mb-row-count-stat` span in the h2
+     * header, reflecting the currently active global and column filters.
+     *
+     * Used by `updateH2Count` to set `span.title` every time the count is
+     * refreshed.  All values are read from the live DOM — no closure deps.
+     *
+     * @param {number}      filteredCount  Currently visible row count.
+     * @param {number}      totalCount     Total (or global-filtered) count.
+     * @param {number|null} absoluteTotal  Unfiltered absolute total (3-tier).
+     * @returns {string}   Tooltip text (safe for DOM `.title` property).
+     */
+    // ── Custom rich tooltip for .mb-row-count-stat spans ──────────────────────
+    // Native `title` attributes only support plain text — no colors.
+    // We store HTML in `data-mbtt` and show a floating `#mb-stat-tooltip` div
+    // on mouseenter so filter expressions appear with the same highlight colors
+    // used in the table cells.
+    //
+    // Color token helpers (read Lib.settings lazily so they stay current):
+    //   gf()  → global-filter highlight (default gold background, red text)
+    //   stf() → sub-table filter highlight (light green bg, black text)
+    //   cf()  → column-filter highlight (light blue bg, red text)
+
+    /**
+     * Wrap `expr` in a colored highlight span matching the filter type.
+     * The result is an HTML string (safe to embed via `data-mbtt`).
+     * @param {string} expr  Filter expression (will be HTML-escaped).
+     * @param {'gf'|'stf'|'cf'} type
+     * @returns {string}
+     */
+    function _mbttSpan(expr, type) {
+        // Escape HTML special chars in the expression
+        const safe = expr
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+        return `<span class="mbtt-${type}">${safe}</span>`;
+    }
+
+    /**
+     * Initialise the singleton custom tooltip for `.mb-row-count-stat` spans.
+     * Safe to call multiple times — creates the div only once.
+     */
+    function _initStatTooltip() {
+        if (document.getElementById('mb-stat-tooltip')) return;
+        const _tip = document.createElement('div');
+        _tip.id = 'mb-stat-tooltip';
+        _tip.style.display = 'none';
+        document.body.appendChild(_tip);
+
+        let _target = null; // current hovered element
+
+        document.addEventListener('mouseover', (e) => {
+            const el = e.target.closest('.mb-row-count-stat');
+            if (!el || !el.dataset.mbtt) return;
+            _target = el;
+            _tip.innerHTML = el.dataset.mbtt;
+            _tip.style.display = 'block';
+            _positionTip(e);
+            // Suppress the h2/h3 parent's native title while our tooltip is visible
+            // so the browser doesn't overlay both tooltips simultaneously.
+            const _hParent = el.closest('h2, h3');
+            if (_hParent && _hParent.title) {
+                _hParent.dataset.mbttSavedTitle = _hParent.title;
+                _hParent.title = '';
+            }
+        }, true);
+
+        document.addEventListener('mouseout', (e) => {
+            const el = e.target.closest('.mb-row-count-stat');
+            if (!el || el !== _target) return;
+            _target = null;
+            _tip.style.display = 'none';
+            // Restore the h2/h3 parent's native title
+            const _hParent = el.closest('h2, h3');
+            if (_hParent && _hParent.dataset.mbttSavedTitle !== undefined) {
+                _hParent.title = _hParent.dataset.mbttSavedTitle;
+                delete _hParent.dataset.mbttSavedTitle;
+            }
+        }, true);
+
+        document.addEventListener('mousemove', (e) => {
+            if (!_target) return;
+            _positionTip(e);
+        }, true);
+
+        function _positionTip(e) {
+            const gap = 14;
+            const vw = window.innerWidth, vh = window.innerHeight;
+            _tip.style.left = '0'; _tip.style.top = '0'; // measure without constraint
+            const tw = _tip.offsetWidth, th = _tip.offsetHeight;
+            let x = e.clientX + gap, y = e.clientY + gap;
+            if (x + tw > vw - 8) x = e.clientX - tw - gap;
+            if (y + th > vh - 8) y = e.clientY - th - gap;
+            _tip.style.left = Math.max(4, x) + 'px';
+            _tip.style.top  = Math.max(4, y) + 'px';
+        }
+    }
+
+    /**
+     * Build the HTML tooltip content for the h2 `.mb-row-count-stat` span,
+     * reflecting the currently active global and column filters.
+     * Returns an HTML string stored in `data-mbtt`; never used as `title`.
+     */
+    function _buildH2CountTooltip(filteredCount, totalCount, absoluteTotal) {
+        function _nR(n) { return n === 1 ? `There is ${n} row` : `There are ${n} rows`; }
+        function _r(n)  { return n === 1 ? 'row' : 'rows'; }
+
+        const _gfEl  = document.getElementById('mb-global-filter-input');
+        const _gfVal = _gfEl ? (typeof stripFilterPrefix === 'function'
+            ? stripFilterPrefix(_gfEl.value || '') : (_gfEl.value || '')) : '';
+
+        const _allColInputs = Array.from(
+            document.querySelectorAll('table.tbl thead tr.mb-col-filter-row .mb-col-filter-input')
+        );
+        const _activeCol = _allColInputs.map(inp => {
+            const _raw = typeof stripFilterPrefix === 'function'
+                ? stripFilterPrefix(inp.value || '') : (inp.value || '');
+            if (!_raw.trim()) return null;
+            const _tbl = inp.closest('table.tbl');
+            const _hdr = _tbl ? Array.from(_tbl.querySelectorAll('thead tr:first-child th')) : [];
+            const _idx = parseInt(inp.dataset.colIdx || '-1', 10);
+            const _th  = (_idx >= 0 && _idx < _hdr.length) ? _hdr[_idx] : null;
+            return { colName: _th ? _cleanColHeaderText(_th) : `Column ${_idx + 1}`, expr: _raw.trim() };
+        }).filter(Boolean);
+
+        const _colHTML = _activeCol
+            .map(f => `'${f.colName}':${_mbttSpan(f.expr, 'cf')}`).join(', ');
+
+        const _abs = (absoluteTotal !== null && absoluteTotal !== totalCount)
+            ? absoluteTotal : null;
+        const _isMultiTable = activeDefinition && activeDefinition.tableMode === 'multi';
+        const _tLabel = _isMultiTable ? 'in ALL sub-tables' : 'in this table';
+
+        if (_abs !== null) {
+            return `${_nR(filteredCount)} visible; ${totalCount} after global filter; ${_abs} total unfiltered`;
+        }
+        if (filteredCount === totalCount) {
+            return `${_nR(totalCount)} total unfiltered ${_tLabel}`;
+        }
+        if (_activeCol.length > 0 && _gfVal) {
+            return `${_nR(filteredCount)} visible after the global filter ${_mbttSpan(_gfVal, 'gf')} and column filters ${_colHTML} from ${totalCount} total ${_r(totalCount)} ${_tLabel}`;
+        } else if (_activeCol.length > 0) {
+            return `${_nR(filteredCount)} visible after column filters ${_colHTML} from ${totalCount} total ${_r(totalCount)} ${_tLabel}`;
+        } else if (_gfVal) {
+            return `${_nR(filteredCount)} visible after the global filter ${_mbttSpan(_gfVal, 'gf')} from ${totalCount} total ${_r(totalCount)} ${_tLabel}`;
+        }
+        return `${_nR(filteredCount)} of ${totalCount} ${_r(totalCount)} visible ${_tLabel}`;
+    }
+
     function updateH2Count(filteredCount, totalCount, absoluteTotal = null) {
         Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}, absoluteTotal=${absoluteTotal}`);
 
@@ -15075,6 +15303,11 @@ ${sections.join('\n')}
                 countText = (filteredCount === totalCount) ? `(${totalCount})` : `(${filteredCount} of ${totalCount})`;
             }
             span.textContent = countText;
+
+            // Store rich HTML tooltip in data-mbtt (picked up by the custom
+            // #mb-stat-tooltip hover system); do NOT use span.title (plain text only).
+            span.removeAttribute('title');
+            span.dataset.mbtt = _buildH2CountTooltip(filteredCount, totalCount, absoluteTotal);
 
             // Positioning Logic: Ensure the row count stays immediately after header text, before Master Toggle or Global Filter
             const referenceNode = targetH2.querySelector('.mb-master-toggle') || filterContainer;
@@ -16467,6 +16700,9 @@ ${sections.join('\n')}
                             }
                         }
                     }
+                    // Update h3 row-count-stat tooltip for this table — reflects
+                    // the current combination of global, column, and STF filters.
+                    _updateSubTableH3Tooltip(table);
                 });
             } else {
                 // Single table mode: show modeLabel and all filter info
@@ -18591,69 +18827,9 @@ ${sections.join('\n')}
          * "locally_filtered" (numerator) = rows currently visible (not hidden by anything).
          */
         function updateSubTableRowCount() {
-            const h3 = findH3ForTable(table);
-            if (!h3) return;
-            const countStat = h3.querySelector('.mb-row-count-stat');
-            if (!countStat) return;
-
-            const allTbodyRows = Array.from(table.querySelectorAll('tbody tr'));
-
-            // Total rows in unfiltered subtable (stored at initial render)
-            const total = parseInt(table.dataset.mbTotalRows || '0', 10) || allTbodyRows.length;
-
-            // Denominator: rows visible before the subtable filter ran
-            // = currently visible + rows hidden only by this subtable filter
-            const denominator = allTbodyRows.filter(r =>
-                r.style.display !== 'none' || r.dataset.mbStfHidden
-            ).length;
-
-            // Numerator: rows currently visible (passes all filters)
-            const visible = allTbodyRows.filter(r => r.style.display !== 'none').length;
-
-            // Global filter expression (stripped of mode prefix)
-            const _gfEl  = document.getElementById('mb-global-filter-input');
-            const _gfVal = _gfEl ? (typeof stripFilterPrefix === 'function'
-                ? stripFilterPrefix(_gfEl.value || '')
-                : (_gfEl.value || '')) : '';
-
-            // Sub-table filter expression
-            const _stfVal = filterInput ? filterInput.value.trim() : '';
-
-            if (_stfVal) {
-                // Sub-table filter active: (visible of denominator)/total
-                // Split into two titled spans so each part has its own tooltip.
-                // When denominator === total the global filter has no effect, so
-                // omit the /total suffix (no need for a separate N tooltip either).
-                countStat.title = ''; // clear any whole-span title
-                if (denominator === total) {
-                    // STF only, no global filter narrowing
-                    const _tip = _gfVal
-                        ? `${visible} rows match the sub-table filter "${_stfVal}" from ${denominator} rows already filtered by the global filter "${_gfVal}"`
-                        : `${visible} rows match the sub-table filter "${_stfVal}" from ${denominator} rows in this sub-table`;
-                    countStat.innerHTML =
-                        `<span title="${_tip}">(${visible} of ${denominator})</span>`;
-                } else {
-                    // Both STF and global filter active: (n of M)/N
-                    const _tipBracketed = `${visible} rows filtered by the sub-table filter "${_stfVal}" from the ${denominator} rows already filtered by the global filter "${_gfVal}"`;
-                    const _tipTotal     = `${total} total rows unfiltered in this sub-table`;
-                    countStat.innerHTML =
-                        `<span title="${_tipBracketed}">(${visible} of ${denominator})</span>` +
-                        `/<span title="${_tipTotal}">${total}</span>`;
-                }
-            } else {
-                // No sub-table filter active: (globally_filtered of total) or plain (total)
-                if (denominator === total) {
-                    countStat.title   = '';
-                    countStat.innerHTML = `(${denominator})`;
-                } else {
-                    // Global filter only: (M of N) with a single tooltip on the whole span
-                    const _tipGlobal = _gfVal
-                        ? `${denominator} rows filtered from the full ${total} rows in this sub-table by the global filter "${_gfVal}"`
-                        : `${denominator} of ${total} rows visible in this sub-table`;
-                    countStat.title   = _tipGlobal;
-                    countStat.innerHTML = `(${denominator} of ${total})`;
-                }
-            }
+            // Delegate to the module-level helper so both the STF path (this
+            // closure) and the runFilter column-filter path share identical logic.
+            if (table) _updateSubTableH3Tooltip(table);
         }
 
         /**
@@ -18950,6 +19126,119 @@ ${sections.join('\n')}
      *
      * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
      */
+    /**
+     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
+     * reflecting the current combination of global filter, column filters, and
+     * sub-table filter active on this specific table.
+     *
+     * Called from:
+     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
+     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
+     *
+     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
+     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
+     *
+     * @param {HTMLTableElement} tbl  The live sub-table element.
+     */
+    function _updateSubTableH3Tooltip(tbl) {
+        const _h3 = findH3ForTable(tbl);
+        if (!_h3) return;
+        const _countStat = _h3.querySelector('.mb-row-count-stat');
+        if (!_countStat) return;
+
+        const _allRows = Array.from(tbl.querySelectorAll('tbody tr'));
+        const _total   = parseInt(tbl.dataset.mbTotalRows || '0', 10) || _allRows.length;
+        const _denom   = _allRows.filter(r =>
+            r.style.display !== 'none' || r.dataset.mbStfHidden
+        ).length;
+        const _visible = _allRows.filter(r => r.style.display !== 'none').length;
+
+        const _gfEl  = document.getElementById('mb-global-filter-input');
+        const _gfVal = _gfEl ? (typeof stripFilterPrefix === 'function'
+            ? stripFilterPrefix(_gfEl.value || '') : (_gfEl.value || '')) : '';
+
+        const _stfInp = _h3.querySelector(
+            '.mb-subtable-filter-container input[type="text"]');
+        const _stfVal = _stfInp ? _stfInp.value.trim() : '';
+
+        const _cfRow    = tbl.querySelector('thead tr.mb-col-filter-row');
+        const _hdrCells = Array.from(tbl.querySelectorAll('thead tr:first-child th'));
+        const _activeCol = _cfRow
+            ? Array.from(_cfRow.querySelectorAll('.mb-col-filter-input'))
+                .map(inp => {
+                    const _raw = typeof stripFilterPrefix === 'function'
+                        ? stripFilterPrefix(inp.value || '') : (inp.value || '');
+                    if (!_raw.trim()) return null;
+                    const _idx = parseInt(inp.dataset.colIdx || '-1', 10);
+                    const _th  = (_idx >= 0 && _idx < _hdrCells.length) ? _hdrCells[_idx] : null;
+                    return { colName: _th ? _cleanColHeaderText(_th) : `Column ${_idx + 1}`,
+                             expr: _raw.trim() };
+                }).filter(Boolean)
+            : [];
+
+        // HTML column filter summary — each expression colored with cf class
+        const _colHTML = _activeCol
+            .map(f => `'${f.colName}':${_mbttSpan(f.expr, 'cf')}`).join(', ');
+
+        function _nRows(n) { return n === 1 ? `There is ${n} row` : `There are ${n} rows`; }
+        function _r(n)     { return n === 1 ? 'row' : 'rows'; }
+
+        // Build the rich HTML tooltip string
+        let _html;
+        if (_stfVal) {
+            if (_denom === _total) {
+                // STF only — no global/column narrowing
+                _html = _gfVal
+                    ? `${_nRows(_visible)} filtered by the sub-table filter ${_mbttSpan(_stfVal, 'stf')} from the ${_denom} ${_r(_denom)} already filtered by the global filter ${_mbttSpan(_gfVal, 'gf')}`
+                    : `${_nRows(_visible)} matching the sub-table filter ${_mbttSpan(_stfVal, 'stf')} from the ${_denom} ${_r(_denom)} in this sub-table`;
+            } else if (_activeCol.length > 0) {
+                // All three: global + STF + column
+                _html = `${_nRows(_visible)} left after the global filter ${_mbttSpan(_gfVal, 'gf')}, the sub-table filter ${_mbttSpan(_stfVal, 'stf')} and the column level filters ${_colHTML} from ${_total} total unfiltered ${_r(_total)} in this sub-table`;
+            } else {
+                // Global + STF only
+                _html = `${_nRows(_visible)} filtered by the sub-table filter ${_mbttSpan(_stfVal, 'stf')} from the ${_denom} ${_r(_denom)} already filtered by the global filter ${_mbttSpan(_gfVal, 'gf')}`;
+            }
+        } else if (_denom !== _total) {
+            // No STF — global and/or column filters
+            if (_activeCol.length > 0 && _gfVal) {
+                _html = `${_nRows(_denom)} filtered by column filters ${_colHTML} from ${_total} ${_r(_total)} in this sub-table, further narrowed by the global filter ${_mbttSpan(_gfVal, 'gf')}`;
+            } else if (_activeCol.length > 0) {
+                _html = `${_nRows(_denom)} filtered by sub-table column filters ${_colHTML} from ${_total} ${_r(_total)} in this sub-table`;
+            } else {
+                _html = _gfVal
+                    ? `${_nRows(_denom)} filtered from the full ${_total} ${_r(_total)} in this sub-table by the global filter ${_mbttSpan(_gfVal, 'gf')}`
+                    : `${_nRows(_denom)} of ${_total} ${_r(_total)} visible in this sub-table`;
+            }
+        } else {
+            // No filter active
+            _html = `${_nRows(_total)} total unfiltered in this sub-table`;
+        }
+
+        // Store rich tooltip in data-mbtt; remove any stale native title
+        // so browsers don't show both tooltips simultaneously.
+        // The countStat textContent / child spans are managed by the call sites
+        // (renderGroupedTable sets it; _mkSpan child spans remain untouched here).
+        _countStat.removeAttribute('title');
+        // Clear stale data-mbtt on child spans (split (n/M)/N case)
+        _countStat.querySelectorAll('[data-mbtt]').forEach(el => el.removeAttribute('data-mbtt'));
+
+        // For the (n of M)/N split-span case the countStat has two child spans
+        // each with their own title — update them to data-mbtt too.
+        const _children = _countStat.querySelectorAll('span');
+        if (_children.length === 2 && _stfVal && _denom !== _total) {
+            // Bracketed span: (n of M)
+            _children[0].removeAttribute('title');
+            _children[0].dataset.mbtt = _html;
+            // Total span: /N
+            const _tipN = `${_nRows(_total)} total unfiltered in this sub-table`;
+            _children[1].removeAttribute('title');
+            _children[1].dataset.mbtt = _tipN;
+            _countStat.dataset.mbtt = ''; // outer span defers to children
+        } else {
+            _countStat.dataset.mbtt = _html;
+        }
+    }
+
     function updateH2CountFromSubtables() {
         const tables = Array.from(document.querySelectorAll('table.tbl'))
             .filter(t => t.querySelector('.mb-col-filter-row'));
@@ -19348,6 +19637,9 @@ ${sections.join('\n')}
                     container.appendChild(h3);
                     container.appendChild(table);
                 }
+                // Set initial tooltip on the count-stat span now that h3 and table
+                // are in the live DOM (findH3ForTable requires both to be connected).
+                _updateSubTableH3Tooltip(table);
 
                 // Add "Show all" button if a seeAllUrl was found — inserted at the beginning of subTableControls
                 if (group.seeAllUrl) {
@@ -19467,6 +19759,8 @@ ${sections.join('\n')}
                 if (countStat) {
                     countStat.textContent = (group.rows.length === totalInGroup) ? `(${totalInGroup})` : `(${group.rows.length} of ${totalInGroup})`;
                 }
+                // Refresh h3 tooltip to reflect current filter state
+                _updateSubTableH3Tooltip(table);
 
                 // Ensure sub-table controls exist (they may be missing if table was created during initial filter)
                 if (!h3.querySelector('.mb-subtable-controls')) {
