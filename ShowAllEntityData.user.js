@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.222+2026-03-17
+// @version      9.99.223+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2999,8 +2999,10 @@
             // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Artist RGs',         params: { all: '1', va: '0' } },
-                { label: '🧮 Various Artists RGs', params: { all: '1', va: '1' } }
+                { label: '🧮 Official RGs',         params: { all: '0', va: '0' } },
+                { label: '🧮 Official VA RGs',      params: { all: '0', va: '1' } },
+                { label: '🧮 Artist RGs',           params: { all: '1', va: '0' } },
+                { label: '🧮 Various Artists RGs',  params: { all: '1', va: '1' } }
             ],
             features: {
                 columnErasers: [
@@ -10722,9 +10724,16 @@
         if (conf.label.includes('Show all')) {
             // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
             eb.title = `Fetch all the table data from the MusicBrainz backend database`;
+        } else if (conf.label.includes('Official VA RGs')) {
+            // Must be checked BEFORE 'Various Artists RGs' and 'Official RGs' / 'Artist RGs'
+            eb.title = 'Fetch all official various artists release groups from the MusicBrainz backend database';
         } else if (conf.label.includes('Various Artists RGs')) {
             // Must be checked BEFORE 'Artist RGs' because the VA label also contains 'Artist RGs'
             eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
+        } else if (conf.label.includes('Official RGs')) {
+            // Must be checked BEFORE 'Artist RGs' because 'Official RGs' does not contain 'Artist'
+            // but guard ordering is important: 'Official VA RGs' already matched above
+            eb.title = 'Fetch all official artist release groups from the MusicBrainz backend database';
         } else if (conf.label.includes('Artist RGs')) {
             eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database (combined)';
         } else if (conf.label.includes('Artist releases')) {

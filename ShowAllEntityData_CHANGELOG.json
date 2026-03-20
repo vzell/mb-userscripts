@@ -1,5 +1,18 @@
 [
     {
+      "version": "9.99.223",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "✨ New Features / Changes",
+          "items": [
+            "artist-releasegroups pageDefinition: re-introduced the two official-only fetch buttons '🧮 Official RGs' (`{ all: '0', va: '0' }`) and '🧮 Official VA RGs' (`{ all: '0', va: '1' }`) as the first two entries in the `buttons` array, before the existing combined '🧮 Artist RGs' and '🧮 Various Artists RGs' buttons. `params` alignment fixed to use consistent spacing across all four button entries.",
+            "Tooltip chain: added two new `else if` branches for the re-introduced buttons. Branch order (most-specific first): 'Official VA RGs' → 'Various Artists RGs' → 'Official RGs' → 'Artist RGs'. Tooltips: '🧮 Official RGs' → 'Fetch all official artist release groups from the MusicBrainz backend database'; '🧮 Official VA RGs' → 'Fetch all official various artists release groups from the MusicBrainz backend database'."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.222",
       "date": "2026-03-17",
       "sections": [
