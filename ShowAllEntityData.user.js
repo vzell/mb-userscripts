@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.228+2026-03-17
+// @version      9.99.229+2026-03-17
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22593,34 +22593,57 @@ ${sections.join('\n')}
 
         // ── Trailing h2 relocation ───────────────────────────────────────────
         // Some pages have h2 sections (Relationships, Related works, etc.) that
-        // MusicBrainz renders AFTER the data-table h2.  Move all such trailing
-        // h2s to immediately before the data-table h2, after any h2s that were
-        // already there.  This keeps the page structure logical without hiding
-        // content.
+        // MusicBrainz renders AFTER the data-table h2.  Move each such section
+        // — the h2 heading AND all sibling elements that follow it up to the next
+        // h2 — to immediately before the data-table h2.  Sections that were
+        // already before the data h2 are left in place.
         //
         // Strategy:
-        //   1. Identify the "data h2" — the one with .mb-row-count-stat.
-        //   2. Collect all h2s in #content that follow it in DOM order.
-        //   3. Insert them directly before the data h2, in their original
-        //      relative order (preserving document order among themselves).
+        //   1. Find the "data h2" — the one carrying .mb-row-count-stat.
+        //   2. Collect trailing h2s (those that follow the data h2 in DOM order).
+        //   3. For each trailing h2 (processed in reverse document order so the
+        //      first trailing section ends up immediately before the data h2):
+        //      a. Gather the h2 itself plus every following sibling up to (but
+        //         not including) the next h2 sibling — this is the section content.
+        //      b. insertBefore each node in the section in front of the data h2.
         try {
             const _content = document.getElementById('content');
             if (_content) {
                 const _allH2s = Array.from(_content.querySelectorAll('h2'));
                 const _dataH2 = _allH2s.find(h => h.querySelector('.mb-row-count-stat'));
                 if (_dataH2) {
-                    // Collect h2s that appear after the data h2 in DOM order
+                    // Trailing h2s: those that the data h2 precedes in document order
                     const _trailing = _allH2s.filter(h =>
                         h !== _dataH2 &&
                         (_dataH2.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)
                     );
+
                     if (_trailing.length > 0) {
-                        // Insert each trailing h2 before the data h2 (in original order)
-                        _trailing.forEach(h2 => {
-                            _dataH2.parentNode.insertBefore(h2, _dataH2);
+                        // Process in reverse order so earlier sections land first
+                        // (each insert goes before the data h2, so reversing
+                        // ensures the original sequence is preserved).
+                        [..._trailing].reverse().forEach(h2 => {
+                            // Collect all nodes from h2 through its following siblings
+                            // up to (but not including) the next h2 sibling.
+                            // We snapshot them first because insertBefore mutates the live
+                            // NodeList as we iterate.
+                            const _sectionNodes = [];
+                            let _cur = h2;
+                            while (_cur) {
+                                if (_cur !== h2 && _cur.nodeType === Node.ELEMENT_NODE &&
+                                    _cur.tagName === 'H2') break; // stop before next h2
+                                _sectionNodes.push(_cur);
+                                _cur = _cur.nextSibling;
+                            }
+
+                            // Move each node in forward order before the data h2
+                            _sectionNodes.forEach(node => {
+                                _dataH2.parentNode.insertBefore(node, _dataH2);
+                            });
                         });
+
                         Lib.debug('cleanup',
-                            `Relocated ${_trailing.length} trailing h2(s) before data h2`);
+                            `Relocated ${_trailing.length} trailing h2 section(s) before data h2`);
                     }
                 }
             }

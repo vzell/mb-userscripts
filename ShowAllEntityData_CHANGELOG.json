@@ -1,5 +1,17 @@
 [
     {
+      "version": "9.99.229",
+      "date": "2026-03-17",
+      "sections": [
+        {
+          "label": "🐛 Bug Fixes",
+          "items": [
+            "Trailing h2 relocation (fix for 9.99.228): only the bare `<h2>` element was being moved, not the section content that follows it (relationship lists, related-work tables, etc.). Fixed by collecting each trailing h2 plus all of its following siblings up to (but not including) the next sibling h2 as a 'section node list', then moving the entire list before the data h2. Sections are processed in reverse document order so that after all insertions the final order before the data h2 matches the original trailing order. Sibling node collection walks `nextSibling` (not `nextElementSibling`) to capture text nodes and comments as well as elements."
+          ]
+        }
+      ]
+    },
+    {
       "version": "9.99.228",
       "date": "2026-03-17",
       "sections": [
