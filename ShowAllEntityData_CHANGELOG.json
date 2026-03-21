@@ -1,5 +1,35 @@
 [
     {
+        "version": "9.99.260",
+        "date": "2026-03-20",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Auto-resize — Event column (and any column with a `<a class='wrap-anywhere'>` anchor) still wrapped even after the previous two fixes (sampling removal + auto table layout). Root cause confirmed: `el.style.whiteSpace = 'nowrap'` and `el.style.overflowWrap = 'normal'` are normal inline style declarations and are beaten by any `!important` rule in an external stylesheet (MusicBrainz CSS uses `.wrap-anywhere { overflow-wrap: anywhere; }` which in some build variants carries `!important`, and similarly for `word-break`). An `!important` inline declaration — set via `el.style.setProperty(name, value, 'important')` — wins the cascade over ALL author stylesheet rules including those with `!important`. All text-wrap property assignments in both `toggleAutoResizeColumns` and `toggleSubTableAutoResize` (for the `measureDiv` container itself, all descendant element loops, and all `liClone` loops) have been changed to `setProperty(..., 'important')`. This guarantees that no external CSS rule can reintroduce wrapping during measurement."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.258",
+        "date": "2026-03-20",
+        "sections": [
+            {
+                "label": "✨ New Features / Changes",
+                "items": [
+                    "pageDefinitions — `area-events` and `artist-events`: added 'Place', 'Area', 'Country' to `collapsableColumns` so the three synthetic columns produced by the new multi-row-aware `splitLocation` extractor participate in the collapse/expand toggle infrastructure."
+                ]
+            },
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Auto-resize — Event column (and any column containing an inline-block element such as `.mb-eaa-inline-ph` followed by a `<a class='wrap-anywhere'>` anchor) wrapped prematurely after auto-resize. Root cause: `table-layout:fixed` constrains every column to exactly the colgroup width; a `wrap-anywhere` anchor inside a column that is sized to exactly the measured single-line width has no headroom and breaks at the first soft-wrap point (typically the space before a `<span class='comment'>`). Fix: switch both `toggleAutoResizeColumns` and `toggleSubTableAutoResize` from `table-layout:fixed` to `table-layout:auto`, and instead set `min-width` on each `<th>` header cell. Under auto layout the browser uses the measured minimum as a floor but is free to widen the column when content requires it, eliminating spurious wraps while still preventing columns from collapsing below their measured content width. `restoreOriginalTableState` now also clears `th.style.minWidth` on restore."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.257",
         "date": "2026-03-20",
         "sections": [

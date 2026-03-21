@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.257+2026-03-20
+// @version      9.99.260+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -10886,11 +10886,10 @@ a { color: #1565c0; }`;
 
             // ── Measurement div ───────────────────────────────────────────────
             const measureDiv = document.createElement('div');
-            measureDiv.style.cssText = `
-                position: absolute; visibility: hidden; white-space: nowrap;
-                top: -9999px; left: -9999px; display: inline-block;
-                font-size: inherit; padding: 4px 8px;
-            `;
+            measureDiv.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;left:-9999px;display:inline-block;font-size:inherit;padding:4px 8px;';
+            measureDiv.style.setProperty('white-space',   'nowrap',  'important');
+            measureDiv.style.setProperty('overflow-wrap', 'normal',  'important');
+            measureDiv.style.setProperty('word-break',    'normal',  'important');
             document.body.appendChild(measureDiv);
 
             // Measure header widths
@@ -10904,17 +10903,16 @@ a { color: #1565c0; }`;
                 measureDiv.innerHTML = '';
                 Array.from(th.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
                 measureDiv.querySelectorAll('*').forEach(el => {
-                    el.style.whiteSpace   = 'nowrap';
-                    el.style.overflowWrap = 'normal';
-                    el.style.wordBreak    = 'normal';
+                    el.style.setProperty('white-space',   'nowrap',  'important');
+                    el.style.setProperty('overflow-wrap', 'normal',  'important');
+                    el.style.setProperty('word-break',    'normal',  'important');
                 });
                 columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
             });
 
-            // Measure data-cell widths (sample up to 100 rows)
-            const rows       = table.querySelectorAll('tbody tr');
-            const sampleStep = Math.max(1, Math.floor(rows.length / Math.min(rows.length, 100)));
-            for (let i = 0; i < rows.length; i += sampleStep) {
+            // Measure ALL data rows — no sampling.
+            const rows = table.querySelectorAll('tbody tr');
+            for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
                 if (row.style.display === 'none') continue;
                 Array.from(row.cells).forEach((cell, colIndex) => {
@@ -10927,9 +10925,9 @@ a { color: #1565c0; }`;
                     measureDiv.innerHTML = '';
                     Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
                     measureDiv.querySelectorAll('*').forEach(el => {
-                        el.style.whiteSpace   = 'nowrap';
-                        el.style.overflowWrap = 'normal';
-                        el.style.wordBreak    = 'normal';
+                        el.style.setProperty('white-space',   'nowrap',  'important');
+                        el.style.setProperty('overflow-wrap', 'normal',  'important');
+                        el.style.setProperty('word-break',    'normal',  'important');
                     });
                     columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
 
@@ -10940,13 +10938,13 @@ a { color: #1565c0; }`;
                         if (li.classList.contains('mb-caa-art-li')) return;
                         const liClone = li.cloneNode(true);
                         liClone.style.display     = 'inline-block';
-                        liClone.style.whiteSpace  = 'nowrap';
-                        liClone.style.overflowWrap = 'normal';
-                        liClone.style.wordBreak   = 'normal';
+                        liClone.style.setProperty('white-space',   'nowrap',  'important');
+                        liClone.style.setProperty('overflow-wrap', 'normal',  'important');
+                        liClone.style.setProperty('word-break',    'normal',  'important');
                         liClone.querySelectorAll('*').forEach(el => {
-                            el.style.whiteSpace   = 'nowrap';
-                            el.style.overflowWrap = 'normal';
-                            el.style.wordBreak    = 'normal';
+                            el.style.setProperty('white-space',   'nowrap',  'important');
+                            el.style.setProperty('overflow-wrap', 'normal',  'important');
+                            el.style.setProperty('word-break',    'normal',  'important');
                         });
                         measureDiv.innerHTML = '';
                         measureDiv.appendChild(liClone);
@@ -10977,7 +10975,7 @@ a { color: #1565c0; }`;
                                 const liClone = li.cloneNode(true);
                                 liClone.style.display     = '';
                                 liClone.style.whiteSpace  = 'nowrap';
-                                liClone.style.overflowWrap = 'normal';
+                                liClone.style.setProperty('overflow-wrap', 'normal', 'important');
                                 liClone.style.wordBreak   = 'normal';
                                 // Strip the <img> thumbnail itself — it has a fixed width and
                                 // its natural-width is not what determines column width.
@@ -10990,9 +10988,9 @@ a { color: #1565c0; }`;
                                 measureDiv.innerHTML = '';
                                 measureDiv.appendChild(liClone);
                                 measureDiv.querySelectorAll('*').forEach(el => {
-                                    el.style.whiteSpace   = 'nowrap';
-                                    el.style.overflowWrap = 'normal';
-                                    el.style.wordBreak    = 'normal';
+                                    el.style.setProperty('white-space',   'nowrap',  'important');
+                                    el.style.setProperty('overflow-wrap', 'normal',  'important');
+                                    el.style.setProperty('word-break',    'normal',  'important');
                                 });
                                 columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
                             });
@@ -11016,8 +11014,9 @@ a { color: #1565c0; }`;
             columnWidths.forEach((width, index) => {
                 const col = document.createElement('col');
                 if (columnVisible[index]) {
+                    // Leave visible col widths unset (auto layout); th.style.minWidth
+                    // provides the floor so wrap-anywhere cells cannot cap the column.
                     const finalWidth = Math.ceil(width + 20);
-                    col.style.width = `${finalWidth}px`;
                     totalWidth += finalWidth;
                     visibleCount++;
                 } else {
@@ -11027,9 +11026,14 @@ a { color: #1565c0; }`;
                 colgroup.appendChild(col);
             });
 
-            table.style.tableLayout = 'fixed';
+            // Use auto layout (same rationale as toggleAutoResizeColumns)
+            table.style.tableLayout = 'auto';
             table.style.width       = `${totalWidth}px`;
             table.style.minWidth    = `${totalWidth}px`;
+            // Set min-width on each visible <th>
+            headers.forEach((th, idx) => {
+                if (columnVisible[idx]) th.style.minWidth = `${Math.ceil(columnWidths[idx] + 20)}px`;
+            });
 
             if (Lib.settings.sa_enable_column_resizing) makeColumnsResizable(table);
 
@@ -11074,6 +11078,10 @@ a { color: #1565c0; }`;
      * @param {Object} state - Original state object
      */
     function restoreOriginalTableState(table, state) {
+        // Clear th min-widths set by auto-resize
+        table.querySelectorAll('thead tr:first-child th').forEach(th => {
+            th.style.minWidth = '';
+        });
         // Restore table styles
         table.style.width = state.tableWidth || '';
         table.style.minWidth = state.tableMinWidth || '';
@@ -11282,16 +11290,13 @@ a { color: #1565c0; }`;
             //
             //   3. word-break: same — reset to normal so no mid-word breaks occur.
             const measureDiv = document.createElement('div');
-            measureDiv.style.cssText = `
-                position: absolute;
-                visibility: hidden;
-                white-space: nowrap;
-                word-break: normal;
-                overflow-wrap: normal;
-                font-family: inherit;
-                font-size: inherit;
-                padding: 4px 8px;
-            `;
+            // Use !important on text-wrap properties so that MusicBrainz stylesheet
+            // rules (including any with !important, e.g. .wrap-anywhere) cannot
+            // override them and cause wrapping inside the measureDiv.
+            measureDiv.style.cssText = 'position:absolute;visibility:hidden;font-family:inherit;font-size:inherit;padding:4px 8px;';
+            measureDiv.style.setProperty('white-space',   'nowrap',  'important');
+            measureDiv.style.setProperty('overflow-wrap', 'normal',  'important');
+            measureDiv.style.setProperty('word-break',    'normal',  'important');
             document.body.appendChild(measureDiv);
 
             // Measure header widths (ONLY for visible columns)
@@ -11325,9 +11330,9 @@ a { color: #1565c0; }`;
                 // explicit stylesheet rules like .wrap-anywhere{overflow-wrap:anywhere}.
                 // Setting the inline style on each element beats any stylesheet rule.
                 measureDiv.querySelectorAll('*').forEach(el => {
-                    el.style.whiteSpace   = 'nowrap';
-                    el.style.overflowWrap = 'normal';
-                    el.style.wordBreak    = 'normal';
+                    el.style.setProperty('white-space',   'nowrap',  'important');
+                    el.style.setProperty('overflow-wrap', 'normal',  'important');
+                    el.style.setProperty('word-break',    'normal',  'important');
                 });
 
                 const width = measureDiv.offsetWidth;
@@ -11337,12 +11342,11 @@ a { color: #1565c0; }`;
                 Lib.debug('resize', `Header ${colIndex}: "${th.textContent.trim()}" = ${width}px`);
             });
 
-            // Measure data cell widths (sample rows for performance, ONLY visible columns)
+            // Measure ALL data rows — no sampling.  Sampling caused long cells at
+            // odd/skipped indices to be missed, resulting in under-sized columns.
             const rows = table.querySelectorAll('tbody tr');
-            const sampleSize = Math.min(rows.length, 100); // Sample up to 100 rows
-            const sampleStep = Math.max(1, Math.floor(rows.length / sampleSize));
 
-            for (let i = 0; i < rows.length; i += sampleStep) {
+            for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
 
                 // Skip hidden rows
@@ -11365,9 +11369,9 @@ a { color: #1565c0; }`;
                     measureDiv.innerHTML = '';
                     Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
                     measureDiv.querySelectorAll('*').forEach(el => {
-                        el.style.whiteSpace   = 'nowrap';
-                        el.style.overflowWrap = 'normal';
-                        el.style.wordBreak    = 'normal';
+                        el.style.setProperty('white-space',   'nowrap',  'important');
+                        el.style.setProperty('overflow-wrap', 'normal',  'important');
+                        el.style.setProperty('word-break',    'normal',  'important');
                     });
                     columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
 
@@ -11380,13 +11384,13 @@ a { color: #1565c0; }`;
                         if (li.classList.contains('mb-caa-art-li')) return; // handled separately
                         const liClone = li.cloneNode(true);
                         liClone.style.display     = 'inline-block';
-                        liClone.style.whiteSpace  = 'nowrap';
-                        liClone.style.overflowWrap = 'normal';
-                        liClone.style.wordBreak   = 'normal';
+                        liClone.style.setProperty('white-space',   'nowrap',  'important');
+                        liClone.style.setProperty('overflow-wrap', 'normal',  'important');
+                        liClone.style.setProperty('word-break',    'normal',  'important');
                         liClone.querySelectorAll('*').forEach(el => {
-                            el.style.whiteSpace   = 'nowrap';
-                            el.style.overflowWrap = 'normal';
-                            el.style.wordBreak    = 'normal';
+                            el.style.setProperty('white-space',   'nowrap',  'important');
+                            el.style.setProperty('overflow-wrap', 'normal',  'important');
+                            el.style.setProperty('word-break',    'normal',  'important');
                         });
                         measureDiv.innerHTML = '';
                         measureDiv.appendChild(liClone);
@@ -11412,16 +11416,14 @@ a { color: #1565c0; }`;
             columnWidths.forEach((width, index) => {
                 const col = document.createElement('col');
 
-                // Only set width for VISIBLE columns
                 if (columnVisible[index]) {
-                    // Add some padding to the calculated width
-                    const finalWidth = Math.ceil(width + 20); // 20px extra for comfort
-                    col.style.width = `${finalWidth}px`;
+                    // In table-layout:auto, col.style.width can act as a hard cap in
+                    // some browsers even when th.style.minWidth is larger.  Leave
+                    // visible col widths unset; min-width on <th> provides the floor.
                     visibleColumnCount++;
-                    Lib.debug('resize', `Table ${tableIndex}, Column ${index}: ${finalWidth}px (visible)`);
+                    Lib.debug('resize', `Table ${tableIndex}, Column ${index}: ${Math.ceil(width + 20)}px min-width (visible)`);
                 } else {
-                    // For hidden columns, don't set a width - let them stay at their natural (hidden) size
-                    col.style.width = '0px';
+                    col.style.width   = '0px';
                     col.style.display = 'none';
                     Lib.debug('resize', `Table ${tableIndex}, Column ${index}: 0px (hidden)`);
                 }
@@ -11429,8 +11431,20 @@ a { color: #1565c0; }`;
                 colgroup.appendChild(col);
             });
 
-            // Set table to use fixed layout for consistency
-            table.style.tableLayout = 'fixed';
+            // Use auto table layout so that wrap-anywhere / long-word cells can
+            // still expand past the measured minimum width when needed, preventing
+            // premature line-breaks in cells that contain inline-block elements
+            // (e.g. .mb-eaa-inline-ph) followed by wrap-anywhere anchors.
+            // min-width on each <col> acts as a lower bound; the browser may widen
+            // columns further if required to avoid truncation.
+            table.style.tableLayout = 'auto';
+
+            // Set column min-widths on <th> so sticky auto layout respects them
+            headers.forEach((th, idx) => {
+                if (columnVisible[idx]) {
+                    th.style.minWidth = `${Math.ceil(columnWidths[idx] + 20)}px`;
+                }
+            });
 
             // Calculate total table width (only from visible columns)
             const totalWidth = columnWidths.reduce((sum, w, idx) => {
