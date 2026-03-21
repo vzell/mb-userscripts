@@ -58849,7 +58849,74 @@ Use all these background colors (and also the background color for the standard 
 
 ** CAA/EAA count wrong
 
-* TODO don't take the "cache" icon into account fo the unique value drop-dwon menu
+A couple of artwork related fixes:
+
+1.)
+
+In the "Statistics" UI panel, rename the current
+
+#+begin_example
+"`🖼️ Total ${_artKey} front artwork count`"
+#+end_example
+
+to
+
+#+begin_example
+"`🖼️ Total table rows with ${_artKey} artwork`"
+#+end_example
+
+it better describes what it's about.
+
+2.)
+
+There is some miscalculation going on with the current value of "`🖼️ Total ${_artKey} front artwork count`" (before it
+gets renamed). The value shown is always the same as the total number of rows in the table, which is clearly wrong.
+
+#+begin_example
+            {
+                // id used for live refresh from _showCaaCompletionToast when panel is open.
+                stat: `🖼️ Total ${_artKey} front artwork count`,
+                value: _totalCaaCount > 0
+                    ? `<span style="color:${C.accent};font-weight:600">${_totalCaaCount.toLocaleString()}</span>`
+                    : '<span id="mb-stats-art-count-val" style="color:#999">—</span>',
+                comment: _totalCaaCount > 0
+                    ? `Unique artwork links across ${subTblCount} sub-table${subTblCount > 1 ? 's' : ''}`
+                    : `Counting ${_artKey} links… (updates when loading completes)`,
+            },
+#+end_example
+
+Also the artwork count per sub-table (in the "multi"-table case) is wrong, eg.
+
+#+begin_example
+<td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; text-align: right; white-space: nowrap;">🖼️ <span style="color:#1565c0;font-weight:700">100</span></td>
+<td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85); text-align: right;"><span style="font-size:0.8em;color:#555">Filtered CAA artwork count</span></td>
+#+end_example
+
+It also is shown currently as the actual total number of rows per sub-table (well, at least the wrong counts per
+sub-table when summed up are consistent with what is shown for the grand total)
+
+The real artwork numbers per sub-table are not known until every table row is checked in the CoverArt Archive if there is artwork available (and then downloaded).
+
+A better approach would probably be, to check if the stripe of big images per sub-table have been completely downloaded
+and THEN display that count as the TOTAL number of CAA images per sub-table (which is then a fixed number which will not change again).
+
+When filters are in effect on a sub-table, count the number of big images in the CAA stripe again and display that value
+as the "Filtered CAA artwork count" per sub-table. Actually that number IS already calculated and displayed inside the
+toggle CAA artwork button, e.g. "102" in the following example
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/46e5c6a9-b0a7-4e42-9162-8f412705b09d/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">102</span></button>
+#+end_example
+
+whereas the total number of rows is always equal or greater then this number e.g. "104" for this example
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;100&lt;/span&gt; rows total unfiltered in this sub-table">(100)</span>
+#+end_example
+
+
+
+* DONE don't take the "cache" icon into account fo the unique value drop-dwon menu
 ** initial
 
 In all table columns where either CAA or EAA thumbnails together with the cache icons "🔵", "⚠️", etc are dislayed
