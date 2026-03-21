@@ -58101,8 +58101,29 @@ add a new configurable foreground and background color (default are the current 
 
 ** TODO add colors to the actual counts and add the background filter colors as the forground for the filter types
 
-add colors to the actual counts and add the background filter colors as the forground for the filter types
+small glitches
 
+1.)
+
+add a configurable fore- and background color (by default dark black on light grey) in the main configuration section
+("const configSchema") for both, the actual row count currently visible and the total unfiltered count in the row count
+span '"mb-row-count-stat"'
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 3 rows left after the global filter &lt;span class=&quot;mbtt-gf&quot;&gt;bruce&lt;/span&gt;, the sub-table filter &lt;span class=&quot;mbtt-stf&quot;&gt;version&lt;/span&gt; and the column level filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt;, 'Comment':&lt;span class=&quot;mbtt-cf&quot;&gt;2&lt;/span&gt; from 47 total unfiltered rows in this sub-table">(9 of 47)</span>
+#+end_example
+
+2.)
+
+colorize the row count tooltip in either the h2/h3 line even more:
+
+- add the same color as the foreground color from the global filter (red by default) to the string "global" filter (just
+  global) and the same color as the background color from the sub-table filter (green by default) to the string "column level" filters (just "column level").
+  So basically colorize the filter types like the actual filter expressions.
+
+** TODO fix the tooltip for the h2 lin in "multi"-table mode
+
+fix the tooltip for the h2 lin in "multi"-table mode
 
 * change hardcoded hightlight for col filter
 
