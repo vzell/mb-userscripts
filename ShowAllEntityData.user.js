@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.261+2026-03-20
+// @version      9.99.262+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -956,6 +956,13 @@
             type: 'checkbox',
             default: false,
             description: 'When enabled, appends the unique-value count badge to each exported column header in parentheses, e.g. "Label (7)".'
+        },
+
+        sa_export_include_sort_state: {
+            label: 'Include sort-state glyph in exported column headers',
+            type: 'checkbox',
+            default: true,
+            description: 'When enabled (default), preserves the active sort-state glyph (▲ or ▼) in exported column headers. When disabled, the glyph and priority superscript are stripped, leaving only the plain column name.'
         },
 
         // ============================================================
@@ -6057,6 +6064,16 @@
         const uniqSpan = clone.querySelector('.mb-col-uniq-count');
         const uniqCount = (uniqSpan && Lib.settings.sa_export_include_uniq_counts)
             ? uniqSpan.textContent.trim() : '';
+        // Capture sort-state glyph before removing sort-icon-btns
+        const includeSortState = Lib.settings.sa_export_include_sort_state !== false;
+        let sortSuffix = '';
+        if (includeSortState) {
+            const activeBtn = Array.from(clone.querySelectorAll('.sort-icon-btn.sort-icon-active'))[0];
+            if (activeBtn) {
+                const g = activeBtn.textContent.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
+                if (g === '▲' || g === '▼') sortSuffix = ` ${g}`;
+            }
+        }
         clone.querySelectorAll(
             '.sort-icon-btn, .mb-col-uniq-wrap, .column-resizer, ' +
             '.mb-col-collapse-hdr-btn, .mb-caa-col-hdr-btn, .mb-col-hdr-flex'
@@ -6064,6 +6081,7 @@
         let text = clone.textContent
             .replace(/[⇅▲▼📊▶◀▤⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim().replace(/\s+/g, ' ');
         if (!text && th.dataset.colName) text = th.dataset.colName.trim();
+        if (sortSuffix) text += sortSuffix;
         if (uniqCount) text = `${text} (${uniqCount})`;
         return text;
     }
@@ -9391,30 +9409,20 @@ ${sections.join('\n')}
                 `flex-shrink:0;user-select:none;`;
             let _subAllExpanded = false; // tracks current bulk state
             _subToggle.addEventListener('click', () => {
-                // Identical strategy to rewireGlobalCollapseButtonMulti:
-                // iterate ALL .mb-col-collapse-hdr-btn across every table,
-                // drive cells directly via _applyCollapseState.
+                // Cycle the column-detail expand/collapse bars inside each stats
+                // card. These are the [data-col-expanded] divs (colToggleBars)
+                // that show/hide the per-column breakdown table in each card.
                 const _targetExpand = !_subAllExpanded;
-                document.querySelectorAll('table.tbl .mb-col-collapse-hdr-btn').forEach(hdrBtn => {
-                    const colIdx = parseInt(hdrBtn.dataset.colIndex, 10);
-                    if (isNaN(colIdx)) return;
-                    const _tbl = hdrBtn.closest('table.tbl');
-                    if (!_tbl) return;
-                    Array.from(_tbl.querySelectorAll('tbody tr')).forEach(tr => {
-                        const td = tr.cells[colIdx];
-                        if (!td) return;
-                        const toggle = td.querySelector('.mb-cell-collapse-toggle');
-                        if (!toggle) return;
-                        _applyCollapseState(toggle, _targetExpand);
-                    });
-                    const hg = hdrBtn.querySelector('.mb-col-collapse-glyph');
-                    if (hg) hg.textContent = _targetExpand ? '▼' : '▶';
-                    hdrBtn.setAttribute('aria-expanded', _targetExpand ? 'true' : 'false');
-                });
-                // Update all sub-table collapse button glyphs
-                document.querySelectorAll('.mb-subtable-collapse-btn').forEach(btn => {
-                    if (btn.style.display !== 'none')
-                        btn.innerHTML = makeCollapseExpandBtnHTML(!_targetExpand);
+                body.querySelectorAll('[data-col-expanded]').forEach(bar => {
+                    const isExpanded = bar.dataset.colExpanded === 'true';
+                    if (isExpanded === _targetExpand) return;
+                    const _icon   = bar.querySelector('span');
+                    const _detail = bar.nextElementSibling;
+                    if (_detail && _detail.dataset.colDetailOf !== undefined) {
+                        bar.dataset.colExpanded    = _targetExpand ? 'true' : 'false';
+                        _detail.style.display      = _targetExpand ? '' : 'none';
+                        if (_icon) { _icon.textContent = _targetExpand ? '▼' : '▶'; _icon.style.transform = ''; }
+                    }
                 });
                 _subAllExpanded = _targetExpand;
                 _subToggle.textContent = _targetExpand ? '▼' : '▶';
@@ -15872,6 +15880,20 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * _mbttCount — wraps a numeric count in a pill colored by the
+     * sa_ui_row_count_color / sa_ui_row_count_bg settings, making row-count
+     * numbers inside tooltips visually distinct from the surrounding prose.
+     * @param {number|string} n
+     * @returns {string} HTML string.
+     */
+    function _mbttCount(n) {
+        const bg  = Lib.settings.sa_ui_row_count_bg    || '#e8e8e8';
+        const col = Lib.settings.sa_ui_row_count_color || '#111111';
+        return `<span style="background:${bg};color:${col};border-radius:2px;` +
+               `padding:0 3px;font-weight:bold;">${n}</span>`;
+    }
+
+    /**
      * Initialise the singleton custom tooltip for `.mb-row-count-stat` spans.
      * Safe to call multiple times — creates the div only once.
      */
@@ -15937,8 +15959,9 @@ a { color: #1565c0; }`;
      * Returns an HTML string stored in `data-mbtt`; never used as `title`.
      */
     function _buildH2CountTooltip(filteredCount, totalCount, absoluteTotal) {
-        function _nR(n) { return n === 1 ? `There is ${n} row` : `There are ${n} rows`; }
+        function _nR(n) { return n === 1 ? `There is ${_mbttCount(n)} row` : `There are ${_mbttCount(n)} rows`; }
         function _r(n)  { return n === 1 ? 'row' : 'rows'; }
+        function _cN(n) { return _mbttCount(n); }
 
         const _gfEl  = document.getElementById('mb-global-filter-input');
         const _gfVal = _gfEl ? (typeof stripFilterPrefix === 'function'
@@ -15973,13 +15996,13 @@ a { color: #1565c0; }`;
             return `${_nR(totalCount)} total unfiltered ${_tLabel}`;
         }
         if (_activeCol.length > 0 && _gfVal) {
-            return `${_nR(filteredCount)} visible after the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')} and ${_mbttLabel('column','cf')} filters ${_colHTML} from ${totalCount} total ${_r(totalCount)} ${_tLabel}`;
+            return `${_nR(filteredCount)} visible after the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')} and ${_mbttLabel('column','cf')} filters ${_colHTML} from ${_cN(totalCount)} total ${_r(totalCount)} ${_tLabel}`;
         } else if (_activeCol.length > 0) {
-            return `${_nR(filteredCount)} visible after ${_mbttLabel('column','cf')} filters ${_colHTML} from ${totalCount} total ${_r(totalCount)} ${_tLabel}`;
+            return `${_nR(filteredCount)} visible after ${_mbttLabel('column','cf')} filters ${_colHTML} from ${_cN(totalCount)} total ${_r(totalCount)} ${_tLabel}`;
         } else if (_gfVal) {
-            return `${_nR(filteredCount)} visible after the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')} from ${totalCount} total ${_r(totalCount)} ${_tLabel}`;
+            return `${_nR(filteredCount)} visible after the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')} from ${_cN(totalCount)} total ${_r(totalCount)} ${_tLabel}`;
         }
-        return `${_nR(filteredCount)} of ${totalCount} ${_r(totalCount)} visible ${_tLabel}`;
+        return `${_nR(filteredCount)} of ${_cN(totalCount)} ${_r(totalCount)} visible ${_tLabel}`;
     }
 
     function updateH2Count(filteredCount, totalCount, absoluteTotal = null) {
@@ -20175,8 +20198,9 @@ a { color: #1565c0; }`;
         const _colHTML = _activeCol
             .map(f => `'${f.colName}':${_mbttSpan(f.expr, 'cf')}`).join(', ');
 
-        function _nRows(n) { return n === 1 ? `There is ${n} row` : `There are ${n} rows`; }
+        function _nRows(n) { return n === 1 ? `There is ${_mbttCount(n)} row` : `There are ${_mbttCount(n)} rows`; }
         function _r(n)     { return n === 1 ? 'row' : 'rows'; }
+        function _cN(n)    { return _mbttCount(n); }
 
         // Build the rich HTML tooltip string
         let _html;
@@ -20184,24 +20208,24 @@ a { color: #1565c0; }`;
             if (_denom === _total) {
                 // STF only — no global/column narrowing
                 _html = _gfVal
-                    ? `${_nRows(_visible)} filtered by the ${_mbttLabel('sub-table','stf')} filter ${_mbttSpan(_stfVal, 'stf')} from the ${_denom} ${_r(_denom)} already filtered by the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}`
-                    : `${_nRows(_visible)} matching the ${_mbttLabel('sub-table','stf')} filter ${_mbttSpan(_stfVal, 'stf')} from the ${_denom} ${_r(_denom)} in this sub-table`;
+                    ? `${_nRows(_visible)} filtered by the ${_mbttLabel('sub-table','stf')} filter ${_mbttSpan(_stfVal, 'stf')} from the ${_cN(_denom)} ${_r(_denom)} already filtered by the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}`
+                    : `${_nRows(_visible)} matching the ${_mbttLabel('sub-table','stf')} filter ${_mbttSpan(_stfVal, 'stf')} from the ${_cN(_denom)} ${_r(_denom)} in this sub-table`;
             } else if (_activeCol.length > 0) {
                 // All three: global + STF + column
-                _html = `${_nRows(_visible)} left after the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}, the ${_mbttLabel('sub-table','stf')} filter ${_mbttSpan(_stfVal, 'stf')} and the ${_mbttLabel('column level','cf')} filters ${_colHTML} from ${_total} total unfiltered ${_r(_total)} in this sub-table`;
+                _html = `${_nRows(_visible)} left after the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}, the ${_mbttLabel('sub-table','stf')} filter ${_mbttSpan(_stfVal, 'stf')} and the ${_mbttLabel('column level','cf')} filters ${_colHTML} from ${_cN(_total)} total unfiltered ${_r(_total)} in this sub-table`;
             } else {
                 // Global + STF only
-                _html = `${_nRows(_visible)} filtered by the ${_mbttLabel('sub-table','stf')} filter ${_mbttSpan(_stfVal, 'stf')} from the ${_denom} ${_r(_denom)} already filtered by the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}`;
+                _html = `${_nRows(_visible)} filtered by the ${_mbttLabel('sub-table','stf')} filter ${_mbttSpan(_stfVal, 'stf')} from the ${_cN(_denom)} ${_r(_denom)} already filtered by the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}`;
             }
         } else if (_denom !== _total) {
             // No STF — global and/or column filters
             if (_activeCol.length > 0 && _gfVal) {
-                _html = `${_nRows(_denom)} filtered by ${_mbttLabel('column','cf')} filters ${_colHTML} from ${_total} ${_r(_total)} in this sub-table, further narrowed by the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}`;
+                _html = `${_nRows(_denom)} filtered by ${_mbttLabel('column','cf')} filters ${_colHTML} from ${_cN(_total)} ${_r(_total)} in this sub-table, further narrowed by the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}`;
             } else if (_activeCol.length > 0) {
-                _html = `${_nRows(_denom)} filtered by ${_mbttLabel('sub-table','stf')} ${_mbttLabel('column','cf')} filters ${_colHTML} from ${_total} ${_r(_total)} in this sub-table`;
+                _html = `${_nRows(_denom)} filtered by ${_mbttLabel('sub-table','stf')} ${_mbttLabel('column','cf')} filters ${_colHTML} from ${_cN(_total)} ${_r(_total)} in this sub-table`;
             } else {
                 _html = _gfVal
-                    ? `${_nRows(_denom)} filtered from the full ${_total} ${_r(_total)} in this sub-table by the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}`
+                    ? `${_nRows(_denom)} filtered from the full ${_cN(_total)} ${_r(_total)} in this sub-table by the ${_mbttLabel('global','gf')} filter ${_mbttSpan(_gfVal, 'gf')}`
                     : `${_nRows(_denom)} of ${_total} ${_r(_total)} visible in this sub-table`;
             }
         } else {
