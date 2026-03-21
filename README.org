@@ -45966,110 +45966,6 @@ Include a "Close" button and also "Escape" key closing of the popup.
 #+end_example
 
 
-* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
-** very strange
-*** the column lenght is calcuated wrong for the real "Title"
-
-#+begin_example
-C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now) (live, 1971‐07‐23: Guggenheim Bandshell, Damrosch Park, Lincoln Center, New York City, NY, USA)
-#+end_example
-
-The "Title" column breaks at 
-
-#+begin_example
-C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now) (live, 1971‐07‐23: Guggenheim Bandshell, Damrosch Park, Lincoln Center, New York
-#+end_example
-
-and the rest, is rendered in the next line
-
-#+begin_example
-City, NY, USA)
-#+end_example
-
-the same is true for the column "MB-Name"
-
-where the real value in the "MB-Name" column is "C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now)
-
-but it breaks at 
-
-#+begin_example
-C’Mon Billy, Break Up the Wine (Nothing
-#+end_example
-
-and the rest
-
-#+begin_example
-Can Stop Me Now)
-#+end_example
-
-is again rendererd in a new line
-
-*** column mismatch
-
-For the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148
-
-additionally there is also a column mismatch occuring after the row
-"https://musicbrainz.org/recording/370414e2-522c-403d-80b2-1c99a6e1010f" - "Dinner at Eight", the "Atttibutes" column
-value moves under "Artist" column
-
-
-It breaks
-
-** initial
-
-For example for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
-
-when auto-resizing the table with the "↔️ Resize" button, the following data cell in the "Event" column" ist still not properly autoresized
-
-Filter for "academy"
-
-#+begin_example
-<td>
-  <span class="blank-icon">
-  </span>
-  <a class="wrap-anywhere" href="/event/83f93115-3da6-4ab6-934a-a034f6303a88">
-    <bdi>2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>5th Annual Academy Museum Gala
-    </bdi>)
-  </span>
-</td>
-#+end_example
-
-but instead it breaks in the next row after the '(5th Annual Academy' and 'Museum Gala)' is rendered in the next row
-
-#+begin_example
-2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA (5th Annual Academy
-Museum Gala)
-#+end_example
-
-Is it maybe because of the presence of data cells which have '<span class="artwork-icon eaa-icon"' prepended to the actual event title, e.g.
-
-#+begin_example
-<td>
-  <a href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/event-art">
-    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
-    </span>
-  </a>
-  <a class="wrap-anywhere" href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f">
-    <bdi>2025‐10‐26: The Stone Pony, Asbury Park, NJ, USA
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>Birthday Party at The Pony
-    </bdi>)
-  </span>
-</td>
-#+end_example
-
-Please fix
-
-** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works - "Auld Lang Syne (original Scots version, lyrics by Robert Burns)"
-** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events - 2023‐10‐28: Pollak Theatre, Monmouth University, West Long Branch, NJ, USA (The Wild, The Innocent & The E Street Shuffle 50th Anniversary Symposium)
-
-
 * align button texts and make everything configurable (size, font, height, character to underline)
 * add version to app help, configuration and keybord shortcuts dialogs
 
@@ -53039,7 +52935,6 @@ only inside the "CAA" column ALSO the hovering over the "empty" space works and 
 </td>
 #+end_example
 
-
 * DONE remove ➕ from "Release"
 
 #+begin_example
@@ -54273,7 +54168,6 @@ to the event parts extracted
 
 on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
 fetching of all paginated pages begins after pressing the "Show all.." action button
-
 
 * QUESTION: on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
 
@@ -55587,6 +55481,17 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
 
 
 * TODO create a configurable extractMultiRowCell function on a source column: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events ==> "Area", "Country" columns
+** DONE initial
+
+new feature:
+
+Extend specifically the "extractor: 'splitLocation'" when splitting the "sourceColumn: 'Location'"
+
+#+begin_example
+{ sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+#+end_example
+
+for pageType definitions, like e.g
 
 #+begin_example
         {
@@ -55600,7 +55505,7 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
                     { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
                 ],
-                collapsableColumns: [ 'Location', 'Place', 'EAA' ],
+                collapsableColumns: [ 'Location', 'EAA' ],
                 addEAA: 'Event',
                 extractMainColumn: 'Event'
             },
@@ -55608,13 +55513,190 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
         }
 #+end_example
 
+to be multi-row cell aware. So the "syntheticColumns: ['Place', 'Area', 'Country']" should also be splitted into MultiRowCells
+
+So for example the source column value 
+
 #+begin_example
-                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+<td class="mb-has-collapse-toggle">
+  <ul>
+    <li style="">
+      <a href="/place/4423e94b-4875-4261-887b-a0a843dc9910">
+	<bdi>Center Chapel
+	</bdi>
+      </a> in
+      <a href="/area/5354deea-116c-410c-aefc-c019ea14dfda">
+	<bdi>Lebanon
+	</bdi>
+      </a>,
+      <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
+	<bdi>Kansas
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+    <li style="">
+      <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
+	<bdi>Kansas
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+    <li style="">
+      <a href="/area/fc1aee9a-f1a8-45dc-8820-af6b5d7f7450">
+	<bdi>Denver
+	</bdi>
+      </a>,
+      <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
+	<bdi>Colorado
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+    <li style="">
+      <a href="/area/a551ab62-4166-483c-b0e5-3e121abad371">
+	<bdi>Golden
+	</bdi>
+      </a>,
+      <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
+	<bdi>Colorado
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+    <li style="">
+      <a href="/area/30bef557-58ae-4789-95ad-4df489ac9531">
+	<bdi>Hastings
+	</bdi>
+      </a>,
+      <a href="/area/a5ff428a-ad62-4752-8f8d-14107c574117">
+	<bdi>Nebraska
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Collapse multi-row cell back to display just the first item (5 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 5 items">
+    <span class="mb-cell-collapse-glyph">▼
+    </span>
+    <span class="mb-cell-collapse-count">5
+    </span>
+    <span class="mb-cell-collapse-rack">▤
+    </span>
+  </span>
+</td>
 #+end_example
 
-should be splitted into MultiRowCells
+when splitted in it's constituents lokks like this right now
 
-* TODO add collpase icon to all "Location" split types in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events after making them multi-row cells
+- for the extracted "Area" column
+  
+#+begin_example
+<td>
+  <a href="/area/5354deea-116c-410c-aefc-c019ea14dfda">
+    <bdi>Lebanon
+    </bdi>
+  </a>,
+  <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
+    <bdi>Kansas
+    </bdi>
+  </a>,
+  <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
+    <bdi>Kansas
+    </bdi>
+  </a>,
+  <a href="/area/fc1aee9a-f1a8-45dc-8820-af6b5d7f7450">
+    <bdi>Denver
+    </bdi>
+  </a>,
+  <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
+    <bdi>Colorado
+    </bdi>
+  </a>,
+  <a href="/area/a551ab62-4166-483c-b0e5-3e121abad371">
+    <bdi>Golden
+    </bdi>
+  </a>,
+  <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
+    <bdi>Colorado
+    </bdi>
+  </a>,
+  <a href="/area/30bef557-58ae-4789-95ad-4df489ac9531">
+    <bdi>Hastings
+    </bdi>
+  </a>,
+  <a href="/area/a5ff428a-ad62-4752-8f8d-14107c574117">
+    <bdi>Nebraska
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+- for the extracted "Country" column
+
+#+begin_example
+<td>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+#+end_example
+
+So they also need to be rendered in a <li> cell structure
+
+** TODO add collpase icon to all "Location" split types in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events after making them multi-row cells
 
 #+begin_example
 collapsableColumns: [ 'Location', '', ... ],
@@ -55658,9 +55740,8 @@ collapsableColumns: [ 'Location', '', ... ],
         }
 #+end_example
 
-* TODO In the synthetic column "Country" when "Location" has been splitted, it there are multip entries for the same country, just display ONE, actually make it a multi-row cell
-* TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
+* TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
 * TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
 
@@ -56808,7 +56889,7 @@ comumn cell level accordingly)
 
 * test with the VA pass
 
-* test with Save/Load fomr disk for Artist-Releasegroups
+* test with Save/Load from disk for Artist-Releasegroups
 
 
 * DONE Statistics panel: ~207 KB us WRONG
@@ -57635,6 +57716,109 @@ please fix the placement of the following comment block, somehow it looks concat
      */
 #+end_example
 
+* DONE multi-row cols in "multi"-table pageTypes not collapsable/uncollapsable anymore on artist-releasegroup pages
+
+There is a bug that multi-row columns in "multi"-table pageTypes are not collapsable/uncollapsable anymore on the complete table and column header level:
+
+e.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the column "Label" is such a multi-row column
+
+and clicking on the table level button
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button>
+#+end_example
+
+or column header level button
+
+#+begin_example
+<span class="mb-col-collapse-hdr-btn" data-col-index="6" title="Expand ALL multi-row Label cells (7) in this table column" role="button" aria-expanded="false" aria-label="Expand all multi-row cells in: Label" style="margin-left: auto;"><span class="mb-col-collapse-glyph">▶</span><span class="mb-col-collapse-count">7</span><span class="mb-col-collapse-rack">▤</span></span>
+#+end_example
+
+has NO effect, but it works in the cell itselg, so clicking
+
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all multi-row cell items (2)" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed"><span class="mb-cell-collapse-glyph">▶</span><span class="mb-cell-collapse-count">2</span><span class="mb-cell-collapse-rack">▤</span></span>
+#+end_example
+
+for example works
+
+* DONE move "Enable Save/Load to Disk" to explicit section
+
+move the block
+
+#+begin_example
+        sa_enable_save_load: {
+            label: 'Enable Save/Load to Disk',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
+        },
+#+end_example
+
+to the beginning of the "// LOAD AND SAVE DATA TO/FROM DISK SECTION" section
+
+* DONE add "Total Tracks" to "type: 'area-releases'"
+
+add the following missing parameter block 
+
+#+begin_example
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+#+end_example
+
+to the pageType definition from "type: 'area-releases'"
+
+* DONE https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278&page=1 needs "video" column
+
+the following pageType definitions
+
+#+begin_example
+        {
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
+            features: {
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'work-recordings',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work' } ],
+            features: {
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+need the synthetic "video" column parameter
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+#+end_example
+
+* DONE the "Primary Alias" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events doesn't seem to be taken into account when calculating the width of auto-resized column
+
+the "Primary Alias" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events doesn't seem to
+be taken into account when calculating the width when auto-resizing columns with the button
+
+#+begin_example
+<button id="mb-resize-btn" title="Auto-resize columns to optimal width (click to toggle / Ctrl+M, then R)"
+#+end_example
+
 
 * counting and display wrong: actually with indexedDB cache
 
@@ -57929,101 +58113,6 @@ STF highlight: bg #90ee90 (hardcoded light green), color #000
 #+end_example
 
 
-* DONE multi-row cols in "multi"-table pageTypes not collapsable/uncollapsable anymore on artist-releasegroup pages
-
-There is a bug that multi-row columns in "multi"-table pageTypes are not collapsable/uncollapsable anymore on the complete table and column header level:
-
-e.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c the column "Label" is such a multi-row column
-
-and clicking on the table level button
-
-#+begin_example
-<button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button>
-#+end_example
-
-or column header level button
-
-#+begin_example
-<span class="mb-col-collapse-hdr-btn" data-col-index="6" title="Expand ALL multi-row Label cells (7) in this table column" role="button" aria-expanded="false" aria-label="Expand all multi-row cells in: Label" style="margin-left: auto;"><span class="mb-col-collapse-glyph">▶</span><span class="mb-col-collapse-count">7</span><span class="mb-col-collapse-rack">▤</span></span>
-#+end_example
-
-has NO effect, but it works in the cell itselg, so clicking
-
-#+begin_example
-<span class="mb-cell-collapse-toggle" title="Show all multi-row cell items (2)" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed"><span class="mb-cell-collapse-glyph">▶</span><span class="mb-cell-collapse-count">2</span><span class="mb-cell-collapse-rack">▤</span></span>
-#+end_example
-
-for example works
-
-* DONE move "Enable Save/Load to Disk" to explicit section
-
-move the block
-
-#+begin_example
-        sa_enable_save_load: {
-            label: 'Enable Save/Load to Disk',
-            type: 'checkbox',
-            default: true,
-            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
-        },
-#+end_example
-
-to the beginning of the "// LOAD AND SAVE DATA TO/FROM DISK SECTION" section
-
-* DONE add "Total Tracks" to "type: 'area-releases'"
-
-add the following missing parameter block 
-
-#+begin_example
-                    {
-                        sourceColumn:    'Tracks',
-                        extractor:       'sumTracks',
-                        syntheticColumns: ['Total Tracks']
-                    },
-#+end_example
-
-to the pageType definition from "type: 'area-releases'"
-
-* DONE https://musicbrainz.org/work/55d593ce-52cc-30ec-9494-eca1ab879f5c?direction=2&link_type_id=278&page=1 needs "video" column
-
-the following pageType definitions
-
-#+begin_example
-        {
-            type: 'work-recordings-filtered',
-            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
-            features: {
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
-                ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'work-recordings',
-            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work' } ],
-            features: {
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-#+end_example
-
-need the synthetic "video" column parameter
-
-#+begin_example
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-#+end_example
-
-
 * TODO on https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events "toggle EAA button" changes place with (row count)
 
 * TODO missing - JSDoc: * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
@@ -58074,7 +58163,8 @@ In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
 
-* make export configurable
+* TODO make export configurable
+** DONE initial
 
 add some new features:
 
@@ -58162,12 +58252,273 @@ should be exported uncollapsed. in the dialog which asks the enduser for the fin
 generated name as for the standard export of the final rendered page but add as a post_fix the string "_STATISTICS" to
 the base filename.
 
+** DONE fix "Country/Date" column when exporting
 
-* the "Primary Alias" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events doesn't seem to be taken into account when calculating the width of auto-resized column
+some bugs:
 
-the "Primary Alias" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events doesn't seem to
-be taken into account when calculating the width when auto-resizing columns with the button
+1.)
+
+fix the "Country/Date" column when exporting:
+
+Righ now there are no spaces between the different constituents in that column, so e.g. it gets exported as
 
 #+begin_example
-<button id="mb-resize-btn" title="Auto-resize columns to optimal width (click to toggle / Ctrl+M, then R)"
+US1973-01-05Fri
 #+end_example
+
+but it should be
+
+#+begin_example
+US 1973-01-05 Fri
+#+end_example
+
+3.)
+
+In the "Statistics" UI
+
+add another toggle icon inside
+
+#+begin_example
+<div style="font-size: 1em; font-weight: 700; color: rgb(56, 142, 60); margin: 10px 0px 4px; padding: 3px 0px 3px 2px; border-bottom: 2px solid rgb(232, 245, 233); display: flex; align-items: center; gap: 6px;"><span title="Collapse/expand all table-detail cards" style="cursor: pointer; font-size: 0.9em; color: rgb(56, 142, 60); flex-shrink: 0; user-select: none; margin-right: 2px;">▼</span><span style="font-size:1.1em">🗃️</span><span>Table Details</span></div>
+#+end_example
+
+between the
+
+#+begin_example
+<span style="font-size:1.1em">🗃️</span>
+#+end_example
+
+and the
+
+#+begin_example
+<span>Table Details</span>
+#+end_example
+
+with the action when pressed repeatedly, to emulate a click on all the collapse/uncollpase glyphs for the sub-tables under it, e.g 
+
+#+begin_example
+<span style="font-size: 0.8em; transition: transform 0.15s; display: inline-block;">▶</span>
+#+end_example
+
+** DONE bugs
+
+actually NONE of the previously reported bugs have been fixed, so here they are again to fix
+
+1.)
+
+the new toggle glyph
+
+#+begin_example
+<span title="Cycle all sub-table multi-row collapse buttons (expands all → collapses all → expands all…)" style="cursor: pointer; font-size: 0.8em; transition: transform 0.15s; display: inline-block; color: rgb(85, 85, 85); flex-shrink: 0; user-select: none;">▶</span>
+#+end_example
+
+doesn't work, it correctly switches between "▶" and "▼" when pressed repeatedly, but the emulation of clicking on all the collapse/uncollpase glyphs for the sub-tables DOESN't work
+
+2.)
+
+clicking the sub-table collapse/uncollapse glyphs directly 
+
+#+begin_example
+<span style="font-size: 0.8em; transition: transform 0.15s; display: inline-block;">▶</span>
+#+end_example
+
+works so. But there is a bug which symbols gets rendered. It switches in order from
+
+#+begin_example
+collpased: "▶" => uncollapsed: "▼" => collapsed: "<triangle which points up instead of ▶ again>"
+#+end_example
+
+but it should be
+
+#+begin_example
+collpased: "▶" => uncollapsed: "▼" => collapsed: "▶"
+#+end_example
+
+please fix
+
+3.)
+
+the following is STILL not fixed:
+
+fix the "Country/Date" column when exporting:
+
+Righ now there are no spaces between the different constituents in that column, so e.g. it gets exported as
+
+#+begin_example
+US1973-01-05Fri
+#+end_example
+
+but it should be
+
+#+begin_example
+US 1973-01-05 Fri
+#+end_example
+
+** TODO bugs
+
+1.)
+
+the new toggle glyph
+
+#+begin_example
+<span title="Cycle all sub-table multi-row collapse buttons (expands all → collapses all → expands all…)" style="cursor: pointer; font-size: 0.8em; transition: transform 0.15s; display: inline-block; color: rgb(85, 85, 85); flex-shrink: 0; user-select: none;">▶</span>
+#+end_example
+
+doesn't work
+
+
+* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
+** very strange
+*** the column lenght is calcuated wrong for the real "Title"
+
+#+begin_example
+C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now) (live, 1971‐07‐23: Guggenheim Bandshell, Damrosch Park, Lincoln Center, New York City, NY, USA)
+#+end_example
+
+The "Title" column breaks at 
+
+#+begin_example
+C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now) (live, 1971‐07‐23: Guggenheim Bandshell, Damrosch Park, Lincoln Center, New York
+#+end_example
+
+and the rest, is rendered in the next line
+
+#+begin_example
+City, NY, USA)
+#+end_example
+
+the same is true for the column "MB-Name"
+
+where the real value in the "MB-Name" column is "C’Mon Billy, Break Up the Wine (Nothing Can Stop Me Now)
+
+but it breaks at 
+
+#+begin_example
+C’Mon Billy, Break Up the Wine (Nothing
+#+end_example
+
+and the rest
+
+#+begin_example
+Can Stop Me Now)
+#+end_example
+
+is again rendererd in a new line
+
+*** column mismatch
+
+For the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148
+
+additionally there is also a column mismatch occuring after the row
+"https://musicbrainz.org/recording/370414e2-522c-403d-80b2-1c99a6e1010f" - "Dinner at Eight", the "Atttibutes" column
+value moves under "Artist" column
+
+
+It breaks
+
+** initial
+
+For example for the following URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+when auto-resizing the table with the "↔️ Resize" button, the following data cell in the "Event" column" ist still not properly autoresized
+
+Filter for "academy"
+
+#+begin_example
+<td>
+  <span class="blank-icon">
+  </span>
+  <a class="wrap-anywhere" href="/event/83f93115-3da6-4ab6-934a-a034f6303a88">
+    <bdi>2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>5th Annual Academy Museum Gala
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+but instead it breaks in the next row after the '(5th Annual Academy' and 'Museum Gala)' is rendered in the next row
+
+#+begin_example
+2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA (5th Annual Academy
+Museum Gala)
+#+end_example
+
+Is it maybe because of the presence of data cells which have '<span class="artwork-icon eaa-icon"' prepended to the actual event title, e.g.
+
+#+begin_example
+<td>
+  <a href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/event-art">
+    <span class="artwork-icon eaa-icon" title="This event has artwork in the Event Art Archive">
+    </span>
+  </a>
+  <a class="wrap-anywhere" href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f">
+    <bdi>2025‐10‐26: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Birthday Party at The Pony
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+Please fix
+
+** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works - "Auld Lang Syne (original Scots version, lyrics by Robert Burns)"
+** https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events - 2023‐10‐28: Pollak Theatre, Monmouth University, West Long Branch, NJ, USA (The Wild, The Innocent & The E Street Shuffle 50th Anniversary Symposium)
+
+some bugs
+
+1.)
+
+the columns
+
+#+begin_example
+['Place', 'Area', 'Country']
+#+end_example
+
+should now also be added to the "collapsableColumns" parameter where appropriate, aftert the latest fix, e.g.
+
+#+begin_example
+collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+#+end_example
+
+2.)
+
+There is a subtle bug when it comes to calculating the width of the auto-resized column "Event" for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+For some cells, e.g.
+
+#+begin_example
+<td>
+  <span class="mb-eaa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair;" data-eaa-hover-wired="1">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: none; border-radius: 2px;" src="//eventartarchive.org/event/83f93115-3da6-4ab6-934a-a034f6303a88/front-250">
+  </span>
+  <a class="wrap-anywhere" href="/event/83f93115-3da6-4ab6-934a-a034f6303a88">
+    <bdi>2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>5th Annual Academy Museum Gala
+    </bdi>)
+  </span>
+</td>
+#+end_example
+
+visually the data cells breaks in a new row inside the same cell after
+
+#+begin_example
+2025‐10‐18: David Geffen Theater, Academy Museum of Motion Pictures, Los Angeles, CA, USA (5th Annual Academy
+#+end_example
+
+and the rest is render in the next row visually
+
+#+begin_example
+Museum Gala)
+#+end_example
+
+can you explain or better fix
+
