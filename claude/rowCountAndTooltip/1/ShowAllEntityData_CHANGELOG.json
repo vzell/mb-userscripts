@@ -1,5 +1,24 @@
 [
     {
+        "version": "9.99.262",
+        "date": "2026-03-20",
+        "sections": [
+            {
+                "label": "✨ New Features / Changes",
+                "items": [
+                    "configSchema (EXPORT) — new `sa_export_include_sort_state` (default `true`): when enabled the active sort-state glyph (▲ or ▼, captured from `.sort-icon-btn.sort-icon-active` before the button is removed) is appended to the exported column header text (e.g. 'Length ▼'). When disabled all glyphs and priority superscripts are stripped, leaving only the plain column name. Applied in `_exportCleanHeaderText` used by all four exporters.",
+                    "configSchema (UI APPEARANCE) — `sa_ui_row_count_color` and `sa_ui_row_count_bg` now correctly colorize the numeric row counts (e.g. 6 and 47) inside row-count tooltips via a new `_mbttCount(n)` helper, rather than the stat span container itself. `_nR` (h2) and `_nRows` (h3) now call `_mbttCount` so the row counts in 'There are N rows' are wrapped in a colored pill. Bare count variables (`totalCount`, `_total`, `_denom`) used after 'from' in both `_buildH2CountTooltip` and `_updateSubTableH3Tooltip` are also wrapped via a local `_cN(n)` alias."
+                ]
+            },
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Statistics panel — 'Table Details' second toggle (▶ between 🗃️ and label): was querying `table.tbl .mb-col-collapse-hdr-btn` in the live data tables (the multi-row cell column-header buttons) instead of the `[data-col-expanded]` `colToggleBar` divs inside each stats card. Fixed to iterate `body.querySelectorAll('[data-col-expanded]')`, check whether each bar's `nextElementSibling` has `dataset.colDetailOf`, and directly update `bar.dataset.colExpanded`, `_detail.style.display`, and the icon span's `textContent` — no reliance on `.click()` or external DOM scope."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.261",
         "date": "2026-03-20",
         "sections": [

@@ -45835,137 +45835,6 @@ it was triggered, by clicking the "OK" button directly (or maybe wait 2 seconds 
 text) ? If yes, please implement
 
 
-* TODO Export
-** TODO remove cruft before exporting
-*** "▶"
-** add more formats, JSON, ORG
-*** DONE JSON
-*** DONE ORG-Mode
-*** DONE HTML
-*** XML
-*** Excel
-
-** DONE create info popup
-
-In the following function, after the line
-
-#+begin_example
-        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
-#+end_example
-
-include code that pops up an info box which says that the enduser should monitor the browser downloading the file.
-Include a "Close" button and also "Escape" key closing of the popup.
-
-
-#+begin_example
-    function exportTableToCSV() {
-        const table = document.querySelector('table.tbl');
-        if (!table) {
-            alert('No table found to export');
-            Lib.error('export', 'No table found for CSV export');
-            return;
-        }
-
-        Lib.info('export', 'Starting CSV export...');
-
-        const rows = [];
-        let totalCells = 0;
-
-        // Get headers from first row
-        const headerRow = table.querySelector('thead tr:first-child');
-        if (headerRow) {
-            const headers = [];
-            Array.from(headerRow.cells).forEach(cell => {
-                // Skip hidden columns
-                if (cell.style.display === 'none') return;
-
-                // Clean header text (remove sort icons)
-                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
-                // Remove extra whitespace
-                headerText = headerText.replace(/\s+/g, ' ');
-                headers.push(headerText);
-            });
-            rows.push(headers);
-            totalCells += headers.length;
-            Lib.debug('export', `Exported ${headers.length} headers: ${headers.join(', ')}`);
-        }
-
-        // Get data rows (only visible ones)
-        const dataRows = table.querySelectorAll('tbody tr');
-        let rowsExported = 0;
-        let rowsSkipped = 0;
-
-        dataRows.forEach(row => {
-            // Skip hidden rows (filtered out)
-            if (row.style.display === 'none') {
-                rowsSkipped++;
-                return;
-            }
-
-            const cells = [];
-            Array.from(row.cells).forEach((cell, index) => {
-                // Skip hidden columns
-                if (cell.style.display === 'none') return;
-
-                // Get text content and clean it up
-                let text = cell.textContent.trim();
-
-                // Remove extra whitespace
-                text = text.replace(/\s+/g, ' ');
-
-                // Escape quotes (CSV standard: " becomes "")
-                text = text.replace(/"/g, '""');
-
-                // Wrap in quotes if contains comma, newline, or quote
-                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
-                    text = `"${text}"`;
-                }
-
-                cells.push(text);
-            });
-
-            if (cells.length > 0) {
-                rows.push(cells);
-                totalCells += cells.length;
-                rowsExported++;
-            }
-        });
-
-        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
-
-        // Create CSV string
-        const csv = rows.map(row => row.join(',')).join('\n');
-
-        // Create Blob and download
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-
-        // Generate filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-        const pageName = pageType || 'table';
-        const filename = `musicbrainz-${pageName}-${timestamp}.csv`;
-        link.download = filename;
-
-        // Trigger download
-        link.click();
-
-        // Cleanup
-        URL.revokeObjectURL(url);
-
-        // Update status
-        const statusDisplay = document.getElementById('mb-status-display');
-        if (statusDisplay) {
-            statusDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
-            statusDisplay.style.color = 'green';
-        }
-
-        Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
-    }
-#+end_example
-
-
 * align button texts and make everything configurable (size, font, height, character to underline)
 * add version to app help, configuration and keybord shortcuts dialogs
 
@@ -54258,6 +54127,266 @@ some more things to implement:
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
 
 
+* DONE create a configurable extractMultiRowCell function on a source column: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events ==> "Area", "Country" columns
+** DONE initial
+
+new feature:
+
+Extend specifically the "extractor: 'splitLocation'" when splitting the "sourceColumn: 'Location'"
+
+#+begin_example
+{ sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+#+end_example
+
+for pageType definitions, like e.g
+
+#+begin_example
+        {
+            type: 'artist-events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                collapsableColumns: [ 'Location', 'EAA' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        }
+#+end_example
+
+to be multi-row cell aware. So the "syntheticColumns: ['Place', 'Area', 'Country']" should also be splitted into MultiRowCells
+
+So for example the source column value 
+
+#+begin_example
+<td class="mb-has-collapse-toggle">
+  <ul>
+    <li style="">
+      <a href="/place/4423e94b-4875-4261-887b-a0a843dc9910">
+	<bdi>Center Chapel
+	</bdi>
+      </a> in
+      <a href="/area/5354deea-116c-410c-aefc-c019ea14dfda">
+	<bdi>Lebanon
+	</bdi>
+      </a>,
+      <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
+	<bdi>Kansas
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+    <li style="">
+      <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
+	<bdi>Kansas
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+    <li style="">
+      <a href="/area/fc1aee9a-f1a8-45dc-8820-af6b5d7f7450">
+	<bdi>Denver
+	</bdi>
+      </a>,
+      <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
+	<bdi>Colorado
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+    <li style="">
+      <a href="/area/a551ab62-4166-483c-b0e5-3e121abad371">
+	<bdi>Golden
+	</bdi>
+      </a>,
+      <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
+	<bdi>Colorado
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+    <li style="">
+      <a href="/area/30bef557-58ae-4789-95ad-4df489ac9531">
+	<bdi>Hastings
+	</bdi>
+      </a>,
+      <a href="/area/a5ff428a-ad62-4752-8f8d-14107c574117">
+	<bdi>Nebraska
+	</bdi>
+      </a>,
+      <span class="flag flag-US">
+	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+	  <bdi>United States
+	  </bdi>
+	</a>
+      </span>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Collapse multi-row cell back to display just the first item (5 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 5 items">
+    <span class="mb-cell-collapse-glyph">▼
+    </span>
+    <span class="mb-cell-collapse-count">5
+    </span>
+    <span class="mb-cell-collapse-rack">▤
+    </span>
+  </span>
+</td>
+#+end_example
+
+when splitted in it's constituents lokks like this right now
+
+- for the extracted "Area" column
+  
+#+begin_example
+<td>
+  <a href="/area/5354deea-116c-410c-aefc-c019ea14dfda">
+    <bdi>Lebanon
+    </bdi>
+  </a>,
+  <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
+    <bdi>Kansas
+    </bdi>
+  </a>,
+  <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
+    <bdi>Kansas
+    </bdi>
+  </a>,
+  <a href="/area/fc1aee9a-f1a8-45dc-8820-af6b5d7f7450">
+    <bdi>Denver
+    </bdi>
+  </a>,
+  <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
+    <bdi>Colorado
+    </bdi>
+  </a>,
+  <a href="/area/a551ab62-4166-483c-b0e5-3e121abad371">
+    <bdi>Golden
+    </bdi>
+  </a>,
+  <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
+    <bdi>Colorado
+    </bdi>
+  </a>,
+  <a href="/area/30bef557-58ae-4789-95ad-4df489ac9531">
+    <bdi>Hastings
+    </bdi>
+  </a>,
+  <a href="/area/a5ff428a-ad62-4752-8f8d-14107c574117">
+    <bdi>Nebraska
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+- for the extracted "Country" column
+
+#+begin_example
+<td>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+  <span class="flag flag-US">
+    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+      <bdi>United States
+      </bdi>
+    </a>
+  </span>
+</td>
+#+end_example
+
+So they also need to be rendered in a <li> cell structure
+
+** DONE add collpase icon to all "Location" split types in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events after making them multi-row cells
+
+#+begin_example
+collapsableColumns: [ 'Location', '', ... ],
+#+end_example
+
+#+begin_example
+        {
+            type: 'area-events',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Area' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                ],
+                collapsableColumns: [ 'Artists', 'Location', 'EAA' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                collapsableColumns: [ 'Location', 'EAA' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event'
+            },
+            tableMode: 'single'
+        }
+#+end_example
+
 * DONE OBSOLETE: split artist releasegroup pages in official (h2 header name "Official Discography") and non-official (h2 header name "Non-Official Discography")
 ** initial
 
@@ -55480,267 +55609,6 @@ in the last step also remove all sub-tables from the DOM which are rendered BEFO
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
 
-* TODO create a configurable extractMultiRowCell function on a source column: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events ==> "Area", "Country" columns
-** DONE initial
-
-new feature:
-
-Extend specifically the "extractor: 'splitLocation'" when splitting the "sourceColumn: 'Location'"
-
-#+begin_example
-{ sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
-#+end_example
-
-for pageType definitions, like e.g
-
-#+begin_example
-        {
-            type: 'artist-events',
-            match: (path) => path.includes('/events'),
-            buttons: [ { label: 'Show all Events for Artist' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
-                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
-                ],
-                collapsableColumns: [ 'Location', 'EAA' ],
-                addEAA: 'Event',
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        }
-#+end_example
-
-to be multi-row cell aware. So the "syntheticColumns: ['Place', 'Area', 'Country']" should also be splitted into MultiRowCells
-
-So for example the source column value 
-
-#+begin_example
-<td class="mb-has-collapse-toggle">
-  <ul>
-    <li style="">
-      <a href="/place/4423e94b-4875-4261-887b-a0a843dc9910">
-	<bdi>Center Chapel
-	</bdi>
-      </a> in
-      <a href="/area/5354deea-116c-410c-aefc-c019ea14dfda">
-	<bdi>Lebanon
-	</bdi>
-      </a>,
-      <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
-	<bdi>Kansas
-	</bdi>
-      </a>,
-      <span class="flag flag-US">
-	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-	  <bdi>United States
-	  </bdi>
-	</a>
-      </span>
-    </li>
-    <li style="">
-      <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
-	<bdi>Kansas
-	</bdi>
-      </a>,
-      <span class="flag flag-US">
-	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-	  <bdi>United States
-	  </bdi>
-	</a>
-      </span>
-    </li>
-    <li style="">
-      <a href="/area/fc1aee9a-f1a8-45dc-8820-af6b5d7f7450">
-	<bdi>Denver
-	</bdi>
-      </a>,
-      <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
-	<bdi>Colorado
-	</bdi>
-      </a>,
-      <span class="flag flag-US">
-	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-	  <bdi>United States
-	  </bdi>
-	</a>
-      </span>
-    </li>
-    <li style="">
-      <a href="/area/a551ab62-4166-483c-b0e5-3e121abad371">
-	<bdi>Golden
-	</bdi>
-      </a>,
-      <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
-	<bdi>Colorado
-	</bdi>
-      </a>,
-      <span class="flag flag-US">
-	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-	  <bdi>United States
-	  </bdi>
-	</a>
-      </span>
-    </li>
-    <li style="">
-      <a href="/area/30bef557-58ae-4789-95ad-4df489ac9531">
-	<bdi>Hastings
-	</bdi>
-      </a>,
-      <a href="/area/a5ff428a-ad62-4752-8f8d-14107c574117">
-	<bdi>Nebraska
-	</bdi>
-      </a>,
-      <span class="flag flag-US">
-	<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-	  <bdi>United States
-	  </bdi>
-	</a>
-      </span>
-    </li>
-  </ul>
-  <span class="mb-cell-collapse-toggle" title="Collapse multi-row cell back to display just the first item (5 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 5 items">
-    <span class="mb-cell-collapse-glyph">▼
-    </span>
-    <span class="mb-cell-collapse-count">5
-    </span>
-    <span class="mb-cell-collapse-rack">▤
-    </span>
-  </span>
-</td>
-#+end_example
-
-when splitted in it's constituents lokks like this right now
-
-- for the extracted "Area" column
-  
-#+begin_example
-<td>
-  <a href="/area/5354deea-116c-410c-aefc-c019ea14dfda">
-    <bdi>Lebanon
-    </bdi>
-  </a>,
-  <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
-    <bdi>Kansas
-    </bdi>
-  </a>,
-  <a href="/area/c747e5a9-3ac7-4dfb-888f-193ff598c62f">
-    <bdi>Kansas
-    </bdi>
-  </a>,
-  <a href="/area/fc1aee9a-f1a8-45dc-8820-af6b5d7f7450">
-    <bdi>Denver
-    </bdi>
-  </a>,
-  <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
-    <bdi>Colorado
-    </bdi>
-  </a>,
-  <a href="/area/a551ab62-4166-483c-b0e5-3e121abad371">
-    <bdi>Golden
-    </bdi>
-  </a>,
-  <a href="/area/373183af-56db-44d7-b06a-5877c02c5f01">
-    <bdi>Colorado
-    </bdi>
-  </a>,
-  <a href="/area/30bef557-58ae-4789-95ad-4df489ac9531">
-    <bdi>Hastings
-    </bdi>
-  </a>,
-  <a href="/area/a5ff428a-ad62-4752-8f8d-14107c574117">
-    <bdi>Nebraska
-    </bdi>
-  </a>
-</td>
-#+end_example
-
-- for the extracted "Country" column
-
-#+begin_example
-<td>
-  <span class="flag flag-US">
-    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-      <bdi>United States
-      </bdi>
-    </a>
-  </span>
-  <span class="flag flag-US">
-    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-      <bdi>United States
-      </bdi>
-    </a>
-  </span>
-  <span class="flag flag-US">
-    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-      <bdi>United States
-      </bdi>
-    </a>
-  </span>
-  <span class="flag flag-US">
-    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-      <bdi>United States
-      </bdi>
-    </a>
-  </span>
-  <span class="flag flag-US">
-    <a href="/area/489ce91b-6658-3307-9877-795b68554c98">
-      <bdi>United States
-      </bdi>
-    </a>
-  </span>
-</td>
-#+end_example
-
-So they also need to be rendered in a <li> cell structure
-
-** TODO add collpase icon to all "Location" split types in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events after making them multi-row cells
-
-#+begin_example
-collapsableColumns: [ 'Location', '', ... ],
-#+end_example
-
-#+begin_example
-        {
-            type: 'area-events',
-            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Area' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
-                ],
-                collapsableColumns: [ 'Artists', 'Location', 'EAA' ],
-                addEAA: 'Event',
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-#+begin_example
-        {
-            type: 'artist-events',
-            match: (path) => path.includes('/events'),
-            buttons: [ { label: 'Show all Events for Artist' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
-                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
-                ],
-                collapsableColumns: [ 'Location', 'EAA' ],
-                addEAA: 'Event',
-                extractMainColumn: 'Event'
-            },
-            tableMode: 'single'
-        }
-#+end_example
-
-
 * TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
 * TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
@@ -56135,7 +56003,7 @@ Another bug
 - when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
 
-* TODO statistics panel
+* DONE statistics panel
 ** wrong stats
 ** make it multitable aware
 ** memory usage how is it counted
@@ -56843,15 +56711,12 @@ artwork load over the network has been performed. This has happened when the fun
 function _showCaaCompletionToast()
 #+end_example
 
+** DONE add a button to the statistics panel for exporting in HTML
 ** TODO column (standard/synthetic) row count wrong
 
 Still some bugs
 
 3.) column row count wrong
-
-
-** TODO add a button to the statistics panel for exporting in HTML
-
 
 * maybe (or the synthetic columns per table in a specific pageType can be deduced from the following parameters in the "const pageDefinitions" definitions variable
 
@@ -58099,7 +57964,15 @@ add a new boolean (default: true) which when true enables the whole h2/h3 row co
 
 add a new configurable foreground and background color (default are the current values) for the h2/h3 row count tooltips
 
-** TODO add colors to the actual counts and add the background filter colors as the forground for the filter types
+** DONE add the background filter colors as the forground for the filter types
+
+colorize the row count tooltip in either the h2/h3 line even more:
+
+- add the same color as the foreground color from the global filter (red by default) to the string "global" filter (just
+  global) and the same color as the background color from the sub-table filter (green by default) to the string "column level" filters (just "column level").
+  So basically colorize the filter types like the actual filter expressions.
+
+** DONE add colors to the actual counts and add the background filter colors as the forground for the filter types
 
 small glitches
 
@@ -58113,17 +57986,77 @@ span '"mb-row-count-stat"'
 <span class="mb-row-count-stat" data-mbtt="There are 3 rows left after the global filter &lt;span class=&quot;mbtt-gf&quot;&gt;bruce&lt;/span&gt;, the sub-table filter &lt;span class=&quot;mbtt-stf&quot;&gt;version&lt;/span&gt; and the column level filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt;, 'Comment':&lt;span class=&quot;mbtt-cf&quot;&gt;2&lt;/span&gt; from 47 total unfiltered rows in this sub-table">(9 of 47)</span>
 #+end_example
 
+** actually
+
+some bugs:
+
+1.)
+
+actually the
+
+#+begin_example
+sa_ui_row_count_color
+#+end_example
+
+and
+
+#+begin_example
+sa_ui_row_count_bg
+#+end_example
+
+are NOT meant to colorize the "Foreground (text) color of the (N of M) row-count stat span in H2/H3 headers" and "Background color of the (N of M) row-count stat span in H2/H3 headers"
+but instead to colorize just the actual counters in the tooltip itself:
+
+Let' say the tooltip is
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 6 rows left after the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;sess&lt;/span&gt;, the &lt;span style=&quot;background:#90ee90;color:#000;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;sub-table&lt;/span&gt; filter &lt;span class=&quot;mbtt-stf&quot;&gt;ire&lt;/span&gt; and the &lt;span style=&quot;background:#add8e6;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;column level&lt;/span&gt; filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt; from 47 total unfiltered rows in this sub-table">(6 of 47)</span>
+#+end_example
+
+it should be the counts "6" and "47" ("<THIS ONE>" in the example below) which should get colorized with the configured colors
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are <THIS ONE> rows left after the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;sess&lt;/span&gt;, the &lt;span style=&quot;background:#90ee90;color:#000;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;sub-table&lt;/span&gt; filter &lt;span class=&quot;mbtt-stf&quot;&gt;ire&lt;/span&gt; and the &lt;span style=&quot;background:#add8e6;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;column level&lt;/span&gt; filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt; from <THIS ONE> total unfiltered rows in this sub-table">(6 of 47)</span>
+#+end_example
+
 2.)
 
-colorize the row count tooltip in either the h2/h3 line even more:
+in the "Statistics" panel '<div id="mb-stats-panel"' in the case of "multi"-table pageTypes
 
-- add the same color as the foreground color from the global filter (red by default) to the string "global" filter (just
-  global) and the same color as the background color from the sub-table filter (green by default) to the string "column level" filters (just "column level").
-  So basically colorize the filter types like the actual filter expressions.
+the toggle glyph
 
-** TODO fix the tooltip for the h2 lin in "multi"-table mode
+#+begin_example
+<span title="Cycle all sub-table multi-row collapse buttons (expands all → collapses all → expands all…)" style="cursor: pointer; font-size: 0.8em; transition: transform 0.15s; display: inline-block; color: rgb(85, 85, 85); flex-shrink: 0; user-select: none;">▶</span>
+#+end_example
 
-fix the tooltip for the h2 lin in "multi"-table mode
+STILL doesn't work, it doesn't collpase/uncollpase ALL the subtables
+
+3.)
+
+add a new configurable boolean (default:true) in the "Export" configuration section to either include the sort state glyph from the column headers in the export or not
+
+* TODO On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
+
+On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
+
+from the generic
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
+#+end_example
+
+to
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
+#+end_example
+
+for the format "(<n> of <M>)/<N>"
+
+** TODO fix the tooltip for the h2 line in "multi"-table mode, it's too broad
+
+fix the tooltip for the h2 line in "multi"-table mode
+
 
 * change hardcoded hightlight for col filter
 
@@ -58375,18 +58308,151 @@ but it should be
 US 1973-01-05 Fri
 #+end_example
 
+** DONE Export
+*** add more formats, JSON, ORG
+**** DONE JSON
+**** DONE ORG-Mode
+**** DONE HTML
+**** XML
+**** Excel
+
+*** DONE create info popup
+
+In the following function, after the line
+
+#+begin_example
+        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+#+end_example
+
+include code that pops up an info box which says that the enduser should monitor the browser downloading the file.
+Include a "Close" button and also "Escape" key closing of the popup.
+
+
+#+begin_example
+    function exportTableToCSV() {
+        const table = document.querySelector('table.tbl');
+        if (!table) {
+            alert('No table found to export');
+            Lib.error('export', 'No table found for CSV export');
+            return;
+        }
+
+        Lib.info('export', 'Starting CSV export...');
+
+        const rows = [];
+        let totalCells = 0;
+
+        // Get headers from first row
+        const headerRow = table.querySelector('thead tr:first-child');
+        if (headerRow) {
+            const headers = [];
+            Array.from(headerRow.cells).forEach(cell => {
+                // Skip hidden columns
+                if (cell.style.display === 'none') return;
+
+                // Clean header text (remove sort icons)
+                let headerText = cell.textContent.replace(/[⇅▲▼]/g, '').trim();
+                // Remove extra whitespace
+                headerText = headerText.replace(/\s+/g, ' ');
+                headers.push(headerText);
+            });
+            rows.push(headers);
+            totalCells += headers.length;
+            Lib.debug('export', `Exported ${headers.length} headers: ${headers.join(', ')}`);
+        }
+
+        // Get data rows (only visible ones)
+        const dataRows = table.querySelectorAll('tbody tr');
+        let rowsExported = 0;
+        let rowsSkipped = 0;
+
+        dataRows.forEach(row => {
+            // Skip hidden rows (filtered out)
+            if (row.style.display === 'none') {
+                rowsSkipped++;
+                return;
+            }
+
+            const cells = [];
+            Array.from(row.cells).forEach((cell, index) => {
+                // Skip hidden columns
+                if (cell.style.display === 'none') return;
+
+                // Get text content and clean it up
+                let text = cell.textContent.trim();
+
+                // Remove extra whitespace
+                text = text.replace(/\s+/g, ' ');
+
+                // Escape quotes (CSV standard: " becomes "")
+                text = text.replace(/"/g, '""');
+
+                // Wrap in quotes if contains comma, newline, or quote
+                if (text.includes(',') || text.includes('\n') || text.includes('"')) {
+                    text = `"${text}"`;
+                }
+
+                cells.push(text);
+            });
+
+            if (cells.length > 0) {
+                rows.push(cells);
+                totalCells += cells.length;
+                rowsExported++;
+            }
+        });
+
+        Lib.info('export', `Exported ${rowsExported} data rows, skipped ${rowsSkipped} hidden rows`);
+
+        // Create CSV string
+        const csv = rows.map(row => row.join(',')).join('\n');
+
+        // Create Blob and download
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Generate filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+        const pageName = pageType || 'table';
+        const filename = `musicbrainz-${pageName}-${timestamp}.csv`;
+        link.download = filename;
+
+        // Trigger download
+        link.click();
+
+        // Cleanup
+        URL.revokeObjectURL(url);
+
+        // Update status
+        const statusDisplay = document.getElementById('mb-status-display');
+        if (statusDisplay) {
+            statusDisplay.textContent = `✓ Exported ${rowsExported} rows to ${filename}`;
+            statusDisplay.style.color = 'green';
+        }
+
+        Lib.info('export', `CSV export complete: ${filename} (${rowsExported} rows, ${totalCells} cells)`);
+    }
+#+end_example
+
+** DONE remove cruft before exporting
+*** "▶"
+** TODO make the sortable state configurable for export
+
+add a new configurable boolean (default:true) in the "Export" configuration section to either include the sort state glyph from the column headers in the export or not
+
 ** TODO bugs
 
-1.)
+in the "Statistics" panel '<div id="mb-stats-panel"' in the case of "multi"-table pageTypes
 
-the new toggle glyph
+the toggle glyph
 
 #+begin_example
 <span title="Cycle all sub-table multi-row collapse buttons (expands all → collapses all → expands all…)" style="cursor: pointer; font-size: 0.8em; transition: transform 0.15s; display: inline-block; color: rgb(85, 85, 85); flex-shrink: 0; user-select: none;">▶</span>
 #+end_example
 
-doesn't work
-
+STILL doesn't work, it doesn't collpase/uncollpase ALL the subtables
 
 * DONE In the "Place" column there is actually on 1 multi-row columns present (but it shows the original 5 values from the columns to split)
 * DONE why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
@@ -58547,3 +58613,26 @@ Museum Gala)
 can you explain or better fix
 
 
+* TODO row count switches place with EAA toggle button
+
+On pages of type https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+
+the row counter stats span
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 109 rows total unfiltered in this table">(109)</span>
+#+end_example
+
+after specifying a filter expression in the filter field
+
+#+begin_example
+<input id="mb-global-filter-input" placeholder="Global Filter…" title="Enter global filter string (focus this field with 'Ctrl+G')" style="font-size: 1em; padding: 2px 6px; border: 2px solid orange; border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s; box-shadow: orange 0px 0px 2px 2px;">
+#+end_example
+
+is rendered after the
+
+#+begin_example
+<button id="mb-eaa-toggle-btn-retry-0" type="button" title="Retry loading all EAA event art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+#+end_example
+
+This should NEVER happen, the "mb-row-count-stat" should always be rendered right after the h2 header title, in this case "Events"
