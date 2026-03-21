@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.256+2026-03-20
+// @version      9.99.257+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1580,21 +1580,37 @@
         /**
          * splitLocation — splits a "Location" cell (venue / city / country) into
          * three separate cells: Place, Area, and Country.
-         * Place  ← links whose href contains '/place/'
-         * Area   ← links whose href contains '/area/' but without a flag wrapper
-         * Country← links whose href contains '/area/' wrapped in a .flag span
+         * Place   ← links whose href contains '/place/'
+         * Area    ← links whose href contains '/area/' but NOT wrapped in a .flag span
+         * Country ← links whose href contains '/area/' wrapped in a .flag span
+         *
+         * Multi-row aware: when the source cell contains a <ul><li> structure (i.e.
+         * the Location column was already wrapped by renderMultiRowCell or inherited
+         * a multi-row layout from MusicBrainz), each <li> is processed independently
+         * and the results are placed into parallel <ul><li> lists in the three output
+         * cells — one <li> per source <li> for each synthetic column.  This mirrors
+         * splitCountryDate's per-event <li> approach so that the three split columns
+         * stay row-aligned with the source.
+         *
          * Synthetic columns: ['Place', 'Area', 'Country']
          */
         splitLocation(sourceCell) {
             const tdP = document.createElement('td');
             const tdA = document.createElement('td');
             const tdC = document.createElement('td');
-            if (sourceCell) {
-                sourceCell.querySelectorAll('a').forEach(a => {
-                    const href     = a.getAttribute('href');
-                    const clonedA  = a.cloneNode(true);
+            if (!sourceCell) return [tdP, tdA, tdC];
+
+            /**
+             * Process one DOM node (a single <li> content or the whole flat cell)
+             * and append the extracted Place / Area / Country fragments to the
+             * provided containers (either <li> or <td> elements).
+             */
+            const _processNode = (node, containerP, containerA, containerC) => {
+                node.querySelectorAll('a').forEach(a => {
+                    const href    = a.getAttribute('href');
+                    const clonedA = a.cloneNode(true);
                     if (href && href.includes('/place/')) {
-                        tdP.appendChild(clonedA);
+                        containerP.appendChild(clonedA);
                     } else if (href && href.includes('/area/')) {
                         const flagSpan = a.closest('.flag');
                         if (flagSpan) {
@@ -1610,14 +1626,41 @@
                             } else {
                                 span.innerHTML = flagSpan.innerHTML;
                             }
-                            tdC.appendChild(span);
+                            containerC.appendChild(span);
                         } else {
-                            if (tdA.hasChildNodes()) tdA.appendChild(document.createTextNode(', '));
-                            tdA.appendChild(clonedA);
+                            if (containerA.hasChildNodes()) containerA.appendChild(document.createTextNode(', '));
+                            containerA.appendChild(clonedA);
                         }
                     }
                 });
+            };
+
+            const sourceLis = Array.from(sourceCell.querySelectorAll(':scope > ul > li'));
+
+            if (sourceLis.length > 0) {
+                // ── Multi-row path: build parallel <ul><li> lists ──────────────
+                const ulP = document.createElement('ul');
+                const ulA = document.createElement('ul');
+                const ulC = document.createElement('ul');
+
+                sourceLis.forEach(li => {
+                    const liP = document.createElement('li');
+                    const liA = document.createElement('li');
+                    const liC = document.createElement('li');
+                    _processNode(li, liP, liA, liC);
+                    ulP.appendChild(liP);
+                    ulA.appendChild(liA);
+                    ulC.appendChild(liC);
+                });
+
+                if (ulP.querySelector('li a')) tdP.appendChild(ulP);
+                if (ulA.querySelector('li a')) tdA.appendChild(ulA);
+                if (ulC.querySelector('li a')) tdC.appendChild(ulC);
+            } else {
+                // ── Flat path: original behaviour for non-multi-row cells ──────
+                _processNode(sourceCell, tdP, tdA, tdC);
             }
+
             return [tdP, tdA, tdC];
         },
 

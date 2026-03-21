@@ -1,5 +1,17 @@
 [
     {
+        "version": "9.99.257",
+        "date": "2026-03-20",
+        "sections": [
+            {
+                "label": "✨ New Features / Changes",
+                "items": [
+                    "splitLocation extractor — multi-row cell aware: when the source 'Location' column contains a `<ul><li>` multi-row structure (e.g. an artist-events page where one event has multiple venues), the extractor now processes each source `<li>` independently and builds parallel `<ul><li>` lists for the three synthetic columns 'Place', 'Area', and 'Country'. Each `<li>` in the source becomes exactly one `<li>` in each output cell, keeping the rows aligned across the three columns. A shared `_processNode(node, containerP, containerA, containerC)` helper handles the link classification logic (place href → Place, area href without flag → Area, area href inside .flag → Country) for both the multi-row and flat paths. When the source cell has no `<ul><li>` structure the original flat behaviour is preserved."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.256",
         "date": "2026-03-20",
         "sections": [
