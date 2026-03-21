@@ -56718,6 +56718,7 @@ Still some bugs
 
 3.) column row count wrong
 
+
 * maybe (or the synthetic columns per table in a specific pageType can be deduced from the following parameters in the "const pageDefinitions" definitions variable
 
 (or the synthetic columns per table in a specific pageType can be
@@ -57684,440 +57685,7 @@ be taken into account when calculating the width when auto-resizing columns with
 <button id="mb-resize-btn" title="Auto-resize columns to optimal width (click to toggle / Ctrl+M, then R)"
 #+end_example
 
-
-* counting and display wrong: actually with indexedDB cache
-
-* test with final rendered page (so all are display)
-** starting with ALL rows fetched for officail an non-officail
-
-# "Discography": 1941 of 1946/2123  [artwork 567]   
-
-** switching to official
-
-# h2 header line: "Official Discography" (582 of 2123) [artwork 2067]
-# h2 header line: "Discography" (582) [artwork 578]                         original: OK
-
-** switching to non-official
-
-# h2 header line: "Non-Official Discography" (1541 of 2123) [artwork 2067]
-# h2 header line: "Discography" (2123) [artwork 2067]               original: OK
-
-- the row display, if uncollapsed all sub-tables is correct, but some sub-tables have a count in the h3 header of the
-  sub-table which render in the format
-
-#+begin_example
-(<actual rows in sub-table of the un-official case> of <actual rows in sub-table of the official case>)
-#+end_example
-
-e.g in the sub-table with name "Album + Compilation (168 of 36)"
-
-** filtering tests
-
-                ok                                                                ok
-# Album (3 of 8)/22 "[artwork] 3"  "of"  [ ]cc   <buttons> (ok)          Filtered 8 rows [MB-Name:"the"]
-
-#+begin_example
-global filter: "bruce"
-sub-header("Album") filter: "of"
-column filter("MB-Name"): "the"
-#+end_example
-
-==> then switch to
-
-#+begin_example
-global filter: "bruce"
-sub-header("Album") filter: "the" [cc]
-column filter("MB-Name"): "of"
-#+end_example
-
-# "Official Discography": 1939 of 1941/2123  [artwork 567]
-                ok                                                                ok
-# Album (1 of 3)/22 "[artwork] 1"  "the"  [x]cc   <buttons> (ok)          Filtered 3 rows [MB-Name:"of"]
-
-Table: 1 row (ok)
-
-
-* rendering time for VA - 1057 4.33s minutes in network mode
-
-
-* TODO inform the user that the CSV exporter exports the first table in "multi"-table mode
-
-inform the user that the CSV exporter exports the first table in "multi"-table mode
-
-
-* TODO tooltips - explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
-** DONE initial - for sub-table format "(<M> of <N>)" and "(<n> of <M>)/<N>" add dynamic tooltips
-
-- Please create a dynamic tooltip text for the following format "(<M> of <N>)" in the following span in the h3 header line of a sub-table
-
-#+begin_example
-<span class="mb-row-count-stat">(4 of 13)</span>
-#+end_example
-
-when a global filter alone is in effect, which tells the user 'There are <M> rows filtered from the full <N> rows in this sub-table as the effect of the global filter "<global filter expression>"' 
-
-- Please create two dynamic tooltip texts for the following format "(<n> of <M>)/<N>" on the following span in the h3 header line of a sub-table
-
-#+begin_example
-<span class="mb-row-count-stat">(3 of 4)/13</span>
-#+end_example
-
-on tooltip should show up when hovering over the bracketed part "(<n> of <M>)", the other one when hovering over the "<N>" part.
- - The tooltip over the "<N>" part should be "There are <N> total rows unfiltered in this sub-table"
- - The tooltip over the "(<n> of <M>)" part should be, when a global filter and a sub-table filter are both in effect, 'There are <n> rows filtered as the effect of the sub-table filter "<sub-table filter expression>" from the <M> rows already filtered by the global filter "<global filter expression>"'
-
-** DONE explain the rest of the formats in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
-
-there are bugs with the dynamic tooltip implementation from the last session:
-
-1.)
-
-the dynamic tooltip text for the following format h3 count rows format "(<M> of <N>)" is not always displayed
-
-2.)
-
-the two part dynamic tooltip text for the format "(<n> of <M>)/<N>" is cut of for the first part for ""(<n> of <M>)".
-So instead of showing
-
-#+begin_example
-3 rows filtered by the sub-table filter "<sub-table filter expression>" from the <M> rows already filtered by the global filter "<global filter expression>"
-#+end_example
-
-it just shows
-
-#+begin_example
-3 rows filtered by the sub-table filter
-#+end_example
-
-3.)
-
-when NO filter at all is in effect, the tooltip for just the format "<N>" should be "There are <N> total unfiltered rows in this table"
-
-** DONE bugs
-
-still bugs
-
-1.)
-
-in "multi"-table mode, when a global filter is active and on a specific sub-table there is NO sub-table filter in
-effect, but one or more column-level filters, the dynamic tooltip for the h3 count rows format of "(<M> of <N>)" for that specific sub-table should change
-
-#+begin_example
-"<M>" rows filtered by the sub-table column filters on columns "<list of column names with their respective column filter expressions>" from the <M> rows already filtered by the global filter "<global filter expression>"
-#+end_example
-
-The
-
-#+begin_example
-"<list of column names with their respective column filter expressions>"
-#+end_example
-
-could look like e.g
-
-#+begin_example
-'column name 2':"<column name 2 filter expression>", 'column name 5':"<column name 5 filter expression>", 'column name 6':"<column name 6 filter expression>", ...
-#+end_example
-
-** DONE still buggy
-
-still buggy
-
-1.)
-
-in "multi"-table mode, when a global filter is active and on a specific sub-table and there is NO sub-table filter in
-effect, but one or more column-level filters, the dynamic tooltip for the h3 count rows format of "(<M> of <N>)" for
-that specific sub-table
-
-#+begin_example
-"<M>" rows filtered by the sub-table column filters on columns "<list of column names with their respective column filter expressions>" from the <M> rows already filtered by the global filter "<global filter expression>"
-#+end_example
-
-is not reset to
-
-#+begin_example
-There are <M> rows filtered from the full <N> rows in this sub-table as the effect of the global filter "<global filter expression>"
-#+end_example
-
-when all the column level filters are reset
-
-** DONE There are 1 = There is 1
-
-a couple of small gliches:
-
-1.)
-
-adjust the tooltips for the case of just one row (plural to singular)
-
-#+begin_example
-"There are 1" === "There is 1"
-#+end_example
-
-2.)
-
-if for a specific sub-table all filter types are in effect, a global, a sub-table and one or more column level filters, the tooltip text for the format "(<n> of <n>)/<N>" should be
-
-#+begin_example
-There are "<n>" rows left after the global filter "<global filter expression>", the sub-table filter "<sub-table filter expression>" and the column level filters "<list of column names with their respective column filter expressions>" from <N> total unfiltered rows in this sub-table
-#+end_example
-
-** DONE remove numbers from column names
-
-when creating the list of column names with their filters e.g.
-
-#+begin_example
-'column name 2':"<column name 2 filter expression>", 'column name 5':"<column name 5 filter expression>", 'column name 6':"<column name 6 filter expression>", ...
-#+end_example
-
-write a helper function for extracting just the real column name. Most of the column headers also have a number in front
-of the glyph for the unique-value drop down menu for the number of unique values in the column, or in addition if a
-column is a multi-rows cell column, for the number of rows which have a multi-row cell.
-
-Right now e.g. I get typically as the tooltip when column filters are involved
-
-#+begin_example
-There are "3" rows left after the global filter "live", the sub-table filter "e st" and the column level filters 'Country/Date 1':"it" from 13 total unfiltered rows in this sub-table
-#+end_example
-
-The "1" after "Country/Date" which is the real column name is the 1 unique value in this column
-
-2.)
-
-extend the tooltip scenario (albeit much simpler) also to the case of "single"-table pageTypes, with the exception that
-now the count rows formats show up in the single table h2 header row.
-
-** DONE new bug
-
-now the extracted column names are ALL empty in both the "multi"- and "single"-table modes, so the New module-level
-helper removes too much (basically everything when trying to extract the real column name from the column header, e.g.
-
-#+begin_example
-<th data-col-name="Country/Date" style="cursor: default; position: relative;"><div class="mb-col-hdr-flex">Country/Date <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span><span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 1 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 1 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry"><span class="mb-col-uniq-count">1</span><span class="mb-col-uniq-btn">📊</span></span></div><div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;"></div></th>
-#+end_example
-
-In this case the real column name would be "Country/Date"
-
-** DONE bug in mult-table
-
-bugs in multi-table mode:
-
-1.)
-
-In "multi"-table mode, after the final rendering of the page, when NO filter has been specified yet, the tooltips on the sub-table h3 header row counts doesn't show the 
-
-#+begin_example
-There are <N> rows total unfiltered in this sub-table
-#+end_example
-
-only after a filter on any level has been specified
-
-2.)
-
-the tooltip in "multi"-table mode on the summarization row count h2 header line right now shows the text (which is fine for "single"-mode tables, as there is just ONE table)
-
-#+begin_example
-There are <N> rows total unfiltered in this table
-#+end_example
-
-but the wording should be
-
-#+begin_example
-There are <N> rows total unfiltered in ALL sub-tables
-#+end_example
-
-for "multi"-table pages
-
-** DONE still
-
-1.)
-
-The Initial tooltip is still missing on h3 during very first render of the page
-
-2.)
-
-please implement the same background colors in the tooltips for the filter expressions, as the actual background colors
-what the filter strings looks like when they are highlighted in the tables, e.g. orange for the global filter, green for the sub-table filter etc.
-
-** DONE double tooltips
-
-one last bug:
-
-The new colored tooltip shows up fine but is immediately overhovered by the tooltips from the complete h2/h3 lines
-
-#+begin_example
-h2.title = 'Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)';
-h3.title = 'Click to collapse/uncollapse sub-section (Ctrl+Click to toggle ALL sub-sections)';
-#+end_example
-
-** DONE configurable tooltips
-
-add some new features:
-
-1.)
-
-add a new "Tooltips" configuration section in the variable "const configSchema"
-
-2.)
-
-add a new boolean (default: true) which when true enables the whole h2/h3 row count tooltip feature we just introduced otherwise the standard h2/h3 row tooltip should take over
-
-3.)
-
-add a new configurable foreground and background color (default are the current values) for the h2/h3 row count tooltips
-
-** DONE add the background filter colors as the forground for the filter types
-
-colorize the row count tooltip in either the h2/h3 line even more:
-
-- add the same color as the foreground color from the global filter (red by default) to the string "global" filter (just
-  global) and the same color as the background color from the sub-table filter (green by default) to the string "column level" filters (just "column level").
-  So basically colorize the filter types like the actual filter expressions.
-
-** DONE add colors to the actual counts and add the background filter colors as the forground for the filter types
-
-small glitches
-
-1.)
-
-add a configurable fore- and background color (by default dark black on light grey) in the main configuration section
-("const configSchema") for both, the actual row count currently visible and the total unfiltered count in the row count
-span '"mb-row-count-stat"'
-
-#+begin_example
-<span class="mb-row-count-stat" data-mbtt="There are 3 rows left after the global filter &lt;span class=&quot;mbtt-gf&quot;&gt;bruce&lt;/span&gt;, the sub-table filter &lt;span class=&quot;mbtt-stf&quot;&gt;version&lt;/span&gt; and the column level filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt;, 'Comment':&lt;span class=&quot;mbtt-cf&quot;&gt;2&lt;/span&gt; from 47 total unfiltered rows in this sub-table">(9 of 47)</span>
-#+end_example
-
-** actually
-
-some bugs:
-
-1.)
-
-actually the
-
-#+begin_example
-sa_ui_row_count_color
-#+end_example
-
-and
-
-#+begin_example
-sa_ui_row_count_bg
-#+end_example
-
-are NOT meant to colorize the "Foreground (text) color of the (N of M) row-count stat span in H2/H3 headers" and "Background color of the (N of M) row-count stat span in H2/H3 headers"
-but instead to colorize just the actual counters in the tooltip itself:
-
-Let' say the tooltip is
-
-#+begin_example
-<span class="mb-row-count-stat" data-mbtt="There are 6 rows left after the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;sess&lt;/span&gt;, the &lt;span style=&quot;background:#90ee90;color:#000;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;sub-table&lt;/span&gt; filter &lt;span class=&quot;mbtt-stf&quot;&gt;ire&lt;/span&gt; and the &lt;span style=&quot;background:#add8e6;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;column level&lt;/span&gt; filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt; from 47 total unfiltered rows in this sub-table">(6 of 47)</span>
-#+end_example
-
-it should be the counts "6" and "47" ("<THIS ONE>" in the example below) which should get colorized with the configured colors
-
-#+begin_example
-<span class="mb-row-count-stat" data-mbtt="There are <THIS ONE> rows left after the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;sess&lt;/span&gt;, the &lt;span style=&quot;background:#90ee90;color:#000;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;sub-table&lt;/span&gt; filter &lt;span class=&quot;mbtt-stf&quot;&gt;ire&lt;/span&gt; and the &lt;span style=&quot;background:#add8e6;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;column level&lt;/span&gt; filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt; from <THIS ONE> total unfiltered rows in this sub-table">(6 of 47)</span>
-#+end_example
-
-2.)
-
-in the "Statistics" panel '<div id="mb-stats-panel"' in the case of "multi"-table pageTypes
-
-the toggle glyph
-
-#+begin_example
-<span title="Cycle all sub-table multi-row collapse buttons (expands all → collapses all → expands all…)" style="cursor: pointer; font-size: 0.8em; transition: transform 0.15s; display: inline-block; color: rgb(85, 85, 85); flex-shrink: 0; user-select: none;">▶</span>
-#+end_example
-
-STILL doesn't work, it doesn't collpase/uncollpase ALL the subtables
-
-3.)
-
-add a new configurable boolean (default:true) in the "Export" configuration section to either include the sort state glyph from the column headers in the export or not
-
-* TODO On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
-
-On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
-
-from the generic
-
-#+begin_example
-<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
-#+end_example
-
-to
-
-#+begin_example
-<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
-#+end_example
-
-for the format "(<n> of <M>)/<N>"
-
-** TODO fix the tooltip for the h2 line in "multi"-table mode, it's too broad
-
-fix the tooltip for the h2 line in "multi"-table mode
-
-
-* change hardcoded hightlight for col filter
-
-#+begin_example
-Global filter highlight: bg sa_global_filter_highlight_bg (default #FFD700), color sa_global_filter_highlight_color (default red)
-Column filter highlight: bg sa_column_filter_highlight_bg (default #add8e6), color sa_column_filter_highlight_color (default red)
-STF highlight: bg #90ee90 (hardcoded light green), color #000
-#+end_example
-
-
-* TODO on https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events "toggle EAA button" changes place with (row count)
-
-* TODO missing - JSDoc: * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
-
-#+begin_example
-    /**
-     * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
-     * in the document that removes `[class="treleases"]` elements the instant they
-     * are inserted into the rendered table.
-     *
-     * Background: the jesus2099 "mb. SUPER MIND CONTROL Ⅱ X TURBO" userscript
-     * injects a node such as:
-     *   <… class="treleases" title="SUPER MIND CONTROL Ⅱ X TURBO">
-     * into Length cells of the *live* rendered table — AFTER our render pipeline
-     * has already finished.  Because our pass-1 (applyIntegerColumnStyling) runs
-     * during row import (before the rows hit the DOM) and our pass-2
-     * (finalizeColonAlignedColumns) runs just before render, neither pass can see
-     * the annotation; the only reliable interception point is a MutationObserver
-     * that fires synchronously as each node is added.
-     *
-     * The observer:
-     *   - watches `childList` and `subtree` on each `table.tbl tbody`
-     *   - for every added node, checks whether it or any of its descendants
-     *     carries `class="treleases"` (exact match) — the attribute value used by
-     *     the jesus2099 script
-     *   - removes the offending element immediately, before the browser paints
-     *
-     * Called once after each `renderFinalTable` / `renderGroupedTable` completes.
-     * A module-level `WeakSet` prevents double-observing the same tbody across
-     * repeated re-renders.
-     *
-     * @returns {void}
-     */
-#+end_example
-
-#+begin_example
-    /**
-     * High-performance batch renderer for large datasets
-     * Uses DocumentFragment, chunked rendering, and progress updates
-     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
-     */
-    async function renderFinalTable(rows) {
-#+end_example
-
-* TODO todos
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
-
-* TODO make export configurable
+* DONE make export configurable
 ** DONE initial
 
 add some new features:
@@ -58438,11 +58006,11 @@ Include a "Close" button and also "Escape" key closing of the popup.
 
 ** DONE remove cruft before exporting
 *** "▶"
-** TODO make the sortable state configurable for export
+** DONE make the sortable state configurable for export
 
 add a new configurable boolean (default:true) in the "Export" configuration section to either include the sort state glyph from the column headers in the export or not
 
-** TODO bugs
+** DONE bugs
 
 in the "Statistics" panel '<div id="mb-stats-panel"' in the case of "multi"-table pageTypes
 
@@ -58613,9 +58181,450 @@ Museum Gala)
 can you explain or better fix
 
 
-* TODO row count switches place with EAA toggle button
+* DONE tooltips - explain the format in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
+** DONE initial - for sub-table format "(<M> of <N>)" and "(<n> of <M>)/<N>" add dynamic tooltips
 
-On pages of type https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+- Please create a dynamic tooltip text for the following format "(<M> of <N>)" in the following span in the h3 header line of a sub-table
+
+#+begin_example
+<span class="mb-row-count-stat">(4 of 13)</span>
+#+end_example
+
+when a global filter alone is in effect, which tells the user 'There are <M> rows filtered from the full <N> rows in this sub-table as the effect of the global filter "<global filter expression>"' 
+
+- Please create two dynamic tooltip texts for the following format "(<n> of <M>)/<N>" on the following span in the h3 header line of a sub-table
+
+#+begin_example
+<span class="mb-row-count-stat">(3 of 4)/13</span>
+#+end_example
+
+on tooltip should show up when hovering over the bracketed part "(<n> of <M>)", the other one when hovering over the "<N>" part.
+ - The tooltip over the "<N>" part should be "There are <N> total rows unfiltered in this sub-table"
+ - The tooltip over the "(<n> of <M>)" part should be, when a global filter and a sub-table filter are both in effect, 'There are <n> rows filtered as the effect of the sub-table filter "<sub-table filter expression>" from the <M> rows already filtered by the global filter "<global filter expression>"'
+
+** DONE explain the rest of the formats in the h2/h3 row count info display in the tooltip (2 of 7)/22 [artwork 6])
+
+there are bugs with the dynamic tooltip implementation from the last session:
+
+1.)
+
+the dynamic tooltip text for the following format h3 count rows format "(<M> of <N>)" is not always displayed
+
+2.)
+
+the two part dynamic tooltip text for the format "(<n> of <M>)/<N>" is cut of for the first part for ""(<n> of <M>)".
+So instead of showing
+
+#+begin_example
+3 rows filtered by the sub-table filter "<sub-table filter expression>" from the <M> rows already filtered by the global filter "<global filter expression>"
+#+end_example
+
+it just shows
+
+#+begin_example
+3 rows filtered by the sub-table filter
+#+end_example
+
+3.)
+
+when NO filter at all is in effect, the tooltip for just the format "<N>" should be "There are <N> total unfiltered rows in this table"
+
+** DONE bugs
+
+still bugs
+
+1.)
+
+in "multi"-table mode, when a global filter is active and on a specific sub-table there is NO sub-table filter in
+effect, but one or more column-level filters, the dynamic tooltip for the h3 count rows format of "(<M> of <N>)" for that specific sub-table should change
+
+#+begin_example
+"<M>" rows filtered by the sub-table column filters on columns "<list of column names with their respective column filter expressions>" from the <M> rows already filtered by the global filter "<global filter expression>"
+#+end_example
+
+The
+
+#+begin_example
+"<list of column names with their respective column filter expressions>"
+#+end_example
+
+could look like e.g
+
+#+begin_example
+'column name 2':"<column name 2 filter expression>", 'column name 5':"<column name 5 filter expression>", 'column name 6':"<column name 6 filter expression>", ...
+#+end_example
+
+** DONE still buggy
+
+still buggy
+
+1.)
+
+in "multi"-table mode, when a global filter is active and on a specific sub-table and there is NO sub-table filter in
+effect, but one or more column-level filters, the dynamic tooltip for the h3 count rows format of "(<M> of <N>)" for
+that specific sub-table
+
+#+begin_example
+"<M>" rows filtered by the sub-table column filters on columns "<list of column names with their respective column filter expressions>" from the <M> rows already filtered by the global filter "<global filter expression>"
+#+end_example
+
+is not reset to
+
+#+begin_example
+There are <M> rows filtered from the full <N> rows in this sub-table as the effect of the global filter "<global filter expression>"
+#+end_example
+
+when all the column level filters are reset
+
+** DONE There are 1 = There is 1
+
+a couple of small gliches:
+
+1.)
+
+adjust the tooltips for the case of just one row (plural to singular)
+
+#+begin_example
+"There are 1" === "There is 1"
+#+end_example
+
+2.)
+
+if for a specific sub-table all filter types are in effect, a global, a sub-table and one or more column level filters, the tooltip text for the format "(<n> of <n>)/<N>" should be
+
+#+begin_example
+There are "<n>" rows left after the global filter "<global filter expression>", the sub-table filter "<sub-table filter expression>" and the column level filters "<list of column names with their respective column filter expressions>" from <N> total unfiltered rows in this sub-table
+#+end_example
+
+** DONE remove numbers from column names
+
+when creating the list of column names with their filters e.g.
+
+#+begin_example
+'column name 2':"<column name 2 filter expression>", 'column name 5':"<column name 5 filter expression>", 'column name 6':"<column name 6 filter expression>", ...
+#+end_example
+
+write a helper function for extracting just the real column name. Most of the column headers also have a number in front
+of the glyph for the unique-value drop down menu for the number of unique values in the column, or in addition if a
+column is a multi-rows cell column, for the number of rows which have a multi-row cell.
+
+Right now e.g. I get typically as the tooltip when column filters are involved
+
+#+begin_example
+There are "3" rows left after the global filter "live", the sub-table filter "e st" and the column level filters 'Country/Date 1':"it" from 13 total unfiltered rows in this sub-table
+#+end_example
+
+The "1" after "Country/Date" which is the real column name is the 1 unique value in this column
+
+2.)
+
+extend the tooltip scenario (albeit much simpler) also to the case of "single"-table pageTypes, with the exception that
+now the count rows formats show up in the single table h2 header row.
+
+** DONE new bug
+
+now the extracted column names are ALL empty in both the "multi"- and "single"-table modes, so the New module-level
+helper removes too much (basically everything when trying to extract the real column name from the column header, e.g.
+
+#+begin_example
+<th data-col-name="Country/Date" style="cursor: default; position: relative;"><div class="mb-col-hdr-flex">Country/Date <span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅</span><span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲</span><span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼</span><span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 1 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 1 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry"><span class="mb-col-uniq-count">1</span><span class="mb-col-uniq-btn">📊</span></span></div><div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;"></div></th>
+#+end_example
+
+In this case the real column name would be "Country/Date"
+
+** DONE bug in mult-table
+
+bugs in multi-table mode:
+
+1.)
+
+In "multi"-table mode, after the final rendering of the page, when NO filter has been specified yet, the tooltips on the sub-table h3 header row counts doesn't show the 
+
+#+begin_example
+There are <N> rows total unfiltered in this sub-table
+#+end_example
+
+only after a filter on any level has been specified
+
+2.)
+
+the tooltip in "multi"-table mode on the summarization row count h2 header line right now shows the text (which is fine for "single"-mode tables, as there is just ONE table)
+
+#+begin_example
+There are <N> rows total unfiltered in this table
+#+end_example
+
+but the wording should be
+
+#+begin_example
+There are <N> rows total unfiltered in ALL sub-tables
+#+end_example
+
+for "multi"-table pages
+
+** DONE still
+
+1.)
+
+The Initial tooltip is still missing on h3 during very first render of the page
+
+2.)
+
+please implement the same background colors in the tooltips for the filter expressions, as the actual background colors
+what the filter strings looks like when they are highlighted in the tables, e.g. orange for the global filter, green for the sub-table filter etc.
+
+** DONE double tooltips
+
+one last bug:
+
+The new colored tooltip shows up fine but is immediately overhovered by the tooltips from the complete h2/h3 lines
+
+#+begin_example
+h2.title = 'Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)';
+h3.title = 'Click to collapse/uncollapse sub-section (Ctrl+Click to toggle ALL sub-sections)';
+#+end_example
+
+** DONE configurable tooltips
+
+add some new features:
+
+1.)
+
+add a new "Tooltips" configuration section in the variable "const configSchema"
+
+2.)
+
+add a new boolean (default: true) which when true enables the whole h2/h3 row count tooltip feature we just introduced otherwise the standard h2/h3 row tooltip should take over
+
+3.)
+
+add a new configurable foreground and background color (default are the current values) for the h2/h3 row count tooltips
+
+** DONE add the background filter colors as the forground for the filter types
+
+colorize the row count tooltip in either the h2/h3 line even more:
+
+- add the same color as the foreground color from the global filter (red by default) to the string "global" filter (just
+  global) and the same color as the background color from the sub-table filter (green by default) to the string "column level" filters (just "column level").
+  So basically colorize the filter types like the actual filter expressions.
+
+** DONE add colors to the actual counts and add the background filter colors as the forground for the filter types
+
+small glitches
+
+1.)
+
+add a configurable fore- and background color (by default dark black on light grey) in the main configuration section
+("const configSchema") for both, the actual row count currently visible and the total unfiltered count in the row count
+span '"mb-row-count-stat"'
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 3 rows left after the global filter &lt;span class=&quot;mbtt-gf&quot;&gt;bruce&lt;/span&gt;, the sub-table filter &lt;span class=&quot;mbtt-stf&quot;&gt;version&lt;/span&gt; and the column level filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt;, 'Comment':&lt;span class=&quot;mbtt-cf&quot;&gt;2&lt;/span&gt; from 47 total unfiltered rows in this sub-table">(9 of 47)</span>
+#+end_example
+
+** DONE actually
+
+some bugs:
+
+1.)
+
+actually the
+
+#+begin_example
+sa_ui_row_count_color
+#+end_example
+
+and
+
+#+begin_example
+sa_ui_row_count_bg
+#+end_example
+
+are NOT meant to colorize the "Foreground (text) color of the (N of M) row-count stat span in H2/H3 headers" and "Background color of the (N of M) row-count stat span in H2/H3 headers"
+but instead to colorize just the actual counters in the tooltip itself:
+
+Let' say the tooltip is
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 6 rows left after the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;sess&lt;/span&gt;, the &lt;span style=&quot;background:#90ee90;color:#000;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;sub-table&lt;/span&gt; filter &lt;span class=&quot;mbtt-stf&quot;&gt;ire&lt;/span&gt; and the &lt;span style=&quot;background:#add8e6;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;column level&lt;/span&gt; filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt; from 47 total unfiltered rows in this sub-table">(6 of 47)</span>
+#+end_example
+
+it should be the counts "6" and "47" ("<THIS ONE>" in the example below) which should get colorized with the configured colors
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are <THIS ONE> rows left after the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;sess&lt;/span&gt;, the &lt;span style=&quot;background:#90ee90;color:#000;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;sub-table&lt;/span&gt; filter &lt;span class=&quot;mbtt-stf&quot;&gt;ire&lt;/span&gt; and the &lt;span style=&quot;background:#add8e6;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;column level&lt;/span&gt; filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;5&lt;/span&gt; from <THIS ONE> total unfiltered rows in this sub-table">(6 of 47)</span>
+#+end_example
+
+2.)
+
+in the "Statistics" panel '<div id="mb-stats-panel"' in the case of "multi"-table pageTypes
+
+the toggle glyph
+
+#+begin_example
+<span title="Cycle all sub-table multi-row collapse buttons (expands all → collapses all → expands all…)" style="cursor: pointer; font-size: 0.8em; transition: transform 0.15s; display: inline-block; color: rgb(85, 85, 85); flex-shrink: 0; user-select: none;">▶</span>
+#+end_example
+
+STILL doesn't work, it doesn't collpase/uncollpase ALL the subtables
+
+3.)
+
+add a new configurable boolean (default:true) in the "Export" configuration section to either include the sort state glyph from the column headers in the export or not
+
+
+* counting and display wrong: actually with indexedDB cache
+
+* test with final rendered page (so all are display)
+** starting with ALL rows fetched for officail an non-officail
+
+# "Discography": 1941 of 1946/2123  [artwork 567]   
+
+** switching to official
+
+# h2 header line: "Official Discography" (582 of 2123) [artwork 2067]
+# h2 header line: "Discography" (582) [artwork 578]                         original: OK
+
+** switching to non-official
+
+# h2 header line: "Non-Official Discography" (1541 of 2123) [artwork 2067]
+# h2 header line: "Discography" (2123) [artwork 2067]               original: OK
+
+- the row display, if uncollapsed all sub-tables is correct, but some sub-tables have a count in the h3 header of the
+  sub-table which render in the format
+
+#+begin_example
+(<actual rows in sub-table of the un-official case> of <actual rows in sub-table of the official case>)
+#+end_example
+
+e.g in the sub-table with name "Album + Compilation (168 of 36)"
+
+** filtering tests
+
+                ok                                                                ok
+# Album (3 of 8)/22 "[artwork] 3"  "of"  [ ]cc   <buttons> (ok)          Filtered 8 rows [MB-Name:"the"]
+
+#+begin_example
+global filter: "bruce"
+sub-header("Album") filter: "of"
+column filter("MB-Name"): "the"
+#+end_example
+
+==> then switch to
+
+#+begin_example
+global filter: "bruce"
+sub-header("Album") filter: "the" [cc]
+column filter("MB-Name"): "of"
+#+end_example
+
+# "Official Discography": 1939 of 1941/2123  [artwork 567]
+                ok                                                                ok
+# Album (1 of 3)/22 "[artwork] 1"  "the"  [x]cc   <buttons> (ok)          Filtered 3 rows [MB-Name:"of"]
+
+Table: 1 row (ok)
+
+
+* rendering time for VA - 1057 4.33s minutes in network mode
+
+
+* TODO inform the user that the CSV exporter exports the first table in "multi"-table mode
+
+inform the user that the CSV exporter exports the first table in "multi"-table mode
+
+
+
+* TODO On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
+
+On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
+
+from the generic
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
+#+end_example
+
+to
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
+#+end_example
+
+for the format "(<n> of <M>)/<N>"
+
+** TODO fix the tooltip for the h2 line in "multi"-table mode, it's too broad
+
+fix the tooltip for the h2 line in "multi"-table mode
+
+
+* change hardcoded hightlight for col filter
+
+#+begin_example
+Global filter highlight: bg sa_global_filter_highlight_bg (default #FFD700), color sa_global_filter_highlight_color (default red)
+Column filter highlight: bg sa_column_filter_highlight_bg (default #add8e6), color sa_column_filter_highlight_color (default red)
+STF highlight: bg #90ee90 (hardcoded light green), color #000
+#+end_example
+
+
+* TODO missing - JSDoc: * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+
+#+begin_example
+    /**
+     * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+     * in the document that removes `[class="treleases"]` elements the instant they
+     * are inserted into the rendered table.
+     *
+     * Background: the jesus2099 "mb. SUPER MIND CONTROL Ⅱ X TURBO" userscript
+     * injects a node such as:
+     *   <… class="treleases" title="SUPER MIND CONTROL Ⅱ X TURBO">
+     * into Length cells of the *live* rendered table — AFTER our render pipeline
+     * has already finished.  Because our pass-1 (applyIntegerColumnStyling) runs
+     * during row import (before the rows hit the DOM) and our pass-2
+     * (finalizeColonAlignedColumns) runs just before render, neither pass can see
+     * the annotation; the only reliable interception point is a MutationObserver
+     * that fires synchronously as each node is added.
+     *
+     * The observer:
+     *   - watches `childList` and `subtree` on each `table.tbl tbody`
+     *   - for every added node, checks whether it or any of its descendants
+     *     carries `class="treleases"` (exact match) — the attribute value used by
+     *     the jesus2099 script
+     *   - removes the offending element immediately, before the browser paints
+     *
+     * Called once after each `renderFinalTable` / `renderGroupedTable` completes.
+     * A module-level `WeakSet` prevents double-observing the same tbody across
+     * repeated re-renders.
+     *
+     * @returns {void}
+     */
+#+end_example
+
+#+begin_example
+    /**
+     * High-performance batch renderer for large datasets
+     * Uses DocumentFragment, chunked rendering, and progress updates
+     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
+     */
+    async function renderFinalTable(rows) {
+#+end_example
+
+
+* TODO todos
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
+
+
+* TODO on https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events "toggle EAA button" changes place with (row count)
+
+* TODO row count switches place with EAA toggle button
+** initial
+
+Two bugs
+
+1.)
+
+ONLY on pages of type https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
 
 the row counter stats span
 
@@ -58636,3 +58645,162 @@ is rendered after the
 #+end_example
 
 This should NEVER happen, the "mb-row-count-stat" should always be rendered right after the h2 header title, in this case "Events"
+
+This works for ALL other pageTypes, so why is it broken on this special URL
+
+2.)
+
+The background color of the counters on
+
+"single"-table - h2 lines
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;70&lt;/span&gt; rows visible; 70 after global filter; 1329 total unfiltered">(70 of 70)/1329</span>
+#+end_example
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Events<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;109&lt;/span&gt; rows total unfiltered in this table">(109)</span><button id="mb-eaa-toggle-btn-0" type="button" class="mb-eaa-art-toggle-btn" title="Show big artwork EAA event art images stripe" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="1"><img class="mb-eaa-toggle-thumb" src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-eaa-toggle-count">2</span></button><button id="mb-eaa-toggle-btn-retry-0" type="button" title="Retry loading all EAA event art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter…" title="Enter global filter string (focus this field with 'Ctrl+G')" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude Matches (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle ALL highlighting</button><button id="mb-clear-column-filters-btn" title="Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by 'Ctrl+Shift+G')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status"></span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+#+end_example
+
+and "multi"-table - h3 lines
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;6&lt;/span&gt; rows filtered from the full &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;47&lt;/span&gt; rows in this sub-table by the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;ga&lt;/span&gt;">(6 of 47)</span>
+#+end_example
+
+should NOT be grey, but use the same background color as the h2/h3 line itself
+
+** messed up
+
+No you completely messed up, the order of appearance should always be
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;">
+  <span class="mb-toggle-icon">▼
+  </span>Appearances
+  <span class="mb-row-count-stat" 
+  </span>
+  <button id="mb-caa-toggle-btn-global" 
+    <img class="mb-caa-toggle-thumb" 
+    <span class="mb-caa-toggle-count">331
+    </span>
+  </button>
+  <button id="mb-caa-toggle-btn-global-retry" type="button"
+  </button>
+#+end_example
+
+
+* background color of counter wrong
+** initial
+
+The background color of the counters on
+
+"single"-table - h2 lines
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Events<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;109&lt;/span&gt; rows total unfiltered in this table">(109)</span><button id="mb-eaa-toggle-btn-0" type="button" class="mb-eaa-art-toggle-btn" title="Show big artwork EAA event art images stripe" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="1"><img class="mb-eaa-toggle-thumb" src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-eaa-toggle-count">2</span></button><button id="mb-eaa-toggle-btn-retry-0" type="button" title="Retry loading all EAA event art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter…" title="Enter global filter string (focus this field with 'Ctrl+G')" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-global-filter-clear" title="Clear global filter" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude Matches (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle ALL highlighting</button><button id="mb-clear-column-filters-btn" title="Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by 'Ctrl+Shift+G')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status"></span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+#+end_example
+
+and "multi"-table - h3 lines
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Click to collapse/uncollapse sub-section (Ctrl+Click to toggle ALL sub-sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Arranged recording <span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;4&lt;/span&gt; rows filtered from the full &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;47&lt;/span&gt; rows in this sub-table by the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;asb&lt;/span&gt;">(4 of 47)</span><button id="mb-stf-arranged_recording-resize-btn" type="button" class="mb-subtable-resize-btn" title="Auto-resize columns in sub-section &quot;arranged recording&quot;" aria-label="Auto-resize columns for: arranged recording" style="font-size: 0.8em; padding: 1px 5px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; display: inline-flex; align-items: center; box-sizing: border-box; transition: background-color 0.2s, border-color 0.2s, transform 0.1s, box-shadow 0.1s;">↔️</button><button id="mb-stf-arranged_recording-vis-btn" type="button" class="mb-subtable-vis-btn" title="Show/hide columns in sub-section &quot;arranged recording&quot;" aria-label="Column visibility for: arranged recording" style="font-size: 0.85em; padding: 1px 5px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; display: inline-flex; align-items: center; box-sizing: border-box; transition: background-color 0.2s, border-color 0.2s, transform 0.1s, box-shadow 0.1s;">👁️</button><span class="mb-subtable-filter-toggle-icon" title="Toggle filter elements for sub-section &quot;arranged recording&quot;" role="button" aria-label="Toggle sub-table filter for &quot;arranged recording&quot;">🔍</span><span class="mb-subtable-filter-container" data-category-name="arranged recording"><span class="mb-subtable-filter-wrapper"><input id="mb-stf-arranged_recording-input" type="text" placeholder="Filter &quot;arranged recording&quot;… just in this sub-table" title="Filter rows in the &quot;arranged recording&quot; sub-table" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px 0px 0px 3px; width: 320px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;"><span id="mb-stf-arranged_recording-clear" title="Clear filter for &quot;arranged recording&quot;" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(204, 204, 204); border-right: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-stf-arranged_recording-case-label" for="mb-stf-arranged_recording-case-checkbox" title="Case Sensitive Filtering (filter for &quot;${categoryName}&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-arranged_recording-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-stf-arranged_recording-rx-label" for="mb-stf-arranged_recording-rx-checkbox" title="RegExp Filtering (filter for &quot;${categoryName}&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-arranged_recording-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-stf-arranged_recording-ex-label" for="mb-stf-arranged_recording-ex-checkbox" title="Exclude Matches (filter for &quot;arranged recording&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-arranged_recording-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><button id="mb-stf-arranged_recording-clear-all-btn" class="mb-stf-clear-col-btn" type="button" title="Clear ALL column filters for this sub-table (the sub-table filter itself is kept)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all column filters</button></span><button id="mb-stf-arranged_recording-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand ALL collapsed multi-row cells in &quot;arranged recording&quot; sub-section" aria-label="Expand all collapsed multi-row cells in: arranged recording" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: none;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><span class="mb-subtable-controls"><button class="mb-subtable-clear-btn" type="button" title="Clear ALL COLUMN filters for this sub-table" style="display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span><span class="mb-subtable-clear-btn-label">Clear all column filters</span></button><button id="mb-stf-arranged_recording-toggle-filter-highlight-btn" type="button" title="Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><span class="mb-filter-status" data-table-name="arranged recording" data-table-index="0"></span><span class="mb-sort-status" data-table-name="arranged recording" data-table-index="0"></span></span></h3>
+#+end_example
+
+should NOT be grey, but use the same background color as the h2/h3 line itself
+
+** wrong
+
+Two bugs:
+
+1.)
+
+Actually the "description" parameters for the following two items are completely wrong
+
+#+begin_example
+        sa_ui_row_count_color: {
+            label: 'Row-count stat: text color',
+            type: 'color_picker',
+            default: '#111111',
+            description: 'Foreground (text) color of the (N of M) row-count stat span in H2/H3 headers. Default: dark black (#111111).'
+        },
+
+        sa_ui_row_count_bg: {
+            label: 'Row-count stat: background color',
+            type: 'color_picker',
+            default: '#e8e8e8',
+            description: 'Background color of the (N of M) row-count stat span in H2/H3 headers. Default: light grey (#e8e8e8).'
+        },
+#+end_example
+
+These colors are for the foreground an background colors for the row counts in the h2/h3 row count tooltips. There they actually are woking OK.
+
+2.)
+
+The background colors of the row counters on the h2/h3 lines itself, should'n be touched at all, they should inherit the background colors of the h2/h3 lines itself
+
+** colors for counts
+
+On "multi"-table pageTypes URLs
+
+the colorization of the row counts are not consistent:
+
+inside the
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Appearances<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;391&lt;/span&gt; rows visible; 391 after global filter; 1329 total unfiltered">(391 of 391)/1329</span><button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/6069bf25-f108-4670-8e62-d42eb55dfe32/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">55</span></button><button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button><span id="mb-filter-container" style="display: inline-flex; align-items: center; white-space: nowrap; gap: 5px; margin-left: 15px; vertical-align: middle;"><span id="mb-global-filter-wrapper" class="mb-filter-wrapper" style="display: inline-flex; align-items: stretch; position: relative;"><input id="mb-global-filter-input" placeholder="Global Filter… works across all sub-tables" title="Enter global filter string (focus this field with 'Ctrl+G')" style="font-size: 1em; padding: 2px 6px; border: 2px solid orange; border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s; box-shadow: orange 0px 0px 2px 2px;"><span id="mb-global-filter-clear" title="Clear global filter" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; flex-shrink: 0; cursor: pointer; user-select: none; font-size: 0.65em; color: rgb(153, 153, 153); border-top: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-right: none; background: rgb(250, 250, 250); transition: color 0.15s, background 0.15s;">✕</span><span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid orange; border-right: 2px solid orange; border-bottom: 2px solid orange; border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><label id="mb-global-filter-case-label" title="Case Sensitive Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-global-filter-rx-label" title="RegExp Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-global-filter-exclude-label" title="Exclude Matches (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label><span id="mb-preload-filter-msg" style="font-size: 0.8em; color: red; margin-left: 4px; font-weight: bold; white-space: nowrap; display: none;"></span><button id="mb-toggle-prefilter-btn" title="Toggle prefilter highlighting" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">Prefilter</button><button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.9em;"><span>multi-row</span><span>cells</span></span></button><button id="mb-toggle-filter-highlight-btn" title="Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle ALL highlighting</button><button id="mb-clear-column-filters-btn" title="Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL COLUMN filters</button><button id="mb-clear-all-filters-btn" title="Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by 'Ctrl+Shift+G')" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear ALL filters</button><span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;"><span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter [global:"6"]</span><span id="mb-sort-status-display" class="mb-sort-status"></span></span></span></h2>
+#+end_example
+
+in the span
+
+#+begin_example
+  <span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;391&lt;/span&gt; rows visible; 391 after global filter; 1329 total unfiltered">(391 of 391)/1329
+#+end_example
+
+the "391" and "1329" should also get the same treatment as the "391" in
+
+#+begin_example
+There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;391&lt;/span&gt;
+#+end_example
+
+and the string "global" should get the same colorization '&lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt;' as in the tooltip for the h3 counters
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;18&lt;/span&gt; rows filtered from the full &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;47&lt;/span&gt; rows in this sub-table by the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;6&lt;/span&gt;">(18 of 47)</span>
+#+end_example
+
+** extend colorization
+
+Some more bugfixes to colorization in the row count tooltips:
+
+1.)
+
+In the h2 row after the colorized string "global"
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;9&lt;/span&gt; rows visible; &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;9&lt;/span&gt; after &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter; &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;1329&lt;/span&gt; total unfiltered">(9 of 9)/1329
+</span>
+#+end_example
+
+the current output
+
+#+begin_example
+after &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter;
+#+end_example
+
+is missing the actual global filter string after the word "filter" ==> 'filter &lt;span class=&quot;mbtt-gf&quot;&gt;sess&lt;/span&gt;'
+
+like it's been done in the h3 row counter
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;2&lt;/span&gt; rows filtered by &lt;span style=&quot;background:#add8e6;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;column&lt;/span&gt; filters 'Length':&lt;span class=&quot;mbtt-cf&quot;&gt;4&lt;/span&gt;, 'Comment':&lt;span class=&quot;mbtt-cf&quot;&gt;live&lt;/span&gt; from &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;47&lt;/span&gt; rows in this sub-table, further narrowed by the &lt;span style=&quot;background:#FFD700;color:red;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;global&lt;/span&gt; filter &lt;span class=&quot;mbtt-gf&quot;&gt;sess&lt;/span&gt;">(2 of 47)</span>
+#+end_example
+
+2.)
+
+in the h3 row counter, also colorize the column names before each column level filter string, the format is "'<column name>':<column filter string>"
+Change the foreground color of each '<column name>' to be the same as the background color of the "<column filter string>"
+
+
+
+
