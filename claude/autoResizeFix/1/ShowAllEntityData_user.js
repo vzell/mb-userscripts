@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.253+2026-03-20
+// @version      9.99.260+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1580,21 +1580,37 @@
         /**
          * splitLocation — splits a "Location" cell (venue / city / country) into
          * three separate cells: Place, Area, and Country.
-         * Place  ← links whose href contains '/place/'
-         * Area   ← links whose href contains '/area/' but without a flag wrapper
-         * Country← links whose href contains '/area/' wrapped in a .flag span
+         * Place   ← links whose href contains '/place/'
+         * Area    ← links whose href contains '/area/' but NOT wrapped in a .flag span
+         * Country ← links whose href contains '/area/' wrapped in a .flag span
+         *
+         * Multi-row aware: when the source cell contains a <ul><li> structure (i.e.
+         * the Location column was already wrapped by renderMultiRowCell or inherited
+         * a multi-row layout from MusicBrainz), each <li> is processed independently
+         * and the results are placed into parallel <ul><li> lists in the three output
+         * cells — one <li> per source <li> for each synthetic column.  This mirrors
+         * splitCountryDate's per-event <li> approach so that the three split columns
+         * stay row-aligned with the source.
+         *
          * Synthetic columns: ['Place', 'Area', 'Country']
          */
         splitLocation(sourceCell) {
             const tdP = document.createElement('td');
             const tdA = document.createElement('td');
             const tdC = document.createElement('td');
-            if (sourceCell) {
-                sourceCell.querySelectorAll('a').forEach(a => {
-                    const href     = a.getAttribute('href');
-                    const clonedA  = a.cloneNode(true);
+            if (!sourceCell) return [tdP, tdA, tdC];
+
+            /**
+             * Process one DOM node (a single <li> content or the whole flat cell)
+             * and append the extracted Place / Area / Country fragments to the
+             * provided containers (either <li> or <td> elements).
+             */
+            const _processNode = (node, containerP, containerA, containerC) => {
+                node.querySelectorAll('a').forEach(a => {
+                    const href    = a.getAttribute('href');
+                    const clonedA = a.cloneNode(true);
                     if (href && href.includes('/place/')) {
-                        tdP.appendChild(clonedA);
+                        containerP.appendChild(clonedA);
                     } else if (href && href.includes('/area/')) {
                         const flagSpan = a.closest('.flag');
                         if (flagSpan) {
@@ -1610,14 +1626,41 @@
                             } else {
                                 span.innerHTML = flagSpan.innerHTML;
                             }
-                            tdC.appendChild(span);
+                            containerC.appendChild(span);
                         } else {
-                            if (tdA.hasChildNodes()) tdA.appendChild(document.createTextNode(', '));
-                            tdA.appendChild(clonedA);
+                            if (containerA.hasChildNodes()) containerA.appendChild(document.createTextNode(', '));
+                            containerA.appendChild(clonedA);
                         }
                     }
                 });
+            };
+
+            const sourceLis = Array.from(sourceCell.querySelectorAll(':scope > ul > li'));
+
+            if (sourceLis.length > 0) {
+                // ── Multi-row path: build parallel <ul><li> lists ──────────────
+                const ulP = document.createElement('ul');
+                const ulA = document.createElement('ul');
+                const ulC = document.createElement('ul');
+
+                sourceLis.forEach(li => {
+                    const liP = document.createElement('li');
+                    const liA = document.createElement('li');
+                    const liC = document.createElement('li');
+                    _processNode(li, liP, liA, liC);
+                    ulP.appendChild(liP);
+                    ulA.appendChild(liA);
+                    ulC.appendChild(liC);
+                });
+
+                if (ulP.querySelector('li a')) tdP.appendChild(ulP);
+                if (ulA.querySelector('li a')) tdA.appendChild(ulA);
+                if (ulC.querySelector('li a')) tdC.appendChild(ulC);
+            } else {
+                // ── Flat path: original behaviour for non-multi-row cells ──────
+                _processNode(sourceCell, tdP, tdA, tdC);
             }
+
             return [tdP, tdA, tdC];
         },
 
@@ -3075,7 +3118,7 @@
                     { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
-                collapsableColumns: [ 'Artists', 'Location', 'EAA' ],
+                collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
                 addEAA: 'Event',
                 extractMainColumn: 'Event'
             },
@@ -3621,7 +3664,7 @@
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
                     { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
                 ],
-                collapsableColumns: [ 'Location', 'EAA' ],
+                collapsableColumns: [ 'Location', 'EAA', 'Place', 'Area', 'Country' ],
                 addEAA: 'Event',
                 extractMainColumn: 'Event'
             },
@@ -4710,7 +4753,9 @@
      * @returns {string} HTML string to assign to btn.innerHTML
      */
     function makeCollapseExpandBtnHTML(expand) {
-        const arrow  = expand ? '▶' : '◀';
+        // ▶ = currently collapsed → click will EXPAND
+        // ▼ = currently expanded  → click will COLLAPSE
+        const arrow  = expand ? '▶' : '▼';
         const action = expand ? 'Expand' : 'Collapse';
         return `<span style="align-self:center;font-size:1em;">${arrow}</span>` +
             `<span style="display:flex;flex-direction:column;align-items:center;` +
@@ -5958,7 +6003,35 @@
             clone.querySelectorAll('[data-erg-btn]').forEach(el => el.remove());
         }
 
-        let text = clone.textContent.trim().replace(/\s+/g, ' ');
+        // Before extracting text, insert a space node before every Element child
+        // inside the clone. This ensures that adjacent sibling elements (e.g. the
+        // .release-country and .release-date spans inside a .release-event, or a
+        // date text node and an injected .mb-day-of-week span) are separated by a
+        // space when textContent is read — producing 'US 1973-01-05 Fri' instead
+        // of 'US1973-01-05Fri'.
+        (function _insertSpaces(node) {
+            const children = Array.from(node.childNodes); // snapshot before mutation
+            children.forEach(child => {
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    node.insertBefore(document.createTextNode(' '), child);
+                    _insertSpaces(child); // recurse into element children
+                }
+            });
+        })(clone);
+
+        // For multi-row <ul><li> cells, join each <li>'s text with a space.
+        // The _insertSpaces pass above ensures each li's textContent already
+        // has spaces between its constituent child elements.
+        const lis = clone.querySelectorAll('ul > li');
+        let text;
+        if (lis.length > 0) {
+            text = Array.from(lis)
+                .map(li => li.textContent.trim().replace(/\s+/g, ' '))
+                .filter(Boolean)
+                .join(' ');
+        } else {
+            text = clone.textContent.trim().replace(/\s+/g, ' ');
+        }
         if (Lib.settings.sa_export_strip_title_glyphs) {
             text = text.replace(/^[▶▼◀▲]\s*/, '');
         }
@@ -9275,6 +9348,7 @@ ${sections.join('\n')}
             ? 'Table Details' : 'Table Detail';
         const _tdHead  = _mkSectionHead('🗃️', _tdLabel);
         if (tableMode === 'multi' && _tableData.length > 1) {
+            // Toggle 1 (leftmost): collapse/expand ALL table-detail cards at once
             const _tdToggle = document.createElement('span');
             _tdToggle.textContent = '▼';
             _tdToggle.title = 'Collapse/expand all table-detail cards';
@@ -9289,6 +9363,55 @@ ${sections.join('\n')}
                 });
             });
             _tdHead.insertBefore(_tdToggle, _tdHead.firstChild);
+
+            // Toggle 2 (between icon and label): cycle the per-sub-table collapse
+            // buttons in the live table (the ▶N▤ column-header collapse buttons),
+            // emulating a click on every visible sub-table's .mb-subtable-collapse-btn.
+            // State cycles: all-expanded → all-collapsed → all-expanded …
+            const _subToggle = document.createElement('span');
+            _subToggle.textContent = '▶';
+            _subToggle.title = 'Cycle all sub-table multi-row collapse buttons ' +
+                               '(expands all → collapses all → expands all…)';
+            _subToggle.style.cssText = `cursor:pointer;font-size:0.8em;` +
+                `transition:transform 0.15s;display:inline-block;color:${C.muted};` +
+                `flex-shrink:0;user-select:none;`;
+            let _subAllExpanded = false; // tracks current bulk state
+            _subToggle.addEventListener('click', () => {
+                // Identical strategy to rewireGlobalCollapseButtonMulti:
+                // iterate ALL .mb-col-collapse-hdr-btn across every table,
+                // drive cells directly via _applyCollapseState.
+                const _targetExpand = !_subAllExpanded;
+                document.querySelectorAll('table.tbl .mb-col-collapse-hdr-btn').forEach(hdrBtn => {
+                    const colIdx = parseInt(hdrBtn.dataset.colIndex, 10);
+                    if (isNaN(colIdx)) return;
+                    const _tbl = hdrBtn.closest('table.tbl');
+                    if (!_tbl) return;
+                    Array.from(_tbl.querySelectorAll('tbody tr')).forEach(tr => {
+                        const td = tr.cells[colIdx];
+                        if (!td) return;
+                        const toggle = td.querySelector('.mb-cell-collapse-toggle');
+                        if (!toggle) return;
+                        _applyCollapseState(toggle, _targetExpand);
+                    });
+                    const hg = hdrBtn.querySelector('.mb-col-collapse-glyph');
+                    if (hg) hg.textContent = _targetExpand ? '▼' : '▶';
+                    hdrBtn.setAttribute('aria-expanded', _targetExpand ? 'true' : 'false');
+                });
+                // Update all sub-table collapse button glyphs
+                document.querySelectorAll('.mb-subtable-collapse-btn').forEach(btn => {
+                    if (btn.style.display !== 'none')
+                        btn.innerHTML = makeCollapseExpandBtnHTML(!_targetExpand);
+                });
+                _subAllExpanded = _targetExpand;
+                _subToggle.textContent = _targetExpand ? '▼' : '▶';
+            });
+            // Insert between the 🗃️ icon span and the text span
+            const _iconSpan = _tdHead.querySelector('span[style*="1.1em"]');
+            if (_iconSpan && _iconSpan.nextSibling) {
+                _tdHead.insertBefore(_subToggle, _iconSpan.nextSibling);
+            } else {
+                _tdHead.appendChild(_subToggle);
+            }
         }
         body.appendChild(_tdHead);
 
@@ -9525,8 +9648,10 @@ ${sections.join('\n')}
                 colToggleBar.addEventListener('click', () => {
                     const expanded = colToggleBar.dataset.colExpanded === 'true';
                     colToggleBar.dataset.colExpanded = expanded ? 'false' : 'true';
-                    colIcon.style.transform = expanded ? 'rotate(-90deg)' : '';
+                    // Use ▶ for collapsed and ▼ for expanded — no CSS transform
+                    // (rotate(-90deg) on ▶ renders as ▲, not ▶).
                     colIcon.textContent     = expanded ? '▶' : '▼';
+                    colIcon.style.transform = '';
                     colDetail.style.display = expanded ? 'none' : '';
                 });
 
@@ -10761,11 +10886,10 @@ a { color: #1565c0; }`;
 
             // ── Measurement div ───────────────────────────────────────────────
             const measureDiv = document.createElement('div');
-            measureDiv.style.cssText = `
-                position: absolute; visibility: hidden; white-space: nowrap;
-                top: -9999px; left: -9999px; display: inline-block;
-                font-size: inherit; padding: 4px 8px;
-            `;
+            measureDiv.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;left:-9999px;display:inline-block;font-size:inherit;padding:4px 8px;';
+            measureDiv.style.setProperty('white-space',   'nowrap',  'important');
+            measureDiv.style.setProperty('overflow-wrap', 'normal',  'important');
+            measureDiv.style.setProperty('word-break',    'normal',  'important');
             document.body.appendChild(measureDiv);
 
             // Measure header widths
@@ -10779,17 +10903,16 @@ a { color: #1565c0; }`;
                 measureDiv.innerHTML = '';
                 Array.from(th.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
                 measureDiv.querySelectorAll('*').forEach(el => {
-                    el.style.whiteSpace   = 'nowrap';
-                    el.style.overflowWrap = 'normal';
-                    el.style.wordBreak    = 'normal';
+                    el.style.setProperty('white-space',   'nowrap',  'important');
+                    el.style.setProperty('overflow-wrap', 'normal',  'important');
+                    el.style.setProperty('word-break',    'normal',  'important');
                 });
                 columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
             });
 
-            // Measure data-cell widths (sample up to 100 rows)
-            const rows       = table.querySelectorAll('tbody tr');
-            const sampleStep = Math.max(1, Math.floor(rows.length / Math.min(rows.length, 100)));
-            for (let i = 0; i < rows.length; i += sampleStep) {
+            // Measure ALL data rows — no sampling.
+            const rows = table.querySelectorAll('tbody tr');
+            for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
                 if (row.style.display === 'none') continue;
                 Array.from(row.cells).forEach((cell, colIndex) => {
@@ -10802,11 +10925,31 @@ a { color: #1565c0; }`;
                     measureDiv.innerHTML = '';
                     Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
                     measureDiv.querySelectorAll('*').forEach(el => {
-                        el.style.whiteSpace   = 'nowrap';
-                        el.style.overflowWrap = 'normal';
-                        el.style.wordBreak    = 'normal';
+                        el.style.setProperty('white-space',   'nowrap',  'important');
+                        el.style.setProperty('overflow-wrap', 'normal',  'important');
+                        el.style.setProperty('word-break',    'normal',  'important');
                     });
                     columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
+
+                    // Also measure each <li> individually (hidden or visible) so that
+                    // collapsed multi-row cells and single-li synthetic columns like
+                    // 'Primary Alias' are measured at their full single-line width.
+                    cell.querySelectorAll('ul > li').forEach(li => {
+                        if (li.classList.contains('mb-caa-art-li')) return;
+                        const liClone = li.cloneNode(true);
+                        liClone.style.display     = 'inline-block';
+                        liClone.style.setProperty('white-space',   'nowrap',  'important');
+                        liClone.style.setProperty('overflow-wrap', 'normal',  'important');
+                        liClone.style.setProperty('word-break',    'normal',  'important');
+                        liClone.querySelectorAll('*').forEach(el => {
+                            el.style.setProperty('white-space',   'nowrap',  'important');
+                            el.style.setProperty('overflow-wrap', 'normal',  'important');
+                            el.style.setProperty('word-break',    'normal',  'important');
+                        });
+                        measureDiv.innerHTML = '';
+                        measureDiv.appendChild(liClone);
+                        columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
+                    });
 
                     // ── CAA/EAA art cells: measure collapsed image-li content ──────
                     // When the [data-caa-expand-btn] is in its collapsed state (▶),
@@ -10832,7 +10975,7 @@ a { color: #1565c0; }`;
                                 const liClone = li.cloneNode(true);
                                 liClone.style.display     = '';
                                 liClone.style.whiteSpace  = 'nowrap';
-                                liClone.style.overflowWrap = 'normal';
+                                liClone.style.setProperty('overflow-wrap', 'normal', 'important');
                                 liClone.style.wordBreak   = 'normal';
                                 // Strip the <img> thumbnail itself — it has a fixed width and
                                 // its natural-width is not what determines column width.
@@ -10845,9 +10988,9 @@ a { color: #1565c0; }`;
                                 measureDiv.innerHTML = '';
                                 measureDiv.appendChild(liClone);
                                 measureDiv.querySelectorAll('*').forEach(el => {
-                                    el.style.whiteSpace   = 'nowrap';
-                                    el.style.overflowWrap = 'normal';
-                                    el.style.wordBreak    = 'normal';
+                                    el.style.setProperty('white-space',   'nowrap',  'important');
+                                    el.style.setProperty('overflow-wrap', 'normal',  'important');
+                                    el.style.setProperty('word-break',    'normal',  'important');
                                 });
                                 columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
                             });
@@ -10871,8 +11014,9 @@ a { color: #1565c0; }`;
             columnWidths.forEach((width, index) => {
                 const col = document.createElement('col');
                 if (columnVisible[index]) {
+                    // Leave visible col widths unset (auto layout); th.style.minWidth
+                    // provides the floor so wrap-anywhere cells cannot cap the column.
                     const finalWidth = Math.ceil(width + 20);
-                    col.style.width = `${finalWidth}px`;
                     totalWidth += finalWidth;
                     visibleCount++;
                 } else {
@@ -10882,9 +11026,14 @@ a { color: #1565c0; }`;
                 colgroup.appendChild(col);
             });
 
-            table.style.tableLayout = 'fixed';
+            // Use auto layout (same rationale as toggleAutoResizeColumns)
+            table.style.tableLayout = 'auto';
             table.style.width       = `${totalWidth}px`;
             table.style.minWidth    = `${totalWidth}px`;
+            // Set min-width on each visible <th>
+            headers.forEach((th, idx) => {
+                if (columnVisible[idx]) th.style.minWidth = `${Math.ceil(columnWidths[idx] + 20)}px`;
+            });
 
             if (Lib.settings.sa_enable_column_resizing) makeColumnsResizable(table);
 
@@ -10929,6 +11078,10 @@ a { color: #1565c0; }`;
      * @param {Object} state - Original state object
      */
     function restoreOriginalTableState(table, state) {
+        // Clear th min-widths set by auto-resize
+        table.querySelectorAll('thead tr:first-child th').forEach(th => {
+            th.style.minWidth = '';
+        });
         // Restore table styles
         table.style.width = state.tableWidth || '';
         table.style.minWidth = state.tableMinWidth || '';
@@ -11137,16 +11290,13 @@ a { color: #1565c0; }`;
             //
             //   3. word-break: same — reset to normal so no mid-word breaks occur.
             const measureDiv = document.createElement('div');
-            measureDiv.style.cssText = `
-                position: absolute;
-                visibility: hidden;
-                white-space: nowrap;
-                word-break: normal;
-                overflow-wrap: normal;
-                font-family: inherit;
-                font-size: inherit;
-                padding: 4px 8px;
-            `;
+            // Use !important on text-wrap properties so that MusicBrainz stylesheet
+            // rules (including any with !important, e.g. .wrap-anywhere) cannot
+            // override them and cause wrapping inside the measureDiv.
+            measureDiv.style.cssText = 'position:absolute;visibility:hidden;font-family:inherit;font-size:inherit;padding:4px 8px;';
+            measureDiv.style.setProperty('white-space',   'nowrap',  'important');
+            measureDiv.style.setProperty('overflow-wrap', 'normal',  'important');
+            measureDiv.style.setProperty('word-break',    'normal',  'important');
             document.body.appendChild(measureDiv);
 
             // Measure header widths (ONLY for visible columns)
@@ -11180,9 +11330,9 @@ a { color: #1565c0; }`;
                 // explicit stylesheet rules like .wrap-anywhere{overflow-wrap:anywhere}.
                 // Setting the inline style on each element beats any stylesheet rule.
                 measureDiv.querySelectorAll('*').forEach(el => {
-                    el.style.whiteSpace   = 'nowrap';
-                    el.style.overflowWrap = 'normal';
-                    el.style.wordBreak    = 'normal';
+                    el.style.setProperty('white-space',   'nowrap',  'important');
+                    el.style.setProperty('overflow-wrap', 'normal',  'important');
+                    el.style.setProperty('word-break',    'normal',  'important');
                 });
 
                 const width = measureDiv.offsetWidth;
@@ -11192,12 +11342,11 @@ a { color: #1565c0; }`;
                 Lib.debug('resize', `Header ${colIndex}: "${th.textContent.trim()}" = ${width}px`);
             });
 
-            // Measure data cell widths (sample rows for performance, ONLY visible columns)
+            // Measure ALL data rows — no sampling.  Sampling caused long cells at
+            // odd/skipped indices to be missed, resulting in under-sized columns.
             const rows = table.querySelectorAll('tbody tr');
-            const sampleSize = Math.min(rows.length, 100); // Sample up to 100 rows
-            const sampleStep = Math.max(1, Math.floor(rows.length / sampleSize));
 
-            for (let i = 0; i < rows.length; i += sampleStep) {
+            for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
 
                 // Skip hidden rows
@@ -11217,32 +11366,36 @@ a { color: #1565c0; }`;
                     measureDiv.style.fontFamily = styles.fontFamily;
 
                     // Clone the cell's CHILDREN directly into measureDiv (not the <td> itself).
-                    // Appending an orphaned <td> triggers browser table-fixup which wraps
-                    // it in anonymous table/table-row boxes that carry white-space:normal,
-                    // defeating the white-space:nowrap set on measureDiv.  This is the root
-                    // cause of Event-column cells (which contain a blank-icon/artwork-icon
-                    // span + a .wrap-anywhere link + a .comment span) being measured as
-                    // too narrow — only the widest single token (e.g. the icon's fixed
-                    // pixel width) was returned instead of the full single-line width.
                     measureDiv.innerHTML = '';
                     Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
-                    // Force every cloned descendant to not wrap.  CSS inheritance only
-                    // fills values that are not explicitly set — it does NOT override
-                    // explicit stylesheet rules like .wrap-anywhere{overflow-wrap:anywhere}.
-                    // Setting the inline style on each element beats any stylesheet rule.
-                    // Without this, .wrap-anywhere anchors break text inside the measureDiv
-                    // even though its own white-space is nowrap, causing offsetWidth to
-                    // reflect only the widest non-breaking token instead of the full
-                    // single-line width of the entire cell content.
                     measureDiv.querySelectorAll('*').forEach(el => {
-                        el.style.whiteSpace   = 'nowrap';
-                        el.style.overflowWrap = 'normal';
-                        el.style.wordBreak    = 'normal';
+                        el.style.setProperty('white-space',   'nowrap',  'important');
+                        el.style.setProperty('overflow-wrap', 'normal',  'important');
+                        el.style.setProperty('word-break',    'normal',  'important');
                     });
+                    columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
 
-                    const width = measureDiv.offsetWidth;
-
-                    columnWidths[colIndex] = Math.max(columnWidths[colIndex], width);
+                    // Also measure each <li> individually (including hidden ones from
+                    // collapsed multi-row cells and single-li synthetic columns like
+                    // 'Primary Alias').  Block <ul>/<li> elements inside the inline
+                    // measureDiv may not expand to their full text width, so measuring
+                    // each li as a standalone inline block gives a reliable maximum.
+                    cell.querySelectorAll('ul > li').forEach(li => {
+                        if (li.classList.contains('mb-caa-art-li')) return; // handled separately
+                        const liClone = li.cloneNode(true);
+                        liClone.style.display     = 'inline-block';
+                        liClone.style.setProperty('white-space',   'nowrap',  'important');
+                        liClone.style.setProperty('overflow-wrap', 'normal',  'important');
+                        liClone.style.setProperty('word-break',    'normal',  'important');
+                        liClone.querySelectorAll('*').forEach(el => {
+                            el.style.setProperty('white-space',   'nowrap',  'important');
+                            el.style.setProperty('overflow-wrap', 'normal',  'important');
+                            el.style.setProperty('word-break',    'normal',  'important');
+                        });
+                        measureDiv.innerHTML = '';
+                        measureDiv.appendChild(liClone);
+                        columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
+                    });
                 });
             }
 
@@ -11263,16 +11416,14 @@ a { color: #1565c0; }`;
             columnWidths.forEach((width, index) => {
                 const col = document.createElement('col');
 
-                // Only set width for VISIBLE columns
                 if (columnVisible[index]) {
-                    // Add some padding to the calculated width
-                    const finalWidth = Math.ceil(width + 20); // 20px extra for comfort
-                    col.style.width = `${finalWidth}px`;
+                    // In table-layout:auto, col.style.width can act as a hard cap in
+                    // some browsers even when th.style.minWidth is larger.  Leave
+                    // visible col widths unset; min-width on <th> provides the floor.
                     visibleColumnCount++;
-                    Lib.debug('resize', `Table ${tableIndex}, Column ${index}: ${finalWidth}px (visible)`);
+                    Lib.debug('resize', `Table ${tableIndex}, Column ${index}: ${Math.ceil(width + 20)}px min-width (visible)`);
                 } else {
-                    // For hidden columns, don't set a width - let them stay at their natural (hidden) size
-                    col.style.width = '0px';
+                    col.style.width   = '0px';
                     col.style.display = 'none';
                     Lib.debug('resize', `Table ${tableIndex}, Column ${index}: 0px (hidden)`);
                 }
@@ -11280,8 +11431,20 @@ a { color: #1565c0; }`;
                 colgroup.appendChild(col);
             });
 
-            // Set table to use fixed layout for consistency
-            table.style.tableLayout = 'fixed';
+            // Use auto table layout so that wrap-anywhere / long-word cells can
+            // still expand past the measured minimum width when needed, preventing
+            // premature line-breaks in cells that contain inline-block elements
+            // (e.g. .mb-eaa-inline-ph) followed by wrap-anywhere anchors.
+            // min-width on each <col> acts as a lower bound; the browser may widen
+            // columns further if required to avoid truncation.
+            table.style.tableLayout = 'auto';
+
+            // Set column min-widths on <th> so sticky auto layout respects them
+            headers.forEach((th, idx) => {
+                if (columnVisible[idx]) {
+                    th.style.minWidth = `${Math.ceil(columnWidths[idx] + 20)}px`;
+                }
+            });
 
             // Calculate total table width (only from visible columns)
             const totalWidth = columnWidths.reduce((sum, w, idx) => {

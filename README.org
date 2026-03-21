@@ -58367,9 +58367,8 @@ the new toggle glyph
 doesn't work
 
 
-* TODO In the "Place" column there is actually on 1 multi-row columns present (but it shows the original 5 values from the columns to split)
-
-* TODO why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
+* DONE In the "Place" column there is actually on 1 multi-row columns present (but it shows the original 5 values from the columns to split)
+* DONE why not properly auto-resized - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=148&page=1 - see png
 ** very strange
 *** the column lenght is calcuated wrong for the real "Title"
 
@@ -58488,9 +58487,11 @@ should now also be added to the "collapsableColumns" parameter where appropriate
 collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
 #+end_example
 
-* TODO There is a subtle bug when it comes to calculating the width of the auto-resized column "Event" for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+* DONE There is a subtle bug when it comes to calculating the width of the auto-resized column "Event" for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
 
-There is a subtle bug when it comes to calculating the width of the auto-resized column "Event" for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+There is STILL a subtle bug when it comes to calculating the width of the auto-resized column "Event" for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+(is it possible that a MusicBrainz originla CSS  stysheet comes in out way ?)
 
 For some cells, e.g.
 
