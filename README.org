@@ -45837,7 +45837,6 @@ text) ? If yes, please implement
 
 * align button texts and make everything configurable (size, font, height, character to underline)
 * add version to app help, configuration and keybord shortcuts dialogs
-
 * Make all popup dialogs use the format of
 
 #+begin_example
@@ -45855,7 +45854,6 @@ text) ? If yes, please implement
                 filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
                 filterStatusDisplay.style.color = 'green';
 #+end_example
-
 
 
 * TODO add a temporarily disable filter toggle icon left from "x" without actually deleting the filter as long as the hold the mouse 1 during click on that toggle
@@ -56100,6 +56098,29 @@ Change the foreground color of each '<column name>' to be the same as the backgr
 
 
 
+* DONE On "multi"-table pageTypes, change the current tooltip e.g. on the span "mb-row-count-stat"
+** initial
+
+On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
+
+from the generic
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
+#+end_example
+
+to
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
+#+end_example
+
+for the format "(<n> of <M>)/<N>"
+
+** DONE fix the tooltip for the h2 line in "multi"-table mode, it's too broad
+
+fix the tooltip for the h2 line in "multi"-table mode
+
 
 * TODO posting to MusicBrainz forum
 ** <2026-01-28 Wed 09:05>
@@ -57309,13 +57330,10 @@ to the event parts extracted
 
 * TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
 * TODO for RGs CAA artwork also display the Release from where it's sourced
 * TODO add menu to hover CAA picture, for different actions
 
-
 * TODO in debug log emit also the entity title
-
 
 * QUESTION: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
 
@@ -57332,7 +57350,6 @@ fetching of all paginated pages begins after pressing the "Show all.." action bu
 
 
 * TODO Change all the entity links to open in a new tab
-
 
 * TODO Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images (count=0), but on forcefull reload from the net display it again if the count > "0"
 
@@ -57408,9 +57425,6 @@ some more things to implement:
             },
 #+end_example
 
-
-
-#-------------
 
 * TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
 ** initial
@@ -57509,6 +57523,7 @@ persistent filter history over global, sub-table and column level filters, with 
 
 * TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
+
 * TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
 
 
@@ -57576,30 +57591,7 @@ Table: 1 row (ok)
 inform the user that the CSV exporter exports the first table in "multi"-table mode
 
 
-* TODO On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
-
-On "multi"-table pageTypes, change the current tooltip e.g. on the span ""mb-row-count-stat""
-
-from the generic
-
-#+begin_example
-<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
-#+end_example
-
-to
-
-#+begin_example
-<span class="mb-row-count-stat" data-mbtt="There are 13 rows visible; 13 after global filter; 1329 total unfiltered">(13 of 13)/1329</span>
-#+end_example
-
-for the format "(<n> of <M>)/<N>"
-
-** TODO fix the tooltip for the h2 line in "multi"-table mode, it's too broad
-
-fix the tooltip for the h2 line in "multi"-table mode
-
-
-* change hardcoded hightlight for col filter
+* change hardcoded hightlight for column filter
 
 #+begin_example
 Global filter highlight: bg sa_global_filter_highlight_bg (default #FFD700), color sa_global_filter_highlight_color (default red)
@@ -58857,3 +58849,25 @@ Use all these background colors (and also the background color for the standard 
 
 ** CAA/EAA count wrong
 
+* TODO don't take the "cache" icon into account fo the unique value drop-dwon menu
+** initial
+
+In all table columns where either CAA or EAA thumbnails together with the cache icons "🔵", "⚠️", etc are dislayed
+e.g. on https://musicbrainz.org/release-group/39b22944-7503-3937-8bba-09b17281cc6a in the "Release" column
+
+don't take the cache icons "🔵", "⚠️" into account when constructing the unique value drop-down column menu in the column header
+
+#+begin_example
+<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 64 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 64 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+  <span class="mb-col-uniq-count">64
+  </span>
+  <span class="mb-col-uniq-btn">📊
+  </span>
+</span>
+#+end_example
+
+Only the real text strings should be present in the drop-down column menu
+
+** bugs
+
+Actually it's not working, the cache-status emojis are still rendered inside the unique value drop-down column menu
