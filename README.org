@@ -57913,7 +57913,7 @@ add a new boolean (default: true) which when true enables the whole h2/h3 row co
 
 3.)
 
-add a new configurable foreground and background color (default are the curretn values) for the h2/h3 row count tooltips
+add a new configurable foreground and background color (default are the current values) for the h2/h3 row count tooltips
 
 ** TODO add colors to the actual counts and add the background filter colors as the forground for the filter types
 
@@ -58074,3 +58074,90 @@ In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
 
+* make export configurable
+
+add some new features:
+
+1.)
+
+add a new "Export" configuration section in the variable "const configSchema"
+
+2.)
+
+move the block
+
+#+begin_example
+        sa_enable_export: {
+            label: 'Enable Export',
+            type: 'checkbox',
+            default: true,
+            description: 'Show/hide the "💾 Export" button for exporting data to different formats (CSV/JSON/Org-Mode)'
+        },
+#+end_example
+
+to the new "Export" section
+
+3.)
+
+add new boolean settings (default: false) which when true performs cleanup of the following non-text properties in the
+data cells (so they should be removed before export)
+
+- the collapse/uncollapse symbols especially in the "CAA"/"EAA" column (e.g. "▶🔵", , ▶⚠️, "▶⚠⟳" etc.), not the number of artwork thumbnails itself after the symbol
+
+- the collapse/uncollapse symbols (e.g. "▶") in front of titles
+
+- the multi-row collapse/uncollapse symbols ("▶2▤"). But in this case do NOT remove the number count (e.g. "2" in the
+  example before), instead before exporting change the format to a bracket expression, e.g. the data cell should be exported instead of
+
+#+begin_example
+AT2003-05-05Mon▶2▤
+#+end_example
+
+as
+
+#+begin_example
+AT2003-05-05Mon (2)
+#+end_example
+
+
+4.)
+
+add new boolean setting (default: false) which when true exports the number of unique values in each column header.
+
+- in the column headers the number of unique values (if exported) in each column should always be exported bracketed, e.g. for the real column name "Label"
+
+change
+
+#+begin_example
+"Label 7"
+#+end_example
+
+to
+
+#+begin_example
+"Label (7)"
+#+end_example
+
+5.)
+
+a.)
+
+in the "Statistics" panel '<div id="mb-stats-panel"' in the case of "multi"-table pageTypes
+
+- rename the span
+
+#+begin_example
+<span>Table Detail</span>
+#+end_example
+
+from singular "Table Detail" to plural "Table Details" if there are really more than one sub-table 
+
+- and in the case of more than one sub-table render a collapse/uncollapse icon in front of the span
+
+b.)
+
+add an "Export" button on the "Statistics" UI which leverages our export to HTML framework and exports all the data as
+is in the stistics panel to an HTML file. Internally in the case of "multi"-table pageTypes all sub-tables table details
+should be exported uncollapsed. in the dialog which asks the enduser for the final exported filename use the same
+generated name as for the standard export of the final rendered page but add as a post_fix the string "_STATISTICS" to
+the base filename.
