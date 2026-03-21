@@ -3118,7 +3118,7 @@
                     { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
                 ],
-                collapsableColumns: [ 'Artists', 'Location', 'EAA' ],
+                collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
                 addEAA: 'Event',
                 extractMainColumn: 'Event'
             },
@@ -3664,7 +3664,7 @@
                     { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
                     { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
                 ],
-                collapsableColumns: [ 'Location', 'EAA' ],
+                collapsableColumns: [ 'Location', 'EAA', 'Place', 'Area', 'Country' ],
                 addEAA: 'Event',
                 extractMainColumn: 'Event'
             },
