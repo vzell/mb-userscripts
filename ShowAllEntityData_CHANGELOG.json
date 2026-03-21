@@ -1,5 +1,47 @@
 [
     {
+        "version": "9.99.256",
+        "date": "2026-03-20",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Statistics panel — second 'Table Details' toggle (▶ between 🗃️ and label): was switching glyphs correctly but not affecting any tables. Root cause: the handler walked `.mb-subtable-collapse-btn` → h3 → next table sibling, a fragile path that failed silently when bigbox divs sat between h3 and table, and the state check compared against the wrong span class. Rewritten to use the identical strategy as `rewireGlobalCollapseButtonMulti`: iterate all `table.tbl .mb-col-collapse-hdr-btn` in the document, call `_applyCollapseState` per cell directly, then update sub-table button glyphs.",
+                    "Statistics panel — 'Columns (N)' expand/collapse glyph in table-detail cards showed ▲ (up-pointing triangle) instead of ▶ on the third state. Root cause: `colToggleBar`'s click handler set `colIcon.style.transform = 'rotate(-90deg)'` on the ▶ character, which rotates it to point upward. Fixed by removing the transform and using only `textContent` changes: ▶ when collapsed, ▼ when expanded.",
+                    "Export — Country/Date (and all cells with adjacent sibling elements) now export with space-separated constituents. Root cause: `.release-event` spans are INSIDE `<li>` items, so the previous `lis.length > 0` branch fired first and called `li.textContent.trim()` which concatenates all child element text without separators (e.g. 'US1973-01-05Fri'). Fixed by a recursive `_insertSpaces(node)` helper that runs on the cloned cell before any text extraction: it inserts a space text node before each Element child throughout the entire clone, so that `textContent` naturally includes spaces between adjacent element contents. The `.release-event` special-case branch has been removed as it is no longer needed."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.255",
+        "date": "2026-03-20",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Statistics panel sub-table toggle (▶ between 🗃️ and 'Table Details') — the toggle was visually switching between ▶/▼ but not actually expanding/collapsing sub-tables. Root cause: the code called `btn.click()` on `.mb-subtable-collapse-btn` elements (synthetic untrusted click, may be suppressed), and the state-detection read `.mb-col-collapse-glyph` which does not exist inside `makeCollapseExpandBtnHTML`'s output. Fixed by: (1) reading state from `btn.querySelector('span').textContent` (the first child span carries ▶ or ▼), (2) finding the table associated with each button by walking forward from its `.mb-toggle-h3` ancestor, and (3) directly calling `_applyCollapseState` per cell and updating header-button glyphs, bypassing synthetic click events entirely.",
+                    "Sub-table collapse button glyph cycle — after clicking Expand (▶) the button correctly showed ▼ (Collapse), but after clicking Collapse the button showed ◀ instead of reverting to ▶. Root cause: `makeCollapseExpandBtnHTML(false)` used ◀ as the arrow. Fixed to use ▼ for the collapsed→expand state (▶) and the expanded→collapse state (▼), making the cycle ▶ → ▼ → ▶.",
+                    "Export — Country/Date source column (original `.release-event` DOM structure) now exports with space-separated constituents. `_exportCleanCellText` now detects `.release-event` child elements and joins each event's part texts (country code + date + weekday) with a single space, and joins multiple events with ' / '. Previously `clone.textContent` concatenated them directly (e.g. 'US1973-01-05Fri'). Multi-row `<ul><li>` cells (split Country / Date columns) continue to be joined by space as before."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.254",
+        "date": "2026-03-20",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "Export — Country/Date (and all multi-row ul/li cells) now export with space-separated constituents. Previously `_exportCleanCellText` used `clone.textContent` which concatenates all text nodes with no separators (e.g. 'US1973-01-05Fri'). Fixed by detecting `ul > li` items and joining them with a single space (e.g. 'US 1973-01-05 Fri'). Falls back to plain `textContent` for non-list cells.",
+                    "Auto-resize — 'Primary Alias' and other single-item synthetic columns (`<ul><li>text</li></ul>`) were measured at zero or collapsed width. Root cause: block `<ul>`/`<li>` elements inside the inline `measureDiv` may not expand to their full text width. Fixed by measuring each `<li>` individually as `display:inline-block` (including hidden ones from collapsed multi-row cells) and folding the max into `columnWidths`. Applied to both `toggleAutoResizeColumns` (global) and `toggleSubTableAutoResize` (per-sub-table). CAA art `<li>` items are skipped.",
+                    "Statistics panel 'Table Details' — added a second toggle icon between the 🗃️ emoji and the 'Table Details' text. Clicking it cycles all visible `.mb-subtable-collapse-btn` buttons in the live rendered table through expand-all/collapse-all states. The icon starts as ▶ and flips to ▼ and back."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.253",
         "date": "2026-03-20",
         "sections": [

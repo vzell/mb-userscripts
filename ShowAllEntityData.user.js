@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.253+2026-03-20
+// @version      9.99.256+2026-03-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4710,7 +4710,9 @@
      * @returns {string} HTML string to assign to btn.innerHTML
      */
     function makeCollapseExpandBtnHTML(expand) {
-        const arrow  = expand ? '▶' : '◀';
+        // ▶ = currently collapsed → click will EXPAND
+        // ▼ = currently expanded  → click will COLLAPSE
+        const arrow  = expand ? '▶' : '▼';
         const action = expand ? 'Expand' : 'Collapse';
         return `<span style="align-self:center;font-size:1em;">${arrow}</span>` +
             `<span style="display:flex;flex-direction:column;align-items:center;` +
@@ -5958,7 +5960,35 @@
             clone.querySelectorAll('[data-erg-btn]').forEach(el => el.remove());
         }
 
-        let text = clone.textContent.trim().replace(/\s+/g, ' ');
+        // Before extracting text, insert a space node before every Element child
+        // inside the clone. This ensures that adjacent sibling elements (e.g. the
+        // .release-country and .release-date spans inside a .release-event, or a
+        // date text node and an injected .mb-day-of-week span) are separated by a
+        // space when textContent is read — producing 'US 1973-01-05 Fri' instead
+        // of 'US1973-01-05Fri'.
+        (function _insertSpaces(node) {
+            const children = Array.from(node.childNodes); // snapshot before mutation
+            children.forEach(child => {
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    node.insertBefore(document.createTextNode(' '), child);
+                    _insertSpaces(child); // recurse into element children
+                }
+            });
+        })(clone);
+
+        // For multi-row <ul><li> cells, join each <li>'s text with a space.
+        // The _insertSpaces pass above ensures each li's textContent already
+        // has spaces between its constituent child elements.
+        const lis = clone.querySelectorAll('ul > li');
+        let text;
+        if (lis.length > 0) {
+            text = Array.from(lis)
+                .map(li => li.textContent.trim().replace(/\s+/g, ' '))
+                .filter(Boolean)
+                .join(' ');
+        } else {
+            text = clone.textContent.trim().replace(/\s+/g, ' ');
+        }
         if (Lib.settings.sa_export_strip_title_glyphs) {
             text = text.replace(/^[▶▼◀▲]\s*/, '');
         }
@@ -9275,6 +9305,7 @@ ${sections.join('\n')}
             ? 'Table Details' : 'Table Detail';
         const _tdHead  = _mkSectionHead('🗃️', _tdLabel);
         if (tableMode === 'multi' && _tableData.length > 1) {
+            // Toggle 1 (leftmost): collapse/expand ALL table-detail cards at once
             const _tdToggle = document.createElement('span');
             _tdToggle.textContent = '▼';
             _tdToggle.title = 'Collapse/expand all table-detail cards';
@@ -9289,6 +9320,55 @@ ${sections.join('\n')}
                 });
             });
             _tdHead.insertBefore(_tdToggle, _tdHead.firstChild);
+
+            // Toggle 2 (between icon and label): cycle the per-sub-table collapse
+            // buttons in the live table (the ▶N▤ column-header collapse buttons),
+            // emulating a click on every visible sub-table's .mb-subtable-collapse-btn.
+            // State cycles: all-expanded → all-collapsed → all-expanded …
+            const _subToggle = document.createElement('span');
+            _subToggle.textContent = '▶';
+            _subToggle.title = 'Cycle all sub-table multi-row collapse buttons ' +
+                               '(expands all → collapses all → expands all…)';
+            _subToggle.style.cssText = `cursor:pointer;font-size:0.8em;` +
+                `transition:transform 0.15s;display:inline-block;color:${C.muted};` +
+                `flex-shrink:0;user-select:none;`;
+            let _subAllExpanded = false; // tracks current bulk state
+            _subToggle.addEventListener('click', () => {
+                // Identical strategy to rewireGlobalCollapseButtonMulti:
+                // iterate ALL .mb-col-collapse-hdr-btn across every table,
+                // drive cells directly via _applyCollapseState.
+                const _targetExpand = !_subAllExpanded;
+                document.querySelectorAll('table.tbl .mb-col-collapse-hdr-btn').forEach(hdrBtn => {
+                    const colIdx = parseInt(hdrBtn.dataset.colIndex, 10);
+                    if (isNaN(colIdx)) return;
+                    const _tbl = hdrBtn.closest('table.tbl');
+                    if (!_tbl) return;
+                    Array.from(_tbl.querySelectorAll('tbody tr')).forEach(tr => {
+                        const td = tr.cells[colIdx];
+                        if (!td) return;
+                        const toggle = td.querySelector('.mb-cell-collapse-toggle');
+                        if (!toggle) return;
+                        _applyCollapseState(toggle, _targetExpand);
+                    });
+                    const hg = hdrBtn.querySelector('.mb-col-collapse-glyph');
+                    if (hg) hg.textContent = _targetExpand ? '▼' : '▶';
+                    hdrBtn.setAttribute('aria-expanded', _targetExpand ? 'true' : 'false');
+                });
+                // Update all sub-table collapse button glyphs
+                document.querySelectorAll('.mb-subtable-collapse-btn').forEach(btn => {
+                    if (btn.style.display !== 'none')
+                        btn.innerHTML = makeCollapseExpandBtnHTML(!_targetExpand);
+                });
+                _subAllExpanded = _targetExpand;
+                _subToggle.textContent = _targetExpand ? '▼' : '▶';
+            });
+            // Insert between the 🗃️ icon span and the text span
+            const _iconSpan = _tdHead.querySelector('span[style*="1.1em"]');
+            if (_iconSpan && _iconSpan.nextSibling) {
+                _tdHead.insertBefore(_subToggle, _iconSpan.nextSibling);
+            } else {
+                _tdHead.appendChild(_subToggle);
+            }
         }
         body.appendChild(_tdHead);
 
@@ -9525,8 +9605,10 @@ ${sections.join('\n')}
                 colToggleBar.addEventListener('click', () => {
                     const expanded = colToggleBar.dataset.colExpanded === 'true';
                     colToggleBar.dataset.colExpanded = expanded ? 'false' : 'true';
-                    colIcon.style.transform = expanded ? 'rotate(-90deg)' : '';
+                    // Use ▶ for collapsed and ▼ for expanded — no CSS transform
+                    // (rotate(-90deg) on ▶ renders as ▲, not ▶).
                     colIcon.textContent     = expanded ? '▶' : '▼';
+                    colIcon.style.transform = '';
                     colDetail.style.display = expanded ? 'none' : '';
                 });
 
@@ -10808,6 +10890,26 @@ a { color: #1565c0; }`;
                     });
                     columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
 
+                    // Also measure each <li> individually (hidden or visible) so that
+                    // collapsed multi-row cells and single-li synthetic columns like
+                    // 'Primary Alias' are measured at their full single-line width.
+                    cell.querySelectorAll('ul > li').forEach(li => {
+                        if (li.classList.contains('mb-caa-art-li')) return;
+                        const liClone = li.cloneNode(true);
+                        liClone.style.display     = 'inline-block';
+                        liClone.style.whiteSpace  = 'nowrap';
+                        liClone.style.overflowWrap = 'normal';
+                        liClone.style.wordBreak   = 'normal';
+                        liClone.querySelectorAll('*').forEach(el => {
+                            el.style.whiteSpace   = 'nowrap';
+                            el.style.overflowWrap = 'normal';
+                            el.style.wordBreak    = 'normal';
+                        });
+                        measureDiv.innerHTML = '';
+                        measureDiv.appendChild(liClone);
+                        columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
+                    });
+
                     // ── CAA/EAA art cells: measure collapsed image-li content ──────
                     // When the [data-caa-expand-btn] is in its collapsed state (▶),
                     // li.mb-caa-art-li-image items are display:none and are NOT
@@ -11217,32 +11319,36 @@ a { color: #1565c0; }`;
                     measureDiv.style.fontFamily = styles.fontFamily;
 
                     // Clone the cell's CHILDREN directly into measureDiv (not the <td> itself).
-                    // Appending an orphaned <td> triggers browser table-fixup which wraps
-                    // it in anonymous table/table-row boxes that carry white-space:normal,
-                    // defeating the white-space:nowrap set on measureDiv.  This is the root
-                    // cause of Event-column cells (which contain a blank-icon/artwork-icon
-                    // span + a .wrap-anywhere link + a .comment span) being measured as
-                    // too narrow — only the widest single token (e.g. the icon's fixed
-                    // pixel width) was returned instead of the full single-line width.
                     measureDiv.innerHTML = '';
                     Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
-                    // Force every cloned descendant to not wrap.  CSS inheritance only
-                    // fills values that are not explicitly set — it does NOT override
-                    // explicit stylesheet rules like .wrap-anywhere{overflow-wrap:anywhere}.
-                    // Setting the inline style on each element beats any stylesheet rule.
-                    // Without this, .wrap-anywhere anchors break text inside the measureDiv
-                    // even though its own white-space is nowrap, causing offsetWidth to
-                    // reflect only the widest non-breaking token instead of the full
-                    // single-line width of the entire cell content.
                     measureDiv.querySelectorAll('*').forEach(el => {
                         el.style.whiteSpace   = 'nowrap';
                         el.style.overflowWrap = 'normal';
                         el.style.wordBreak    = 'normal';
                     });
+                    columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
 
-                    const width = measureDiv.offsetWidth;
-
-                    columnWidths[colIndex] = Math.max(columnWidths[colIndex], width);
+                    // Also measure each <li> individually (including hidden ones from
+                    // collapsed multi-row cells and single-li synthetic columns like
+                    // 'Primary Alias').  Block <ul>/<li> elements inside the inline
+                    // measureDiv may not expand to their full text width, so measuring
+                    // each li as a standalone inline block gives a reliable maximum.
+                    cell.querySelectorAll('ul > li').forEach(li => {
+                        if (li.classList.contains('mb-caa-art-li')) return; // handled separately
+                        const liClone = li.cloneNode(true);
+                        liClone.style.display     = 'inline-block';
+                        liClone.style.whiteSpace  = 'nowrap';
+                        liClone.style.overflowWrap = 'normal';
+                        liClone.style.wordBreak   = 'normal';
+                        liClone.querySelectorAll('*').forEach(el => {
+                            el.style.whiteSpace   = 'nowrap';
+                            el.style.overflowWrap = 'normal';
+                            el.style.wordBreak    = 'normal';
+                        });
+                        measureDiv.innerHTML = '';
+                        measureDiv.appendChild(liClone);
+                        columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
+                    });
                 });
             }
 
