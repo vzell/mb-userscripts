@@ -58161,3 +58161,13 @@ is in the stistics panel to an HTML file. Internally in the case of "multi"-tabl
 should be exported uncollapsed. in the dialog which asks the enduser for the final exported filename use the same
 generated name as for the standard export of the final rendered page but add as a post_fix the string "_STATISTICS" to
 the base filename.
+
+
+* the "Primary Alias" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events doesn't seem to be taken into account when calculating the width of auto-resized column
+
+the "Primary Alias" column in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events doesn't seem to
+be taken into account when calculating the width when auto-resizing columns with the button
+
+#+begin_example
+<button id="mb-resize-btn" title="Auto-resize columns to optimal width (click to toggle / Ctrl+M, then R)"
+#+end_example
