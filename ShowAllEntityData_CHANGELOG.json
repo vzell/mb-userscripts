@@ -1,5 +1,29 @@
 [
     {
+        "version": "9.99.271",
+        "date": "2026-03-21",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "getCleanColumnText — replaced the TreeWalker FILTER_REJECT approach with a guaranteed clone-and-strip strategy. Root cause of the v9.99.270 non-fix: in some browser / Tampermonkey execution environments, returning FILTER_REJECT from acceptNode() for an ELEMENT node does NOT reliably prune that element's TEXT-NODE children from the walk when SHOW_TEXT is also present in the whatToShow mask — the spec says children of a FILTER_REJECT node should be skipped, but this is not universally observed in practice. As a result, the emoji text nodes inside .mb-art-cache-hint-inline (which is a child of .mb-caa-inline-ph, which was FILTER_REJECT'd) were still being visited and included in the extracted text. Fix: at the start of getCleanColumnText, when the element contains any of the known decorative/cache spans (tested with a cheap querySelector), the element is shallow-cloned with cloneNode(true) and all matching elements are removed from the clone via querySelectorAll+remove before the TreeWalker is run. The clone pass is gated behind the querySelector so ordinary cells (no inline thumbnails) pay zero cloning cost. The FILTER_REJECT list is retained as a belt-and-braces secondary guard. The _CLEAN_STRIP_SEL constant documents the full set of stripped selectors. The artSearchUl mbArtSearch lookup continues to query the ORIGINAL element (dataset attributes are preserved by cloneNode, so this is equivalent, but querying the live element is canonical)."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "9.99.270",
+        "date": "2026-03-21",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "getCleanColumnText — added mb-art-cache-hint-col-wrap to the TreeWalker FILTER_REJECT set. This wrapper spans sits inside CAA/EAA-bearing cells (e.g. the Release column on release-group pages) and contains two children: the cache-status emoji span (.mb-art-cache-hint-col, text: 🟢/🟡/🔵/⚠️) and the count badge span (.mb-caa-count-badge / .mb-eaa-count-badge, text: the image count number). Both are display metadata, not part of the real cell value. Before this fix, getCleanColumnText walked into the wrapper and included the emoji and count in the text used for the unique-values dropdown — causing entries like '5 🔵 The Dark Side of the Moon' to appear instead of just 'The Dark Side of the Moon'. Rejecting the entire wrapper with FILTER_REJECT (which prunes the subtree, not just the wrapper node itself) removes both the emoji and the count badge from unique-value collection, column filter matching, and sort keys in one step."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.269",
         "date": "2026-03-21",
         "sections": [

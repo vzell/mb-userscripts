@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.269+2026-03-21
+// @version      9.99.271+2026-03-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -16387,22 +16387,62 @@ a { color: #1565c0; }`;
      * @param {Element} element - DOM element to extract text from.
      * @returns {string} Normalised visible text content.
      */
+    /**
+     * Selector covering every element whose text content must NEVER appear in
+     * column filter / sort / unique-values text:
+     *   - Inline thumbnail placeholders (.mb-caa-inline-ph / .mb-eaa-inline-ph)
+     *     and their cache-hint overlays (.mb-art-cache-hint-inline).
+     *   - Cache-hint column-mode wrappers and count badges.
+     *   - Per-image art rows inside multi-row art cells.
+     *   - Generic artwork / icon spans (background-image decorators).
+     *
+     * Used by getCleanColumnText to strip these elements from a clone before
+     * text extraction, guaranteeing that cache-status emoji (🟢/🟡/🔵/🗄️/⚠️)
+     * and image-count numbers never pollute filter matching, sort keys, or the
+     * unique-values dropdown — regardless of TreeWalker FILTER_REJECT browser
+     * behaviour.
+     */
+    const _CLEAN_STRIP_SEL =
+        '.mb-caa-inline-ph,.mb-eaa-inline-ph,' +
+        '.mb-art-cache-hint-inline,.mb-art-cache-hint-col-wrap,' +
+        '.mb-art-cache-hint-col,.mb-caa-count-badge,.mb-eaa-count-badge,' +
+        '.mb-caa-art-li-image,.artwork-icon,.caa-icon,.icon';
+
     function getCleanColumnText(element) {
+        // ── Clone-and-strip: physically remove all decorative / cache-hint
+        // elements from a clone before text extraction.  This is more robust
+        // than relying on TreeWalker FILTER_REJECT alone: some browser /
+        // Tampermonkey execution environments visit text-node children of a
+        // FILTER_REJECT element when SHOW_TEXT is also in the whatToShow mask.
+        let root = element;
+        if (element.querySelector(_CLEAN_STRIP_SEL)) {
+            root = element.cloneNode(true);
+            root.querySelectorAll(_CLEAN_STRIP_SEL).forEach(el => el.remove());
+        }
+
         let textParts = [];
-        const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
             acceptNode: (node) => {
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     const tag = node.tagName.toLowerCase();
                     // Skip script, style, head
                     if (tag === 'script' || tag === 'style' || tag === 'head') return NodeFilter.FILTER_REJECT;
 
-                    // Skip elements that are purely decorative (image placeholders)
+                    // Secondary FILTER_REJECT guard (belt-and-braces — should
+                    // have been stripped by the clone pass above, but kept here
+                    // for robustness and to handle any future additions).
                     if (node.classList && (
                         node.classList.contains('artwork-icon') ||
                         node.classList.contains('caa-icon') ||
                         node.classList.contains('icon') ||
-                        // Per-image CAA/EAA rows — content must not pollute sort/filter text.
-                        node.classList.contains('mb-caa-art-li-image')
+                        node.classList.contains('mb-caa-art-li-image') ||
+                        node.classList.contains('mb-caa-inline-ph') ||
+                        node.classList.contains('mb-eaa-inline-ph') ||
+                        node.classList.contains('mb-art-cache-hint-inline') ||
+                        node.classList.contains('mb-art-cache-hint-col-wrap') ||
+                        node.classList.contains('mb-art-cache-hint-col') ||
+                        node.classList.contains('mb-caa-count-badge') ||
+                        node.classList.contains('mb-eaa-count-badge')
                     )) {
                         return NodeFilter.FILTER_REJECT;
                     }
@@ -16430,6 +16470,10 @@ a { color: #1565c0; }`;
         // column filters (and global RegExp filters per cell) match against them.
         // getCleanVisibleText() (used for sort and non-regex global filter) is
         // not modified, so sort order is never polluted by art metadata.
+        // Query from the ORIGINAL element (not the clone) so that mbArtSearch,
+        // which is a dataset attribute and not a text node, is always found even
+        // when root is a clone (dataset attrs ARE preserved by cloneNode(true),
+        // but querying the live element is simpler and avoids any edge cases).
         const artSearchUl = element.querySelector('ul.mb-caa-art-ul');
         if (artSearchUl && artSearchUl.dataset.mbArtSearch) {
             textParts.push(artSearchUl.dataset.mbArtSearch);
