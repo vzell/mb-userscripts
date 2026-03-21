@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.269+2026-03-21
+// @version      9.99.268+2026-03-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -869,31 +869,12 @@
             description: 'Background color for the per-column filter input row (table.tbl thead tr.mb-col-filter-row th). Slightly lighter than the main header row.'
         },
 
-        sa_ui_thead_th_extracted_bg: {
-            label: 'Extracted column header background color',
+        sa_ui_thead_th_synthetic_bg: {
+            label: 'Synthetic column header background color',
             type: 'color_picker',
             default: '#b8c8b8',
-            description: 'Background color for extracted table column-header cells — columns split or ' +
-                         'injected from original columns via columnExtractors (e.g. Country, Date, Place, ' +
-                         'Area, MB-Name, Comment, CAA, EAA, Video, Cancelled, Primary Alias, etc.). ' +
-                         'The default (#b8c8b8) is a darker, greenish grey — visually distinct from the ' +
-                         'standard header background — to make extracted columns immediately recognisable. ' +
-                         'Also used as the row-tint color for extracted-column rows in the Statistics panel ' +
-                         'Table Details section.'
-        },
-
-        sa_ui_thead_th_derived_bg: {
-            label: 'Derived column header background color',
-            type: 'color_picker',
-            default: '#c8c8b0',
-            description: 'Background color for derived table column-header cells — columns further extracted ' +
-                         'from already-extracted columns via syntheticColumnExtractors (e.g. DD, MM, YYYY, ' +
-                         'Day, Month derived from the Date column; Event-Type, Event-Date, etc. derived from ' +
-                         'the Comment column). ' +
-                         'The default (#c8c8b0) is a warm sandy beige — similar brightness to the extracted ' +
-                         'color but with a warm hue — so the two synthetic tiers are visually distinct. ' +
-                         'Also used as the row-tint color for derived-column rows in the Statistics panel ' +
-                         'Table Details section.'
+            description: 'Background color for synthetic table column-header cells (injected columns such as Event-Type, Event-Date, Country, Date, MB-Name, Comment, CAA, EAA, etc.). ' +
+                         'The default (#b8c8b8) is a darker, greenish grey — visually distinct from the standard header background — to make synthetic columns immediately recognisable.'
         },
 
         sa_ui_row_count_color: {
@@ -8736,9 +8717,7 @@ ${sections.join('\n')}
         // classes stamped on each <th> by cleanupHeaders.
         // Falls back to the old dataset.colName / bg-color heuristic for <th>
         // cells that were stamped before this version was deployed.
-        const _extractedBg = (Lib.settings.sa_ui_thead_th_extracted_bg || '#b8c8b8')
-            .replace(/\s/g, '').toLowerCase();
-        const _derivedBg   = (Lib.settings.sa_ui_thead_th_derived_bg   || '#c8c8b0')
+        const _synthBg = (Lib.settings.sa_ui_thead_th_synthetic_bg || '#b8c8b8')
             .replace(/\s/g, '').toLowerCase();
         const _firstTbl  = _tbls[0];
         const _headerRow = _firstTbl
@@ -8754,9 +8733,9 @@ ${sections.join('\n')}
                     _origCols++;
                 } else {
                     // Legacy fallback: th stamped before class-based detection
-                    const _bg = th.style.backgroundColor.replace(/\s/g, '').toLowerCase();
                     const _isSynth = !!th.dataset.colName ||
-                        (!!th.style.backgroundColor && (_bg === _extractedBg || _bg === _derivedBg));
+                        (!!th.style.backgroundColor &&
+                         th.style.backgroundColor.replace(/\s/g, '').toLowerCase() === _synthBg);
                     if (_isSynth) _extractedCols++;
                     else          _origCols++;
                 }
@@ -8905,10 +8884,9 @@ ${sections.join('\n')}
             return (bdi ? bdi.textContent : h1.textContent).trim().replace(/\s+/g, ' ');
         })();
 
-        // Column header background colors — used for detection fallback and to tint
-        // column rows in the Table Detail breakdown by origin type.
-        const _extractedBgColor = Lib.settings.sa_ui_thead_th_extracted_bg || '#b8c8b8';
-        const _derivedBgColor   = Lib.settings.sa_ui_thead_th_derived_bg   || '#c8c8b0';
+        // Synthetic column background color — used both for detection fallback
+        // and to tint synthetic columns in the Table Detail column breakdown.
+        const _synthBgColor = Lib.settings.sa_ui_thead_th_synthetic_bg || '#b8c8b8';
 
         const _tableData = Array.from(tables).map((tbl, tIdx) => {
             const _h2 = (() => {
@@ -8969,24 +8947,12 @@ ${sections.join('\n')}
 
                 const _visible = th.style.display !== 'none';
 
-                // Classify column origin by CSS class (stamped in cleanupHeaders);
-                // fall back to bg-color / dataset.colName heuristic for legacy cells.
-                let colType;
-                if (th.classList.contains('mb-derived-extracted-column')) {
-                    colType = 'derived';
-                } else if (th.classList.contains('mb-extracted-column')) {
-                    colType = 'extracted';
-                } else if (th.classList.contains('mb-original-column')) {
-                    colType = 'original';
-                } else {
-                    const _bg = th.style.backgroundColor.replace(/\s/g, '').toLowerCase();
-                    const _isLegacySynth = !!th.dataset.colName ||
-                        (!!th.style.backgroundColor && (
-                            _bg === _extractedBgColor.replace(/\s/g, '').toLowerCase() ||
-                            _bg === _derivedBgColor.replace(/\s/g, '').toLowerCase()
-                        ));
-                    colType = _isLegacySynth ? 'extracted' : 'original';
-                }
+                // Detect synthetic column: dataset.colName set (primary) or
+                // backgroundColor matches the configured synthetic bg (fallback).
+                const _isSynth = !!th.dataset.colName ||
+                    (!!th.style.backgroundColor &&
+                     th.style.backgroundColor.replace(/\s/g, '').toLowerCase() ===
+                     _synthBgColor.replace(/\s/g, '').toLowerCase());
 
                 const _sortBtns = th.querySelectorAll('.sort-icon-btn');
                 let _sortState = '⇅ none';
@@ -9019,7 +8985,7 @@ ${sections.join('\n')}
                 const _wPx = _cgC ? parseInt(_cgC.style.width) : 0;
                 const _wStr = _wPx > 0 ? `manually ${_wPx}\u202fpx` : 'default';
 
-                return { name: _colName, visible: _visible, colType,
+                return { name: _colName, visible: _visible, isSynth: _isSynth,
                          sort: _sortState,
                          unique: _uqCount, multiRow: _mrCount,
                          filter: _cfVal, resize: _wStr };
@@ -9294,8 +9260,7 @@ ${sections.join('\n')}
             const _fTbl = tables[0];
             const _fHdr = _fTbl ? _fTbl.querySelector('thead tr:first-child') : null;
             let orig = 0, extracted = 0, derived = 0;
-            const _eBg = _extractedBgColor.replace(/\s/g, '').toLowerCase();
-            const _dBg = _derivedBgColor.replace(/\s/g, '').toLowerCase();
+            const _sbg = _synthBgColor.replace(/\s/g, '').toLowerCase();
             if (_fHdr) {
                 Array.from(_fHdr.cells).forEach(th => {
                     if (th.classList.contains('mb-derived-extracted-column')) {
@@ -9306,9 +9271,9 @@ ${sections.join('\n')}
                         orig++;
                     } else {
                         // Legacy fallback for cells stamped before class-based detection
-                        const _bg = th.style.backgroundColor.replace(/\s/g, '').toLowerCase();
                         const _s = !!th.dataset.colName ||
-                            (!!th.style.backgroundColor && (_bg === _eBg || _bg === _dBg));
+                            (!!th.style.backgroundColor &&
+                             th.style.backgroundColor.replace(/\s/g, '').toLowerCase() === _sbg);
                         _s ? extracted++ : orig++;
                     }
                 });
@@ -9688,13 +9653,13 @@ ${sections.join('\n')}
                 td.columns.forEach((col, ci) => {
                     const cr = document.createElement('tr');
                     cr.dataset.statsRow = 'true';
-                    // Row background tint by column origin type
-                    const _rowBg = col.colType === 'derived'   ? _derivedBgColor   + '55'
-                                 : col.colType === 'extracted' ? _extractedBgColor + '55'
-                                 : '';   // 'original' — no tint, inherits default
                     cr.onmouseenter = () => { if (!cr.dataset.qfHide) cr.style.background = C.accentL; };
-                    cr.onmouseleave = () => { cr.style.background = _rowBg; };
-                    if (_rowBg) cr.style.background = _rowBg;
+                    cr.onmouseleave = () => {
+                        cr.style.background = col.isSynth ? _synthBgColor + '55' : '';
+                    };
+
+                    // Apply synthetic column tint to the whole row background
+                    if (col.isSynth) cr.style.background = _synthBgColor + '55';
 
                     const _mkColTd = (txt, opts2 = {}) => {
                         const td3 = document.createElement('td');
@@ -9711,7 +9676,7 @@ ${sections.join('\n')}
                     // Column name cell — tinted background for synthetic columns
                     cr.appendChild(_mkColTd(
                         col.visible
-                            ? `<strong${col.colType !== 'original' ? ` style="color:${C.accent}"` : ''}>${col.name}</strong>`
+                            ? `<strong${col.isSynth ? ` style="color:${C.accent}"` : ''}>${col.name}</strong>`
                             : `<span style="text-decoration:line-through;color:#aaa">${col.name}</span>`
                     ));
                     cr.appendChild(_mkColTd(
@@ -17764,8 +17729,7 @@ a { color: #1565c0; }`;
             }
         });
 
-        const headerBgColor        = Lib.settings.sa_ui_thead_th_extracted_bg || '#b8c8b8';
-        const headerDerivedBgColor = Lib.settings.sa_ui_thead_th_derived_bg   || '#c8c8b0';
+        const headerBgColor = Lib.settings.sa_ui_thead_th_synthetic_bg || '#b8c8b8';
 
         // Inject synthetic column headers for every active column extractor.
         // Each extractor may declare one or more synthetic columns; we only add a
@@ -17796,7 +17760,7 @@ a { color: #1565c0; }`;
                     th.textContent = colName;
                     th.dataset.colName = colName;
                     th.classList.add('mb-derived-extracted-column');
-                    th.style.backgroundColor = headerDerivedBgColor;
+                    th.style.backgroundColor = headerBgColor;
                     Lib.debug('cleanup', `Injecting synthetic header: ${colName} (via synthetic extractor: ${entry.extractor})`);
                     theadRow.appendChild(th);
                 }

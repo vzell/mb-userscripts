@@ -1,19 +1,5 @@
 [
     {
-        "version": "9.99.269",
-        "date": "2026-03-21",
-        "sections": [
-            {
-                "label": "✨ New Features / Changes",
-                "items": [
-                    "configSchema (UI APPEARANCE) — sa_ui_thead_th_synthetic_bg renamed to sa_ui_thead_th_extracted_bg; label updated to 'Extracted column header background color'; description updated to clarify it covers columns injected via columnExtractors and extractMainColumn (Country, Date, Place, Area, MB-Name, Comment, CAA, EAA, Video, Cancelled, Primary Alias, etc.). New setting sa_ui_thead_th_derived_bg added (label: 'Derived column header background color', default: #c8c8b0 — warm sandy beige, same brightness as #b8c8b8 but warm-hued) for headers injected via syntheticColumnExtractors (DD, MM, YYYY, Day, Month derived from Date; Event-Type, Event-Date, etc. derived from Comment). Both settings also document their role as row-tint colors in the Statistics panel Table Details section.",
-                    "cleanupHeaders — activeSyntheticColumnExtractors loop now applies sa_ui_thead_th_derived_bg (headerDerivedBgColor) to derived <th> cells; activeColumnExtractors and extractMainColumn loops continue to use sa_ui_thead_th_extracted_bg (headerBgColor). The two synthetic tiers are now visually distinct in the rendered table header.",
-                    "Statistics panel Table Details — per-column rows are now tinted by origin type: extracted columns (#b8c8b855 by default), derived columns (#c8c8b055 by default), original columns (no tint — inherits default row background). The _tableData column descriptor replaces the binary isSynth boolean with a three-way colType string ('original' | 'extracted' | 'derived'), classified first by mb-original/extracted/derived-extracted CSS class and falling back to bg-color / dataset.colName heuristic for legacy cells. Column-name <strong> accent color is applied to both extracted and derived columns (colType !== 'original'). All snapshot capture and live-DOM fallback paths updated to use sa_ui_thead_th_extracted_bg / sa_ui_thead_th_derived_bg instead of the old sa_ui_thead_th_synthetic_bg."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.268",
         "date": "2026-03-21",
         "sections": [
