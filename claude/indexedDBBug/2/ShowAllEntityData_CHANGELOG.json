@@ -1,18 +1,5 @@
 [
     {
-        "version": "9.99.278",
-        "date": "2026-03-22",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "_artRetryTable — regression introduced in v9.99.277: step 6 (the _artInitInlinePics call with cacheBust=true) caused the CAA column icons and bigbox strip to revert to ⚠️ 'Timing unavailable' after pressing the retry button. Root cause: all three functions (_artInitBigPics, _artInitSmallPics, _artInitInlinePics) are called synchronously in the same JS microtask, so Date.now() returns the same millisecond value for all, generating identical cache-bust query strings (e.g. ?_cb=1711065600123). _artInitBigPics with cacheBust=true uses the native img.src path (not IDB); it relies on getResourceTimingHint(this.src) in img.onload to detect 'network'. _artInitInlinePics with the same cache-bust URL uses _artFetchCachedImage (GM_xhr), which downloads the same resource from the redirect target (archive.org). The GM_xhr fetch consumes the PerformanceResourceEntry for that URL. When the native img.onload fires for bigpics/smallpics and calls getResourceTimingHint, the RT buffer entry has already been consumed, so it returns 'unavailable' → ⚠️. Fix: step 6 removed from _artRetryTable. The C1/C2 inline hint fixes from v9.99.277 already ensure correct hints during normal filter re-renders (which cover the vast majority of cases). Inline thumbnails in the addFeature column (Release/Event) after a retry will show whatever the previous hint was rather than updating — acceptable given that the retry correctly shows 🔵 on the CAA column and bigbox stripe.",
-                    "_onBigLoaded (in _artInitBigPics) — structural bug introduced in v9.99.275 when the 'else if (bigMemoryHit)' branch was added to the cache-hint block. A stray extra closing brace '}' after the if/else-if/else chain prematurely closed the outer 'if (sa_rt_enable && sa_rt_show_bigbox)' block. The lines that update the emoji and hint span ('const emoji = cacheStatusEmoji(hintStatus)' through 'wrapper.appendChild(hintBadge)') were unreachable dead code outside _onBigLoaded, so the bigbox overlay was never applied on any path (idb, memory, or network). This is why bigbox and CAA column hints showed ⚠️ since v9.99.275. Fixed by removing the stray brace."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.277",
         "date": "2026-03-22",
         "sections": [

@@ -1,5 +1,17 @@
 [
     {
+        "version": "9.99.279",
+        "date": "2026-03-22",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "_artInitInlinePics / _artRetryTable — Release-column inline thumbnail cache-hint overlays showed 🟢 'memory cache' after pressing the retry button instead of 🔵 'network'. Root cause: step 6 was removed from _artRetryTable in v9.99.278 (to avoid RT-entry competition), so inline thumbnails were not retried at all — they kept showing the previous hint. For filter re-renders (Case C1, live blob) the 🟢 hint is correct. But after retry the user expects 🔵 like bigbox and CAA column. Root cause of the original v9.99.277 step-6 bug: _artInitInlinePics called _artFetchCachedImage (GM_xhr) for the cache-busted URL. Because _artIdbMemCache is keyed by normalised URL and Date.now() returns the same millisecond for all three retry functions, the GM_xhr fetch stored the blob under the same URL that the native img.src requests use. Subsequent same-URL lookups returned fromMemory=true → 🟢. Fix: added '&& !cacheBust' to the IDB branch check in loadTask inside _artInitInlinePics. When cacheBust=true, loadTask always uses the native img.src path (same as _artInitBigPics and _artInitSmallPics), so the browser creates a real PerformanceResourceEntry for the https:// URL and getResourceTimingHint returns 🔵 'network'. Step 6 is re-added to _artRetryTable: clear per-cell inlineDoneAttr markers and call _artInitInlinePics(ctx, true, table). No RT-entry competition occurs because all three functions now use the native img.src path for cacheBust=true requests — no GM_xhr runs that could consume a PerformanceResourceEntry ahead of the native img.onload handler."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.278",
         "date": "2026-03-22",
         "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.278+2026-03-22
+// @version      9.99.279+2026-03-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -30112,7 +30112,19 @@ a { color: #1565c0; }`;
         _artInitBigPics(ctx, table, tableIndex, btnId, true);  // cacheBust = true
         _artInitSmallPics(ctx, table, true);                   // cacheBust = true
 
-        // ── 6. Re-enrich all art cells (rebuilds multi-row lists from fresh API data)
+        // ── 6. Retry inline thumbnails in the addFeature column (e.g. "Release") ─
+        // Clear done markers so _artInitInlinePics treats the cells as fresh.
+        // With cacheBust=true the loadTask inside _artInitInlinePics bypasses
+        // _artFetchCachedImage and uses the native img.src path — exactly like
+        // _artInitBigPics / _artInitSmallPics above — so the browser creates a
+        // PerformanceResourceEntry for the https:// URL and getResourceTimingHint
+        // returns 🔵 'network', matching the other columns after retry.
+        table.querySelectorAll('td[data-' + ctx.inlineDoneAttr + ']').forEach(td => {
+            delete td.dataset[ctx.inlineDoneAttr];
+        });
+        _artInitInlinePics(ctx, true, table); // cacheBust = true, targetTable = table
+
+        // ── 7. Re-enrich all art cells (rebuilds multi-row lists from fresh API data)
         _artEnrichTable(ctx, table);
 
         Lib.debug(ctx.key, `${ctx.key}RetryTable: reload enqueued for table ${tableIndex} (${count} link(s))`);
@@ -30925,11 +30937,23 @@ a { color: #1565c0; }`;
                     anyInjected = true;
 
                     // ── Defer fetch through _caaQueue (concurrency-throttled) ───
-                    // When IDB is enabled the loadTask calls _artFetchCachedImage
-                    // (three-tier: session Map → IDB → GM_xhr network).
-                    // When IDB is disabled, the original native img.src path is used.
+                    // When IDB is enabled AND this is not a cache-busted retry, the
+                    // loadTask uses _artFetchCachedImage (three-tier: session Map →
+                    // IDB → GM_xhr network) so cached blobs are served without a
+                    // network round-trip.
+                    //
+                    // When cacheBust=true (called from _artRetryTable) the IDB path
+                    // is intentionally bypassed and the native img.src path is used
+                    // instead — mirroring _artInitBigPics/_artInitSmallPics behaviour.
+                    // This ensures:
+                    //   (a) a genuine network fetch occurs (bypassing any cached blob)
+                    //   (b) the browser creates a PerformanceResourceEntry for the
+                    //       https:// URL so getResourceTimingHint returns 🔵 'network'
+                    //   (c) no RT-entry competition with the bigpics/smallpics native
+                    //       requests (which would happen if GM_xhr and native img.src
+                    //       raced for the same cache-busted URL).
                     const loadTask = () => {
-                        if (Lib.settings.sa_art_idb_enable) {
+                        if (Lib.settings.sa_art_idb_enable && !cacheBust) {
                             return _artFetchCachedImage(imgurl)
                                 .then(({ objectUrl, fromIdb, fromMemory }) => {
                                     if (!ph.isConnected) return; // node detached by a later render pass

@@ -58221,7 +58221,6 @@ to the event parts extracted
 * TODO in debug log emit also the entity title
 
 
-* QUESTION: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
 * QUESTION: on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
 
 on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
@@ -58964,7 +58963,7 @@ comumn cell level accordingly)
 * test with the VA pass
 * test with Save/Load from disk for Artist-Releasegroups
 
-* TODO add settings Save/Load functionality
+* DONE add settings Save/Load functionality
 ** DONE initial
 
 add Save/Load functionality to the "Settings" dialog by creating two new buttons "Save configuration" and "Load
@@ -59035,7 +59034,7 @@ the saving it again, there is a mismatch between how integers are represented.
 
 Integers have are enclosed in '"' after resetting and saving.
 
-** h3 header
+** DONE h3 header
 
 small glitches
 
@@ -59053,7 +59052,10 @@ to
 <h3 style="margin:0;color:#222;font-size:1.2em;">📥 Save Settings Configuration</h3>
 #+end_example
 
-2.)
+
+* QUESTION: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
+* DONE In the case of running the page with the indexedDB "sa_art_idb_enable: true" - "⚠️ no data"
+** initial
 
 In the case of running the page with the indexedDB "sa_art_idb_enable: true", I made sure that during initial rendering
 of the page e.g. https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 ALL the CAA images were
@@ -59065,6 +59067,116 @@ the cache icons on the images in the big images stripe above the table data and 
 
 I uploaded the debug log of a filtering action in the file "debugIndexedDB". Please explain and fix
 
+** bugs
+
+OK, it now initially (when all CAA images are in the indexedDB) sets the cache hint icon in the "CAA" column to
+
+#+begin_example
+"<span class="mb-art-cache-hint-col" title="IndexedDB cache hit">🗄️</span>"
+#+end_example
+
+It also, when pressing the retry-button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-3" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+#+end_example
+
+sets the cache hint icon in the "CAA" column and the cache-hint overlay icon in the big picture image stripe correctly to 
+
+#+begin_example
+<span class="mb-art-cache-hint-col" title="Network fetch (256 ms)">🔵</span>
+#+end_example
+
+BUT the cache-hint overlay icons in the "Release" column (https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23?page=2) are ALWAYS showing
+
+#+begin_example
+"⚠️ no data"
+#+end_example
+
+** bugs
+
+still bugs:
+
+When pressing the retry-button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-3" type="button"
+#+end_example
+
+the cache-hint overlay icons in the "Release" column now show "🟢 memory cache", in the big picture image stripe they show "⚠️ no data" and the "CAA" column shows "⚠️ no data" with a tooltip of "Timing unavailable"
+
+** almost
+
+Almost fixed, now after pressing the retry-button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-3" type="button"
+#+end_example
+
+- the cache-hint overlay icons in the big picture image stripe CORRECTLY show "🔵"
+- the cache-hint overlay icons in the "CAA" column CORRECTLY show "🔵"
+- the cache-hint overlay icons in the "Release" column INCORRECTLY show "🟢 memory cache", also it should also be "🔵"
+
+Here the debug log from a sub-table with 1 row, when pressing the retry button
+
+#+begin_example
+12:26:01.359 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/e7a9ef74-339b-4387-8ad6-8a40b8c13d66/front-250?_cb=1774182346446 
+12:26:04.473 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Toggling table for "(unknown) release". New state: visible 
+12:26:18.554 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaRetryTable: starting forced reload for table 2 
+12:26:18.556 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaCreateOrUpdateToggleButton: updated btn mb-caa-toggle-btn-2 (1 link(s)) 
+12:26:18.558 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitBigPics: built bigbox for table 2 with 1 image(s), initially hidden 
+12:26:18.559 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/e9f29204-735d-40db-ba82-43ed8f3a5efe/front-250?_cb=1774182378559 
+12:26:18.559 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitSmallPics: enqueued 1 load request(s) (queue: 2 running, 0 pending) 
+12:26:18.560 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichTable: enqueued 1 enrichment request(s) (queue: 3 running, 0 pending) 
+12:26:18.560 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaRetryTable: reload enqueued for table 2 (1 link(s)) 
+12:26:18.578 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbGetMetadata: IDB hit — /release/e9f29204-735d-40db-ba82-43ed8f3a5efe (7 images) 
+12:26:18.578 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 7 image(s) for /release/e9f29204-735d-40db-ba82-43ed8f3a5efe (IDB metadata) 
+12:26:18.583 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: rebuilt 7 image row(s) in CAA cell 
+12:26:19.362 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/e9f29204-735d-40db-ba82-43ed8f3a5efe/front-250?_cb=1774182378559 
+12:26:27.928 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caa toggle btn mb-caa-toggle-btn-2: strip shown 
+#+end_example
+
+
+* TODO network path
+
+#+begin_example
+12:41:49.146 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caa toggle btn mb-caa-toggle-btn-0: strip shown 
+12:42:25.913 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaRetryTable: starting forced reload for table 1 
+12:42:25.913 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaCreateOrUpdateToggleButton: updated btn mb-caa-toggle-btn-1 (4 link(s)) 
+12:42:25.914 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitBigPics: built bigbox for table 1 with 4 image(s), initially hidden 
+12:42:25.914 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitSmallPics: enqueued 4 load request(s) (queue: 4 running, 4 pending) 
+12:42:25.914 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: addCAA column = "Release" 
+12:42:25.915 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: processing table 1, column "Release" at index 1 
+12:42:25.915 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: done — injected=0 enqueued=0 skipped(done=4 noLink=0 noGuid=0) column="Release" (queue: 4 running, 4 pending) 
+12:42:25.915 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichTable: enqueued 4 enrichment request(s) (queue: 4 running, 8 pending) 
+12:42:25.915 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaRetryTable: reload enqueued for table 1 (4 link(s)) 
+12:42:26.264 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release/835aa9d8-7cb3-4578-85fd-dcfd51a5bc83/front-250?_cb=1774183345914 
+12:42:26.264 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/76415396-cf11-43dc-ad76-a3a5c4c9072d/front-250?_cb=1774183346264 
+12:42:26.292 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release/348e019a-36d2-4320-bfd9-d9aa486fb19f/front-250?_cb=1774183345914 
+12:42:26.292 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/835aa9d8-7cb3-4578-85fd-dcfd51a5bc83/front-250?_cb=1774183346292 
+12:42:26.304 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release/a8a64368-57fa-4bc0-9eef-c06a2fb57394/front-250?_cb=1774183345914 
+12:42:26.305 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/a8a64368-57fa-4bc0-9eef-c06a2fb57394/front-250?_cb=1774183346305 
+12:42:26.306 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitBigPics: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release/76415396-cf11-43dc-ad76-a3a5c4c9072d/front-250?_cb=1774183345914 
+12:42:26.307 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/348e019a-36d2-4320-bfd9-d9aa486fb19f/front-250?_cb=1774183346307 
+12:42:26.516 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release/76415396-cf11-43dc-ad76-a3a5c4c9072d/front-250?_cb=1774183346264 
+12:42:26.516 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/76415396-cf11-43dc-ad76-a3a5c4c9072d/front-250?_cb=1774183346264 
+12:42:26.580 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release/348e019a-36d2-4320-bfd9-d9aa486fb19f/front-250?_cb=1774183346307 
+12:42:26.580 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/348e019a-36d2-4320-bfd9-d9aa486fb19f/front-250?_cb=1774183346307 
+12:42:26.594 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release/a8a64368-57fa-4bc0-9eef-c06a2fb57394/front-250?_cb=1774183346305 
+12:42:26.594 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/a8a64368-57fa-4bc0-9eef-c06a2fb57394/front-250?_cb=1774183346305 
+12:42:26.605 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: cache-hint=unavailable (ts=null ebs=null dur=n/a redirectStart=n/a responseStart=n/a) — //coverartarchive.org/release/835aa9d8-7cb3-4578-85fd-dcfd51a5bc83/front-250?_cb=1774183346292 
+12:42:26.605 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/835aa9d8-7cb3-4578-85fd-dcfd51a5bc83/front-250?_cb=1774183346292 
+12:42:26.808 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 9 image(s) for /release/835aa9d8-7cb3-4578-85fd-dcfd51a5bc83 
+12:42:26.809 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: rebuilt 9 image row(s) in CAA cell 
+12:42:26.825 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 2 image(s) for /release/a8a64368-57fa-4bc0-9eef-c06a2fb57394 
+12:42:26.825 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: rebuilt 2 image row(s) in CAA cell 
+12:42:26.826 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 10 image(s) for /release/76415396-cf11-43dc-ad76-a3a5c4c9072d 
+12:42:26.827 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: rebuilt 10 image row(s) in CAA cell 
+12:42:26.827 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 5 image(s) for /release/348e019a-36d2-4320-bfd9-d9aa486fb19f 
+12:42:26.828 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: rebuilt 5 image row(s) in CAA cell 
+#+end_example
 
 * configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
 * tooltip should show image comment, additionally to the image popup itself
+
+

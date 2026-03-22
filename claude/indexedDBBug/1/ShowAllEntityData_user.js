@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.278+2026-03-22
+// @version      9.99.276+2026-03-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -27507,51 +27507,6 @@ a { color: #1565c0; }`;
      * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
      *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
      */
-    /**
-     * Determines the correct cache-hint status and label for a loaded image
-     * source URL, taking the IDB/memory/native-path distinction into account.
-     *
-     * The core problem this solves: when IDB is enabled and an image is fetched
-     * via GM_xmlhttpRequest (_artGmFetchBlob), the result is stored as a blob:
-     * URL.  Blob: URLs are never recorded by the browser's Resource Timing API,
-     * so getResourceTimingHint(blobUrl) always returns 'unavailable' → ⚠️.
-     * The correct status in this case is 'network' (the GM_xhr fetch IS a
-     * genuine network request).
-     *
-     * When IDB is disabled the browser fetches images directly via <img>.src
-     * (a real https:// URL), which IS recorded by the RT API.
-     *
-     * Decision logic:
-     *   • fromIdb    → synthesise 'idb'
-     *   • fromMemory → synthesise 'memory'
-     *   • src starts with 'blob:' → synthesise 'network'  (GM_xhr IDB path)
-     *   • otherwise → query getResourceTimingHint(src)     (native img.src path)
-     *
-     * @param {string}  src         Resolved image URL (blob: or https://).
-     * @param {boolean} fromIdb     Whether the blob was served from IDB.
-     * @param {boolean} fromMemory  Whether the blob was served from session Map.
-     * @returns {{ status: string, label: string }}
-     */
-    function _hintFromSrc(src, fromIdb, fromMemory) {
-        if (fromIdb) {
-            return { status: 'idb',    label: cacheStatusLabel('idb', null) };
-        }
-        if (fromMemory) {
-            return { status: 'memory', label: cacheStatusLabel('memory', null) };
-        }
-        if (src && src.startsWith('blob:')) {
-            // blob: URL → produced by _artGmFetchBlob → definitely a network fetch.
-            // GM_xmlhttpRequest requests do NOT appear in the page's Performance
-            // Resource Timing buffer, so getResourceTimingHint would always return
-            // 'unavailable'.  Synthesise 'network' directly instead.
-            return { status: 'network', label: cacheStatusLabel('network', null) };
-        }
-        // Native img.src path (IDB disabled) — the browser fetched the https:// URL
-        // directly, so a real PerformanceResourceEntry exists for it.
-        const hint = getResourceTimingHint(src);
-        return { status: hint.status, label: cacheStatusLabel(hint.status, hint.duration) };
-    }
-
     function getResourceTimingHint(url) {
         if (typeof performance === 'undefined' || typeof performance.getEntriesByName !== 'function') {
             return {
@@ -28804,20 +28759,16 @@ a { color: #1565c0; }`;
                     hintStatus = 'memory';
                     hintLabel  = cacheStatusLabel('memory', null);
                 } else {
-                    const _h = _hintFromSrc(src, wasIdbHit, wasMemoryHit);
-                    hintStatus = _h.status;
-                    hintLabel  = _h.label;
-                    if (_h.status !== 'network') {
-                        // Log RT details only for native-path lookups (non-blob src)
-                        const hint = getResourceTimingHint(src);
-                        Lib.debug(ctx.key,
-                            `${ctx.key}LoadIcon: cache-hint=${hint.status} ` +
-                            `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
-                            `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
-                            `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
-                            `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
-                            ` — ${imgurl}`);
-                    }
+                    const hint = getResourceTimingHint(src);
+                    hintStatus = hint.status;
+                    hintLabel  = cacheStatusLabel(hint.status, hint.duration);
+                    Lib.debug(ctx.key,
+                        `${ctx.key}LoadIcon: cache-hint=${hint.status} ` +
+                        `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
+                        `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
+                        `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
+                        `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
+                        ` — ${imgurl}`);
                 }
 
                 const emoji = cacheStatusEmoji(hintStatus);
@@ -29557,19 +29508,16 @@ a { color: #1565c0; }`;
                                 hintStatus = 'memory';
                                 hintLabel  = cacheStatusLabel('memory', null);
                             } else {
-                                const _h = _hintFromSrc(src, bigIdbHit, bigMemoryHit);
-                                hintStatus = _h.status;
-                                hintLabel  = _h.label;
-                                if (_h.status !== 'network') {
-                                    const hint = getResourceTimingHint(src);
-                                    Lib.debug(ctx.key,
-                                        `${ctx.key}InitBigPics: cache-hint=${hint.status} ` +
-                                        `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
-                                        `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
-                                        `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
-                                        `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
-                                        ` — ${imgurl}`);
-                                }
+                                const hint = getResourceTimingHint(src);
+                                hintStatus = hint.status;
+                                hintLabel  = cacheStatusLabel(hint.status, hint.duration);
+                                Lib.debug(ctx.key,
+                                    `${ctx.key}InitBigPics: cache-hint=${hint.status} ` +
+                                    `(ts=${hint.transferSize} ebs=${hint.encodedBodySize} ` +
+                                    `dur=${hint.duration !== null ? Math.round(hint.duration) + 'ms' : 'n/a'} ` +
+                                    `redirectStart=${hint.redirectStart !== null ? Math.round(hint.redirectStart) + 'ms' : 'n/a'} ` +
+                                    `responseStart=${hint.responseStart !== null ? Math.round(hint.responseStart) + 'ms' : 'n/a'})` +
+                                    ` — ${imgurl}`);
                             }
                             const emoji = cacheStatusEmoji(hintStatus);
 
@@ -30577,7 +30525,7 @@ a { color: #1565c0; }`;
      *
      * @param {ArtCtx} ctx  Archive context descriptor.
      */
-    function _artInitInlinePics(ctx, cacheBust = false, targetTable = null) {
+    function _artInitInlinePics(ctx) {
         if (!Lib.settings.sa_enable_caa_pics) return;
         if (!Lib.settings.sa_caa_pics_inline) return;
 
@@ -30605,9 +30553,6 @@ a { color: #1565c0; }`;
         let skippedDone = 0, skippedNoLink = 0, skippedNoGuid = 0;
 
         tables.forEach((table, tblIdx) => {
-            // When called from _artRetryTable, only process the specific table.
-            if (targetTable && table !== targetTable) return;
-
             const colIdx = caaFindColumnByName(table, colName);
             if (colIdx === -1) {
                 Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: column "${colName}" not found in table ${tblIdx} — skipping table`);
@@ -30711,8 +30656,7 @@ a { color: #1565c0; }`;
                             const guidMatch  = href && href.match(GUID_RE);
                             if (!guidMatch) return;
                             const entityType = ctx.entityTypes.find(t => href.includes('/' + t + '/')) || ctx.entityTypes[0];
-                            const imgurl     = ctx.archiveHost + '/' + entityType + '/' + guidMatch[0] + '/front-' + size +
-                                               (cacheBust ? '?_cb=' + Date.now() : '');
+                            const imgurl     = ctx.archiveHost + '/' + entityType + '/' + guidMatch[0] + '/front-' + size;
                             const bigUrl     = ctx.archiveHost + '/' + entityType + '/' + guidMatch[0] + '/front-' + bigSize;
 
                             // ── Hover wiring — both C1 and C2 need this ───────────────
@@ -30736,37 +30680,11 @@ a { color: #1565c0; }`;
                                 existingPh.dataset[hoverWiredAttr] = '1';
                             }
 
-                            if (blobIsAlive && !cacheBust) {
+                            if (blobIsAlive) {
                                 // ── C1: blob is valid — image already visible ──────────
                                 // Stamp the marker so future same-session calls hit Case A.
                                 td.dataset[ctx.inlineDoneAttr] = '1';
                                 skippedDone++;
-                                // Update (or inject) the cache-hint overlay to 'memory' —
-                                // the blob is alive in _artIdbBlobUrls which means it was
-                                // fetched in this session (Tier 1 memory cache hit).  The
-                                // hint span may carry a stale emoji from a prior render
-                                // pass that used getResourceTimingHint on a plain https://
-                                // URL before the blob was cached; refresh it now.
-                                if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
-                                    const hintEmoji = cacheStatusEmoji('memory');
-                                    const hintLabel = cacheStatusLabel('memory', null);
-                                    let existingHint = existingPh.querySelector('.mb-art-cache-hint-inline');
-                                    if (existingHint) {
-                                        existingHint.textContent = hintEmoji;
-                                        existingHint.title       = hintLabel;
-                                    } else {
-                                        const hs           = document.createElement('span');
-                                        hs.className       = 'mb-art-cache-hint-inline';
-                                        hs.textContent     = hintEmoji;
-                                        hs.title           = hintLabel;
-                                        hs.style.cssText   =
-                                            'font-size:0.65em; line-height:1; position:absolute;' +
-                                            ' top:0; left:0; user-select:none; cursor:default;' +
-                                            ' pointer-events:none;';
-                                        existingPh.style.position = 'relative';
-                                        existingPh.appendChild(hs);
-                                    }
-                                }
                                 Lib.debug(ctx.key,
                                     `init${ctx.key.toUpperCase()}InlinePics: C1 same-session restore ` +
                                     `— blob alive, hover re-wired — ${imgurl}`);
@@ -30788,7 +30706,7 @@ a { color: #1565c0; }`;
                             const refetchTask = () => {
                                 if (Lib.settings.sa_art_idb_enable) {
                                     return _artFetchCachedImage(imgurl)
-                                        .then(({ objectUrl, fromIdb, fromMemory }) => {
+                                        .then(({ objectUrl }) => {
                                             // Guard: only update the live DOM node.
                                             // If a subsequent render pass (runFilter → renderGroupedTable)
                                             // ran tbody.innerHTML='' before this task completed, existingImg
@@ -30802,31 +30720,6 @@ a { color: #1565c0; }`;
                                                 // cloneNode copies of this td (made by an earlier render
                                                 // pass) do not inherit a premature 'done' marker.
                                                 td.dataset[ctx.inlineDoneAttr] = '1';
-
-                                                // ── Cache-hint indicator (C2 restore) ──────────────
-                                                if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
-                                                    const hintStatus = fromIdb    ? 'idb'
-                                                                     : fromMemory ? 'memory'
-                                                                     : (() => { const h = getResourceTimingHint(objectUrl); return h.status; })();
-                                                    const hintLabel  = cacheStatusLabel(hintStatus, null);
-                                                    const hintEmoji  = cacheStatusEmoji(hintStatus);
-                                                    let existingHint = existingPh.querySelector('.mb-art-cache-hint-inline');
-                                                    if (existingHint) {
-                                                        existingHint.textContent = hintEmoji;
-                                                        existingHint.title       = hintLabel;
-                                                    } else {
-                                                        const hs = document.createElement('span');
-                                                        hs.className   = 'mb-art-cache-hint-inline';
-                                                        hs.textContent = hintEmoji;
-                                                        hs.title       = hintLabel;
-                                                        hs.style.cssText =
-                                                            'font-size:0.65em; line-height:1; position:absolute;' +
-                                                            ' top:0; left:0; user-select:none; cursor:default;' +
-                                                            ' pointer-events:none;';
-                                                        existingPh.style.position = 'relative';
-                                                        existingPh.appendChild(hs);
-                                                    }
-                                                }
                                             }
                                         })
                                         .catch(() => { /* 404 — leave ph as invisible spacer */ });
@@ -30890,8 +30783,7 @@ a { color: #1565c0; }`;
 
                     // Derive entity type from the href (first matching entityType segment)
                     const entityType = ctx.entityTypes.find(t => href.includes('/' + t + '/')) || ctx.entityTypes[0];
-                    const imgurl = ctx.archiveHost + '/' + entityType + '/' + guidMatch[0] + '/front-' + size +
-                                   (cacheBust ? '?_cb=' + Date.now() : '');
+                    const imgurl = ctx.archiveHost + '/' + entityType + '/' + guidMatch[0] + '/front-' + size;
 
                     Lib.debug(ctx.key,
                         `init${ctx.key.toUpperCase()}InlinePics: will fetch inline thumbnail: ${imgurl}`);
