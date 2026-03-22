@@ -58220,18 +58220,12 @@ to the event parts extracted
 
 * TODO in debug log emit also the entity title
 
+
 * QUESTION: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
-
 * QUESTION: on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
 
 on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
 fetching of all paginated pages begins after pressing the "Show all.." action button
-
-* QUESTION: on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the fetching of all paginated pages begins after pressing the "Show all.." action button
-
-on pages like https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f?page=1 it takes forever until the
-fetching of all paginated pages begins after pressing the "Show all.." action button
-
 
 
 * TODO Change all the entity links to open in a new tab
@@ -58485,7 +58479,34 @@ STF highlight: bg #90ee90 (hardcoded light green), color #000
 #+end_example
 
 
-* TODO missing - JSDoc: * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
+* TODO add/fix missing/doubled - JSDoc
+
+#+begin_example
+    /**
+     * Recalculates and updates the h2 row-count badge from current DOM state of all
+     * subtables after global + subtable filters have been applied.
+     *
+     * Mirrors the 3-tier format used by updateSubTableRowCount():
+     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
+     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
+     *
+     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
+     */
+    /**
+     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
+     * reflecting the current combination of global filter, column filters, and
+     * sub-table filter active on this specific table.
+     *
+     * Called from:
+     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
+     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
+     *
+     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
+     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
+     *
+     * @param {HTMLTableElement} tbl  The live sub-table element.
+     */
+#+end_example
 
 #+begin_example
     /**
@@ -58943,9 +58964,107 @@ comumn cell level accordingly)
 * test with the VA pass
 * test with Save/Load from disk for Artist-Releasegroups
 
-* DONE add settings Save/Load functionality
+* TODO add settings Save/Load functionality
+** DONE initial
 
 add Save/Load functionality to the "Settings" dialog by creating two new buttons "Save configuration" and "Load
 configuration". The data should be serialized in a versioned JSON structure, so that two different stored files are easy
 diffable by the enduser.
 
+** DONE integer
+
+some bugs
+
+1.)
+
+please reuse the infra structure of presenting the user with a dialog before saving the configuration to disk from what
+is used when exporting data via the "Export"-button
+
+In the case of saving the configuration the "FILE METADATA" block should be, e.g.
+
+#+begin_example
+  "_meta": {
+    "schema_version": 1,
+    "script_version": "9.99.273+2026-03-22",
+    "exported_at": "2026-03-22T00:58:30.408Z",
+    "script_id": "vz-mb-show-all-entity-data"
+  }
+#+end_example
+
+and the filenname which gets shown to the enduser for optional overwriting should initially be what we have in the current implementation
+
+2.)
+
+When saving the configuration on one browser, then loading it in another browser, then resetting via
+
+#+begin_example
+<a id="vz-mb-show-all-entity-data-reset" style="cursor:pointer;font-weight:600;color:#666;font-size:0.85em;
+                                          text-decoration:none;">
+                                    RESET
+                                </a>
+#+end_example
+
+the saving it again, there is a mismatch between how integers are represented.
+
+#+begin_example
+@@ -136,16 +136,16 @@
+     "sa_caa_pics_big": true,
+     "sa_caa_pics_initially_collapsed": true,
+     "sa_caa_pics_inline": true,
+-    "sa_caa_small_img_size": 250,
+-    "sa_caa_big_img_size": 250,
+-    "sa_caa_big_max_height": 125,
++    "sa_caa_small_img_size": "250",
++    "sa_caa_big_img_size": "250",
++    "sa_caa_big_max_height": "125",
+     "sa_caa_highlight_colour": "#ffff00",
+-    "sa_caa_fetch_concurrency": 4,
++    "sa_caa_fetch_concurrency": "4",
+     "sa_caa_hover_preview": true,
+     "sa_art_idb_enable": false,
+-    "sa_art_idb_image_ttl_days": 30,
+-    "sa_art_idb_metadata_ttl_days": 7,
+-    "sa_caa_completion_toast_duration": 10,
++    "sa_art_idb_image_ttl_days": "30",
++    "sa_art_idb_metadata_ttl_days": "7",
++    "sa_caa_completion_toast_duration": "10",
+     "sa_rt_enable": true,
+     "sa_rt_show_icon_column": true,
+     "sa_rt_show_bigbox": true,
+#+end_example
+
+Integers have are enclosed in '"' after resetting and saving.
+
+** h3 header
+
+small glitches
+
+1.)
+
+The currently rendered h3 header in the save dialog should be changed from
+
+#+begin_example
+<h3 style="margin:0;color:#222;font-size:1.2em;">📥 Export Table Data — Settings Configuration</h3>
+#+end_example
+
+to
+
+#+begin_example
+<h3 style="margin:0;color:#222;font-size:1.2em;">📥 Save Settings Configuration</h3>
+#+end_example
+
+2.)
+
+In the case of running the page with the indexedDB "sa_art_idb_enable: true", I made sure that during initial rendering
+of the page e.g. https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23 ALL the CAA images were
+downloaded and cached in an indexedDB.
+
+When I then start filtering, I would expect because of the "sa_rt_show_bigbox" and "sa_rt_show_inline" both TRUE, that
+the cache icons on the images in the big images stripe above the table data and the inline images in the column
+"Release" and "CAA" (here also the tooltip says consistenly "Timing unavailable") be either "🟢 memory cache" or "🟡 disk cache", but instead they consistently show up as "⚠️ no data"
+
+I uploaded the debug log of a filtering action in the file "debugIndexedDB". Please explain and fix
+
+
+* configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
+* tooltip should show image comment, additionally to the image popup itself
