@@ -59216,15 +59216,7 @@ The interesting parts are:
 
 Please fix..  
 
-
-* configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
-* tooltip should show image comment, additionally to the image popup itself
-
-In the uploaded userscript,
-
-is it possible to show both, a popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
-
-* TODO Statistics
+* DONE Statistics
 
 some bugs
 
@@ -59250,3 +59242,47 @@ the same for the sub-table level checkbox states (Case sensitive, Regex, Exclude
 <td title="Sub-table filter: &quot;CA&quot;" style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; white-space: nowrap;"><em style="color:#1565c0">"CA"</em></td>
 <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85);"><span style="font-size:0.8em;color:#555">Active filter</span></td>
 #+end_example
+
+
+* configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
+
+* tooltip should show image comment, additionally to the image popup itself
+
+In the uploaded userscript,
+
+show both, the popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
+
+#+begin_example
+<td data-erg-injected="1" data-caa-multi-built="1">
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back Spine">
+    <li class="mb-caa-art-li mb-caa-art-li-summary">
+      <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (2) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
+      </span>
+      <a href="/release/e4375aa5-e381-4633-8666-033974d149c3/cover-art" data-caa-synthetic="1" title="2 images found for this release / release-group" data-caa-enriched="1">
+	<span class="caa-icon" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/front-250&quot;);" title="2 images found for this release / release-group">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Network fetch (1965 ms)">🔵
+	</span>
+	<span class="mb-caa-count-badge" title="2 images found for this release / release-group">2
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031291-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031887-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back / Spine
+      </span>
+    </li>
+  </ul>
+</td>
+#+end_example
+
+
