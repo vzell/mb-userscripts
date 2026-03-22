@@ -59138,6 +59138,26 @@ Here the debug log from a sub-table with 1 row, when pressing the retry button
 
 
 * TODO network path
+** initial
+
+OK, so the indexedDB path now works. Now lets concentrate on the NON-indexedDB path (sa_art_idb_enable: false):
+
+Please re-check the complete cache-hint display logic for the "CAA", column, the big-picture artwork stripe and the
+"Release" column for e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c?tport=8000&page=1
+
+Especially after pressing the retry-button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-3" type="button"
+#+end_example
+
+there are some oddities:
+
+- the cache-hint overlay icons in the "CAA" column (I think INCORRECTLY) show "⚠️ no data" with tooltip "Timing unavailable"
+- the cache-hint overlay icons in the big picture image stripe (I think INCORRECTLY) show "⚠️ no data"
+- the cache-hint overlay icons in the "Release" column show "🔵" for just ONE row and "⚠️ no data" for others
+
+Here is the debug log from a sub-table when pressing the retry button
 
 #+begin_example
 12:41:49.146 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caa toggle btn mb-caa-toggle-btn-0: strip shown 
@@ -59176,7 +59196,59 @@ Here the debug log from a sub-table with 1 row, when pressing the retry button
 12:42:26.828 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: rebuilt 5 image row(s) in CAA cell 
 #+end_example
 
+** bug with row count
+
+There is a bug on "multi"-table pageTypes
+e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c regarding filtering on the sub-table
+level and displaying the filtered row count in the h3 header line
+
+In the sub-table "Promotion release", the total number of rows is 4. When specifiying the sub-table filter condition
+"jp", I would expect 3 rows left (this is actually true, there are ONYL 3 rows dislayed in the sub-table) and the row
+count in the h3 header line to be (3 of 4), but instead it renders as (4)
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;3&lt;/span&gt; rows matching the &lt;span style=&quot;background:#90ee90;color:#000;border-radius:2px;padding:0 3px;font-style:italic;&quot;&gt;sub-table&lt;/span&gt; filter &lt;span class=&quot;mbtt-stf&quot;&gt;jp&lt;/span&gt; from the &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;4&lt;/span&gt; rows in this sub-table">(4)</span>
+#+end_example
+
+The interesting parts are:
+
+- the tooltip for the "(4)" is actually OK, it says 3 out 4 are matching
+- the big picture stripe correctly shows 3 artworks for the 3 rows displayed
+- the "Statistics" panel correctly displays 3/4 filtered rows for this sub-table
+
+Please fix..  
+
 * configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
 * tooltip should show image comment, additionally to the image popup itself
 
+In the uploaded userscript,
 
+is it possible to show both, a popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
+
+
+* Statistics
+
+some bugs
+
+1.)
+
+Add visual identifiers for the global filter checkbox states (Case sensitive, Regex, Exclude) to the end of the column
+
+#+begin_example
+<td style="padding: 4px 8px; border: 1px solid rgb(200, 230, 201); vertical-align: top;"><em style="color:#1565c0">"Bruce"</em></td>
+#+end_example
+
+in the following row "Global Statistics" panel
+
+#+begin_example
+<tr data-stats-row="true" style="transition: background 0.1s;"><td style="padding: 4px 8px; border: 1px solid rgb(200, 230, 201); vertical-align: top; font-weight: 600;">🔍 Global filter</td><td style="padding: 4px 8px; border: 1px solid rgb(200, 230, 201); vertical-align: top;"><em style="color:#1565c0">"Bruce"</em></td><td style="padding: 4px 8px; border: 1px solid rgb(200, 230, 201); vertical-align: top; color: rgb(85, 85, 85);">check the '🔍 Filter' column in the 'Table Detail' section below</td></tr>
+#+end_example
+
+2.)
+
+the same for the sub-table level checkbox states (Case sensitive, Regex, Exclude), render them visually after the string "Active filter" in the "Table Details" sections
+
+#+begin_example
+<td title="Sub-table filter: &quot;CA&quot;" style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; white-space: nowrap;"><em style="color:#1565c0">"CA"</em></td>
+<td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85);"><span style="font-size:0.8em;color:#555">Active filter</span></td>
+#+end_example

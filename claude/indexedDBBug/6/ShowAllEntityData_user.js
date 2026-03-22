@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.280+2026-03-22
+// @version      9.99.281+2026-03-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -20464,6 +20464,16 @@ a { color: #1565c0; }`;
             _html = `${_nRows(_total)} total unfiltered in this sub-table`;
         }
 
+        // ── Update countStat text content ─────────────────────────────────────
+        // This must happen regardless of whether the tooltip feature is enabled,
+        // because the visible text "(N)" / "(N of M)" is always shown.
+        // _visible is the count after ALL active filters (global + column + STF).
+        // _total  is the unfiltered row count for this sub-table.
+        // The text is "(N)" when all rows are visible, "(N of M)" otherwise.
+        _countStat.textContent = (_visible === _total)
+            ? `(${_total})`
+            : `(${_visible} of ${_total})`;
+
         // Store rich tooltip in data-mbtt; remove any stale native title
         // so browsers don't show both tooltips simultaneously.
         // When the feature is disabled, clear data-mbtt so no tooltip fires.
@@ -21029,11 +21039,21 @@ a { color: #1565c0; }`;
                 // any mb-collapse-toggle-has-match classes on the cell toggle icons.
                 updateSubTableCollapseButton(table);
             } else if (h3 && h3.classList.contains('mb-toggle-h3')) {
-                // Update the count in the header during filtering
+                // Update the count in the header during filtering.
+                // Use the DOM-visible row count rather than group.rows.length:
+                // group.rows.length reflects only the global/column filter pass
+                // (rows passed to renderGroupedTable), NOT the STF-hidden rows.
+                // When a sub-table filter is active some of those rows are further
+                // hidden with data-mb-stf-hidden, so group.rows.length > _visible.
                 const countStat = h3.querySelector('.mb-row-count-stat');
-                const totalInGroup = groupedRows.find(g => (g.category || g.key || 'Unknown') === categoryName)?.rows.length || 0;
+                const totalInGroup = parseInt(table.dataset.mbTotalRows || '0', 10)
+                    || (groupedRows.find(g => (g.category || g.key || 'Unknown') === categoryName)?.rows.length || 0);
                 if (countStat) {
-                    countStat.textContent = (group.rows.length === totalInGroup) ? `(${totalInGroup})` : `(${group.rows.length} of ${totalInGroup})`;
+                    const _allTbodyRows = Array.from(table.querySelectorAll('tbody tr'));
+                    const _visibleCount = _allTbodyRows.filter(r => r.style.display !== 'none').length;
+                    countStat.textContent = (_visibleCount === totalInGroup)
+                        ? `(${totalInGroup})`
+                        : `(${_visibleCount} of ${totalInGroup})`;
                 }
                 // Refresh h3 tooltip to reflect current filter state
                 _updateSubTableH3Tooltip(table);

@@ -1,5 +1,17 @@
 [
     {
+        "version": "9.99.281",
+        "date": "2026-03-22",
+        "sections": [
+            {
+                "label": "🐛 Bug Fixes",
+                "items": [
+                    "h3 row-count badge on multi-table pages — sub-table filter (STF) displayed the wrong count in the h3 header span. Example: 'Promotion release' sub-table has 4 rows; filtering with 'jp' hides 1 row leaving 3 visible, but the badge showed '(4)' instead of '(3 of 4)'. The tooltip (data-mbtt) was already correct — it correctly read 3 out of 4 — so this was purely a textContent mismatch. Two independent sites were broken: (1) _updateSubTableH3Tooltip — called by applySubFilter via updateSubTableRowCount() on every STF keystroke — only updated data-mbtt (the hover tooltip) and never touched textContent. So the visible '(N)' text was always left at whatever renderGroupedTable last wrote, which is group.rows.length (the globally-filtered count, ignoring STF). Fixed by computing '(_visible === _total) ? (N) : (N of M)' and assigning to _countStat.textContent at the top of _updateSubTableH3Tooltip, before the tooltip block. (2) renderGroupedTable (the re-render path triggered by global filter / column filter) — the else-if branch that updates the existing h3 during filtering used group.rows.length as the numerator. group.rows.length is the row array passed into renderGroupedTable, which reflects only the global+column filter pass — not any active STF. When STF is active, some of those rows have data-mb-stf-hidden set and are DOM-hidden, so group.rows.length overstates the visible count. Fixed by querying tbody tr elements and filtering to r.style.display !== 'none' to get the true DOM-visible count, and reading table.dataset.mbTotalRows (set during initial render) for the unfiltered total instead of groupedRows[].rows.length."
+                ]
+            }
+        ]
+    },
+    {
         "version": "9.99.280",
         "date": "2026-03-22",
         "sections": [
