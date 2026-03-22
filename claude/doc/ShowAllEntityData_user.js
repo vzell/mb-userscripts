@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.273+2026-03-22
+// @version      9.99.272+2026-03-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8359,7 +8359,7 @@ ${sections.join('\n')}
             // Ctrl/Cmd + , : Open settings
             if (isShortcutEvent(e, 'sa_shortcut_open_settings', 'Ctrl+,')) {
                 e.preventDefault();
-                openSettingsWithConfigButtons();
+                Lib.showSettings();
                 Lib.debug('shortcuts', 'Settings dialog opened via ' + getShortcutDisplay('sa_shortcut_open_settings', 'Ctrl+,'));
             }
 
@@ -12182,7 +12182,42 @@ a { color: #1565c0; }`;
     settingsBtn.type = 'button';
     settingsBtn.title = `Open userscript settings manager to configure script behavior (${getPrefixDisplay()}, then ,)`;
     settingsBtn.onclick = () => {
-        openSettingsWithConfigButtons();
+        console.log('Settings button clicked');
+        console.log('Lib object:', Lib);
+        console.log('Lib.showSettings type:', typeof Lib?.showSettings);
+        console.log('Lib.settingsInterface:', Lib?.settingsInterface);
+
+        // Try method 1: Direct showSettings() call
+        if (Lib && typeof Lib.showSettings === 'function') {
+            console.log('Using Lib.showSettings()');
+            Lib.showSettings();
+            return;
+        }
+
+        // Try method 2: settingsInterface.showModal()
+        if (Lib && Lib.settingsInterface && typeof Lib.settingsInterface.showModal === 'function') {
+            console.log('Using Lib.settingsInterface.showModal()');
+            Lib.settingsInterface.showModal();
+            return;
+        }
+
+        // Try method 3: Find and click menu link (fallback)
+        console.log('Trying fallback: finding menu link');
+        const links = document.querySelectorAll('a[href="#"]');
+        let settingsLink = null;
+        for (const link of links) {
+            if (link.textContent.includes('Userscript Settings Manager') || link.textContent.includes('⚙️')) {
+                settingsLink = link;
+                break;
+            }
+        }
+        if (settingsLink) {
+            console.log('Found menu link, clicking it');
+            settingsLink.click();
+        } else {
+            console.error('No settings access method available');
+            alert('Settings interface not available. Please use the menu: Editing → ⚙️ Userscript Settings Manager');
+        }
     };
 
     // Add shortcuts button (always visible, left of settings button)
@@ -24948,344 +24983,6 @@ a { color: #1565c0; }`;
         el.querySelectorAll('[data-erg-injected]').forEach(child => delete child.dataset.ergInjected);
     }
 
-    // ── Settings Configuration Save / Load ─────────────────────────────────
-    //
-    // CONFIG FILE FORMAT (versioned JSON, one key per line for human diff):
-    //   {
-    //     "_meta": {
-    //       "schema_version": 1,
-    //       "script_version": "9.99.272+2026-03-21",
-    //       "exported_at":    "2026-03-21T14:32:00.000Z",
-    //       "script_id":      "vz-mb-show-all-entity-data"
-    //     },
-    //     "settings": {
-    //       "sa_enable_debug_logging": false,
-    //       "sa_global_filter_highlight_bg": "#FFD700",
-    //       ...one key per line...
-    //     }
-    //   }
-    //
-    // The settings block contains ONLY non-divider keys whose value differs from
-    // the schema default, making files short and trivially diffable.  On import
-    // unknown keys are ignored; missing keys remain at their current saved value.
-    // ──────────────────────────────────────────────────────────────────────────
-
-    /** Current config-file format version (bump when structure changes). */
-    const _CFG_SCHEMA_VERSION = 1;
-
-    /**
-     * Builds the versioned configuration JSON string for the current settings.
-     *
-     * Only non-divider settings whose live value differs from their schema
-     * default are included in the "settings" block; this keeps the file small
-     * and makes diffs between two configurations minimal.  The _meta block
-     * provides enough context to identify the file without opening it.
-     *
-     * The JSON is formatted with 2-space indent so each key appears on its own
-     * line — allowing standard line-diff tools to show exactly which settings
-     * changed between two exported files.
-     *
-     * @returns {string}  Pretty-printed JSON string.
-     */
-    function _buildConfigJson() {
-        const settingsBlock = {};
-        for (const key of Object.keys(configSchema)) {
-            if (configSchema[key].type === 'divider') continue;
-            const live = Lib.settings[key];
-            const dflt = configSchema[key].default;
-            // Always include value; comparing to default is informational only.
-            // Including all keys makes the file a complete snapshot.
-            settingsBlock[key] = live !== undefined ? live : dflt;
-        }
-
-        const payload = {
-            _meta: {
-                schema_version: _CFG_SCHEMA_VERSION,
-                script_version: scriptVersion,
-                exported_at:    new Date().toISOString(),
-                script_id:      SCRIPT_ID
-            },
-            settings: settingsBlock
-        };
-
-        // JSON.stringify with 2-space indent puts each key on its own line,
-        // making the file straightforwardly diffable with any text diff tool.
-        return JSON.stringify(payload, null, 2);
-    }
-
-    /**
-     * Saves the current script configuration to a .json file download.
-     *
-     * The filename encodes the script ID and timestamp so multiple exports are
-     * immediately distinguishable in a downloads folder without opening them.
-     *
-     * Called from the "💾 Save configuration" button injected into the settings
-     * modal footer by _injectSettingsConfigButtons.
-     */
-    function _saveSettingsConfig() {
-        try {
-            const json     = _buildConfigJson();
-            const blob     = new Blob([json], { type: 'application/json' });
-            const url      = URL.createObjectURL(blob);
-            const ts       = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-            const filename = `${SCRIPT_ID}-config-${ts}.json`;
-            triggerStandardDownload(url, filename);
-            Lib.info('settings', `Configuration exported to ${filename}`);
-        } catch (err) {
-            Lib.error('settings', 'Failed to export configuration:', err);
-            Lib.showCustomAlert(
-                `Export failed: ${err.message}`,
-                '⚠️ Export Error'
-            );
-        }
-    }
-
-    /**
-     * Reads a user-selected .json configuration file, validates the payload,
-     * applies matching settings keys, saves them via GM_setValue, and reloads
-     * the page (matching the behaviour of the native SAVE button).
-     *
-     * Validation rules:
-     *   1. JSON must parse without error.
-     *   2. Payload must contain a "settings" object.
-     *   3. _meta.schema_version (when present) must equal _CFG_SCHEMA_VERSION.
-     *   4. Unknown keys (not in configSchema) are silently skipped.
-     *   5. Divider keys are silently skipped.
-     *   6. Type coercion: stored string "true"/"false" → boolean for checkbox
-     *      type keys; numeric strings → number for number type keys.
-     *
-     * A summary dialog reports how many keys were applied, skipped (unknown),
-     * and ignored (type mismatch / parse error) before reloading.
-     *
-     * @param {File} file  The .json file chosen by the user.
-     */
-    async function _loadSettingsConfig(file) {
-        let raw;
-        try {
-            raw = await file.text();
-        } catch (err) {
-            await Lib.showCustomAlert(`Could not read file: ${err.message}`, '⚠️ Read Error');
-            return;
-        }
-
-        let payload;
-        try {
-            payload = JSON.parse(raw);
-        } catch (err) {
-            await Lib.showCustomAlert(
-                `Invalid JSON in file "${file.name}":\n${err.message}`,
-                '⚠️ Parse Error'
-            );
-            return;
-        }
-
-        if (!payload || typeof payload.settings !== 'object' || Array.isArray(payload.settings)) {
-            await Lib.showCustomAlert(
-                `File "${file.name}" does not contain a valid "settings" object.\n` +
-                'Please select a file previously exported by this script.',
-                '⚠️ Invalid Configuration File'
-            );
-            return;
-        }
-
-        // Schema-version check (non-fatal: warn but proceed)
-        const metaVer = payload._meta && payload._meta.schema_version;
-        if (metaVer !== undefined && metaVer !== _CFG_SCHEMA_VERSION) {
-            Lib.warn('settings',
-                `Config file schema_version ${metaVer} ≠ current ${_CFG_SCHEMA_VERSION}; ` +
-                'importing with best-effort compatibility.');
-        }
-
-        let applied = 0, skipped = 0, invalid = 0;
-        const skippedKeys = [];
-
-        for (const [key, value] of Object.entries(payload.settings)) {
-            const schemaCfg = configSchema[key];
-
-            // Skip dividers and keys not in the schema
-            if (!schemaCfg || schemaCfg.type === 'divider') {
-                skipped++;
-                skippedKeys.push(key);
-                continue;
-            }
-
-            // Type coercion
-            let coerced = value;
-            try {
-                if (schemaCfg.type === 'checkbox') {
-                    coerced = value === true || value === 'true';
-                } else if (schemaCfg.type === 'number') {
-                    const n = Number(value);
-                    if (isNaN(n)) { invalid++; continue; }
-                    coerced = n;
-                } else {
-                    // string / text / color_picker / popup_dialog / keyboard_shortcut
-                    coerced = String(value);
-                }
-            } catch (_) {
-                invalid++;
-                continue;
-            }
-
-            GM_setValue(key, coerced);
-            applied++;
-        }
-
-        Lib.info('settings',
-            `Configuration imported from "${file.name}": ` +
-            `${applied} applied, ${skipped} unknown/skipped, ${invalid} invalid`);
-
-        if (skipped > 0) {
-            Lib.debug('settings', `Skipped unknown keys: ${skippedKeys.join(', ')}`);
-        }
-
-        // Build summary for the user
-        const lines = [
-            `File: ${file.name}`,
-            `Applied:  ${applied} setting${applied !== 1 ? 's' : ''}`,
-        ];
-        if (skipped > 0) lines.push(`Skipped:  ${skipped} unknown key${skipped !== 1 ? 's' : ''}`);
-        if (invalid > 0) lines.push(`Invalid:  ${invalid} value${invalid !== 1 ? 's' : ''} (type error)`);
-        if (metaVer !== undefined && metaVer !== _CFG_SCHEMA_VERSION) {
-            lines.push(`\nNote: file uses schema v${metaVer}; current is v${_CFG_SCHEMA_VERSION}.`);
-        }
-        lines.push('\nThe page will now reload to apply the imported settings.');
-
-        await Lib.showCustomAlert(lines.join('\n'), '✅ Configuration Imported');
-        location.reload();
-    }
-
-    /**
-     * Injects "💾 Save configuration" and "📂 Load configuration" buttons into
-     * the settings modal footer immediately after it is added to the DOM.
-     *
-     * The settings modal is rendered entirely by VZ_MBLibrary and closed by
-     * calling location.reload() on save, so there is no stable reference to its
-     * DOM before it is shown.  This function uses a one-shot MutationObserver
-     * watching document.body for the overlay element (`#${SCRIPT_ID}-settings-overlay`)
-     * to be added, then locates the footer div inside the container and appends
-     * the two buttons to its left side.
-     *
-     * The observer disconnects immediately after injecting the buttons so it
-     * does not accumulate across multiple dialog opens.
-     *
-     * Layout in the footer (left-to-right):
-     *   [💾 Save configuration]  [📂 Load configuration]  ··  [SAVE]
-     *
-     * A hidden <input type="file"> is used for the Load picker; it is appended
-     * to the overlay (not document.body) so it is cleaned up automatically when
-     * the dialog closes.
-     */
-    function _injectSettingsConfigButtons() {
-        const overlayId    = `${SCRIPT_ID}-settings-overlay`;
-        const BTN_BASE_CSS =
-            'padding:9px 16px; font-size:0.9em; border-radius:8px; cursor:pointer;' +
-            ' border:1px solid #90a4ae; transition:background 0.15s, border-color 0.15s;' +
-            ' white-space:nowrap;';
-
-        const observer = new MutationObserver((mutations, obs) => {
-            const overlay = document.getElementById(overlayId);
-            if (!overlay) return;
-
-            obs.disconnect(); // one-shot — stop watching immediately
-
-            // The footer is the last direct child of the container div that has
-            // text-align:right (set inline in the VZ_MBLibrary template).  We
-            // locate it by querying for the SAVE button and walking to its parent.
-            const saveBtn = overlay.querySelector(`#${SCRIPT_ID}-save-btn`);
-            if (!saveBtn) {
-                Lib.warn('settings', '_injectSettingsConfigButtons: save-btn not found');
-                return;
-            }
-            const footer = saveBtn.parentElement;
-            if (!footer) return;
-
-            // ── Make footer a flex row so our buttons live on the left ──────────
-            footer.style.display        = 'flex';
-            footer.style.alignItems     = 'center';
-            footer.style.justifyContent = 'space-between';
-
-            // Left-hand cluster: export + import
-            const leftCluster = document.createElement('div');
-            leftCluster.style.cssText = 'display:flex; gap:8px; align-items:center;';
-
-            // ── 💾 Save configuration button ────────────────────────────────────
-            const exportBtn = document.createElement('button');
-            exportBtn.type      = 'button';
-            exportBtn.textContent = '💾 Save configuration';
-            exportBtn.title     = 'Export all current settings to a versioned JSON file';
-            exportBtn.style.cssText =
-                BTN_BASE_CSS + ' background:#e8f5e9; color:#2e7d32;';
-            exportBtn.addEventListener('mouseover', () => {
-                exportBtn.style.background    = '#c8e6c9';
-                exportBtn.style.borderColor   = '#66bb6a';
-            });
-            exportBtn.addEventListener('mouseout',  () => {
-                exportBtn.style.background    = '#e8f5e9';
-                exportBtn.style.borderColor   = '#90a4ae';
-            });
-            exportBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                _saveSettingsConfig();
-            });
-
-            // ── 📂 Load configuration button + hidden file input ─────────────────
-            const importBtn = document.createElement('button');
-            importBtn.type      = 'button';
-            importBtn.textContent = '📂 Load configuration';
-            importBtn.title     = 'Import settings from a previously exported JSON file';
-            importBtn.style.cssText =
-                BTN_BASE_CSS + ' background:#e3f2fd; color:#1565c0;';
-            importBtn.addEventListener('mouseover', () => {
-                importBtn.style.background    = '#bbdefb';
-                importBtn.style.borderColor   = '#42a5f5';
-            });
-            importBtn.addEventListener('mouseout',  () => {
-                importBtn.style.background    = '#e3f2fd';
-                importBtn.style.borderColor   = '#90a4ae';
-            });
-
-            // Hidden file input for picking the JSON file — appended to the
-            // overlay so it is garbage-collected with it on dialog close.
-            const fileInput   = document.createElement('input');
-            fileInput.type    = 'file';
-            fileInput.accept  = '.json,application/json';
-            fileInput.style.display = 'none';
-            overlay.appendChild(fileInput);
-
-            fileInput.addEventListener('change', () => {
-                const f = fileInput.files && fileInput.files[0];
-                if (f) _loadSettingsConfig(f);
-                fileInput.value = ''; // allow re-selecting the same file
-            });
-
-            importBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                fileInput.click();
-            });
-
-            leftCluster.appendChild(exportBtn);
-            leftCluster.appendChild(importBtn);
-            footer.insertBefore(leftCluster, footer.firstChild);
-        });
-
-        observer.observe(document.body, { childList: true });
-    }
-
-    /**
-     * Opens the settings dialog and simultaneously arms the one-shot
-     * MutationObserver that injects the Save/Load configuration buttons.
-     *
-     * All three call sites that previously called Lib.showSettings() directly
-     * are replaced with calls to this wrapper so the buttons are present every
-     * time the dialog is opened — whether via the ⚙️ toolbar button, the
-     * Ctrl+, shortcut, or the prefix-mode shortcut.
-     */
-    function openSettingsWithConfigButtons() {
-        _injectSettingsConfigButtons(); // arm observer before showModal adds the overlay
-        Lib.showSettings();
-    }
-
     /**
      * Serializes current table data (allRows or groupedRows) to JSON and triggers download
      */
@@ -31240,7 +30937,7 @@ a { color: #1565c0; }`;
         'i': { fn: showStatsPanel, description: 'Show Statistics Panel' },
         'e': { fn: openExportMenu, description: 'Open Export Menu' },
         'k': { fn: showShortcutsHelp, description: 'Show Keyboard Shortcuts Help' },
-        ',': { fn: () => openSettingsWithConfigButtons(), description: 'Open Settings' },
+        ',': { fn: () => Lib.showSettings(), description: 'Open Settings' },
         'h': { fn: showAppHelp, description: 'Show App Help' }
     };
 })();

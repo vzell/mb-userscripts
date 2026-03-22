@@ -55603,6 +55603,7 @@ Only the real text strings should be present in the drop-down column menu
 Actually it's not working, the cache-status emojis are still rendered inside the unique value drop-down column menu
 
 
+* DONE fix CCA art work count + add them + total rows to summary - on the table level it should be the filtered state and artwork count per event/release
 
 * TODO add fetching to local db storage and reading from it
 ** initial
@@ -58923,8 +58924,6 @@ Another bug
 
 
 
-* fix CCA art work count + add them + total rows to summary - on the table level it should be the filtered state and artwork count per event/release
-
 * make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
 
 * make the whole CAA/EAA image fetching based on aa new (maybe experimental) boolean - 25m 22s for 4117 Springsteen images (network case)
@@ -58943,4 +58942,10 @@ comumn cell level accordingly)
 
 * test with the VA pass
 * test with Save/Load from disk for Artist-Releasegroups
+
+* DONE add settings Save/Load functionality
+
+add Save/Load functionality to the "Settings" dialog by creating two new buttons "Save configuration" and "Load
+configuration". The data should be serialized in a versioned JSON structure, so that two different stored files are easy
+diffable by the enduser.
 
