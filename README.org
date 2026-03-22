@@ -59052,8 +59052,7 @@ to
 <h3 style="margin:0;color:#222;font-size:1.2em;">📥 Save Settings Configuration</h3>
 #+end_example
 
-
-* QUESTION: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
+* DONE QUESTION: image strip - artist-releationships ... images start with blue network fetch icon .... but the switch to unknown then happens why ?
 * DONE In the case of running the page with the indexedDB "sa_art_idb_enable: true" - "⚠️ no data"
 ** initial
 
@@ -59136,8 +59135,7 @@ Here the debug log from a sub-table with 1 row, when pressing the retry button
 12:26:27.928 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caa toggle btn mb-caa-toggle-btn-2: strip shown 
 #+end_example
 
-
-* TODO network path
+* DONE network path
 ** initial
 
 OK, so the indexedDB path now works. Now lets concentrate on the NON-indexedDB path (sa_art_idb_enable: false):
@@ -59218,6 +59216,7 @@ The interesting parts are:
 
 Please fix..  
 
+
 * configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
 * tooltip should show image comment, additionally to the image popup itself
 
@@ -59225,8 +59224,7 @@ In the uploaded userscript,
 
 is it possible to show both, a popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
 
-
-* Statistics
+* TODO Statistics
 
 some bugs
 
