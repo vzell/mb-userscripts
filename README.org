@@ -60170,6 +60170,14 @@ and the "art comment"
 
 gets highlighted, you can see it DURING typing, BUT it immediately losses the highlightning again after typing
 
+** bug still present
+
+The bug is still present. No highlightning for the badge type or art comments.
+
+This must be fixable. It has to do with the "multi"-table pageType URLs, because on "single"-table pageTypes its working
+perfectly.
+
+Please reimplement with a proper fix
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 

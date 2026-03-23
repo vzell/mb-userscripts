@@ -1,17 +1,5 @@
 [
   {
-    "version": "9.99.298",
-    "date": "2026-03-23",
-    "sections": [
-      {
-        "label": "🐛 Bug Fixes",
-        "items": [
-          "CAA/EAA type-badge and art-comment highlights still absent on multi-table page types after v9.99.297 — root cause identified: in multi-table (addCAA/addEAA) mode initCaaPics() is called from inside renderGroupedTable(), which runs after runFilter()'s groupedRows.forEach loop has completed. At that point _activeFilterHighlightCtx.colFilters holds the colFilters of the last group iterated, not the group that owns the cell being highlighted. All groups other than the last therefore received the wrong column filter set (usually empty), so _artHighlightArtCell was a silent no-op for every cell except those in the final sub-table. Fix: rewrote _artHighlightArtCell() to be fully self-sufficient — it no longer consults _activeFilterHighlightCtx at all. Instead it reads all filter state directly from the live DOM at the moment it is called: (1) global query from #mb-global-filter-input via stripFilterPrefix(), (2) isCaseSensitive / isRegExp from the module-level caseCheckbox / regexpCheckbox elements, (3) colFilters via getColFilters() called on artCell.closest('table') — the sub-table that actually owns the cell — with the per-sub-table Rx checkbox resolved via findH3ForTable(). This approach is immune to the timing race entirely: the DOM is always in the correct final state by the time _artEnrichIcon's async await chain resolves and calls _artHighlightArtCell."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.297",
     "date": "2026-03-23",
     "sections": [

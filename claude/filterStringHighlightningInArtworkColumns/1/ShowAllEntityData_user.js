@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.298+2026-03-23
+// @version      9.99.297+2026-03-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -28862,62 +28862,29 @@ a { color: #1565c0; }`;
      * live CAA/EAA art cell (`<td>`) immediately after _artBuildMultiRowArtCell()
      * has completed.
      *
-     * This is the authoritative highlight call site.  It is fully self-sufficient:
-     * it reads ALL filter state directly from the live DOM at the moment it runs,
-     * so it is immune to the multi-table timing race where _activeFilterHighlightCtx
-     * holds the colFilters of the last-processed group rather than the group that
-     * owns this particular artCell.
+     * This is the authoritative highlight call site.  It reads
+     * _activeFilterHighlightCtx at the latest possible moment — after the async
+     * _artEnrichIcon await chain has settled — so it always sees the correct,
+     * fully-updated filter context regardless of how much time elapsed between
+     * runFilter() setting the context and the art-cell rebuild completing.
      *
-     * State sourced from live DOM:
-     *   - Global filter query: #mb-global-filter-input value (stripped of prefix)
-     *   - isCaseSensitive / isRegExp: the checkboxes in the filter bar
-     *   - colFilters: getColFilters() on the <table> that contains artCell — this
-     *     always returns the correct per-sub-table column filters regardless of
-     *     which group was last processed by runFilter()'s groupedRows.forEach loop
-     *
-     * Called from _artEnrichIcon immediately after each _artBuildMultiRowArtCell()
-     * call (both the IDB Tier-2 early-return path and the main Tier-1/network path).
+     * Calling this from _artEnrichIcon (on the live td) rather than relying solely
+     * on the per-li call inside _artBuildMultiRowArtCell() fixes the race where the
+     * rebuild fires after a second runFilter() has updated or replaced the context.
      *
      * @param {HTMLTableCellElement} artCell  - The `<td>` that was just rebuilt.
      * @param {number}               colIdx   - artCell.cellIndex.
      */
     function _artHighlightArtCell(artCell, colIdx) {
-        // ── 1. Read global filter state directly from the live DOM ───────────────
-        const _gfInput = document.getElementById('mb-global-filter-input');
-        const globalQueryRaw = _gfInput ? stripFilterPrefix(_gfInput.value) : '';
-
-        const isCaseSensitive = caseCheckbox ? caseCheckbox.checked : false;
-
-        // isRegExp for the global filter comes from the global Rx checkbox.
-        // isRegExp for column filters comes from the per-sub-table Rx checkbox
-        // (resolved below via getColFilters on the owning table).
-        const isRegExp = regexpCheckbox ? regexpCheckbox.checked : false;
-
-        // ── 2. Read column filters from the table that owns this artCell ─────────
-        // This is the key fix for multi-table pages: rather than relying on the
-        // module-level _activeFilterHighlightCtx (which holds the last-processed
-        // group's colFilters), we call getColFilters() directly on the sub-table
-        // that contains artCell.  For single-table pages this is equivalent.
-        const _owningTable = artCell.closest('table');
-
-        // Resolve the per-sub-table Rx checkbox (multi-table pages only).
-        const _subH3   = _owningTable ? findH3ForTable(_owningTable) : null;
-        const _subRxCb = _subH3
-            ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-rx-checkbox"]')
-            : null;
-        const colIsRegExp = _subRxCb ? _subRxCb.checked : isRegExp;
-
-        const colFilters = _owningTable
-            ? getColFilters(_owningTable, isCaseSensitive, colIsRegExp)
-            : [];
-
-        // ── 3. Bail out early if nothing is active ───────────────────────────────
-        const hasGlobal = globalQueryRaw !== '';
-        const hasCol    = colFilters.some(f => !f.isMultiRowFilter);
-        if (!hasGlobal && !hasCol) return;
-
-        // ── 4. Build a single context snapshot and highlight every image li ──────
-        const ctxSnap = { globalQueryRaw, colFilters, isCaseSensitive, isRegExp: colIsRegExp };
+        const ctx = _activeFilterHighlightCtx;
+        if (!ctx) return;
+        // Snapshot the context so every li within this cell uses identical regexps.
+        const ctxSnap = {
+            globalQueryRaw:  ctx.globalQueryRaw,
+            colFilters:      ctx.colFilters,
+            isCaseSensitive: ctx.isCaseSensitive,
+            isRegExp:        ctx.isRegExp
+        };
         artCell.querySelectorAll(':scope > ul.mb-caa-art-ul > li.mb-caa-art-li-image')
             .forEach(li => _artHighlightImageLi(li, colIdx, ctxSnap));
     }
