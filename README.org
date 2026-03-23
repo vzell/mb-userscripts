@@ -29106,7 +29106,7 @@ for the new functionality
 
 also add a changelog entry to "let changelog"
 
-** make all the h2 headers clickable
+** DONE make all the h2 headers clickable
 
 some bugs:
 
@@ -29133,6 +29133,127 @@ where "<art image>" is either "CAA" or "EAA"
   uncollpase it; when "Ctrl-Clicking" a h2 header line collapse or uncollpase ALL of them. Also display tooltip for this
   functionality when hovering over an h2 header line
 
+** DONE make all the h2 headers clickable
+
+Actually there are usually more h2 header lines in a musicbrainz release or event page, beside the cover/event art what
+we introduced. Please extend the background and click/Ctrl-click functionality to all of them in a page
+
+** TODO on "Event" pages the h2 headerline form sanojjaans "Event Schedule" is not clickable/No background
+** TODO On "Release" pages, the "Credits" section after the "Tracklist" (with table data) is not visible when the "Tracklist" section is collapsed
+** TODO Optionally collapse/uncollapse + background for the h2 headers on the right side of the sidebar
+** rewrite to use modern library
+
+rewrite the current code in the userscript "ReleasePageEnhancer.user.js"
+
+1.)
+
+to use the same library "VZ_MBLibrary.user.js" as the userscript "ShowAllEntityData.user.js" does
+
+2.)
+
+move the changelog
+
+#+begin_example
+// CHANGELOG
+let changelog = [
+    {version: '0.9.7+2026-03-23', description: 'Enhanced gallery headers: CAA/EAA-aware tooltips, light-orange background, Ctrl+Click to toggle all galleries at once.'},
+    {version: '0.9.6+2026-03-23', description: 'Added event art support via Event Art Archive (eventartarchive.org) for MusicBrainz event pages.'},
+    {version: '0.9.5+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
+    {version: '0.9.0+2026-02-01', description: '1st official release version.'}
+];
+#+end_example
+
+to a new file "ReleasePageEnhancer_CHANGELOG.json" and rewrite it to the syntax used in the corresponding one from
+"ShowAllEntityData_CHANGELOG.json", so that the new library can handle it
+
+3.)
+
+Rewrite the block
+
+#+begin_example
+    const SCRIPT_ID = "vzell-mb-release-enhancer";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Release Page Enhancer";
+    const DEBUG_ENABLED = true
+#+end_example
+
+to use the equivalent code like the "ShowAllEntityData.user.js" userscript does
+
+#+begin_example
+    const SCRIPT_BASE_NAME = "ReleasePageEnhancer";
+    // SCRIPT_ID is derived from SCRIPT_BASE_NAME: CamelCase → kebab-case, lower-cased, prepend "vz-mb-"
+    const SCRIPT_ID = 'vz-mb-' + SCRIPT_BASE_NAME.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : SCRIPT_BASE_NAME;
+
+    // Remote URLs for changelog and help text.
+    // The changelog is fetched and the GM menu item registered by VZ_MBLibrary
+    // (via remoteConfig passed to the constructor below).
+    // The help URL is only used lazily by showAppHelp() via Lib.fetchCachedText().
+    const REMOTE_BASE          = 'https://raw.githubusercontent.com/vzell/mb-userscripts/master/';
+    const REMOTE_HELP_URL      = REMOTE_BASE + SCRIPT_BASE_NAME + '_HELP.txt';
+    const REMOTE_CHANGELOG_URL = REMOTE_BASE + SCRIPT_BASE_NAME + '_CHANGELOG.json';
+    const REMOTE_CACHE_TTL_MS  = 60 * 60 * 1000; // 1 hour
+    const CACHE_KEY_HELP       = SCRIPT_BASE_NAME.toLowerCase() + '-remote-help-text';
+    const CACHE_KEY_CHANGELOG  = SCRIPT_BASE_NAME.toLowerCase() + '-remote-changelog';
+#+end_example
+
+4.)
+
+add a divider section to "const configSchema"
+
+#+begin_example
+        divider_caa_pics: {
+            type: 'divider',
+            label: '🖼️ CAA/EAA ILLUSTRATED DISCOGRAPHY'
+        },
+#+end_example
+
+5.)
+
+also change the block
+
+#+begin_example
+    // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
+    const Lib = (typeof VZMBLibrary !== 'undefined')
+          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, DEBUG_ENABLED)
+          : {
+              settings: {}, // Fallback
+              info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd
+          };
+
+    Lib.info('init', "Script loaded with external library!");
+#+end_example
+
+to use the following features (like in "ShowAllEntityData.user.js")
+
+#+begin_example
+    //--------------------------------------------------------------------------------
+
+    // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
+    // Use a ref object to avoid circular dependency during initialization
+    const settings = {};
+    const remoteConfig = {
+        changelogUrl:      REMOTE_CHANGELOG_URL,
+        cacheKeyChangelog: CACHE_KEY_CHANGELOG,
+        cacheTtlMs:        REMOTE_CACHE_TTL_MS
+    };
+
+    const Lib = (typeof VZ_MBLibrary !== 'undefined')
+          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, null, () => {
+              // Dynamic check: returns current value of debug setting
+              return settings.sa_enable_debug_logging ?? false;
+          }, remoteConfig)
+          : {
+              settings: {},
+              info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
+          };
+
+    // Get version information dynamically
+    const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : 'unknown';
+    const libVersion = (Lib && Lib.version) ? Lib.version : 'unknown';
+
+    // Copy settings reference so the callback can access them
+    Object.assign(settings, Lib.settings);
+#+end_example
 
 
 

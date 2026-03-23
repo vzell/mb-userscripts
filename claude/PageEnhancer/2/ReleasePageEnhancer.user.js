@@ -10,7 +10,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary.user.js
+// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZMBLibrary.user.js
 // @match        *://*.musicbrainz.org/release/*-*-*-*-*
 // @exclude      *://*.musicbrainz.org/release/*/*
 // @match        *://*.musicbrainz.org/event/*-*-*-*-*
@@ -38,56 +38,30 @@
  * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
  */
 
+// CHANGELOG
+let changelog = [
+    {version: '0.9.8+2026-03-23', description: 'Extended collapsible header behaviour (background, Click/Ctrl+Click) to all native MusicBrainz h2 section headers on the page, not just the script-added art gallery headers.'},
+    {version: '0.9.7+2026-03-23', description: 'Enhanced gallery headers: CAA/EAA-aware tooltips, light-orange background, Ctrl+Click to toggle all galleries at once.'},
+    {version: '0.9.6+2026-03-23', description: 'Added event art support via Event Art Archive (eventartarchive.org) for MusicBrainz event pages.'},
+    {version: '0.9.5+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
+    {version: '0.9.0+2026-02-01', description: '1st official release version.'}
+];
+
 (function() {
     'use strict';
 
-    const SCRIPT_BASE_NAME = "ReleasePageEnhancer";
-    // SCRIPT_ID is derived from SCRIPT_BASE_NAME: CamelCase → kebab-case, lower-cased, prepend "vz-mb-"
-    const SCRIPT_ID = 'vz-mb-' + SCRIPT_BASE_NAME.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
-    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : SCRIPT_BASE_NAME;
-    // Remote URLs for changelog and help text.
-    // The changelog is fetched and the GM menu item registered by VZ_MBLibrary
-    // (via remoteConfig passed to the constructor below).
-    // The help URL is only used lazily by showAppHelp() via Lib.fetchCachedText().
-    const REMOTE_BASE          = 'https://raw.githubusercontent.com/vzell/mb-userscripts/master/';
-    const REMOTE_HELP_URL      = REMOTE_BASE + SCRIPT_BASE_NAME + '_HELP.txt';
-    const REMOTE_CHANGELOG_URL = REMOTE_BASE + SCRIPT_BASE_NAME + '_CHANGELOG.json';
-    const REMOTE_CACHE_TTL_MS  = 60 * 60 * 1000; // 1 hour
-    const CACHE_KEY_HELP       = SCRIPT_BASE_NAME.toLowerCase() + '-remote-help-text';
-    const CACHE_KEY_CHANGELOG  = SCRIPT_BASE_NAME.toLowerCase() + '-remote-changelog';
+    const SCRIPT_ID = "vzell-mb-release-enhancer";
+    const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : "Release Page Enhancer";
+    const DEBUG_ENABLED = true
 
     // CONFIG SCHEMA
     const configSchema = {
-        // ============================================================
-        // GENERIC SECTION
-        // ============================================================
-        divider_generic: {
-            type: 'divider',
-            label: '🛠️ GENERIC SETTINGS'
-        },
-
-        ca_enable_debug_logging: {
-            label: "Enable debug logging",
-            type: "checkbox",
-            default: false,
-            description: "Enable debug logging in the browser developer console"
-        },
-
-        // ============================================================
-        // CAA / EAA ILLUSTRATED SECTION
-        // ============================================================
-        divider_caa_pics: {
-            type: 'divider',
-            label: '🖼️ CAA/EAA ILLUSTRATED DISCOGRAPHY'
-        },
-
         ca_image_size: {
             label: "Pixel Size",
             type: "number",
             default: 250,
             description: "Set the art image size in pixels from the art archive"
         },
-
         ca_collapsed_by_default: {
             label: "Start Collapsed",
             type: "checkbox",
@@ -96,31 +70,15 @@
         }
     };
 
-    //--------------------------------------------------------------------------------
     // Initialize VZ-MBLibrary (Logger + Settings + Changelog)
-    // Use a ref object to avoid circular dependency during initialization
-    const settings = {};
-    const remoteConfig = {
-        changelogUrl:      REMOTE_CHANGELOG_URL,
-        cacheKeyChangelog: CACHE_KEY_CHANGELOG,
-        cacheTtlMs:        REMOTE_CACHE_TTL_MS
-    };
-    const Lib = (typeof VZ_MBLibrary !== 'undefined')
-          ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, null, () => {
-              // Dynamic check: returns current value of debug setting
-              return settings.ca_enable_debug_logging ?? false;
-          }, remoteConfig)
+    const Lib = (typeof VZMBLibrary !== 'undefined')
+          ? new VZMBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, changelog, DEBUG_ENABLED)
           : {
-              settings: {},
-              info: console.log, debug: console.log, error: console.error, warn: console.warn, time: console.time, timeEnd: console.timeEnd
+              settings: {}, // Fallback
+              info: console.log, debug: console.log, error: console.error, time: console.time, timeEnd: console.timeEnd
           };
-    // Get version information dynamically
-    const scriptVersion = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : 'unknown';
-    const libVersion = (Lib && Lib.version) ? Lib.version : 'unknown';
-    // Copy settings reference so the callback can access them
-    Object.assign(settings, Lib.settings);
 
-    Lib.info('init', `Script v${scriptVersion} loaded (lib v${libVersion}).`);
+    Lib.info('init', "Script loaded with external library!");
 
     const isOverviewTabActive = () => {
         const activeTab = document.querySelector("ul.tabs li.sel");
