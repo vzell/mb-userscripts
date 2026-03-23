@@ -58335,6 +58335,59 @@ Esc with panel closed → closes dialog
 persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store
 (push to history) button - (also for load from disk - dialog)
 
+Some new functionality:
+
+1.)
+
+Please implement for the "global filter" in the case of "single"- and "multi"-table pageTypes
+
+#+begin_example
+<input id="mb-global-filter-input" placeholder="Global Filter…" title="Enter global filter string (focus this field with 'Ctrl+G')" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(0, 0, 0); border-radius: 3px 0px 0px 3px; width: 500px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;">
+#+end_example
+
+and for ALL the sub-table specific filters, e.g.
+
+#+begin_example
+<input id="mb-stf-Official_release-input" type="text" placeholder="Filter &quot;Official release&quot;… just in this sub-table" title="Filter rows in the &quot;Official release&quot; sub-table" style="font-size: 1em; padding: 2px 6px; border: 2px solid rgb(204, 204, 204); border-radius: 3px 0px 0px 3px; width: 320px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s;">
+#+end_example
+
+the same history functionality as in the "Load Table Data" UI dialog
+
+#+begin_example
+<div style="display:flex;gap:4px;align-items:stretch;">
+                        <div style="position:relative;flex:1;display:flex;align-items:center;">
+                            <input id="sa-load-filter-input" type="text" placeholder="Filter expression... evaluated for each column" style="width:100%;padding:8px 32px 8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;box-sizing:border-box;">
+                            <button id="sa-filter-clear-btn" tabindex="-1" title="Clear filter expression" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#c0392b;font-size:1em;font-weight:bold;line-height:1;padding:2px 3px;border-radius:3px;display:none;">✕
+			    </button>
+                        </div>
+                        <button id="sa-hist-pin-btn" title="Pin current filter to persistent list (saves query + checkbox states)" style="padding:0 10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;cursor:pointer;font-size:1.1em;font-weight:bold;color:#2e7d32;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">+
+			</button>
+                        <button id="sa-load-history-toggle" title="Show/hide filter history (Alt+H)" style="padding: 0px 10px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); border-radius: 6px; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s; display: inline-block;">
+                          🕑
+			  <span style="text-decoration:underline">H
+			  </span>istory ▼
+                        </button>
+</div>
+#+end_example
+
+Please try to refactor instead of duplicating code.
+
+2.)
+
+Maybe also adjust the current filter field implementations so that they look like the one in the "Load Table Data" UI
+dialog (for both the global filter and the sub-table filters), but leave the "Drag to resize" feature intact for the global filter
+
+#+begin_example
+<span id="mb-global-filter-drag" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(0, 0, 0); border-right: 2px solid rgb(0, 0, 0); border-bottom: 2px solid rgb(0, 0, 0); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span>
+#+end_example
+
+and for the sub-table filters
+
+#+begin_example
+<span title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(204, 204, 204); border-right: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span>
+#+end_example
+
+
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
