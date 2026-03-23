@@ -45,7 +45,7 @@
 (function() {
     'use strict';
 
-    const SCRIPT_BASE_NAME = "MB-PageEnhancer";
+    const SCRIPT_BASE_NAME = "MB_PageEnhancer";
     // SCRIPT_ID is derived from SCRIPT_BASE_NAME: CamelCase → kebab-case, lower-cased, prepend "vz-mb-"
     const SCRIPT_ID = 'vz-mb-' + SCRIPT_BASE_NAME.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : SCRIPT_BASE_NAME;
