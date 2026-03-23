@@ -58903,6 +58903,7 @@ comumn cell level accordingly)
 * test with the VA pass
 * test with Save/Load from disk for Artist-Releasegroups
 
+
 * DONE add settings Save/Load functionality
 ** DONE initial
 
@@ -59183,9 +59184,6 @@ the same for the sub-table level checkbox states (Case sensitive, Regex, Exclude
 <td style="padding: 5px 8px; border-bottom: 1px solid rgb(200, 230, 201); border-right: 1px solid rgb(200, 230, 201); vertical-align: middle; font-size: 0.84em; color: rgb(85, 85, 85);"><span style="font-size:0.8em;color:#555">Active filter</span></td>
 #+end_example
 
-
-* configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
-
 * DONE multi-row cell button to big
 ** initial
 
@@ -59269,47 +59267,6 @@ compared to before
 
 but still to tall compared to the h3 line one
 
-
-* TODO tooltip should show image comment, additionally to the image popup itself
-
-In the uploaded userscript,
-
-show both, the popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
-
-#+begin_example
-<td data-erg-injected="1" data-caa-multi-built="1">
-  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back Spine">
-    <li class="mb-caa-art-li mb-caa-art-li-summary">
-      <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (2) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
-      </span>
-      <a href="/release/e4375aa5-e381-4633-8666-033974d149c3/cover-art" data-caa-synthetic="1" title="2 images found for this release / release-group" data-caa-enriched="1">
-	<span class="caa-icon" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/front-250&quot;);" title="2 images found for this release / release-group">
-	</span>
-      </a>
-      <span class="mb-art-cache-hint-col-wrap">
-	<span class="mb-art-cache-hint-col" title="Network fetch (1965 ms)">🔵
-	</span>
-	<span class="mb-caa-count-badge" title="2 images found for this release / release-group">2
-	</span>
-      </span>
-      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031291-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Front
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031887-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Back / Spine
-      </span>
-    </li>
-  </ul>
-</td>
-#+end_example
-
-
 * DONE "CAA"/"EAA" column collapse state
 
 small bug:
@@ -59327,288 +59284,6 @@ if then a filter condition is specified on either the "CAA"/"EAA" or some other 
 
 The artwork thumbnails in the "CAA"/"EAA" column which were uncollapsed are immediately collapsed as soon as someting is
 type in column filter field. They should retain their collapse state during filtering. Please fix
-
-
-* TODO There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" e.g.
-** initial
-
-some bugs:
-
-1.)
-
-There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" regarding "CAA" and "EAA" columns:
-
-- in "EAA" columns e.g when filtering for "ban", the type-badge GETs highlighted, e.g.
-
-#+begin_example
-      <span class="mb-caa-type-badge">
-	<span class="mb-column-filter-highlight">Ban
-	</span>ner
-      </span>
-#+end_example
-
-in the data cell
-
-#+begin_example
-<td data-eaa-multi-built="1">
-  <ul class="mb-caa-art-ul" data-mb-art-search="Poster  Poster  Banner  Poster">
-    <li class="mb-caa-art-li mb-caa-art-li-summary">
-      <span data-caa-expand-btn="expanded" title="Collapse all EAA event art images (4) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
-      </span>
-      <a href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/event-art" title="4 images found for this event" data-eaa-enriched="1">
-	<span class="artwork-icon eaa-icon" title="4 images found for this event" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250&quot;);">
-	</span>
-      </a>
-      <span class="mb-art-cache-hint-col-wrap">
-	<span class="mb-art-cache-hint-col" title="Network fetch (579 ms)">🔵
-	</span>
-	<span class="mb-eaa-count-badge" title="4 images found for this event">4
-	</span>
-      </span>
-      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/43403214707-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Poster
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/43403215596-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Poster
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/43403215609-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">
-	<span class="mb-column-filter-highlight">Ban
-	</span>ner
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/43403215602-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Poster
-      </span>
-    </li>
-  </ul>
-</td>
-#+end_example
-
-- in "CAA" columns the filter string highlightning doesn't work at all
-
-2.)
-
-Additionally, when filtering in either the "CAA" or "EAA" column, the filter string should also be highlighted when it matches in the artwork comment, e.g.
-
-#+begin_example
-<span class="mb-caa-art-comment">opened postcard gatefold, outer side</span>
-#+end_example
-
-Please implement the following solution:
-
-Root cause: The issue is a timing problem, not a TreeWalker issue:
-
-1.) testRowMatch() calls highlightText() which injects mb-column-filter-highlight spans into the clone row's text nodes (including .mb-caa-type-badge and .mb-caa-art-comment).
-2.) renderFinalTable() appends those highlighted clones to the DOM.
-3.) Then initCaaPics() / initEaaPics() → _artEnrichTable() → _artEnrichIcon() → _artBuildMultiRowArtCell() rebuilds the entire <ul> structure inside the art <td>, creating fresh text nodes for type badges and comments — wiping all highlights.
-
-Why EAA appears to work but CAA doesn't: Both get wiped. What you're seeing in the EAA example is a cell that already had data-eaa-multi-built="1" set on the source row — but _stripTransientCellState removes that on the clone, so it gets rebuilt. Both paths destroy highlights. The EAA example in your bug report showing a working highlight is likely from an IDB cache hit that fires near-synchronously before the DOM paint, while CAA network fetches are slower.
-
-Fix plan: Module-level variable to hold the active highlight context:
-
-#+begin_example
-jslet _activeFilterHighlightCtx = null; // { globalQueryRaw, colFilters, isCaseSensitive, isRegExp }
-#+end_example
-
-Set it in runFilter() before the filter pass runs, clear it when no filters are active.
-
-In _artBuildMultiRowArtCell(), after _artBuildImageLi() creates each li, call a new helper _artHighlightImageLi(li, colIdx) that reads _activeFilterHighlightCtx and applies highlightCrossTag for any matching global or column filter — naturally covering both .mb-caa-type-badge and .mb-caa-art-comment text nodes.
-
-** fix
-
-#+begin_example
-Root cause & fix summary
-The analysis in your bug report is exactly correct. Here are the 4 precise changes to make:
-
-Change 1 — Add _activeFilterHighlightCtx module-level variable
-Right after line let _caaQueue = null; (around line 27627), add:
-javascript/**
- * Active filter highlight context, set by runFilter() before the filter pass
- * and cleared when no filters are active.
- *
- * _artBuildMultiRowArtCell() / _artHighlightImageLi() reads this to re-apply
- * highlights to freshly-built image <li> elements after the CAA/EAA art-cell
- * rebuild has wiped the marks that testRowMatch() + highlightText() placed on
- * the clone row.
- *
- * Shape:
- *   globalQueryRaw  {string}   — raw global filter string (pre-lowercasing)
- *   colFilters      {Array}    — output of getColFilters(); { val, idx } entries
- *   isCaseSensitive {boolean}
- *   isRegExp        {boolean}
- *
- * Null when no filter is active — _artHighlightImageLi() is a no-op in that case.
- *
- * @type {{ globalQueryRaw: string, colFilters: Array, isCaseSensitive: boolean,
- *          isRegExp: boolean }|null}
- */
-let _activeFilterHighlightCtx = null;
-
-Change 2 — Set/clear _activeFilterHighlightCtx in runFilter()
-After the const matchCtx = { … } construction (around line 17507), before the let filteredArray line, add:
-javascript// Publish the active highlight context so _artHighlightImageLi() can re-apply
-// filter highlights to freshly-built CAA/EAA image <li> elements after
-// _artBuildMultiRowArtCell() has wiped the marks placed by testRowMatch().
-// colFilters starts as [] and is replaced per-table below; _activeFilterHighlightCtx
-// is assigned a new object on each runFilter() call so per-table replacement is safe.
-const _anyColFilter = () =>
-    Array.from(document.querySelectorAll('.mb-col-filter-input'))
-        .some(inp => stripColFilterPrefix(inp.value) !== '');
-if (globalQueryRaw || _anyColFilter()) {
-    _activeFilterHighlightCtx = {
-        globalQueryRaw,
-        colFilters:      [],      // replaced at each getColFilters() call below
-        isCaseSensitive,
-        isRegExp
-    };
-} else {
-    _activeFilterHighlightCtx = null;
-}
-Then in the multi-table loop, right after matchCtx.colFilters = getColFilters(…), add:
-javascriptif (_activeFilterHighlightCtx) {
-    _activeFilterHighlightCtx.colFilters = matchCtx.colFilters;
-    _activeFilterHighlightCtx.isRegExp   = _colIsRegExp;
-}
-And in the single-table branch, right after matchCtx.colFilters = getColFilters(…), add:
-javascriptif (_activeFilterHighlightCtx) {
-    _activeFilterHighlightCtx.colFilters = matchCtx.colFilters;
-}
-
-Change 3 — Add _artHighlightImageLi() helper
-Place this right before _artBuildImageLi (around line 28738):
-javascript/**
- * Re-applies active filter highlights to a freshly-built image <li> element.
- *
- * Called by _artBuildMultiRowArtCell() after every _artBuildImageLi() call.
- * Because _artBuildMultiRowArtCell runs after testRowMatch() has already injected
- * mb-column-filter-highlight spans into the clone row (and then the DOM is rebuilt,
- * wiping those marks), we must re-highlight the new text nodes here using the
- * globally-stored _activeFilterHighlightCtx.
- *
- * Covers both .mb-caa-type-badge and .mb-caa-art-comment text nodes inside the li.
- *
- * @param {HTMLLIElement} li      - The image <li> produced by _artBuildImageLi().
- * @param {number}        colIdx  - Column index of the art cell in its parent row,
- *                                  used to match column-scoped filters.
- */
-function _artHighlightImageLi(li, colIdx) {
-    const ctx = _activeFilterHighlightCtx;
-    if (!ctx) return;
-
-    const flags = ctx.isCaseSensitive ? 'g' : 'gi';
-
-    /**
-     * Build a RegExp from a raw query string.
-     * Returns null if the string is empty or the RegExp is invalid.
-     *
-     * @param {string}  raw
-     * @param {boolean} isRegExp
-     * @returns {RegExp|null}
-     */
-    const makeRegex = (raw, isRegExp) => {
-        if (!raw) return null;
-        try {
-            return isRegExp
-                ? new RegExp(raw, flags)
-                : new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-        } catch (e) {
-            return new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-        }
-    };
-
-    // Global query — applies to every column, so no colIdx check needed.
-    const globalRegex = makeRegex(ctx.globalQueryRaw, ctx.isRegExp);
-    if (globalRegex) {
-        highlightCrossTag(li, globalRegex, 'mb-global-filter-highlight');
-    }
-
-    // Column-scoped filters — only apply when the filter targets this column.
-    for (const f of ctx.colFilters) {
-        if (f.isMultiRowFilter) continue;       // state filters have no text to mark
-        if (f.idx !== colIdx)   continue;       // different column
-        const colRegex = makeRegex(f.val, ctx.isRegExp);
-        if (colRegex) {
-            highlightCrossTag(li, colRegex, 'mb-column-filter-highlight');
-        }
-    }
-}
-
-Change 4 — Call _artHighlightImageLi() in _artBuildMultiRowArtCell()
-The column index is needed. First, resolve it at the top of _artBuildMultiRowArtCell:
-After function _artBuildMultiRowArtCell(ctx, artCell, images) { and the early return, add:
-javascript// Resolve the column index of this art cell once — used by _artHighlightImageLi().
-const _artColIdx = artCell.cellIndex;
-Then in both the rebuild path and the first-build path, change the _artBuildImageLi calls:
-Rebuild path (around line 28888):
-javascript// Before:
-images.forEach(img => existingUl.appendChild(_artBuildImageLi(img)));
-
-// After:
-images.forEach(img => {
-    const imageLi = _artBuildImageLi(img);
-    _artHighlightImageLi(imageLi, _artColIdx);
-    existingUl.appendChild(imageLi);
-});
-First-build path (around line 28945):
-javascript// Before:
-images.forEach(img => ul.appendChild(_artBuildImageLi(img)));
-
-// After:
-images.forEach(img => {
-    const imageLi = _artBuildImageLi(img);
-    _artHighlightImageLi(imageLi, _artColIdx);
-    ul.appendChild(imageLi);
-});
-
-Change 5 — Bump version and add changelog entry
-@version header: 9.99.295+2026-03-23 → 9.99.296+2026-03-23
-ShowAllEntityData_CHANGELOG.json — prepend a new entry:
-json{
-  "version": "9.99.296",
-  "date": "2026-03-23",
-  "sections": [
-    {
-      "label": "🐛 Bug Fixes",
-      "items": [
-        "CAA/EAA type-badge and art-comment filter highlights wiped on art-cell rebuild — both CAA and EAA columns lost all mb-column-filter-highlight / mb-global-filter-highlight marks the instant _artBuildMultiRowArtCell rebuilt the <ul>/<li> structure (which always happens after testRowMatch() has run, because initCaaPics/initEaaPics fire after renderFinalTable/renderGroupedTable). The EAA 'working' example in the original bug report was a rare IDB near-synchronous cache hit that painted before the highlight wipe — both archives were equally broken. Fix: added module-level _activeFilterHighlightCtx (set by runFilter() before the filter pass, updated per sub-table in multi-table mode, cleared when no filters are active). Added _artHighlightImageLi(li, colIdx) helper that reads _activeFilterHighlightCtx and calls highlightCrossTag for the global query and for any column filter whose idx matches the art cell. Called in _artBuildMultiRowArtCell() immediately after each _artBuildImageLi() call in both the first-build and rebuild paths. Covers .mb-caa-type-badge and .mb-caa-art-comment nodes in both CAA and EAA columns."
-      ]
-    }
-  ]
-}
-
-These 5 changes are the complete, self-contained fix. The key insight is that _activeFilterHighlightCtx acts as a side-channel from runFilter() into _artBuildMultiRowArtCell() — since the art rebuild happens asynchronously after testRowMatch() returns, there's no way to pass the context through the call stack, so a module-level variable is the correct pattern (matching how _caaQueue itself is handled).
-#+end_example
-
-** bug
-
-still some bug:
-
-1.)
-
-the "type badge"
-
-#+begin_example
-<span class="mb-caa-type-badge">Back</span>
-#+end_example
-
-and the "art comment"
- 
-#+begin_example
-<span class="mb-caa-art-comment">fold‐out postcard sleeve, back</span>
-#+end_example
-
-gets highlighted, you can see it DURING typing, BUT it immediately losses the highlightning again after typing
-
 
 * DONE "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
@@ -59910,7 +59585,6 @@ Please implement ..
 
 ** solution
 
-
 * DONE changelog missing
 
 Somehow the '"version": "9.99.294"' changelog is missing from the file "ShowAllEntityData_CHANGELOG.json"
@@ -59941,6 +59615,329 @@ el.querySelectorAll('.mb-inline-art-sort-key').forEach(sk => sk.remove());
 #+end_example
 
 It should probably NOT be there for the "_restoreArtExpandState" functionality
+
+
+* TODO configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
+
+* TODO tooltip should show image comment, additionally to the image popup itself
+
+In the uploaded userscript,
+
+show both, the popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
+
+#+begin_example
+<td data-erg-injected="1" data-caa-multi-built="1">
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back Spine">
+    <li class="mb-caa-art-li mb-caa-art-li-summary">
+      <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (2) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
+      </span>
+      <a href="/release/e4375aa5-e381-4633-8666-033974d149c3/cover-art" data-caa-synthetic="1" title="2 images found for this release / release-group" data-caa-enriched="1">
+	<span class="caa-icon" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/front-250&quot;);" title="2 images found for this release / release-group">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Network fetch (1965 ms)">🔵
+	</span>
+	<span class="mb-caa-count-badge" title="2 images found for this release / release-group">2
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031291-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031887-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back / Spine
+      </span>
+    </li>
+  </ul>
+</td>
+#+end_example
+
+
+* TODO There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" e.g.
+** initial
+
+some bugs:
+
+1.)
+
+There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" regarding "CAA" and "EAA" columns:
+
+- in "EAA" columns e.g when filtering for "ban", the type-badge GETs highlighted, e.g.
+
+#+begin_example
+      <span class="mb-caa-type-badge">
+	<span class="mb-column-filter-highlight">Ban
+	</span>ner
+      </span>
+#+end_example
+
+in the data cell
+
+#+begin_example
+<td data-eaa-multi-built="1">
+  <ul class="mb-caa-art-ul" data-mb-art-search="Poster  Poster  Banner  Poster">
+    <li class="mb-caa-art-li mb-caa-art-li-summary">
+      <span data-caa-expand-btn="expanded" title="Collapse all EAA event art images (4) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
+      </span>
+      <a href="/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/event-art" title="4 images found for this event" data-eaa-enriched="1">
+	<span class="artwork-icon eaa-icon" title="4 images found for this event" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/front-250&quot;);">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Network fetch (579 ms)">🔵
+	</span>
+	<span class="mb-eaa-count-badge" title="4 images found for this event">4
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/43403214707-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Poster
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/43403215596-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Poster
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/43403215609-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">
+	<span class="mb-column-filter-highlight">Ban
+	</span>ner
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://eventartarchive.org/event/47b84024-bd3b-4e36-80e1-b051e12ede2f/43403215602-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Poster
+      </span>
+    </li>
+  </ul>
+</td>
+#+end_example
+
+- in "CAA" columns the filter string highlightning doesn't work at all
+
+2.)
+
+Additionally, when filtering in either the "CAA" or "EAA" column, the filter string should also be highlighted when it matches in the artwork comment, e.g.
+
+#+begin_example
+<span class="mb-caa-art-comment">opened postcard gatefold, outer side</span>
+#+end_example
+
+Please implement the following solution:
+
+Root cause: The issue is a timing problem, not a TreeWalker issue:
+
+1.) testRowMatch() calls highlightText() which injects mb-column-filter-highlight spans into the clone row's text nodes (including .mb-caa-type-badge and .mb-caa-art-comment).
+2.) renderFinalTable() appends those highlighted clones to the DOM.
+3.) Then initCaaPics() / initEaaPics() → _artEnrichTable() → _artEnrichIcon() → _artBuildMultiRowArtCell() rebuilds the entire <ul> structure inside the art <td>, creating fresh text nodes for type badges and comments — wiping all highlights.
+
+Why EAA appears to work but CAA doesn't: Both get wiped. What you're seeing in the EAA example is a cell that already had data-eaa-multi-built="1" set on the source row — but _stripTransientCellState removes that on the clone, so it gets rebuilt. Both paths destroy highlights. The EAA example in your bug report showing a working highlight is likely from an IDB cache hit that fires near-synchronously before the DOM paint, while CAA network fetches are slower.
+
+Fix plan: Module-level variable to hold the active highlight context:
+
+#+begin_example
+jslet _activeFilterHighlightCtx = null; // { globalQueryRaw, colFilters, isCaseSensitive, isRegExp }
+#+end_example
+
+Set it in runFilter() before the filter pass runs, clear it when no filters are active.
+
+In _artBuildMultiRowArtCell(), after _artBuildImageLi() creates each li, call a new helper _artHighlightImageLi(li, colIdx) that reads _activeFilterHighlightCtx and applies highlightCrossTag for any matching global or column filter — naturally covering both .mb-caa-type-badge and .mb-caa-art-comment text nodes.
+
+** fix
+
+#+begin_example
+Root cause & fix summary
+The analysis in your bug report is exactly correct. Here are the 4 precise changes to make:
+
+Change 1 — Add _activeFilterHighlightCtx module-level variable
+Right after line let _caaQueue = null; (around line 27627), add:
+javascript/**
+ * Active filter highlight context, set by runFilter() before the filter pass
+ * and cleared when no filters are active.
+ *
+ * _artBuildMultiRowArtCell() / _artHighlightImageLi() reads this to re-apply
+ * highlights to freshly-built image <li> elements after the CAA/EAA art-cell
+ * rebuild has wiped the marks that testRowMatch() + highlightText() placed on
+ * the clone row.
+ *
+ * Shape:
+ *   globalQueryRaw  {string}   — raw global filter string (pre-lowercasing)
+ *   colFilters      {Array}    — output of getColFilters(); { val, idx } entries
+ *   isCaseSensitive {boolean}
+ *   isRegExp        {boolean}
+ *
+ * Null when no filter is active — _artHighlightImageLi() is a no-op in that case.
+ *
+ * @type {{ globalQueryRaw: string, colFilters: Array, isCaseSensitive: boolean,
+ *          isRegExp: boolean }|null}
+ */
+let _activeFilterHighlightCtx = null;
+
+Change 2 — Set/clear _activeFilterHighlightCtx in runFilter()
+After the const matchCtx = { … } construction (around line 17507), before the let filteredArray line, add:
+javascript// Publish the active highlight context so _artHighlightImageLi() can re-apply
+// filter highlights to freshly-built CAA/EAA image <li> elements after
+// _artBuildMultiRowArtCell() has wiped the marks placed by testRowMatch().
+// colFilters starts as [] and is replaced per-table below; _activeFilterHighlightCtx
+// is assigned a new object on each runFilter() call so per-table replacement is safe.
+const _anyColFilter = () =>
+    Array.from(document.querySelectorAll('.mb-col-filter-input'))
+        .some(inp => stripColFilterPrefix(inp.value) !== '');
+if (globalQueryRaw || _anyColFilter()) {
+    _activeFilterHighlightCtx = {
+        globalQueryRaw,
+        colFilters:      [],      // replaced at each getColFilters() call below
+        isCaseSensitive,
+        isRegExp
+    };
+} else {
+    _activeFilterHighlightCtx = null;
+}
+Then in the multi-table loop, right after matchCtx.colFilters = getColFilters(…), add:
+javascriptif (_activeFilterHighlightCtx) {
+    _activeFilterHighlightCtx.colFilters = matchCtx.colFilters;
+    _activeFilterHighlightCtx.isRegExp   = _colIsRegExp;
+}
+And in the single-table branch, right after matchCtx.colFilters = getColFilters(…), add:
+javascriptif (_activeFilterHighlightCtx) {
+    _activeFilterHighlightCtx.colFilters = matchCtx.colFilters;
+}
+
+Change 3 — Add _artHighlightImageLi() helper
+Place this right before _artBuildImageLi (around line 28738):
+javascript/**
+ * Re-applies active filter highlights to a freshly-built image <li> element.
+ *
+ * Called by _artBuildMultiRowArtCell() after every _artBuildImageLi() call.
+ * Because _artBuildMultiRowArtCell runs after testRowMatch() has already injected
+ * mb-column-filter-highlight spans into the clone row (and then the DOM is rebuilt,
+ * wiping those marks), we must re-highlight the new text nodes here using the
+ * globally-stored _activeFilterHighlightCtx.
+ *
+ * Covers both .mb-caa-type-badge and .mb-caa-art-comment text nodes inside the li.
+ *
+ * @param {HTMLLIElement} li      - The image <li> produced by _artBuildImageLi().
+ * @param {number}        colIdx  - Column index of the art cell in its parent row,
+ *                                  used to match column-scoped filters.
+ */
+function _artHighlightImageLi(li, colIdx) {
+    const ctx = _activeFilterHighlightCtx;
+    if (!ctx) return;
+
+    const flags = ctx.isCaseSensitive ? 'g' : 'gi';
+
+    /**
+     * Build a RegExp from a raw query string.
+     * Returns null if the string is empty or the RegExp is invalid.
+     *
+     * @param {string}  raw
+     * @param {boolean} isRegExp
+     * @returns {RegExp|null}
+     */
+    const makeRegex = (raw, isRegExp) => {
+        if (!raw) return null;
+        try {
+            return isRegExp
+                ? new RegExp(raw, flags)
+                : new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        } catch (e) {
+            return new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        }
+    };
+
+    // Global query — applies to every column, so no colIdx check needed.
+    const globalRegex = makeRegex(ctx.globalQueryRaw, ctx.isRegExp);
+    if (globalRegex) {
+        highlightCrossTag(li, globalRegex, 'mb-global-filter-highlight');
+    }
+
+    // Column-scoped filters — only apply when the filter targets this column.
+    for (const f of ctx.colFilters) {
+        if (f.isMultiRowFilter) continue;       // state filters have no text to mark
+        if (f.idx !== colIdx)   continue;       // different column
+        const colRegex = makeRegex(f.val, ctx.isRegExp);
+        if (colRegex) {
+            highlightCrossTag(li, colRegex, 'mb-column-filter-highlight');
+        }
+    }
+}
+
+Change 4 — Call _artHighlightImageLi() in _artBuildMultiRowArtCell()
+The column index is needed. First, resolve it at the top of _artBuildMultiRowArtCell:
+After function _artBuildMultiRowArtCell(ctx, artCell, images) { and the early return, add:
+javascript// Resolve the column index of this art cell once — used by _artHighlightImageLi().
+const _artColIdx = artCell.cellIndex;
+Then in both the rebuild path and the first-build path, change the _artBuildImageLi calls:
+Rebuild path (around line 28888):
+javascript// Before:
+images.forEach(img => existingUl.appendChild(_artBuildImageLi(img)));
+
+// After:
+images.forEach(img => {
+    const imageLi = _artBuildImageLi(img);
+    _artHighlightImageLi(imageLi, _artColIdx);
+    existingUl.appendChild(imageLi);
+});
+First-build path (around line 28945):
+javascript// Before:
+images.forEach(img => ul.appendChild(_artBuildImageLi(img)));
+
+// After:
+images.forEach(img => {
+    const imageLi = _artBuildImageLi(img);
+    _artHighlightImageLi(imageLi, _artColIdx);
+    ul.appendChild(imageLi);
+});
+
+Change 5 — Bump version and add changelog entry
+@version header: 9.99.295+2026-03-23 → 9.99.296+2026-03-23
+ShowAllEntityData_CHANGELOG.json — prepend a new entry:
+json{
+  "version": "9.99.296",
+  "date": "2026-03-23",
+  "sections": [
+    {
+      "label": "🐛 Bug Fixes",
+      "items": [
+        "CAA/EAA type-badge and art-comment filter highlights wiped on art-cell rebuild — both CAA and EAA columns lost all mb-column-filter-highlight / mb-global-filter-highlight marks the instant _artBuildMultiRowArtCell rebuilt the <ul>/<li> structure (which always happens after testRowMatch() has run, because initCaaPics/initEaaPics fire after renderFinalTable/renderGroupedTable). The EAA 'working' example in the original bug report was a rare IDB near-synchronous cache hit that painted before the highlight wipe — both archives were equally broken. Fix: added module-level _activeFilterHighlightCtx (set by runFilter() before the filter pass, updated per sub-table in multi-table mode, cleared when no filters are active). Added _artHighlightImageLi(li, colIdx) helper that reads _activeFilterHighlightCtx and calls highlightCrossTag for the global query and for any column filter whose idx matches the art cell. Called in _artBuildMultiRowArtCell() immediately after each _artBuildImageLi() call in both the first-build and rebuild paths. Covers .mb-caa-type-badge and .mb-caa-art-comment nodes in both CAA and EAA columns."
+      ]
+    }
+  ]
+}
+
+These 5 changes are the complete, self-contained fix. The key insight is that _activeFilterHighlightCtx acts as a side-channel from runFilter() into _artBuildMultiRowArtCell() — since the art rebuild happens asynchronously after testRowMatch() returns, there's no way to pass the context through the call stack, so a module-level variable is the correct pattern (matching how _caaQueue itself is handled).
+#+end_example
+
+** bug
+
+still some bug:
+
+1.)
+
+the "type badge"
+
+#+begin_example
+<span class="mb-caa-type-badge">Back</span>
+#+end_example
+
+and the "art comment"
+ 
+#+begin_example
+<span class="mb-caa-art-comment">fold‐out postcard sleeve, back</span>
+#+end_example
+
+gets highlighted, you can see it DURING typing, BUT it immediately losses the highlightning again after typing
 
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
