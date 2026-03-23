@@ -59424,6 +59424,191 @@ Set it in runFilter() before the filter pass runs, clear it when no filters are 
 
 In _artBuildMultiRowArtCell(), after _artBuildImageLi() creates each li, call a new helper _artHighlightImageLi(li, colIdx) that reads _activeFilterHighlightCtx and applies highlightCrossTag for any matching global or column filter — naturally covering both .mb-caa-type-badge and .mb-caa-art-comment text nodes.
 
+** fix
+
+#+begin_example
+Root cause & fix summary
+The analysis in your bug report is exactly correct. Here are the 4 precise changes to make:
+
+Change 1 — Add _activeFilterHighlightCtx module-level variable
+Right after line let _caaQueue = null; (around line 27627), add:
+javascript/**
+ * Active filter highlight context, set by runFilter() before the filter pass
+ * and cleared when no filters are active.
+ *
+ * _artBuildMultiRowArtCell() / _artHighlightImageLi() reads this to re-apply
+ * highlights to freshly-built image <li> elements after the CAA/EAA art-cell
+ * rebuild has wiped the marks that testRowMatch() + highlightText() placed on
+ * the clone row.
+ *
+ * Shape:
+ *   globalQueryRaw  {string}   — raw global filter string (pre-lowercasing)
+ *   colFilters      {Array}    — output of getColFilters(); { val, idx } entries
+ *   isCaseSensitive {boolean}
+ *   isRegExp        {boolean}
+ *
+ * Null when no filter is active — _artHighlightImageLi() is a no-op in that case.
+ *
+ * @type {{ globalQueryRaw: string, colFilters: Array, isCaseSensitive: boolean,
+ *          isRegExp: boolean }|null}
+ */
+let _activeFilterHighlightCtx = null;
+
+Change 2 — Set/clear _activeFilterHighlightCtx in runFilter()
+After the const matchCtx = { … } construction (around line 17507), before the let filteredArray line, add:
+javascript// Publish the active highlight context so _artHighlightImageLi() can re-apply
+// filter highlights to freshly-built CAA/EAA image <li> elements after
+// _artBuildMultiRowArtCell() has wiped the marks placed by testRowMatch().
+// colFilters starts as [] and is replaced per-table below; _activeFilterHighlightCtx
+// is assigned a new object on each runFilter() call so per-table replacement is safe.
+const _anyColFilter = () =>
+    Array.from(document.querySelectorAll('.mb-col-filter-input'))
+        .some(inp => stripColFilterPrefix(inp.value) !== '');
+if (globalQueryRaw || _anyColFilter()) {
+    _activeFilterHighlightCtx = {
+        globalQueryRaw,
+        colFilters:      [],      // replaced at each getColFilters() call below
+        isCaseSensitive,
+        isRegExp
+    };
+} else {
+    _activeFilterHighlightCtx = null;
+}
+Then in the multi-table loop, right after matchCtx.colFilters = getColFilters(…), add:
+javascriptif (_activeFilterHighlightCtx) {
+    _activeFilterHighlightCtx.colFilters = matchCtx.colFilters;
+    _activeFilterHighlightCtx.isRegExp   = _colIsRegExp;
+}
+And in the single-table branch, right after matchCtx.colFilters = getColFilters(…), add:
+javascriptif (_activeFilterHighlightCtx) {
+    _activeFilterHighlightCtx.colFilters = matchCtx.colFilters;
+}
+
+Change 3 — Add _artHighlightImageLi() helper
+Place this right before _artBuildImageLi (around line 28738):
+javascript/**
+ * Re-applies active filter highlights to a freshly-built image <li> element.
+ *
+ * Called by _artBuildMultiRowArtCell() after every _artBuildImageLi() call.
+ * Because _artBuildMultiRowArtCell runs after testRowMatch() has already injected
+ * mb-column-filter-highlight spans into the clone row (and then the DOM is rebuilt,
+ * wiping those marks), we must re-highlight the new text nodes here using the
+ * globally-stored _activeFilterHighlightCtx.
+ *
+ * Covers both .mb-caa-type-badge and .mb-caa-art-comment text nodes inside the li.
+ *
+ * @param {HTMLLIElement} li      - The image <li> produced by _artBuildImageLi().
+ * @param {number}        colIdx  - Column index of the art cell in its parent row,
+ *                                  used to match column-scoped filters.
+ */
+function _artHighlightImageLi(li, colIdx) {
+    const ctx = _activeFilterHighlightCtx;
+    if (!ctx) return;
+
+    const flags = ctx.isCaseSensitive ? 'g' : 'gi';
+
+    /**
+     * Build a RegExp from a raw query string.
+     * Returns null if the string is empty or the RegExp is invalid.
+     *
+     * @param {string}  raw
+     * @param {boolean} isRegExp
+     * @returns {RegExp|null}
+     */
+    const makeRegex = (raw, isRegExp) => {
+        if (!raw) return null;
+        try {
+            return isRegExp
+                ? new RegExp(raw, flags)
+                : new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        } catch (e) {
+            return new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        }
+    };
+
+    // Global query — applies to every column, so no colIdx check needed.
+    const globalRegex = makeRegex(ctx.globalQueryRaw, ctx.isRegExp);
+    if (globalRegex) {
+        highlightCrossTag(li, globalRegex, 'mb-global-filter-highlight');
+    }
+
+    // Column-scoped filters — only apply when the filter targets this column.
+    for (const f of ctx.colFilters) {
+        if (f.isMultiRowFilter) continue;       // state filters have no text to mark
+        if (f.idx !== colIdx)   continue;       // different column
+        const colRegex = makeRegex(f.val, ctx.isRegExp);
+        if (colRegex) {
+            highlightCrossTag(li, colRegex, 'mb-column-filter-highlight');
+        }
+    }
+}
+
+Change 4 — Call _artHighlightImageLi() in _artBuildMultiRowArtCell()
+The column index is needed. First, resolve it at the top of _artBuildMultiRowArtCell:
+After function _artBuildMultiRowArtCell(ctx, artCell, images) { and the early return, add:
+javascript// Resolve the column index of this art cell once — used by _artHighlightImageLi().
+const _artColIdx = artCell.cellIndex;
+Then in both the rebuild path and the first-build path, change the _artBuildImageLi calls:
+Rebuild path (around line 28888):
+javascript// Before:
+images.forEach(img => existingUl.appendChild(_artBuildImageLi(img)));
+
+// After:
+images.forEach(img => {
+    const imageLi = _artBuildImageLi(img);
+    _artHighlightImageLi(imageLi, _artColIdx);
+    existingUl.appendChild(imageLi);
+});
+First-build path (around line 28945):
+javascript// Before:
+images.forEach(img => ul.appendChild(_artBuildImageLi(img)));
+
+// After:
+images.forEach(img => {
+    const imageLi = _artBuildImageLi(img);
+    _artHighlightImageLi(imageLi, _artColIdx);
+    ul.appendChild(imageLi);
+});
+
+Change 5 — Bump version and add changelog entry
+@version header: 9.99.295+2026-03-23 → 9.99.296+2026-03-23
+ShowAllEntityData_CHANGELOG.json — prepend a new entry:
+json{
+  "version": "9.99.296",
+  "date": "2026-03-23",
+  "sections": [
+    {
+      "label": "🐛 Bug Fixes",
+      "items": [
+        "CAA/EAA type-badge and art-comment filter highlights wiped on art-cell rebuild — both CAA and EAA columns lost all mb-column-filter-highlight / mb-global-filter-highlight marks the instant _artBuildMultiRowArtCell rebuilt the <ul>/<li> structure (which always happens after testRowMatch() has run, because initCaaPics/initEaaPics fire after renderFinalTable/renderGroupedTable). The EAA 'working' example in the original bug report was a rare IDB near-synchronous cache hit that painted before the highlight wipe — both archives were equally broken. Fix: added module-level _activeFilterHighlightCtx (set by runFilter() before the filter pass, updated per sub-table in multi-table mode, cleared when no filters are active). Added _artHighlightImageLi(li, colIdx) helper that reads _activeFilterHighlightCtx and calls highlightCrossTag for the global query and for any column filter whose idx matches the art cell. Called in _artBuildMultiRowArtCell() immediately after each _artBuildImageLi() call in both the first-build and rebuild paths. Covers .mb-caa-type-badge and .mb-caa-art-comment nodes in both CAA and EAA columns."
+      ]
+    }
+  ]
+}
+
+These 5 changes are the complete, self-contained fix. The key insight is that _activeFilterHighlightCtx acts as a side-channel from runFilter() into _artBuildMultiRowArtCell() — since the art rebuild happens asynchronously after testRowMatch() returns, there's no way to pass the context through the call stack, so a module-level variable is the correct pattern (matching how _caaQueue itself is handled).
+#+end_example
+
+** bug
+
+still some bug:
+
+1.)
+
+the "type badge"
+
+#+begin_example
+<span class="mb-caa-type-badge">Back</span>
+#+end_example
+
+and the "art comment"
+ 
+#+begin_example
+<span class="mb-caa-art-comment">fold‐out postcard sleeve, back</span>
+#+end_example
+
+gets highlighted, you can see it DURING typing, BUT it immediately losses the highlightning again after typing
+
 
 * DONE "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
