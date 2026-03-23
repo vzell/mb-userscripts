@@ -29141,7 +29141,8 @@ we introduced. Please extend the background and click/Ctrl-click functionality t
 ** TODO on "Event" pages the h2 headerline form sanojjaans "Event Schedule" is not clickable/No background
 ** TODO On "Release" pages, the "Credits" section after the "Tracklist" (with table data) is not visible when the "Tracklist" section is collapsed
 ** TODO Optionally collapse/uncollapse + background for the h2 headers on the right side of the sidebar
-** rewrite to use modern library
+** TODO rewrite to use modern library
+*** DONE initial
 
 rewrite the current code in the userscript "ReleasePageEnhancer.user.js"
 
@@ -29255,7 +29256,30 @@ to use the following features (like in "ShowAllEntityData.user.js")
     Object.assign(settings, Lib.settings);
 #+end_example
 
+*** bugs
 
+Why is the menu entry for "ChangeLog" not present anymore in the Tampermonkey specific browser menu after the leatest
+changes. It used to be there when the old library "uploaded as VZMBLibrary.user.js" was in place and the "let changelog"
+was defined inline
+
+#+begin_example
+// CHANGELOG
+let changelog = [
+    {version: '0.9.7+2026-03-23', description: 'Enhanced gallery headers: CAA/EAA-aware tooltips, light-orange background, Ctrl+Click to toggle all galleries at once.'},
+    {version: '0.9.6+2026-03-23', description: 'Added event art support via Event Art Archive (eventartarchive.org) for MusicBrainz event pages.'},
+    {version: '0.9.5+2026-02-01', description: 'Refactored settings, logging and changelog handling to a library.'},
+    {version: '0.9.0+2026-02-01', description: '1st official release version.'}
+];
+#+end_example
+
+Please fix, the "ShowAllEntityData.user.js" also uses the external changelog approach and there it works, the "ChangeLog" entry is present in the Tampermonkey specific browser menu
+
+*** fix
+
+Actually the old library shouldn't be touched at all, the "ChangeLog" entry should be there (in the Tampermonkey
+specific browser menu) with the new library (uploaded again as "VZ_MBLibrary.user.js") and the current codebase of the
+userscript (uploaded again as "ReleasePageEnhancer.user.js") with the external changelog file (uploaded as
+"ReleasePageEnhancer_CHANGELOG.json")
 
 * filter (funnel) icon from chrome console
 
@@ -44890,7 +44914,6 @@ For example, the just configured "primaryAlias" Extractor would remove the prima
 disambiguation comment in the "Comment" column. If the other way around, the "Comment" column would have both the actual
 primary alias AND the disambiguation comment
 
-
 * DONE Event-Alias handling - add the event alias int the next line
 ** extract as synthetic column - add synthetic column for event alias - 2001‐05‐27: The Stone Pony, Asbury Park, NJ, USA (2001-05-27) (Southside Johnny & The Asbury Jukes at The Stone Pony, Southside Johnny & The Asbury Jukes Stone Pony 25th Anniversary Show)
 
@@ -55780,7 +55803,6 @@ Only the real text strings should be present in the drop-down column menu
 
 Actually it's not working, the cache-status emojis are still rendered inside the unique value drop-down column menu
 
-
 * DONE fix CCA art work count + add them + total rows to summary - on the table level it should be the filtered state and artwork count per event/release
 
 * TODO add fetching to local db storage and reading from it
@@ -59847,50 +59869,7 @@ el.querySelectorAll('.mb-inline-art-sort-key').forEach(sk => sk.remove());
 
 It should probably NOT be there for the "_restoreArtExpandState" functionality
 
-
-* TODO configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
-
-* TODO tooltip should show image comment, additionally to the image popup itself
-
-In the uploaded userscript,
-
-show both, the popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
-
-#+begin_example
-<td data-erg-injected="1" data-caa-multi-built="1">
-  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back Spine">
-    <li class="mb-caa-art-li mb-caa-art-li-summary">
-      <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (2) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
-      </span>
-      <a href="/release/e4375aa5-e381-4633-8666-033974d149c3/cover-art" data-caa-synthetic="1" title="2 images found for this release / release-group" data-caa-enriched="1">
-	<span class="caa-icon" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/front-250&quot;);" title="2 images found for this release / release-group">
-	</span>
-      </a>
-      <span class="mb-art-cache-hint-col-wrap">
-	<span class="mb-art-cache-hint-col" title="Network fetch (1965 ms)">🔵
-	</span>
-	<span class="mb-caa-count-badge" title="2 images found for this release / release-group">2
-	</span>
-      </span>
-      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031291-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Front
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031887-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Back / Spine
-      </span>
-    </li>
-  </ul>
-</td>
-#+end_example
-
-
-* TODO There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" e.g.
+* DONE There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" e.g.
 ** initial
 
 some bugs:
@@ -60178,6 +60157,49 @@ This must be fixable. It has to do with the "multi"-table pageType URLs, because
 perfectly.
 
 Please reimplement with a proper fix
+
+
+* TODO configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
+
+* TODO tooltip should show image comment, additionally to the image popup itself
+
+In the uploaded userscript,
+
+show both, the popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
+
+#+begin_example
+<td data-erg-injected="1" data-caa-multi-built="1">
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back Spine">
+    <li class="mb-caa-art-li mb-caa-art-li-summary">
+      <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (2) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
+      </span>
+      <a href="/release/e4375aa5-e381-4633-8666-033974d149c3/cover-art" data-caa-synthetic="1" title="2 images found for this release / release-group" data-caa-enriched="1">
+	<span class="caa-icon" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/front-250&quot;);" title="2 images found for this release / release-group">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Network fetch (1965 ms)">🔵
+	</span>
+	<span class="mb-caa-count-badge" title="2 images found for this release / release-group">2
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031291-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031887-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back / Spine
+      </span>
+    </li>
+  </ul>
+</td>
+#+end_example
+
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
