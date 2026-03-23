@@ -1,48 +1,12 @@
 [
     {
-        "version": "9.99.287",
-        "date": "2026-03-23",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "makeCollapseExpandBtnHTML — the stacked two-row label spans (font-size:0.9em, line-height:1) produced a button height of 2 × 0.9em = 1.8em, which exceeds the natural height of single-line inline-block neighbours in the h2 filter bar (toggle-highlight, clear-filters, etc.). Context fixes on filterContainer (font-size:1rem, line-height:1) could not resolve this because the h2 filter row height is determined by the flat-text single-line buttons, and a two-row stacked button is always taller than a single-line button at the same font-size. The sub-table h3 button (same HTML) fits in its row because h3 rows are naturally taller (larger padding, larger inherited font). Fix: reduce span font-size from 0.9em to 0.72em in makeCollapseExpandBtnHTML. Two stacked rows at 0.72em line-height:1 = 1.44em total, matching the effective height of a single-line button at ~1.4 line-height. The text remains legible and the h3 button (where there is more vertical room) also benefits from the smaller label text."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.286",
-        "date": "2026-03-23",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "mb-col-collapse-all-btn height — v9.99.285 fixed font-size inheritance but the button was still taller than the h3 equivalent because the h2 element also propagates a larger inherited line-height to the filterContainer and its inline-flex children. An inline-flex button's rendered height is driven by both the font-size and the line-height of its content; resetting only font-size was insufficient. Fix: add line-height:1 to the filterContainer span alongside font-size:1rem. Together these two properties fully neutralise both h2 inherited values, making every child button — including the global collapse button — render at exactly the same height as the identical buttons in the h3 sub-table context."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.285",
-        "date": "2026-03-23",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "mb-col-collapse-all-btn (global multi-row collapse button in h2) — correct fix for the height mismatch vs. the per-sub-table button (mb-subtable-collapse-btn in h3). The v9.99.284 attempt adding line-height:1 to the outer button did not fully resolve the issue because the root cause is a font-size inheritance mismatch, not line-height. Root cause: the filterContainer span (mb-filter-container) is appended as a child of the h2 element and inherits its large font-size (browser default h2 = 2em ≈ 32px). All child buttons use font-size:0.8em, which resolves to 0.8 × 32px ≈ 25.6px inside the h2 — roughly twice the size of the same 0.8em button in the h3 context (where h3 ≈ 1.17em × 16px ≈ 18.7px → 0.8 × 18.7px ≈ 15px). This causes the global collapse button, global filter input, Cc/Rx/Ex labels, and all other filterContainer children to render at disproportionate sizes relative to their h3 equivalents. Fix: add font-size:1rem to the filterContainer span's CSS. 1rem pins the effective font-size to the root/html element's font-size (typically 16px) regardless of the h2 ancestor, matching the effective size context of the h3-hosted buttons. The global collapse button style reverts to the standard uiFilterBarBtnCSS() baseline (removing the workaround line-height:1 from v9.99.284)."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.284",
         "date": "2026-03-23",
         "sections": [
             {
                 "label": "🐛 Bug Fixes",
                 "items": [
-                    "mb-col-collapse-all-btn (global multi-row collapse button in h2) — the button was taller than the equivalent per-sub-table button (mb-subtable-collapse-btn in h3) because the global button inherited a taller line-height from the h2 context, causing the two stacked flex-column label groups to expand the inline-flex height. The sub-table button fits perfectly because h3 elements carry a shorter inherited line-height. Fix: the global button now uses explicit matching CSS (font-size, padding, border, background, transition — identical to the sub-table button) and adds line-height:1 directly on the outer button element. The makeCollapseExpandBtnHTML two-column flex-span layout is preserved unchanged; only the outer button's line-height is corrected. Reverts the v9.99.283 flat-text approach which went in the wrong direction. NOTE: the line-height:1 approach in this version did not fully solve the problem; see v9.99.285 for the correct fix."
+                    "mb-col-collapse-all-btn (global multi-row collapse button in h2) — the button was taller than the equivalent per-sub-table button (mb-subtable-collapse-btn in h3) because the global button inherited a taller line-height from the h2 context, causing the two stacked flex-column label groups to expand the inline-flex height. The sub-table button fits perfectly because h3 elements carry a shorter inherited line-height. Fix: the global button now uses explicit matching CSS (font-size, padding, border, background, transition — identical to the sub-table button) and adds line-height:1 directly on the outer button element. The makeCollapseExpandBtnHTML two-column flex-span layout is preserved unchanged; only the outer button's line-height is corrected. Reverts the v9.99.283 flat-text approach which went in the wrong direction."
                 ]
             }
         ]

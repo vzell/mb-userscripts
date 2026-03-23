@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.287+2026-03-23
+// @version      9.99.285+2026-03-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4797,22 +4797,15 @@
     function makeCollapseExpandBtnHTML(expand) {
         // ▶ = currently collapsed → click will EXPAND
         // ▼ = currently expanded  → click will COLLAPSE
-        //
-        // Two stacked flex-column label groups.  The span font-size is set to
-        // 0.72em (down from 0.9em) so that two stacked rows at line-height:1
-        // produce a total height of 2 × 0.72em ≈ 1.44em — matching the height
-        // of a single-line inline-block button whose line-height is ~1.4.
-        // The outer button carries display:inline-flex; align-items:center; gap:4px
-        // which is still required for the two-column layout to render correctly.
         const arrow  = expand ? '▶' : '▼';
         const action = expand ? 'Expand' : 'Collapse';
         return `<span style="align-self:center;font-size:1em;">${arrow}</span>` +
             `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;">` +
+            `line-height:1;font-size:0.9em;">` +
             `<span>${action}</span>` +
             `<span>ALL</span></span>` +
             `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;"><span>multi-row</span>` +
+            `line-height:1;font-size:0.9em;"><span>multi-row</span>` +
             `<span>cells</span></span>`;
     }
 
@@ -12387,10 +12380,13 @@ a { color: #1565c0; }`;
     const filterContainer = document.createElement('span');
     filterContainer.id = 'mb-filter-container';
     // Initially hidden; will be displayed when appended to H2.
-    // font-size:1rem + line-height:1 reset the h2's inherited large font-size and
-    // line-height so child buttons using em units resolve identically to their
-    // h3-hosted equivalents (createSubTableCollapseButton, etc.).
-    filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px; font-size:1rem; line-height:1;';
+    // font-size:1rem resets the h2's inherited large font-size so that child
+    // elements using em units (e.g. buttons with font-size:0.8em) resolve
+    // against the root font-size rather than the h2 heading font-size.
+    // Without this, 0.8em inside an h2 computes to ~25 px whereas the same
+    // 0.8em inside an h3 computes to ~11 px, making the global collapse button
+    // visibly taller than the identical per-sub-table collapse button.
+    filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px; font-size:1rem;';
 
     const filterWrapper = document.createElement('span');
     filterWrapper.id = 'mb-global-filter-wrapper';

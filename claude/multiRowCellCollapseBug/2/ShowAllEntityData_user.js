@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.287+2026-03-23
+// @version      9.99.284+2026-03-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4797,22 +4797,15 @@
     function makeCollapseExpandBtnHTML(expand) {
         // ▶ = currently collapsed → click will EXPAND
         // ▼ = currently expanded  → click will COLLAPSE
-        //
-        // Two stacked flex-column label groups.  The span font-size is set to
-        // 0.72em (down from 0.9em) so that two stacked rows at line-height:1
-        // produce a total height of 2 × 0.72em ≈ 1.44em — matching the height
-        // of a single-line inline-block button whose line-height is ~1.4.
-        // The outer button carries display:inline-flex; align-items:center; gap:4px
-        // which is still required for the two-column layout to render correctly.
         const arrow  = expand ? '▶' : '▼';
         const action = expand ? 'Expand' : 'Collapse';
         return `<span style="align-self:center;font-size:1em;">${arrow}</span>` +
             `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;">` +
+            `line-height:1;font-size:0.9em;">` +
             `<span>${action}</span>` +
             `<span>ALL</span></span>` +
             `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;"><span>multi-row</span>` +
+            `line-height:1;font-size:0.9em;"><span>multi-row</span>` +
             `<span>cells</span></span>`;
     }
 
@@ -12386,11 +12379,8 @@ a { color: #1565c0; }`;
 
     const filterContainer = document.createElement('span');
     filterContainer.id = 'mb-filter-container';
-    // Initially hidden; will be displayed when appended to H2.
-    // font-size:1rem + line-height:1 reset the h2's inherited large font-size and
-    // line-height so child buttons using em units resolve identically to their
-    // h3-hosted equivalents (createSubTableCollapseButton, etc.).
-    filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px; font-size:1rem; line-height:1;';
+    // Initially hidden; will be displayed when appended to H2
+    filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
 
     const filterWrapper = document.createElement('span');
     filterWrapper.id = 'mb-global-filter-wrapper';
@@ -12630,7 +12620,21 @@ a { color: #1565c0; }`;
     const globalCollapseBtn = document.createElement('button');
     globalCollapseBtn.id = 'mb-col-collapse-all-btn';
     globalCollapseBtn.innerHTML = makeCollapseExpandBtnHTML(true);
-    globalCollapseBtn.style.cssText = `${uiFilterBarBtnCSS()} align-items:center; gap:4px; display:none;`;
+    // Use the same style as the per-sub-table collapse button so both render at
+    // identical height.  The key property is line-height:1 on the outer button
+    // itself: without it, display:inline-flex lets the two stacked flex-column
+    // spans push the button height above that of neighbouring inline-block
+    // buttons.  The sub-table button already inherits line-height:1 from its
+    // enclosing h3 context; the global button in h2 does not, so we set it
+    // explicitly here.
+    globalCollapseBtn.style.cssText = [
+        'font-size:0.8em; padding:2px 6px; border-radius:4px;',
+        'background:rgb(240,240,240); border:1px solid rgb(204,204,204);',
+        'cursor:pointer; vertical-align:middle; line-height:1;',
+        'align-items:center; gap:4px;',
+        'transition:background-color 0.2s, color 0.2s, box-shadow 0.2s;',
+        'display:none;'
+    ].join(' ');
     globalCollapseBtn.title =
         'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
     filterContainer.insertBefore(globalCollapseBtn, unhighlightAllBtn);

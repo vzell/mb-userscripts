@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.287+2026-03-23
+// @version      9.99.286+2026-03-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4797,22 +4797,15 @@
     function makeCollapseExpandBtnHTML(expand) {
         // ▶ = currently collapsed → click will EXPAND
         // ▼ = currently expanded  → click will COLLAPSE
-        //
-        // Two stacked flex-column label groups.  The span font-size is set to
-        // 0.72em (down from 0.9em) so that two stacked rows at line-height:1
-        // produce a total height of 2 × 0.72em ≈ 1.44em — matching the height
-        // of a single-line inline-block button whose line-height is ~1.4.
-        // The outer button carries display:inline-flex; align-items:center; gap:4px
-        // which is still required for the two-column layout to render correctly.
         const arrow  = expand ? '▶' : '▼';
         const action = expand ? 'Expand' : 'Collapse';
         return `<span style="align-self:center;font-size:1em;">${arrow}</span>` +
             `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;">` +
+            `line-height:1;font-size:0.9em;">` +
             `<span>${action}</span>` +
             `<span>ALL</span></span>` +
             `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;"><span>multi-row</span>` +
+            `line-height:1;font-size:0.9em;"><span>multi-row</span>` +
             `<span>cells</span></span>`;
     }
 

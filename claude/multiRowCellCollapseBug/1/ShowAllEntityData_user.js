@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.287+2026-03-23
+// @version      9.99.283+2026-03-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4784,9 +4784,10 @@
     /**
      * Returns the innerHTML for global/sub-table collapse-toggle buttons.
      *
-     * Renders as two stacked flex-column groups (▶/▼ glyph + "Expand/Collapse ALL"
-     * + "multi-row cells") laid out with the outer button carrying
-     * display:inline-flex; align-items:center; gap:4px.
+     * Renders as a simple flat string: "▶ Expand multi-row cells" or
+     * "▼ Collapse multi-row cells".  Using plain text (not nested flex spans)
+     * keeps the button height identical to all other filter-bar buttons —
+     * the previous stacked flex-column layout made this button visibly taller.
      *
      * State detection (used by all click handlers) relies on
      * `btn.textContent.startsWith('▶')`.
@@ -4798,22 +4799,13 @@
         // ▶ = currently collapsed → click will EXPAND
         // ▼ = currently expanded  → click will COLLAPSE
         //
-        // Two stacked flex-column label groups.  The span font-size is set to
-        // 0.72em (down from 0.9em) so that two stacked rows at line-height:1
-        // produce a total height of 2 × 0.72em ≈ 1.44em — matching the height
-        // of a single-line inline-block button whose line-height is ~1.4.
-        // The outer button carries display:inline-flex; align-items:center; gap:4px
-        // which is still required for the two-column layout to render correctly.
+        // Single-line format: matches the height of all other filter-bar buttons
+        // (uiFilterBarBtnCSS uses display:inline-block, not inline-flex).
+        // The previous stacked flex-column layout ("Expand / ALL / multi-row / cells"
+        // in two groups) made the button taller than its neighbours.
         const arrow  = expand ? '▶' : '▼';
         const action = expand ? 'Expand' : 'Collapse';
-        return `<span style="align-self:center;font-size:1em;">${arrow}</span>` +
-            `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;">` +
-            `<span>${action}</span>` +
-            `<span>ALL</span></span>` +
-            `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;"><span>multi-row</span>` +
-            `<span>cells</span></span>`;
+        return `${arrow} ${action} multi-row cells`;
     }
 
     function createSubTableCollapseButton(table, categoryName) {
@@ -4827,14 +4819,12 @@
         btn.setAttribute('aria-label', `Expand all collapsed multi-row cells in: ${categoryName}`);
         // Same base style as createSubTableHighlightButton; hidden until
         // updateSubTableCollapseButton() determines multi-row cells exist.
-        // Uses inline-flex so the two-row label (▶ Expand / multi-row / cells)
-        // renders correctly; margin-left:8px shifts it right of the Ex label
-        // to prevent overlap when the button is tinted during highlight mode.
+        // margin-left:8px shifts it right of the Ex label to prevent overlap
+        // when the button is tinted during highlight mode.
         btn.style.cssText = [
             'font-size:0.8em; padding:2px 6px; border-radius:4px;',
             'background:rgb(240,240,240); border:1px solid rgb(204,204,204);',
-            'cursor:pointer; vertical-align:middle;',
-            'align-items:center; gap:4px; margin-left:8px;',
+            'cursor:pointer; vertical-align:middle; margin-left:8px;',
             'transition:background-color 0.2s, color 0.2s, box-shadow 0.2s;',
             'display:none;'
         ].join(' ');
@@ -4933,7 +4923,7 @@
         }
 
         // Show the button and reset its text to the post-filter collapsed state.
-        btn.style.display   = 'inline-flex';
+        btn.style.display   = 'inline-block';
         btn.innerHTML       = makeCollapseExpandBtnHTML(true);
 
         // ── Highlight tint ────────────────────────────────────────────────────
@@ -12386,11 +12376,8 @@ a { color: #1565c0; }`;
 
     const filterContainer = document.createElement('span');
     filterContainer.id = 'mb-filter-container';
-    // Initially hidden; will be displayed when appended to H2.
-    // font-size:1rem + line-height:1 reset the h2's inherited large font-size and
-    // line-height so child buttons using em units resolve identically to their
-    // h3-hosted equivalents (createSubTableCollapseButton, etc.).
-    filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px; font-size:1rem; line-height:1;';
+    // Initially hidden; will be displayed when appended to H2
+    filterContainer.style.cssText = 'display:none; align-items:center; white-space:nowrap; gap:5px;';
 
     const filterWrapper = document.createElement('span');
     filterWrapper.id = 'mb-global-filter-wrapper';
@@ -12630,7 +12617,7 @@ a { color: #1565c0; }`;
     const globalCollapseBtn = document.createElement('button');
     globalCollapseBtn.id = 'mb-col-collapse-all-btn';
     globalCollapseBtn.innerHTML = makeCollapseExpandBtnHTML(true);
-    globalCollapseBtn.style.cssText = `${uiFilterBarBtnCSS()} align-items:center; gap:4px; display:none;`;
+    globalCollapseBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
     globalCollapseBtn.title =
         'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
     filterContainer.insertBefore(globalCollapseBtn, unhighlightAllBtn);
@@ -22883,7 +22870,7 @@ a { color: #1565c0; }`;
 
         // Show the global button and reset its text to collapsed state so it
         // always reads "▶ Expand …" after a re-render.
-        globalBtn.style.display = 'inline-flex';
+        globalBtn.style.display = 'inline-block';
         globalBtn.innerHTML     = makeCollapseExpandBtnHTML(true);
         globalBtn.title         = 'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
 
@@ -23539,7 +23526,7 @@ a { color: #1565c0; }`;
             const globalBtn = document.getElementById('mb-col-collapse-all-btn');
             if (globalBtn) {
                 if (anyColumnHasMultiRow) {
-                    globalBtn.style.display = 'inline-flex';
+                    globalBtn.style.display = 'inline-block';
                     // Reset to collapsed state on every (re-)init.
                     globalBtn.innerHTML = makeCollapseExpandBtnHTML(true);
                     globalBtn.title = 'Expand ALL collapsed multi-row cells in EVERY collapsable table column';

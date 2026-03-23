@@ -1,29 +1,5 @@
 [
     {
-        "version": "9.99.287",
-        "date": "2026-03-23",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "makeCollapseExpandBtnHTML — the stacked two-row label spans (font-size:0.9em, line-height:1) produced a button height of 2 × 0.9em = 1.8em, which exceeds the natural height of single-line inline-block neighbours in the h2 filter bar (toggle-highlight, clear-filters, etc.). Context fixes on filterContainer (font-size:1rem, line-height:1) could not resolve this because the h2 filter row height is determined by the flat-text single-line buttons, and a two-row stacked button is always taller than a single-line button at the same font-size. The sub-table h3 button (same HTML) fits in its row because h3 rows are naturally taller (larger padding, larger inherited font). Fix: reduce span font-size from 0.9em to 0.72em in makeCollapseExpandBtnHTML. Two stacked rows at 0.72em line-height:1 = 1.44em total, matching the effective height of a single-line button at ~1.4 line-height. The text remains legible and the h3 button (where there is more vertical room) also benefits from the smaller label text."
-                ]
-            }
-        ]
-    },
-    {
-        "version": "9.99.286",
-        "date": "2026-03-23",
-        "sections": [
-            {
-                "label": "🐛 Bug Fixes",
-                "items": [
-                    "mb-col-collapse-all-btn height — v9.99.285 fixed font-size inheritance but the button was still taller than the h3 equivalent because the h2 element also propagates a larger inherited line-height to the filterContainer and its inline-flex children. An inline-flex button's rendered height is driven by both the font-size and the line-height of its content; resetting only font-size was insufficient. Fix: add line-height:1 to the filterContainer span alongside font-size:1rem. Together these two properties fully neutralise both h2 inherited values, making every child button — including the global collapse button — render at exactly the same height as the identical buttons in the h3 sub-table context."
-                ]
-            }
-        ]
-    },
-    {
         "version": "9.99.285",
         "date": "2026-03-23",
         "sections": [
