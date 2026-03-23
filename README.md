@@ -47,7 +47,7 @@
 ---
 
 
-## <a name="mb__page_enhancer"></a> MusicBrainz - MB Page Enhancer
+## <a name="mb_page_enhancer"></a> MusicBrainz - MB Page Enhancer
 
 Enhance Release Page with show all cover art images on the page itself, collapsible with configurable size.
 
