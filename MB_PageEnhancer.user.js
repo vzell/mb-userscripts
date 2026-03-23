@@ -1,14 +1,14 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Release Page Enhancer
+// @name         VZ: MusicBrainz - MB Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      0.9.9+2026-03-23
-// @description  Enhance Release and Event Pages with show all cover/event art images on the page itself, collapsible with configurable image size
+// @description  Enhances MusicBrainz pages with additional features
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js
+// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/MB_PageEnhancer.user.js
+// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/MB_PageEnhancer.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary.user.js
 // @match        *://*.musicbrainz.org/release/*-*-*-*-*
@@ -25,24 +25,27 @@
 // ==/UserScript==
 
 /*
- * VZ: MusicBrainz - Release Page Enhancer
+ * VZ: MusicBrainz - MB Page Enhancer
  *
- * is an userscript which enhances MusicBrainz release and event pages with showing all cover/event art
- * images on the page itself, collapsible with configurable image size.
+ * is an userscript which enhances MusicBrainz pages with additional features:
+ *
+ * 1.) release and event pages will show all cover/event art images on the page itself, collapsible with configurable
+ * image size.
  *
  * On release pages, artwork is fetched from the Cover Art Archive (coverartarchive.org).
  * On event pages, artwork is fetched from the Event Art Archive (eventartarchive.org).
  *
- * This script has been created by giving the right facts and asking the right questions to Gemini.
- * When Gemini gots stuck, I asked ChatGPT for help, until I got everything right.
+ * This script has been created by giving the right facts and asking the right questions initially to Gemini. When
+ * Gemini gots stuck, I asked ChatGPT for help, until I got everything right. Later when the script increased in size
+ * and evolved, I switched to Claude and only now and then asked the other two for help.
  *
- * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome and Firefox.
+ * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome, Firefox, Opera and Brave.
  */
 
 (function() {
     'use strict';
 
-    const SCRIPT_BASE_NAME = "ReleasePageEnhancer";
+    const SCRIPT_BASE_NAME = "MB-PageEnhancer";
     // SCRIPT_ID is derived from SCRIPT_BASE_NAME: CamelCase → kebab-case, lower-cased, prepend "vz-mb-"
     const SCRIPT_ID = 'vz-mb-' + SCRIPT_BASE_NAME.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
     const SCRIPT_NAME = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.name : SCRIPT_BASE_NAME;

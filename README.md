@@ -5,7 +5,7 @@
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 ---
-- [MusicBrainz - Release Page Enhancer](#mb_release_page_enhancer)
+- [MusicBrainz - MB Page Enhancer](#mb_page_enhancer)
 - [MusicBrainz - Show All Entity Data In A Consolidated View](#mb_show_all_entity_data)
 - [MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](#mb_show_all_consolidated)
 ---
@@ -47,12 +47,12 @@
 ---
 
 
-## <a name="mb_release_page_enhancer"></a> MusicBrainz - Release Page Enhancer
+## <a name="mb__page_enhancer"></a> MusicBrainz - MB Page Enhancer
 
 Enhance Release Page with show all cover art images on the page itself, collapsible with configurable size.
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/ReleasePageEnhancer.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/ReleasePageEnhancer.user.js)
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/MB_PageEnhancer.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/MB_PageEnhancer.user.js)
 
 ## <a name="mb_customizable_selector"></a> MusicBrainz - Customizable Selector for Packaging, Type, Status, Language and Script on release pages
 
