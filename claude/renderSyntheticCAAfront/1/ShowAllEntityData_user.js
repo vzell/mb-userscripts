@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.294+2026-03-23
+// @version      9.99.289+2026-03-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8632,7 +8632,6 @@ ${sections.join('\n')}
                         const _pfx = getFilterFocusPrefix();
                         e.target.value = _pfx;
                         e.target.setSelectionRange(_pfx.length, _pfx.length);
-                        delete e.target.dataset.mbMultirowMode;
                         runFilter();
                         Lib.debug('shortcuts', `${filterType} filter cleared via Escape (first press, focus kept)`);
                     }
@@ -12653,7 +12652,6 @@ a { color: #1565c0; }`;
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
             input.value = '';
             input.style.backgroundColor = '';
-            delete input.dataset.mbMultirowMode;
         });
 
         // Re-run filter to update display
@@ -12851,7 +12849,6 @@ a { color: #1565c0; }`;
         table.querySelectorAll('.mb-col-filter-input').forEach(input => {
             input.value = '';
             input.style.backgroundColor = '';
-            delete input.dataset.mbMultirowMode;
         });
 
         // Also clear the sub-table (STF) filter input for this table and restore
@@ -22265,16 +22262,11 @@ a { color: #1565c0; }`;
                 const ph = caaPh || eaaPh;
                 if (!ph) return;
                 if (!inlineArtType) inlineArtType = caaPh ? 'caa' : 'eaa';
-                // Use the invisible sort-key span stamped by _artSetInlineSortKey
-                // (added after every load/error path in _artInitInlinePics) so the
-                // count reflects settled fetches only — no dependency on the
-                // cosmetic .mb-art-cache-hint-inline badge which is gated behind the
-                // sa_rt_enable/sa_rt_show_inline settings flags and therefore absent
-                // when resource-timing indicators are disabled.
-                const sk = cell.querySelector('.mb-inline-art-sort-key');
-                if (!sk) return; // fetch not yet settled — skip this cell
-                if (sk.textContent === 'caa-inline-yes')     inlineArtYes++;
-                else if (sk.textContent === 'caa-inline-no') inlineArtNo++;
+                if (ph.querySelector('.mb-art-cache-hint-inline')) {
+                    inlineArtYes++;
+                } else {
+                    inlineArtNo++;
+                }
             });
         }
 
@@ -22386,17 +22378,15 @@ a { color: #1565c0; }`;
 
         /**
          * Creates and appends a single inline-thumbnail presence entry to synBox.
+         * Clicking it filters the column filter input for cells that match
+         * the presence/absence pattern by applying a filter on the column.
+         * Because the inline-thumbnail columns (e.g. "Release", "Event") contain
+         * arbitrary text, we cannot use a simple value filter.  Instead we store
+         * a custom data attribute on the item and handle it via a direct DOM
+         * show/hide pass that marks rows with/without the .mb-art-cache-hint-inline
+         * class in their inline-ph span.
          *
-         * Clicking delegates directly to `applyUniqVal` with the invisible sort-key
-         * text ('caa-inline-yes' or 'caa-inline-no') that `_artSetInlineSortKey`
-         * stamps into every settled cell after each load/error path in
-         * `_artInitInlinePics`.  Because `getCleanColumnText()` includes
-         * display:none spans (the `.mb-inline-art-sort-key` class is not in the
-         * strip selector `_CLEAN_STRIP_SEL`), normal text-value matching through
-         * the regular filter pipeline handles filtering, counting, Escape, ✕, and
-         * all "clear" buttons automatically — no bypass mode or DOM walk needed.
-         *
-         * @param {boolean} hasArt  - true = rows WITH a loaded inline thumbnail
+         * @param {boolean} hasArt  - true = rows WITH inline thumbnail
          * @param {string}  label   - Human-readable display text
          * @param {number}  count   - Number of visible rows matching
          */
@@ -22422,15 +22412,56 @@ a { color: #1565c0; }`;
             item.appendChild(badge);
             item.appendChild(document.createTextNode(label));
 
+            const phSel = inlineArtType === 'caa' ? '.mb-caa-inline-ph' : '.mb-eaa-inline-ph';
             item.addEventListener('mousedown', ev => ev.preventDefault());
             item.addEventListener('click', () => {
-                // Filter by the invisible sort-key text injected by _artSetInlineSortKey.
-                // applyUniqVal writes the value to the column filter input and fires an
-                // 'input' event — runFilter() → getCleanColumnText() picks up the
-                // display:none sort-key span → standard text matching applies.
-                // Clearing works identically to any other text filter (Escape, ✕, clear
-                // buttons) because there is no special bypass dataset attribute involved.
-                applyUniqVal(hasArt ? 'caa-inline-yes' : 'caa-inline-no', table, colIndex);
+                // Hide/show rows using the same data-mb-stf-hidden marker that
+                // applySubFilter uses.  This guarantees that:
+                //   • The standard STF clear button (✕) restores all rows.
+                //   • Any subsequent applySubFilter / runFilter call restores rows
+                //     because they restore or skip rows based on this marker.
+                //   • caaUpdateBigBoxForTable syncs the artwork strip to the new
+                //     visible set (same as after a normal STF filter pass).
+                //
+                // We intentionally do NOT write to the column filter input: writing
+                // the label text "🖼️ poster available" to cfInp without dispatching
+                // an input event would leave a stale text value that the next
+                // runFilter cycle would use as a literal column filter, hiding all
+                // rows (since no cell text matches the label) and making it
+                // impossible to restore the view by clearing.
+                const allTblRows = Array.from(table.querySelectorAll('tbody tr'));
+                // Step 1: restore all rows previously hidden by this mechanism
+                allTblRows.forEach(row => {
+                    if (row.dataset.mbStfHidden) {
+                        row.style.display = '';
+                        delete row.dataset.mbStfHidden;
+                    }
+                });
+                // Step 2: hide rows that don't match the requested art state
+                allTblRows.forEach(row => {
+                    if (row.style.display === 'none') return; // already hidden by global/col filter
+                    const cell = row.cells[colIndex];
+                    if (!cell) return;
+                    const ph = cell.querySelector(phSel);
+                    const loaded = ph ? !!ph.querySelector('.mb-art-cache-hint-inline') : false;
+                    if (!ph || loaded !== hasArt) {
+                        row.dataset.mbStfHidden = '1';
+                        row.style.display = 'none';
+                    }
+                });
+                // Step 3: update h3 count badge + tooltip
+                _updateSubTableH3Tooltip(table);
+                // Step 4: sync CAA/EAA bigbox strip to the new visible set
+                const _allTbls = Array.from(document.querySelectorAll('table.tbl'));
+                const _tIdx = _allTbls.indexOf(table);
+                if (_tIdx !== -1) {
+                    caaUpdateBigBoxForTable(table, _tIdx);
+                    eaaUpdateBigBoxForTable(table, _tIdx);
+                }
+                // Step 5: sync h2 badge
+                if (typeof updateH2CountFromSubtables === 'function') {
+                    updateH2CountFromSubtables();
+                }
                 closeUniqDrop();
             });
             synBox.appendChild(item);
@@ -22513,12 +22544,9 @@ a { color: #1565c0; }`;
         // ── Inline thumbnail presence entries (addCAA / addEAA feature columns) ─
         // These apply to columns like "Release" (addCAA) or "Event" (addEAA)
         // where _artInitInlinePics injects a .mb-caa-inline-ph / .mb-eaa-inline-ph
-        // span into each cell.  After each fetch settles, _artSetInlineSortKey
-        // appends an invisible .mb-inline-art-sort-key span whose textContent is
-        // 'caa-inline-yes' (image loaded) or 'caa-inline-no' (404/error).
-        // Counting above reads that span; makeInlineArtItem delegates to
-        // applyUniqVal so the column filter pipeline handles filtering and reset
-        // identically to the CAA/EAA icon columns.
+        // span into each cell.  The presence of .mb-art-cache-hint-inline inside
+        // the ph span indicates a successfully loaded thumbnail (image available).
+        // Absence of the hint span means the fetch found no front image.
         if (inlineArtType && (inlineArtYes > 0 || inlineArtNo > 0)) {
             const synHdr = document.createElement('div');
             synHdr.textContent = 'Cell structure';
@@ -25117,13 +25145,6 @@ a { color: #1565c0; }`;
 
         // Inline-thumbnail placeholder spans (_artInitInlinePics re-injects them)
         el.querySelectorAll('.mb-caa-inline-ph, .mb-eaa-inline-ph').forEach(ph => ph.remove());
-        // NOTE: .mb-inline-art-sort-key spans are intentionally NOT removed here.
-        // In the multi-table (addCAA) path runFilter() clones rows and calls
-        // _stripTransientCellState() before testRowMatch(); removing the sort-key span
-        // from the clone would cause getCleanColumnText() to see no synthetic value and
-        // match nothing, silently hiding all rows.  The span is idempotent —
-        // _artSetInlineSortKey() updates it in-place after every fetch cycle — so no
-        // explicit removal is ever needed.
 
         // Cache-hint overlays (cosmetic, rebuilt on render)
         el.querySelectorAll('.mb-art-cache-hint-col-wrap').forEach(wrap => wrap.remove());
@@ -30770,46 +30791,6 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Injects or updates the invisible sort-key span inside `td` for inline-art
-     * filter support (addCAA / addEAA columns).
-     *
-     * The span carries text 'caa-inline-yes' when the front-image was successfully
-     * fetched, or 'caa-inline-no' when the fetch resulted in a 404 / error.
-     *
-     * Because `getCleanColumnText()` walks display:none spans (they are only
-     * excluded from the FILTER_REJECT set inside the TreeWalker; the clone-and-
-     * strip pass targets named decorative classes that do NOT include this span's
-     * class), regular text-value matching via `applyUniqVal('caa-inline-yes')` /
-     * `applyUniqVal('caa-inline-no')` drives the column filter pipeline exactly
-     * like the invisible `mb-caa-sort-key` span already does for the CAA / EAA
-     * icon columns.  No bypass mode (mbInlineArtMode) or special DOM-walk is
-     * required — Escape, ✕, and all "clear" buttons reset everything automatically.
-     *
-     * The helper is idempotent: if a span with class `mb-inline-art-sort-key`
-     * already exists inside `td` its text is updated in place; otherwise a new
-     * span is appended.
-     *
-     * @param {ArtCtx}               ctx    - CAA_CTX or EAA_CTX (unused beyond
-     *                                        providing a debug namespace).
-     * @param {HTMLTableCellElement} td     - The <td> to annotate.
-     * @param {boolean}              loaded - true  = front-image available
-     *                                        false = 404 / fetch error
-     */
-    function _artSetInlineSortKey(ctx, td, loaded) {
-        const CLS = 'mb-inline-art-sort-key';
-        let sk = td.querySelector('.' + CLS);
-        if (!sk) {
-            sk = document.createElement('span');
-            sk.className   = CLS;
-            sk.style.display = 'none';
-            td.appendChild(sk);
-        }
-        sk.textContent = loaded ? 'caa-inline-yes' : 'caa-inline-no';
-        Lib.debug(ctx.key,
-            `_artSetInlineSortKey: td → ${sk.textContent}`);
-    }
-
-    /**
      * Generic inline-thumbnail feature.
      *
      * For page definitions that carry `features[ctx.addFeature] = '<column name>'`,
@@ -31000,7 +30981,6 @@ a { color: #1565c0; }`;
                                 // ── C1: blob is valid — image already visible ──────────
                                 // Stamp the marker so future same-session calls hit Case A.
                                 td.dataset[ctx.inlineDoneAttr] = '1';
-                                _artSetInlineSortKey(ctx, td, true);
                                 skippedDone++;
                                 // Update (or inject) the cache-hint overlay to 'memory' —
                                 // the blob is alive in _artIdbBlobUrls which means it was
@@ -31063,7 +31043,6 @@ a { color: #1565c0; }`;
                                                 // cloneNode copies of this td (made by an earlier render
                                                 // pass) do not inherit a premature 'done' marker.
                                                 td.dataset[ctx.inlineDoneAttr] = '1';
-                                                _artSetInlineSortKey(ctx, td, true);
 
                                                 // ── Cache-hint indicator (C2 restore) ──────────────
                                                 if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
@@ -31091,7 +31070,7 @@ a { color: #1565c0; }`;
                                                 }
                                             }
                                         })
-                                        .catch(() => { _artSetInlineSortKey(ctx, td, false); /* 404 — leave ph as invisible spacer */ });
+                                        .catch(() => { /* 404 — leave ph as invisible spacer */ });
                                 }
                                 // Native path (IDB disabled)
                                 return new Promise(resolve => {
@@ -31100,14 +31079,10 @@ a { color: #1565c0; }`;
                                         if (existingImg.isConnected) {
                                             this.style.display = 'inline';
                                             td.dataset[ctx.inlineDoneAttr] = '1';
-                                            _artSetInlineSortKey(ctx, td, true);
                                         }
                                         resolve();
                                     }, { once: true });
-                                    existingImg.addEventListener('error', () => {
-                                        _artSetInlineSortKey(ctx, td, false);
-                                        resolve();
-                                    }, { once: true });
+                                    existingImg.addEventListener('error', () => resolve(), { once: true });
                                     existingImg.src = imgurl;
                                 });
                             };
@@ -31216,7 +31191,6 @@ a { color: #1565c0; }`;
                                     // Stamp done-marker only after image is live (see non-IDB
                                     // path comment for the full rationale).
                                     td.dataset[ctx.inlineDoneAttr] = '1';
-                                    _artSetInlineSortKey(ctx, td, true);
 
                                     // ── Hover preview wiring (inline thumbnail column) ─
                                     if (Lib.settings.sa_caa_hover_preview) {
@@ -31267,7 +31241,6 @@ a { color: #1565c0; }`;
                                         `init${ctx.key.toUpperCase()}InlinePics: loaded OK (idb=${fromIdb} memory=${fromMemory}) — ${imgurl}`);
                                 })
                                 .catch(() => {
-                                    _artSetInlineSortKey(ctx, td, false);
                                     Lib.debug(ctx.key,
                                         `init${ctx.key.toUpperCase()}InlinePics: failed to load ${imgurl}` +
                                         ` — placeholder stays as spacer`);
@@ -31287,7 +31260,6 @@ a { color: #1565c0; }`;
                                     // pass and silently skips re-fetching, leaving the
                                     // cloned img permanently at display:none/src=''.
                                     td.dataset[ctx.inlineDoneAttr] = '1';
-                                    _artSetInlineSortKey(ctx, td, true);
 
                                     // ── Hover preview wiring (inline thumbnail column) ─────
                                     // Attach mouseenter/mouseleave to `ph` (the placeholder span
@@ -31352,7 +31324,6 @@ a { color: #1565c0; }`;
                                 resolve();
                             });
                             img.addEventListener('error', function() {
-                                _artSetInlineSortKey(ctx, td, false);
                                 Lib.debug(ctx.key,
                                     `init${ctx.key.toUpperCase()}InlinePics: failed to load ${imgurl}` +
                                     ` — placeholder stays as spacer`);

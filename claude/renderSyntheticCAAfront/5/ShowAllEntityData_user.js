@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.294+2026-03-23
+// @version      9.99.293+2026-03-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -25117,13 +25117,8 @@ a { color: #1565c0; }`;
 
         // Inline-thumbnail placeholder spans (_artInitInlinePics re-injects them)
         el.querySelectorAll('.mb-caa-inline-ph, .mb-eaa-inline-ph').forEach(ph => ph.remove());
-        // NOTE: .mb-inline-art-sort-key spans are intentionally NOT removed here.
-        // In the multi-table (addCAA) path runFilter() clones rows and calls
-        // _stripTransientCellState() before testRowMatch(); removing the sort-key span
-        // from the clone would cause getCleanColumnText() to see no synthetic value and
-        // match nothing, silently hiding all rows.  The span is idempotent —
-        // _artSetInlineSortKey() updates it in-place after every fetch cycle — so no
-        // explicit removal is ever needed.
+        // Sort-key spans for inline-art filter (_artSetInlineSortKey re-stamps them after fetch)
+        el.querySelectorAll('.mb-inline-art-sort-key').forEach(sk => sk.remove());
 
         // Cache-hint overlays (cosmetic, rebuilt on render)
         el.querySelectorAll('.mb-art-cache-hint-col-wrap').forEach(wrap => wrap.remove());

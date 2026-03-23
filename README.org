@@ -59186,46 +59186,8 @@ the same for the sub-table level checkbox states (Case sensitive, Regex, Exclude
 
 * configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
 
-* tooltip should show image comment, additionally to the image popup itself
-
-In the uploaded userscript,
-
-show both, the popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
-
-#+begin_example
-<td data-erg-injected="1" data-caa-multi-built="1">
-  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back Spine">
-    <li class="mb-caa-art-li mb-caa-art-li-summary">
-      <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (2) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
-      </span>
-      <a href="/release/e4375aa5-e381-4633-8666-033974d149c3/cover-art" data-caa-synthetic="1" title="2 images found for this release / release-group" data-caa-enriched="1">
-	<span class="caa-icon" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/front-250&quot;);" title="2 images found for this release / release-group">
-	</span>
-      </a>
-      <span class="mb-art-cache-hint-col-wrap">
-	<span class="mb-art-cache-hint-col" title="Network fetch (1965 ms)">🔵
-	</span>
-	<span class="mb-caa-count-badge" title="2 images found for this release / release-group">2
-	</span>
-      </span>
-      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031291-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Front
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031887-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Back / Spine
-      </span>
-    </li>
-  </ul>
-</td>
-#+end_example
-
-* TODO multi-row cell button to big
+* DONE multi-row cell button to big
+** initial
 
 some bugs
 
@@ -59257,50 +59219,6 @@ it should have the same height as all other buttons in the h2 line, like e.g.
 
 Please fix
 
-2.)
-
-when in a "CAA"/"EAA" column one or more thumbnail artworks have been expanded, e.g.
-
-#+begin_example
-<span data-caa-expand-btn="expanded" title="Collapse all EAA event art images (4) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
-#+end_example
-
-and if then a filter condition is specified on either the "CAA"/"EAA" or some other column in one of the table specific filter fields, there are two bugs:
-
-a.)
-
-The artwork thumbnails in the "CAA"/"EAA" column which are uncollapsed in that moment SHOULDN't collapse, but retain their current collapse state
-
-b.)
-
-when filtering in either the "CAA" or "EAA" column, the filter string which matches in the artwork comment 
-
-#+begin_example
-<span class="mb-caa-art-comment">opened postcard gatefold, outer side</span>
-#+end_example
-
-should also be highlighted
-
-c.)
-
-There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" e.g.
-
-regarding "CAA" and "EAA" columns:
-
-- in "EAA" columns e.g when filtering for "bann", the type-badge GETs highlighted, e.g.
-
-#+begin_example
-<span class="mb-caa-type-badge"><span class="mb-column-filter-highlight">Bann</span>er</span>
-#+end_example
-
-- in "CAA" columns NOT, e.g. when filtering for "med", the following doesn't get highlighted
-
-#+begin_example
-<span class="mb-caa-type-badge">Medium</span>
-#+end_example
-  
-
-* multi-row cells
 ** initial
 
 Please revert your changes to the height of the "multi-row" cell button and apply the following:
@@ -59352,6 +59270,89 @@ compared to before
 but still to tall compared to the h3 line one
 
 
+* TODO tooltip should show image comment, additionally to the image popup itself
+
+In the uploaded userscript,
+
+show both, the popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
+
+#+begin_example
+<td data-erg-injected="1" data-caa-multi-built="1">
+  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back Spine">
+    <li class="mb-caa-art-li mb-caa-art-li-summary">
+      <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (2) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
+      </span>
+      <a href="/release/e4375aa5-e381-4633-8666-033974d149c3/cover-art" data-caa-synthetic="1" title="2 images found for this release / release-group" data-caa-enriched="1">
+	<span class="caa-icon" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/front-250&quot;);" title="2 images found for this release / release-group">
+	</span>
+      </a>
+      <span class="mb-art-cache-hint-col-wrap">
+	<span class="mb-art-cache-hint-col" title="Network fetch (1965 ms)">🔵
+	</span>
+	<span class="mb-caa-count-badge" title="2 images found for this release / release-group">2
+	</span>
+      </span>
+      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031291-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Front
+      </span>
+    </li>
+    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
+      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031887-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+      <span class="mb-caa-type-badge">Back / Spine
+      </span>
+    </li>
+  </ul>
+</td>
+#+end_example
+
+
+* TODO "CAA"/"EAA" column collapse state
+
+when in a "CAA"/"EAA" column one or more thumbnail artworks have been expanded, e.g.
+
+#+begin_example
+<span data-caa-expand-btn="expanded" title="Collapse all EAA event art images (4) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
+#+end_example
+
+and if then a filter condition is specified on either the "CAA"/"EAA" or some other column in one of the table specific filter fields, there are two bugs:
+
+a.)
+
+The artwork thumbnails in the "CAA"/"EAA" column which are uncollapsed in that moment SHOULDN't collapse, but retain their current collapse state
+
+b.)
+
+when filtering in either the "CAA" or "EAA" column, the filter string which matches in the artwork comment 
+
+#+begin_example
+<span class="mb-caa-art-comment">opened postcard gatefold, outer side</span>
+#+end_example
+
+should also be highlighted
+
+c.)
+
+There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" e.g.
+
+regarding "CAA" and "EAA" columns:
+
+- in "EAA" columns e.g when filtering for "bann", the type-badge GETs highlighted, e.g.
+
+#+begin_example
+<span class="mb-caa-type-badge"><span class="mb-column-filter-highlight">Bann</span>er</span>
+#+end_example
+
+- in "CAA" columns NOT, e.g. when filtering for "med", the following doesn't get highlighted
+
+#+begin_example
+<span class="mb-caa-type-badge">Medium</span>
+#+end_example
+
+
 * TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
 
@@ -59376,44 +59377,23 @@ The "Cell stucture" submenu list should have, additionally to the entries for mu
 entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
 to give the user the chance to quickly filter either for rows with OR without images
 
-* TODO "CAA" column AND other columns where thumbnails are shown: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
-** DONE initial
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have additionally to what is there already (in the "Cell stucture" submenu or in
-the rest of the menu), entries with JUST "yes" for datacells which HAVE artwork and "no for data cells where the artwork
-is completely missing, to give the user the chance to quickly filter either for rows with OR without images (doesn't
-matter what other information is there)
-
-also add a changelog
-
-** DONE doesn't work
-
-In the newly uploaded userscript,
-
-On pageTypes which have a "CAA" column, the "unique value drop-down" menu in the "CAA" column header needs a special treatment:
-
-The "Cell stucture" submenu list should have, additionally to the entries for multi-re-cells collapse/uncollape states,
-entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
-to give the user the chance to quickly filter either for rows with OR without images
-** TODO incorporate the functionality from the current "CAA" column right inside the column with the newly rendered cover art image in front of the release or release group title
-
-some more things to implement:
-
-- incorporate the functionality from the current "CAA" column, basically the addition of the "yes" (CAA image available)
-  and "no" (no CAA image) synthetic values to the "show unique column values"-dropdown menu, and add that same
-  functionality right to the columns defined as
-
-#+begin_example
-            features: {
-                addCAA: '<column name>'
-            },
-#+end_example
 
 * TODO other columns where thumbnails are shown, NO front-image available/front-image available
+** initial
+
+please also add the synthetic "Cell structure" box
+
+#+begin_example
+// synBox is inserted between qfBar and listBox; always present but
+// empty (zero height) when no synthetic entries apply.
+#+end_example
+
+#+begin_example
+<div class="mb-col-uniq-syn-box">
+</div>
+#+end_example
+
+to the unique column values drop-down list for columns which have the "addCAA"/"addEAA" feature in their configuration, e.g.
 
 #+begin_example
             features: {
@@ -59425,15 +59405,13 @@ some more things to implement:
                 addEAA: 'Event',
 #+end_example
 
-- NO front-image available, but a "sticker"
+1.)
 
-#+begin_example
-<span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;" title="1 image found for this release / release-group">
-  <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: none; border-radius: 2px;" src="//coverartarchive.org/release/4d2b4351-a374-442e-9349-685eee8be9ad/front-250">
-</span>
-#+end_example
+for "addCAA" columns there should be the following synthetic entries 
 
-- front-image available
+- "front-image available"
+
+when there is at least one front cover image in the cover art archive available for a release, e.g.
 
 #+begin_example
 <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="10 images found for this release / release-group">
@@ -59442,19 +59420,29 @@ some more things to implement:
   </span>
 </span>
 #+end_example
-  
-2.) EAA
 
-- NO "poster" available
+So you probably should be counting the number of cells in such a column, which have the "mb-art-cache-hint-inline" class, as that's when visually a front artwork thumbnail is rendered in the cell
+
+- "NO front-image available"
+
+when there is NO front cover image in the cover art archive available for a release, e.g.
 
 #+begin_example
-<span class="mb-eaa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
-  <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: none; border-radius: 2px;" src="//eventartarchive.org/event/a397674d-274b-4ca9-8294-2fbede7f7473/front-250">
+<span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;" title="1 image found for this release / release-group">
+  <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: none; border-radius: 2px;" src="//coverartarchive.org/release/4d2b4351-a374-442e-9349-685eee8be9ad/front-250">
 </span>
 #+end_example
-  
-- "poster" available
-  
+
+So you probably should be counting the number of cells in such a column, which DO NOT have the "mb-art-cache-hint-inline" class, as that's when visually NO front artwork thumbnail is rendered in the cell
+
+2.)
+
+for "addEAA" columns there should be the following synthetic entries 
+
+- "poster available"
+
+when there is a poster image in the event art archive available for an event, e.g.
+
 #+begin_example
 <span class="mb-eaa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="1 image found for this event">
   <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="//eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250">
@@ -59462,4 +59450,214 @@ some more things to implement:
   </span>
 </span>
 #+end_example
+
+So you probably should be counting the number of cells in such a column, which have the "mb-art-cache-hint-inline" class, as that's when visually an event poster artwork thumbnail is rendered in the cell
+
+- "NO poster available"
+
+when there is NO poster image in the event art archive available for an event, e.g.
+  
+#+begin_example
+<span class="mb-eaa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
+  <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: none; border-radius: 2px;" src="//eventartarchive.org/event/a397674d-274b-4ca9-8294-2fbede7f7473/front-250">
+</span>
+#+end_example
+
+So you probably should be counting the number of cells in such a column, which DO NOT have the "mb-art-cache-hint-inline" class, as that's when visually NO event poster artwork thumbnail is rendered in the cell
+
+** bug
+
+small bugs, e.g for the "addEAA" case
+
+- when filtering either for "🖼️ poster available" or "∅ NO poster available" in the "mb-col-uniq-syn-box"
+
+#+begin_example
+<div class="mb-col-uniq-syn-box">
+  <div style="font-size: 0.75em; font-weight: 600; color: rgb(85, 85, 85); padding: 4px 8px 2px; letter-spacing: 0.03em; user-select: none;">Cell structure
+  </div>
+  <div class="mb-col-uniq-item mb-col-uniq-multirow-item" role="option" title="🖼️ poster available">
+    <span class="mb-uniq-count-badge" aria-hidden="true" style="color: rgb(17, 17, 17); background-color: rgb(255, 250, 205); font-weight: bold; font-family: monospace; border-radius: 3px; padding: 0px 3px; margin-right: 5px; font-size: 0.85em; display: inline-block;">(2)
+    </span>🖼️ poster available
+  </div>
+  <div class="mb-col-uniq-item mb-col-uniq-multirow-item" role="option" title="∅ NO poster available">
+    <span class="mb-uniq-count-badge" aria-hidden="true" style="color: rgb(17, 17, 17); background-color: rgb(255, 250, 205); font-weight: bold; font-family: monospace; border-radius: 3px; padding: 0px 3px; margin-right: 5px; font-size: 0.85em; display: inline-block;">(107)
+    </span>∅ NO poster available
+  </div>
+  <div aria-hidden="true" style="border-top: 1px solid rgb(208, 208, 208); margin: 4px 0px;">
+  </div>
+</div>
+#+end_example
+
+the corresponding rows are correctly filtered, but when resetting the filter the current filtered rows are still displayed, and there is no chance to see all the rows again
+
+** bug
+
+The latest fix works for the "addEAA" case, but NOT for the "addCAA" case. As soon as either filtering on "🖼️ front-image available" or "∅ NO front-image available" in the "mb-col-uniq-syn-box"
+
+#+begin_example
+<div class="mb-col-uniq-syn-box">
+  <div style="font-size: 0.75em; font-weight: 600; color: rgb(85, 85, 85); padding: 4px 8px 2px; letter-spacing: 0.03em; user-select: none;">Cell structure
+  </div>
+  <div class="mb-col-uniq-item mb-col-uniq-multirow-item" role="option" title="🖼️ front-image available">
+    <span class="mb-uniq-count-badge" aria-hidden="true" style="color: rgb(17, 17, 17); background-color: rgb(255, 250, 205); font-weight: bold; font-family: monospace; border-radius: 3px; padding: 0px 3px; margin-right: 5px; font-size: 0.85em; display: inline-block;">(114)
+    </span>🖼️ front-image available
+  </div>
+  <div class="mb-col-uniq-item mb-col-uniq-multirow-item" role="option" title="∅ NO front-image available">
+    <span class="mb-uniq-count-badge" aria-hidden="true" style="color: rgb(17, 17, 17); background-color: rgb(255, 250, 205); font-weight: bold; font-family: monospace; border-radius: 3px; padding: 0px 3px; margin-right: 5px; font-size: 0.85em; display: inline-block;">(5)
+    </span>∅ NO front-image available
+  </div>
+  <div aria-hidden="true" style="border-top: 1px solid rgb(208, 208, 208); margin: 4px 0px;">
+  </div>
+</div>
+#+end_example
+
+and then resetting the filter, the current filtered rows are still displayed, and there is no chance to see all the rows again
+
+** both broken
+
+Now BOTH are broken, the "addEAA" AND the "addCAA" case
+
+In both cases I can initially choose either filter condition ("with artwork" or "NO artwork", although there is no
+visual indication that we actually filter on one of these in the filter field) but the filter reset doesn't work anymore
+and there is no chance to see all the rows again.
+
+In the "// @version 9.99.288+2026-03-23" at least the "addEAA" case worked, it also had a visual indication in the filter
+field which filter actually was choosen from the synthetic ones, e.g. "🖼️ poster available" got filled in in the filter field, when coosing from the synthetic values
+
+** broken
+
+BOTH are still broken, the "addEAA" AND the "addCAA" case
+
+also in both cases, we now have a visual indication in the filter field which filter actually was choosen from the
+synthetic ones, as soon as one of the synthetic values is choosen for filtering, the filtering initially IS working, but
+the reset (by the way also the "Escape" key should clear the filter, not only clicking the "x"icon in the filter field
+itself) doesn't let all the rows reappear, so we are stuck with the current filtered rows.
+
+By the way there is also a crucial difference, the
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events URL is a "single"-table pageType and the
+https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c is a "multi"-table pageType, wherw this all
+happens
+
+** still
+
+No still the same problems, with both the "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) case.
+
+Please take a step back and check the implementation for filtering the "CAA"/"EAA" columns, which also have synthetic
+entries in the "mb-col-uniq-syn-box". For these columns, the filtering AND resetting actually works. So it should be
+possible to make the "addEAA" and "addCAA" cases also workable, by using a similar approach of filter flagging
+
+** solution
+
+#+begin_example
+Now I understand the exact pattern. The fix is to inject an invisible sort-key span into cells in the addCAA/addEAA column whenever _artInitInlinePics loads (or fails to load) a thumbnail:Ran 2 commandsRan 2 commandsNow I'll add a sort-key class property to the CTX objects and inject the invisible span in _artInitInlinePics after each image loads:Ran a command, edited a fileRan a command, edited a fileThe correct fix is the same approach as the CAA/EAA column: add an invisible sort-key span (display:none) to each cell in the addCAA/addEAA column with text 'caa-inline-yes' / 'caa-inline-no' after the inline thumbnail loads. Then makeInlineArtItem writes that exact text to cfInp.value and calls runFilter() directly (no input event dispatch to avoid the prefix race). Since getCleanColumnText() walks display:none spans, regular text matching handles everything — including Escape, ✕, and all clear buttons — without any special bypass logic.
+Please upload the latest file and say "continue" to get the implementation completed and delivered.Continue11:59 AMRan a command, edited a fileRan a command, edited a fileNow add a helper that injects/updates the sort-key span in the td, then wire it into every load path. First find the four load paths in _artInitInlinePics:Orchestrated integration of sorting function across multiple sitesOrchestrated integration of sorting function across multiple sitesNow wire _artSetInlineSortKey into every path in _artInitInlinePics. Let me read each site carefully:Ran 7 commandsRan 7 commandsNow I have everything. I'll do targeted replacements at each stamp site to add _artSetInlineSortKey(ctx, td, true) for successful loads and _artSetInlineSortKey(ctx, td, false) for errors:Viewed 6 files, edited 6 filesViewed 6 files, edited 6 filesNow add the 'no' sort key on the error/404 path for the main native load:
+#+end_example
+
+** let's try
+
+In the uploaded userscript, starting from '"version": "9.99.288"' you tried implementing adding the synthetic "Cell
+structure" box to the unique column values drop-down list for columns which have the "addCAA"/"addEAA" feature in their
+configuration to support filtering on
+
+#+begin_example
+- "front-image available"
+- "NO front-image available"
+#+end_example
+
+in the "addCAA" ("multi"-table pageType) case and
+
+#+begin_example
+- "poster available"
+- "NO poster available"
+#+end_example
+
+in the "addEAA" ("single"-table pageType) case.
+
+I gave you a hint
+
+#+begin_example
+Please take a step back and check the implementation for filtering the "CAA"/"EAA" columns, which also have synthetic
+entries in the "mb-col-uniq-syn-box". For these columns, the filtering AND resetting actually works. So it should be
+possible to make the "addEAA" and "addCAA" cases also workable, by using a similar approach of filter flagging
+#+end_example
+
+AND you finally came to the conclusion
+
+#+begin_example
+Now I understand the exact pattern. The fix is to inject an invisible sort-key span into cells in the addCAA/addEAA
+column whenever _artInitInlinePics loads (or fails to load) a thumbnail
+
+I'll add a sort-key class property to the CTX objects and inject the invisible span in _artInitInlinePics after each image
+loads:
+
+The correct fix is the same approach as the CAA/EAA column: add an invisible sort-key span (display:none) to each cell in the addCAA/addEAA column with text
+'caa-inline-yes' / 'caa-inline-no' after the inline thumbnail loads. Then makeInlineArtItem writes that exact text to
+cfInp.value and calls runFilter() directly (no input event dispatch to avoid the prefix race). Since
+getCleanColumnText() walks display:none spans, regular text matching handles everything — including Escape, ✕, and all
+clear buttons — without any special bypass logic.
+
+Now add a helper that injects/updates the sort-key span in the td, then wire it into every load path. First find the four load paths in _artInitInlinePics:Orchestrated integration of
+sorting function across multiple sitesOrchestrated integration of sorting function across multiple sites
+
+Now wire _artSetInlineSortKey into every path in _artInitInlinePics.
+
+I'll do targeted replacements at each stamp site to add _artSetInlineSortKey(ctx, td, true) for successful loads and _artSetInlineSortKey(ctx, td, false) for errors
+#+end_example
+
+before finishing.
+
+Please implement and add a changelog
+
+** multi bug
+
+Everything now works for the "addEAA" ("single"-table pageType) case
+
+BUT the "addCAA" ("multi"-table pageType) case is still broken when it comes to filtering. Although the "mb-col-uniq-syn-box" is populated with the correct synthtetic entries and their counts
+
+#+begin_example
+<div class="mb-col-uniq-syn-box">
+  <div style="font-size: 0.75em; font-weight: 600; color: rgb(85, 85, 85); padding: 4px 8px 2px; letter-spacing: 0.03em; user-select: none;">Cell structure
+  </div>
+  <div class="mb-col-uniq-item mb-col-uniq-multirow-item" role="option" title="🖼️ front-image available">
+    <span class="mb-uniq-count-badge" aria-hidden="true" style="color: rgb(17, 17, 17); background-color: rgb(255, 250, 205); font-weight: bold; font-family: monospace; border-radius: 3px; padding: 0px 3px; margin-right: 5px; font-size: 0.85em; display: inline-block;">(114)
+    </span>🖼️ front-image available
+  </div>
+  <div class="mb-col-uniq-item mb-col-uniq-multirow-item" role="option" title="∅ NO front-image available">
+    <span class="mb-uniq-count-badge" aria-hidden="true" style="color: rgb(17, 17, 17); background-color: rgb(255, 250, 205); font-weight: bold; font-family: monospace; border-radius: 3px; padding: 0px 3px; margin-right: 5px; font-size: 0.85em; display: inline-block;">(5)
+    </span>∅ NO front-image available
+  </div>
+  <div aria-hidden="true" style="border-top: 1px solid rgb(208, 208, 208); margin: 4px 0px;">
+  </div>
+</div>
+#+end_example
+
+when choosing one of it for filtering, NO row at all is shown. When clearing the filter from the synthtic value, at least ALL rows are shown again. Please fix
+
+Your proposed fix is:
+
+Root cause (v9.99.294 fix):
+
+In the multi-table (addCAA) path runFilter() does:
+
+#+begin_example
+jsconst clone = r.cloneNode(true);
+Array.from(clone.cells).forEach(td => _stripTransientCellState(td)); // ← stripped the span here
+testRowMatch(clone, matchCtx); // ← span already gone → 0 matches
+#+end_example
+
+
+_stripTransientCellState was removing .mb-inline-art-sort-key from the clone before testRowMatch could read it via getCleanColumnText. The single-table EAA path was unaffected because renderFinalTable appends source rows directly without cloning them, so the span survived.
+
+Fix: removed the el.querySelectorAll('.mb-inline-art-sort-key').forEach(sk => sk.remove()) line from _stripTransientCellState, replacing it with an explanatory comment. The span is idempotent — _artSetInlineSortKey updates it in-place after every fetch cycle, so no explicit removal is needed anywhere.
+
+Please implement ..
+
+** solution
+
+
+
+* "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
+
+* https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
+* https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell structrue" areas in the unique value pull-down menu
 
