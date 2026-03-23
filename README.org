@@ -58567,10 +58567,7 @@ Esc with panel closed → closes dialog
 
 * TODO maybe also the other filter dialogs could get the same
 
-persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store
-(push to history) button - (also for load from disk - dialog)
-
-Some new functionality:
+In the uploaded userscript add some new functionality:
 
 1.)
 
