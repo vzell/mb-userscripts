@@ -59671,3 +59671,30 @@ Please implement ..
 
 Somehow the '"version": "9.99.294"' changelog is missing from the file "ShowAllEntityData_CHANGELOG.json"
 
+And I think, you added again the fix from the previous session
+
+#+begin_example
+el.querySelectorAll('.mb-inline-art-sort-key').forEach(sk => sk.remove());
+#+end_example
+
+#+begin_example
+@@ -25117,13 +25130,8 @@ a { color: #1565c0; }`;
+ 
+         // Inline-thumbnail placeholder spans (_artInitInlinePics re-injects them)
+         el.querySelectorAll('.mb-caa-inline-ph, .mb-eaa-inline-ph').forEach(ph => ph.remove());
+-        // NOTE: .mb-inline-art-sort-key spans are intentionally NOT removed here.
+-        // In the multi-table (addCAA) path runFilter() clones rows and calls
+-        // _stripTransientCellState() before testRowMatch(); removing the sort-key span
+-        // from the clone would cause getCleanColumnText() to see no synthetic value and
+-        // match nothing, silently hiding all rows.  The span is idempotent —
+-        // _artSetInlineSortKey() updates it in-place after every fetch cycle — so no
+-        // explicit removal is ever needed.
++        // Sort-key spans for inline-art filter (_artSetInlineSortKey re-stamps them after fetch)
++        el.querySelectorAll('.mb-inline-art-sort-key').forEach(sk => sk.remove());
+ 
+         // Cache-hint overlays (cosmetic, rebuilt on render)
+         el.querySelectorAll('.mb-art-cache-hint-col-wrap').forEach(wrap => wrap.remove());
+#+end_example
+
+It should probably NOT be there for the "_restoreArtExpandState" functionality
+
