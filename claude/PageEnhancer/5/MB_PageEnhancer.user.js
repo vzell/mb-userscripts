@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - MB Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0.1+2026-03-23
+// @version      1.0.0+2026-03-23
 // @description  Enhances MusicBrainz pages with additional features
 // @author       Gemini (directed by vzell)
 // @tag          AI generated
@@ -138,7 +138,7 @@
     const Lib = (typeof VZ_MBLibrary !== 'undefined')
           ? new VZ_MBLibrary(SCRIPT_ID, SCRIPT_NAME, configSchema, null, () => {
               // Dynamic check: returns current value of debug setting
-              return settings.pe_enable_debug_logging ?? false;
+          return settings.pe_enable_debug_logging ?? false;
           }, remoteConfig)
           : {
               settings: {},
@@ -429,15 +429,11 @@
             Lib.debug('init', `🗂️  [main] Page type: ${isEventPage ? "event" : "release"}, MBID: ${mbid}`);
             Lib.debug('init', `🌐 [main] Archive URL resolved to: ${archiveUrl}`);
 
-            // Fetch and inject the art gallery. Wrapped in an async IIFE so that
-            // Lib.timeEnd() fires only *after* the async gallery rendering resolves,
-            // giving an accurate wall-clock measurement of the full fetch+render cycle.
+            // Fetch and inject the art gallery (asynchronous).
             // Guard is inside displayArtGallery() via pe_enable_caa_eaa.
-            (async () => {
-                Lib.time(timerLabel);
-                await displayArtGallery(mbid, tabsContainer, archiveUrl, artLabel, artShortLabel);
-                Lib.timeEnd(timerLabel, "render");
-            })();
+            Lib.time(timerLabel);
+            displayArtGallery(mbid, tabsContainer, archiveUrl, artLabel, artShortLabel);
+            Lib.timeEnd(timerLabel, "render");
         } else {
             Lib.debug('init', `⏭️  [main] Not on Overview tab — skipping all gallery and header logic.`);
         }

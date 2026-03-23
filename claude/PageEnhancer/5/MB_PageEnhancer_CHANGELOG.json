@@ -1,18 +1,5 @@
 [
   {
-    "version": "1.0.1",
-    "date": "2026-03-23",
-    "sections": [
-      {
-        "label": "🐛 Bug Fixes",
-        "items": [
-          "Fixed indentation of the pe_enable_debug_logging return statement inside the VZ_MBLibrary constructor callback — the line was two levels under-indented relative to the surrounding arrow function body.",
-          "Fixed inaccurate performance timer: Lib.time(timerLabel) / Lib.timeEnd(timerLabel) previously bracketed only the synchronous Promise creation of displayArtGallery(), not the actual async fetch+render work, so the timer always reported ~0 ms. The execution block now wraps the call in a small async IIFE and awaits displayArtGallery(), so Lib.timeEnd() fires only after the full gallery render cycle completes."
-        ]
-      }
-    ]
-  },
-  {
     "version": "1.0.0",
     "date": "2026-03-23",
     "sections": [

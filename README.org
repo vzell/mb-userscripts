@@ -29141,7 +29141,7 @@ we introduced. Please extend the background and click/Ctrl-click functionality t
 ** TODO on "Event" pages the h2 headerline form sanojjaans "Event Schedule" is not clickable/No background
 ** TODO On "Release" pages, the "Credits" section after the "Tracklist" (with table data) is not visible when the "Tracklist" section is collapsed
 ** TODO Optionally collapse/uncollapse + background for the h2 headers on the right side of the sidebar
-** TODO rewrite to use modern library
+** DONE rewrite to use modern library
 *** DONE initial
 
 rewrite the current code in the userscript "ReleasePageEnhancer.user.js"
@@ -29281,6 +29281,41 @@ specific browser menu) with the new library (uploaded again as "VZ_MBLibrary.use
 userscript (uploaded again as "ReleasePageEnhancer.user.js") with the external changelog file (uploaded as
 "ReleasePageEnhancer_CHANGELOG.json")
 
+** add comprehensive debug/warning logging of all actions (enriched with nice appropriate icons/glyphs for the actions done)
+
+In the uploaded userscript "MB_PageEnhancer.user.js"
+
+add some functionality
+
+1.)
+
+why do the variables start with "ca_" in the "const configSchema" ?
+
+create a better suited prefix for this userscript and rename the current variables accordingly
+
+2.)
+
+add comprehensive debug/warning logging of all actions (enriched with nice appropriate icons/glyphs for the actions done)
+
+3.)
+
+add in the variable "const configSchema" to the section
+
+#+begin_example
+// CAA / EAA ILLUSTRATED SECTION
+#+end_example
+
+a new boolean variable whith which the whole CAA/EAA functionaliyt can be switched on or off
+
+4.)
+
+create a new section "section toggling" and a boolean with which the h2 header toggling can be witched on or off
+
+5.)
+
+add a changelog entry to the uploaded changelog file "MB_PageEnhancer_CHANGELOG.json"
+
+ 
 * filter (funnel) icon from chrome console
 
 #+begin_example
