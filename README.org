@@ -59999,3 +59999,14 @@ gets highlighted, you can see it DURING typing, BUT it immediately losses the hi
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell strucure" areas in the unique value pull-down menu
 
 
+* TODO for series pages, we need to find the "type" from the h2 header name wheich precedes the table data
+
+for series pages, we need to find the "type" of series from the h2 header name which precedes the table data. We thenn must dynamically set the "Show all.." button text to that name
+
+#+begin_example
+Show all <h2 header name> for Series
+#+end_example
+
+* TODO For the https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in merged view the h3 sections should be sorted by section name
+
+* TODO For https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "Non-Official Discography" Ctrl-Click on the h2 header line, somehow shows in between the bin image stripes from the "Official Discography" view
