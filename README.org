@@ -59312,17 +59312,23 @@ show both, the popup big artwork image in the "CAA" column, AND as a tooltip the
 
 * TODO "CAA"/"EAA" column collapse state
 
-when in a "CAA"/"EAA" column one or more thumbnail artworks have been expanded, e.g.
+small bug:
+
+Lets say, thumbnail artworks have been expanded in a "CAA" or "EAA" column, e.g. in the "single"-table pageType URL
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events in one or more rows
 
 #+begin_example
 <span data-caa-expand-btn="expanded" title="Collapse all EAA event art images (4) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼</span>
 #+end_example
 
-and if then a filter condition is specified on either the "CAA"/"EAA" or some other column in one of the table specific filter fields, there are two bugs:
+if then a filter condition is specified on either the "CAA"/"EAA" or some other column in one of the table specific filter fields, ther is the BUG:
 
-a.)
+1.)
 
-The artwork thumbnails in the "CAA"/"EAA" column which are uncollapsed in that moment SHOULDN't collapse, but retain their current collapse state
+The artwork thumbnails in the "CAA"/"EAA" column which were uncollapsed are immediately collapsed as soon as someting is
+type in column filter field. They should retain their collapse state during filtering. Please fix
+
+* There is currently a mismatch between the handling of filter string highlightning the "mb-caa-type-badge" e.g.
 
 b.)
 
@@ -59353,7 +59359,7 @@ regarding "CAA" and "EAA" columns:
 #+end_example
 
 
-* TODO "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
+* DONE "CAA" column: unique value drop-down list should have a "sub-structure" with "yes" and "no and then the number of images per release group
 ** DONE initial
 
 In the newly uploaded userscript,
@@ -59377,8 +59383,7 @@ The "Cell stucture" submenu list should have, additionally to the entries for mu
 entries with JUST '✓ has artwork' for datacells which HAVE artwork and '✗ no artwork' for data cells where the artwork is completely MISSING,
 to give the user the chance to quickly filter either for rows with OR without images
 
-
-* TODO other columns where thumbnails are shown, NO front-image available/front-image available
+* DONE other columns where thumbnails are shown, NO front-image available/front-image available
 ** initial
 
 please also add the synthetic "Cell structure" box
@@ -59656,8 +59661,13 @@ Please implement ..
 
 
 
-* "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
+* TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
-* https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
-* https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell structrue" areas in the unique value pull-down menu
+* TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
+* TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell structrue" areas in the unique value pull-down menu
+
+
+* changelog missing
+
+Somehow the '"version": "9.99.294"' changelog is missing from the file "ShowAllEntityData_CHANGELOG.json"
 

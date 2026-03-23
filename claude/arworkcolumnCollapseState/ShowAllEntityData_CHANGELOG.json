@@ -12,18 +12,6 @@
     ]
   },
   {
-    "version": "9.99.294",
-    "date": "2026-03-23",
-    "sections": [
-      {
-        "label": "🐛 Bug Fixes",
-        "items": [
-          "addCAA (multi-table) 'Cell structure' synthetic filter — selecting a syn-box entry showed zero rows. Root cause: runFilter() clones each row with cloneNode(true) and passes the clone to _stripTransientCellState() before testRowMatch(). _stripTransientCellState() was unconditionally removing all .mb-inline-art-sort-key spans from the clone, so getCleanColumnText() found no synthetic value and matched nothing. The single-table (addEAA) path was unaffected because renderFinalTable appends source rows directly without cloning them. Fix: removed the el.querySelectorAll('.mb-inline-art-sort-key').forEach(sk => sk.remove()) call from _stripTransientCellState(), replacing it with an explanatory comment. The span is idempotent — _artSetInlineSortKey() updates it in-place after every fetch cycle — so no explicit removal is needed anywhere."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.293",
     "date": "2026-03-23",
     "sections": [
