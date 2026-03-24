@@ -58566,7 +58566,7 @@ Esc with quick-filter empty → closes panel (dialog stays open)
 Esc with panel closed → closes dialog
 #+end_example
 
-* TODO persistent filter history over global and sub-table and filters, with quick filter functionality + "+"-store (push to history) button
+* DONE persistent filter history over global and sub-table and filters, with quick filter functionality + "+"-store (push to history) button
 ** DONE initial
 
 In the uploaded userscript add some new functionality:
@@ -58661,7 +58661,7 @@ When a filter string from the filter string history list has been applied and co
 
 should also appear depending on which filter field the string has been applied. Right now it only appears if the enduser types something in one of the different filter fields
 
-** TODO make clear X visible in filter after filter string from history has been copied on "Load from Disk" dialog
+** DONE make clear X visible in filter after filter string from history has been copied on "Load from Disk" dialog
 
 Almost perfect. What's missing is:
 
