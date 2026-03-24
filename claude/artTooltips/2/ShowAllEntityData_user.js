@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.301+2026-03-24
+// @version      9.99.302+2026-03-24
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -29508,12 +29508,10 @@ a { color: #1565c0; }`;
             }
 
             // ── Thumbnail tooltip (type badge + optional comment) ──────────────
-            // Sets a native title on the per-image <li> thumbnail so hovering it
-            // shows the image metadata (type and comment) as a browser tooltip.
-            // This is applied only to expanded per-image <li> thumbnails
-            // (mb-caa-art-li-image); the summary <li> thumbnail (mb-caa-art-li-summary)
-            // already carries its own distinct tooltip and is never touched here.
-            img.title = commentText ? typeText + ' \u2013 ' + commentText : typeText;
+            // Plain img.title is intentionally omitted: the HTML tooltip wired on
+            // the <li> element (see below) provides a richer rendering with badge
+            // pill labels in bold and the comment text in italic.  Removing the
+            // native title prevents the browser from showing both tooltips at once.
         }
 
         // ── Type badge(s) — one button-like pill per type, separated by " / " ──
@@ -29556,6 +29554,69 @@ a { color: #1565c0; }`;
             pending.title       = 'Pending approval';
             li.appendChild(pending);
         }
+
+        // ── HTML-based tooltip for the type-badge + comment ─────────────────────
+        // Replaces the former plain img.title.  On mouseenter the shared
+        // #mb-art-bigbox-tooltip singleton shows:
+        //   Line 1: type pill labels joined by " / " (bold)
+        //   Line 2: (comment) in italic — only when a comment is present
+        //
+        // Data attributes stored on the <li> element:
+        //   data-li-tooltip-types   — e.g. "Front / Other"
+        //   data-li-tooltip-comment — e.g. "fold-out postcard sleeve, back"
+        li.dataset.liTooltipTypes   = typeText;
+        if (commentText) li.dataset.liTooltipComment = commentText;
+
+        li.addEventListener('mouseenter', function() {
+            const _tip = _ensureArtBigboxTooltip();
+            if (!_tip) return;
+            const _types   = this.dataset.liTooltipTypes   || '';
+            const _comment = this.dataset.liTooltipComment || '';
+            _tip.innerHTML = '';
+
+            // Row 1: each type token rendered as a bold inline label, separated by " / ".
+            if (_types) {
+                const _typesLine = document.createElement('div');
+                _typesLine.style.cssText = 'font-weight:600; margin-bottom:2px;';
+                _types.split(' / ').forEach((t, i) => {
+                    if (i > 0) {
+                        _typesLine.appendChild(document.createTextNode(' / '));
+                    }
+                    const _pill = document.createElement('span');
+                    _pill.style.cssText =
+                        'display:inline-block; background:#555; color:#cdd6f4;' +
+                        ' border-radius:3px; padding:0 4px; font-size:0.9em;' +
+                        ' font-weight:600; line-height:1.5; white-space:nowrap;';
+                    _pill.textContent = t;
+                    _typesLine.appendChild(_pill);
+                });
+                _tip.appendChild(_typesLine);
+            }
+            // Row 2: comment in italic (when present).
+            if (_comment) {
+                const _commentLine = document.createElement('div');
+                _commentLine.style.cssText = 'font-style:italic; color:#cdd6f4;';
+                _commentLine.textContent   = '(' + _comment + ')';
+                _tip.appendChild(_commentLine);
+            }
+
+            const _r  = this.getBoundingClientRect();
+            const _vw = window.innerWidth, _vh = window.innerHeight;
+            _tip.style.display = 'block';
+            const _tw = _tip.offsetWidth, _th = _tip.offsetHeight;
+            let _x = _r.right + 8;
+            let _y = _r.top;
+            if (_x + _tw > _vw - 6) _x = _r.left - _tw - 8;
+            if (_y + _th > _vh - 6) _y = _vh - _th - 6;
+            if (_x < 4) _x = 4;
+            if (_y < 4) _y = 4;
+            _tip.style.left = _x + 'px';
+            _tip.style.top  = _y + 'px';
+        });
+        li.addEventListener('mouseleave', function() {
+            const _tip = document.getElementById('mb-art-bigbox-tooltip');
+            if (_tip) _tip.style.display = 'none';
+        });
 
         return li;
     }
@@ -30489,28 +30550,73 @@ a { color: #1565c0; }`;
                     const wrapper = document.createElement('a');
                     wrapper.href  = href;
                     // ── HTML-based tooltip for the bigbox wrapper ──────────────────────
-                    // Extract the comment text from the enclosing <td>'s <span class="comment">
-                    // to show it in italic inside a real HTML tooltip instead of a plain title.
-                    // The comment text (inclusive of opening '(' and closing ')') is rendered
-                    // in italic; the entity name is rendered in normal weight above it.
-                    // Falls back to plain wrapper.title when no comment is present.
+                    // Always use the rich HTML tooltip (no plain-title fallback).
+                    // In addition to the entity name and the italic comment, up to six
+                    // extra fields from the row are shown when present:
+                    //   Artist | divider | Format (Tracks) | Country/Date | Label – Cat# | Barcode
+                    //
+                    // Column indices are resolved once per wrapper by scanning the thead row
+                    // of the owning table; hidden columns are still readable because we access
+                    // cell text directly rather than relying on computed visibility.
+
+                    // Extract comment text (keep full "(…)" form including parens).
                     const _commentForTooltip = (() => {
                         if (!_td) return '';
                         const _cs = _td.querySelector('span.comment');
                         if (!_cs) return '';
-                        const _raw = _cs.textContent.trim();
-                        // Keep the full "(…)" form including parens as found in the DOM.
-                        return _raw;
+                        return _cs.textContent.trim();
                     })();
-                    if (_commentForTooltip) {
-                        // Store structured data for the HTML tooltip system.
-                        wrapper.dataset.artTooltipName    = _anchorText;
-                        wrapper.dataset.artTooltipComment = _commentForTooltip;
-                        // Also set a plain title as accessible fallback.
-                        wrapper.title = _wrapperTitle;
-                    } else {
-                        wrapper.title = _wrapperTitle;
-                    }
+
+                    /**
+                     * Returns the trimmed visible text of the table cell whose <th> header
+                     * matches `name` (case-insensitive), or '' when the column is absent.
+                     *
+                     * @param {string} name  Column header text to match.
+                     * @returns {string}
+                     */
+                    const _rowCellText = (name) => {
+                        if (!_td) return '';
+                        const _hdr = table.querySelector('thead tr:first-child');
+                        if (!_hdr) return '';
+                        const _nameLower = name.toLowerCase();
+                        let _ci = -1;
+                        Array.from(_hdr.cells).forEach((th, i) => {
+                            if (th.textContent.trim().toLowerCase() === _nameLower) _ci = i;
+                        });
+                        if (_ci === -1) return '';
+                        const _row = _td.closest('tr');
+                        if (!_row) return '';
+                        const _cell = _row.cells[_ci];
+                        return _cell ? _cell.textContent.replace(/\s+/g, ' ').trim() : '';
+                    };
+
+                    // Collect extra tooltip fields from sibling columns.
+                    const _tipArtist  = _rowCellText('Artist');
+                    const _tipFormat  = _rowCellText('Format');
+                    const _tipTracks  = _rowCellText('Tracks');
+                    const _tipCD      = _rowCellText('Country/Date');
+                    const _tipLabel   = (() => {
+                        // Strip any trailing comment in parens so only the label name is shown,
+                        // e.g. "Columbia" rather than "Columbia (some distribution note)".
+                        const _raw = _rowCellText('Label');
+                        return _raw.replace(/\s*\([^)]*\)\s*$/, '').trim();
+                    })();
+                    const _tipCatNum  = _rowCellText('Catalog#');
+                    const _tipBarcode = _rowCellText('Barcode');
+
+                    // Always store structured data for the HTML tooltip system.
+                    // The HTML tooltip is now shown unconditionally (not only when a
+                    // comment is present), so artTooltipName is always populated.
+                    wrapper.dataset.artTooltipName    = _anchorText;
+                    wrapper.dataset.artTooltipComment = _commentForTooltip;
+                    if (_tipArtist)  wrapper.dataset.artTooltipArtist  = _tipArtist;
+                    if (_tipFormat)  wrapper.dataset.artTooltipFormat  = _tipFormat;
+                    if (_tipTracks)  wrapper.dataset.artTooltipTracks  = _tipTracks;
+                    if (_tipCD)      wrapper.dataset.artTooltipCd      = _tipCD;
+                    if (_tipLabel)   wrapper.dataset.artTooltipLabel   = _tipLabel;
+                    if (_tipCatNum)  wrapper.dataset.artTooltipCatnum  = _tipCatNum;
+                    if (_tipBarcode) wrapper.dataset.artTooltipBarcode = _tipBarcode;
+                    // No plain wrapper.title — the HTML tooltip replaces it entirely.
                     wrapper.setAttribute(ctx.hrefAttrName, href);
                     wrapper.style.cssText = 'display:inline-block; height:100%; margin:8px 8px 4px 4px; position:relative;';
 
@@ -30670,31 +30776,87 @@ a { color: #1565c0; }`;
 
                     wrapper.appendChild(img);
 
-                    // ── HTML-based tooltip for bigbox wrappers with comment ────
-                    // When the wrapper carries art-tooltip-comment (set above when
-                    // the enclosing <td> has a <span class="comment">), wire a rich
-                    // HTML tooltip that renders the entity name in normal weight and
-                    // the comment text in italic, using the shared singleton div
-                    // #mb-art-bigbox-tooltip (lazily created below).
-                    if (wrapper.dataset.artTooltipComment) {
+                    // ── HTML-based tooltip for bigbox wrappers ──────────────────
+                    // Always wire the rich HTML tooltip (artTooltipName is now always
+                    // set, so the guard is simply whether the wrapper carries a name).
+                    // Renders:  <Title>  /  (<italic comment>)  /  Artist  /  divider
+                    //           /  Format (Tracks)  /  Country/Date  /  Label – Cat#  /  Barcode
+                    if (wrapper.dataset.artTooltipName) {
                         wrapper.addEventListener('mouseenter', function(ev) {
                             const _tip = _ensureArtBigboxTooltip();
                             if (!_tip) return;
                             const _name    = this.dataset.artTooltipName    || '';
                             const _comment = this.dataset.artTooltipComment || '';
+                            const _artist  = this.dataset.artTooltipArtist  || '';
+                            const _format  = this.dataset.artTooltipFormat  || '';
+                            const _tracks  = this.dataset.artTooltipTracks  || '';
+                            const _cd      = this.dataset.artTooltipCd      || '';
+                            const _label   = this.dataset.artTooltipLabel   || '';
+                            const _catnum  = this.dataset.artTooltipCatnum  || '';
+                            const _barcode = this.dataset.artTooltipBarcode || '';
                             _tip.innerHTML = '';
+
+                            // Row 1: entity title (bold).
                             if (_name) {
                                 const _nameLine = document.createElement('div');
                                 _nameLine.style.cssText = 'font-weight:600; margin-bottom:2px;';
                                 _nameLine.textContent = _name;
                                 _tip.appendChild(_nameLine);
                             }
+                            // Row 2: disambiguation comment in italic (when present).
                             if (_comment) {
                                 const _commentLine = document.createElement('div');
-                                _commentLine.style.cssText = 'font-style:italic; color:#cdd6f4;';
+                                _commentLine.style.cssText = 'font-style:italic; color:#cdd6f4; margin-bottom:2px;';
                                 _commentLine.textContent = _comment;
                                 _tip.appendChild(_commentLine);
                             }
+                            // Row 3: Artist (when present).
+                            if (_artist) {
+                                const _artistLine = document.createElement('div');
+                                _artistLine.style.cssText = 'margin-bottom:4px;';
+                                _artistLine.textContent = _artist;
+                                _tip.appendChild(_artistLine);
+                            }
+                            // Divider — only when at least one detail field follows.
+                            if (_format || _cd || _label || _catnum || _barcode) {
+                                const _div = document.createElement('div');
+                                _div.style.cssText =
+                                    'border-top:1px solid #45475a; margin:4px 0;';
+                                _tip.appendChild(_div);
+                            }
+                            // Row 4: Format (Tracks) — e.g. "12” Vinyl (9)".
+                            if (_format) {
+                                const _fmtLine = document.createElement('div');
+                                _fmtLine.style.cssText = 'margin-bottom:2px;';
+                                _fmtLine.textContent   = _tracks
+                                    ? _format + ' (' + _tracks + ')'
+                                    : _format;
+                                _tip.appendChild(_fmtLine);
+                            }
+                            // Row 5: Country/Date (when present).
+                            if (_cd) {
+                                const _cdLine = document.createElement('div');
+                                _cdLine.style.cssText  = 'margin-bottom:2px;';
+                                _cdLine.textContent    = _cd;
+                                _tip.appendChild(_cdLine);
+                            }
+                            // Row 6: Label – Catalog# (when either is present).
+                            if (_label || _catnum) {
+                                const _lcLine = document.createElement('div');
+                                _lcLine.style.cssText  = 'margin-bottom:2px;';
+                                _lcLine.textContent    = (_label && _catnum)
+                                    ? _label + ' – ' + _catnum
+                                    : (_label || _catnum);
+                                _tip.appendChild(_lcLine);
+                            }
+                            // Row 7: Barcode (when present).
+                            if (_barcode) {
+                                const _bcLine = document.createElement('div');
+                                _bcLine.style.cssText = 'color:#a6adc8;';
+                                _bcLine.textContent   = _barcode;
+                                _tip.appendChild(_bcLine);
+                            }
+
                             const _r  = this.getBoundingClientRect();
                             const _vw = window.innerWidth, _vh = window.innerHeight;
                             _tip.style.display = 'block';

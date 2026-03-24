@@ -6866,5 +6866,20 @@
         ]
       }
     ]
+  },
+  {
+    "version": "9.99.302",
+    "date": "2026-03-24",
+    "sections": [
+      {
+        "label": "📦 Feature",
+        "items": [
+          "_artInitBigPics (bigbox strip): Enrich HTML tooltip with additional release row fields — Artist, Format (Tracks), Country/Date, Label (without comment) – Catalog#, Barcode — shown below the italic disambiguation comment when present.",
+          "_artInitBigPics (bigbox strip): HTML tooltip is now always shown (unconditionally), not only when a disambiguation comment is present.",
+          "_artInitBigPics (bigbox strip): Plain non-HTML wrapper.title is no longer set; the HTML tooltip is the sole tooltip mechanism.",
+          "_artBuildImageLi (type badge pills): Replace plain img.title with an HTML tooltip on the <li> element, showing type pill labels in bold on line 1 and the italic comment (in parentheses) on line 2 when present."
+        ]
+      }
+    ]
   }
 ]

@@ -60405,7 +60405,7 @@ image in the big image stripe
 
 Please also add a changelog
 
-** TODO change the tooltip to a real HTML based tooltip
+** DONE change the tooltip to a real HTML based tooltip
 
 In the uploaded userscript
 
@@ -60413,7 +60413,7 @@ In the uploaded userscript
 
 - change the big image tooltip to a real HTML based tooltip, which displays the artwork comment from '<span class="comment">' (inclusive the opening '(' and closing ')') in "italic"
 
-** solution not completely right
+** DONE solution not completely right
 
 1. Type badge → button pills (_artBuildImageLi)
    
@@ -60427,7 +60427,9 @@ Comment text in italic on line 2 (e.g. (Pitman pressing))
 
 A new _ensureArtBigboxTooltip() helper (modelled after _ensureArtHoverPreviewDiv) lazily creates this singleton. When no comment is present, behaviour is unchanged (plain wrapper.title only).
 
-** fixes
+** TODO fixes
+
+In the uploaded userscript, implement the following
 
 1.)
 
@@ -60509,6 +60511,41 @@ e.g.
 (fold‐out postcard sleeve, back)
 #+end_example
 
+** delivered the wrong changelog
+
+#+begin_example
+  {
+    "version": "9.99.302",
+    "date": "2026-03-24",
+    "sections": [
+      {
+        "label": "📦 Feature",
+        "items": [
+          "_artInitBigPics (bigbox strip): Enrich HTML tooltip with additional release row fields — Artist, Format (Tracks), Country/Date, Label (without comment) – Catalog#, Barcode — shown below the italic disambiguation comment when present.",
+          "_artInitBigPics (bigbox strip): HTML tooltip is now always shown (unconditionally), not only when a disambiguation comment is present.",
+          "_artInitBigPics (bigbox strip): Plain non-HTML wrapper.title is no longer set; the HTML tooltip is the sole tooltip mechanism.",
+          "_artBuildImageLi (type badge pills): Replace plain img.title with an HTML tooltip on the <li> element, showing type pill labels in bold on line 1 and the italic comment (in parentheses) on line 2 when present."
+        ]
+      }
+    ]
+  }
+#+end_example
+
+** some small fixes
+
+1.)
+
+for the "_artBuildImageLi (type badge pills)": always render the tooltip "top aligned" to the "right" of the big image
+popup when hovering over with the mouse. The tooltip should render like in the case for "_artInitBigPics (bigbox strip)",
+where the tooltip is also always "top right aligned" with the corresponding big image inside the artwork stripe.
+
+2.)
+
+
+
+3.)
+
+The changelog from the last session you presented for download was as actually the one with version "version": "9.99.301" instead of "version": "9.99.302"
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
