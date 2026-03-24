@@ -60531,6 +60531,39 @@ e.g.
   }
 #+end_example
 
+** solution - needs to be generalized per pageType
+*** Change 1 — _artInitBigPics bigbox strip tooltip
+
+1a — Data collection (new _rowCellText helper + 7 extra dataset attributes):
+
+A local helper _rowCellText(name) resolves a column header by name in the <thead> and returns the sibling cell's text
+for the current row. It is used to collect: _tipArtist, _tipFormat, _tipTracks, _tipCD, _tipLabel (parens-stripped),
+_tipCatNum, _tipBarcode. All are stored as data-art-tooltip-* attributes on the wrapper anchor, set only when non-empty.
+
+1b — Always-on HTML tooltip: The guard was changed from if (wrapper.dataset.artTooltipComment) to if (wrapper.dataset.artTooltipName) so the HTML tooltip fires for every bigbox image, not only those with a disambiguation comment. artTooltipName is always populated.
+
+1c — No more plain wrapper.title: Both the if (_commentForTooltip) { … } else { wrapper.title = … } branches were removed. The HTML tooltip is the sole mechanism.
+
+1d — Extended mouseenter renderer now builds up to 7 rows:
+
+Title (bold)
+(italic comment) — when present
+Artist — when present
+Horizontal divider — when any detail field follows
+Format (Tracks) — when Format present
+Country/Date
+Label – Catalog#
+Barcode (muted colour)
+
+*** Change 2 — _artBuildImageLi type-badge pill tooltip
+
+2a — img.title = commentText ? typeText + ' – ' + commentText : typeText replaced with a comment explaining the HTML tooltip takes over.
+
+2b — After the pending-approval block, li.dataset.liTooltipTypes and li.dataset.liTooltipComment are stored on the <li>, and mouseenter/mouseleave listeners are wired to _ensureArtBigboxTooltip() (the same shared singleton). The tooltip shows:
+
+Type pill labels rendered as dark styled <span> tokens joined by / (bold)
+(italic comment) — only when a comment is present
+
 ** some small fixes
 
 1.)
