@@ -60750,3 +60750,35 @@ Show all <h2 header name> for Series
 * TODO For the https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in merged view the h3 sections should be sorted by section name
 
 * TODO For https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "Non-Official Discography" Ctrl-Click on the h2 header line, somehow shows in between the image stripes from the "Official Discography" view
+
+* "Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below the 
+
+"Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below
+
+#+begin_example
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 12px; border-bottom: 2px solid rgb(221, 221, 221); cursor: move; user-select: none; flex-shrink: 0; border-radius: 8px 8px 0px 0px; background: rgb(248, 248, 248);">
+  <span style="font-weight: 700; font-size: 1.15em; color: rgb(34, 34, 34);">🎹 Keyboard Shortcuts
+  </span>
+  <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+    <button title="Close (Escape)" style="background: none; border: none; font-size: 1.2em; cursor: pointer; color: rgb(102, 102, 102); padding: 0px 4px; line-height: 1; user-select: none;">✕
+    </button>
+  </div>
+</div>
+#+end_example
+
+for "Keyboard Shortcuts" and below
+
+#+begin_example
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 20px 12px; border-bottom: 2px solid rgb(221, 221, 221); cursor: move; user-select: none; flex-shrink: 0; border-radius: 10px 10px 0px 0px; background: rgb(248, 248, 248);">
+  <span style="font-weight: 700; font-size: 1.15em; color: rgb(34, 34, 34);">❓ Application Help &amp; Feature Overview
+  </span>
+  <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+    <a title="Bypass cache and download the latest help text from GitHub" style="font-size: 0.82em; font-weight: 600; color: rgb(0, 102, 204); cursor: pointer; text-decoration: none; user-select: none; white-space: nowrap;">🔄 Force refresh
+    </a>
+    <button title="Close (Escape)" style="background: none; border: none; font-size: 1.2em; cursor: pointer; color: rgb(102, 102, 102); padding: 0px 4px; line-height: 1; user-select: none;">✕
+    </button>
+  </div>
+</div>
+#+end_example
+
+for "Application Help & Feature Overview"
