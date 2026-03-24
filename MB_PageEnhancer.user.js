@@ -3,7 +3,7 @@
 // @namespace    https://github.com/vzell/mb-userscripts
 // @version      1.0.1+2026-03-23
 // @description  Enhances MusicBrainz pages with additional features
-// @author       Gemini (directed by vzell)
+// @author       vzell
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
 // @supportURL   https://github.com/vzell/mb-userscripts/issues
