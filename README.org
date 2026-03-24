@@ -58479,7 +58479,8 @@ Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-t
 
 So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefull reload from the net dislpay it again if the count > "0"
 
-* TODO persistent filter history over global, sub-table and column level filters, with quick filter functionality + "+"-store (push to history) button - (also for load from disk - dialog)
+
+* DONE persistent filter history for load from disk - dialog)
 ** initial
 
 In the uploaded userscript,
@@ -58565,7 +58566,8 @@ Esc with quick-filter empty → closes panel (dialog stays open)
 Esc with panel closed → closes dialog
 #+end_example
 
-* TODO maybe also the other filter dialogs could get the same
+* DONE persistent filter history over global and sub-table and filters, with quick filter functionality + "+"-store (push to history) button
+** initial
 
 In the uploaded userscript add some new functionality:
 
@@ -58618,7 +58620,30 @@ and for the sub-table filters
 #+begin_example
 <span title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(204, 204, 204); border-right: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span>
 #+end_example
+** solution
+*** What changed
 
+New shared factory: createFilterHistoryWidget(cfg) (inserted after setSubTableFilterBorder, before uiPrefilterInputCSS)
+A single reusable function that builds the full Pin + History-toggle + dropdown panel for any filter input. It accepts a cfg object with filterInput, caseCheckbox, rxCheckbox, exCheckbox, onApply, and optional getQuery/setQuery/context overrides. Reads/writes the same lru-sa-hist-list and persistent-sa-hist-list GM storage keys as the Load dialog, so history is shared across all contexts. Returns { pinBtn, toggleBtn, dropdownAnchor, refreshDropdown, saveToLru }.
+
+*** Global filter (filterWrapper / filterContainer area)
+
+filterClear is now an absolutely-positioned <button> inside a new filterInputWrap span (position:relative), hidden when the field is empty, shown when there's typed content — matching the Load dialog style.
+The drag-resize handle (filterDragHandle) remains as the flush right-edge ⋮ strip (unchanged behaviour, intact).
+uiGlobalFilterInputCSS() updated: right padding increased to 28px to keep text clear of the ✕ button; border-right:none + border-radius trimmed on the right so the drag handle attaches flush.
+A new gfHistAnchor span (containing pinBtn + dropdownAnchor) is appended to filterContainer between filterWrapper and the Cc/Rx/Ex labels.
+Checkboxes are now created before the history widget construction so they can be captured by the closure.
+_syncGfClearBtn is wired to the input event to keep the ✕ visible/hidden in sync.
+setGlobalFilterBorder updated: no longer tries to sync a clearEl border strip (there isn't one anymore), only syncs the drag handle.
+
+*** Sub-table filters (createSubTableFilterContainer)
+
+Same ✕-inside-input redesign: stfInputWrap (mb-stf-input-wrap, position:relative) wraps the <input> and an absolutely-positioned clearBtn; drag handle gets class mb-stf-drag-handle for targeted border sync.
+setSubTableFilterBorder updated to find the drag handle via .mb-stf-input-wrap → nextElementSibling.mb-stf-drag-handle instead of slicing wrap.children.
+_stfHistWidget is built (same factory) and its pinBtn + dropdownAnchor are appended to container between filterWrapper and the Cc/Rx/Ex labels.
+_syncStfClearBtn is wired to input events and called from updateInputStyle, the Escape handler, and the toggle-icon collapse path.
+Old clearBtn click listener replaced: the new button wires directly to filterInput.value = '' → _syncStfClearBtn → dispatchEvent('input').
+STF input event handler now also calls _syncStfClearBtn; Enter inside the STF input calls both applySubFilter() and _stfHistWidget.saveToLru().
 
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
