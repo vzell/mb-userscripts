@@ -60407,11 +60407,111 @@ Please also add a changelog
 
 ** TODO change the tooltip to a real HTML based tooltip
 
+In the uploaded userscript
+
 - for the the "Expanded cell thumbnail tooltip (_artBuildImageLi)", it should look like a 'botton'/'multiple " / " separated buttons' with a grey background and the "badge-type" as the button text
 
 - change the big image tooltip to a real HTML based tooltip, which displays the artwork comment from '<span class="comment">' (inclusive the opening '(' and closing ')') in "italic"
 
-  
+** solution not completely right
+
+1. Type badge → button pills (_artBuildImageLi)
+   
+Each individual type string is now rendered as its own grey pill button (dark grey #c8c8c8 background, rounded corners, bold text, inline-block). Multi-type images like ["Front", "Back"] produce two separate pills with a literal / text separator between them — rather than the previous single span with joined text "Front / Back". A single type produces a single pill. The mb-caa-type-badge class is preserved on the outer wrapper span for backward compatibility with existing CSS/filter logic.
+
+2. Bigbox strip HTML tooltip with italic comment (_artInitBigPics)
+When a bigbox wrapper anchor's corresponding table row has a <span class="comment"> element, the wrapper now stores the entity name and full comment text (including the ( and ) parens exactly as found in the DOM) in data-art-tooltip-name / data-art-tooltip-comment. On mouseenter, a new singleton dark-panel div (#mb-art-bigbox-tooltip, styled to match the existing #mb-stat-tooltip) is positioned and shown with:
+
+Entity name in normal weight on line 1
+Comment text in italic on line 2 (e.g. (Pitman pressing))
+
+A new _ensureArtBigboxTooltip() helper (modelled after _ensureArtHoverPreviewDiv) lazily creates this singleton. When no comment is present, behaviour is unchanged (plain wrapper.title only).
+
+** fixes
+
+
+1.)
+
+For "the Bigbox strip HTML tooltip with italic comment (_artInitBigPics)":
+
+a.)
+
+the current tooltip
+
+#+begin_example
+<title>
+(<italicComment>)
+#+end_example
+
+should be changed that also the following column values should be shown in the tooltip below the italic comment (when
+present)
+
+#+begin_example
+<title>
+(<italic Comment>)
+<Artist>
+<divider line>
+<Format> (<Tracks>)
+<Country/Date>
+<Label (without comment)> - <Catalog#>
+<Barcode>
+#+end_example
+
+e.g.
+
+#+begin_example
+Greetings From Asbury Park, N.J.
+(Pitman pressing)
+Bruce Springsteen
+-------------------------------
+12" Vinyl (9)
+<US flag> US 973-01-05 Fri
+Columbia - PC 31903 
+074643190312
+#+end_example
+
+b.)
+
+the HTML based tooltip should always be shown, not only when a "comment" is present
+
+c.)
+
+the plain NON-HTML tooltip, should NOT be shown anymore, ONLY the HTML based one
+
+2.)
+
+For the "Type badge → button pills (_artBuildImageLi)":
+
+a.)
+
+the current NON HTML based plain tooltip 
+
+#+begin_example
+title="Front / Other – fold‐out postcard sleeve, back"
+#+end_example
+
+in
+
+#+begin_example
+<li class="mb-caa-art-li mb-caa-art-li-image" style=""><img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475413348-250.jpg" alt="" loading="lazy" title="Front / Other – fold‐out postcard sleeve, back" style="cursor: crosshair;"><span class="mb-caa-type-badge"><span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Front</span> / <span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Other</span></span> – <span class="mb-caa-art-comment">fold‐out postcard sleeve, back</span></li>
+#+end_example
+
+should be changed to an HTML based version like in bullet point 1.). It should look like
+
+#+begin_example
+" /  " separated HTML based badge type buttons
+(italic Comment from '<span class="mb-caa-art-comment">')
+#+end_example
+
+e.g.
+
+#+begin_example
+[Front] / [Other]
+(fold‐out postcard sleeve, back)
+#+end_example
+
+
+
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
