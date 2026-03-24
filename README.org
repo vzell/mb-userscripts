@@ -60566,6 +60566,8 @@ Type pill labels rendered as dark styled <span> tokens joined by / (bold)
 
 ** some small fixes
 
+some fixes and enhancements
+
 1.)
 
 for the "_artBuildImageLi (type badge pills)": always render the tooltip "top aligned" to the "right" of the big image
@@ -60574,6 +60576,122 @@ where the tooltip is also always "top right aligned" with the corresponding big 
 
 2.)
 
+For the "Data collection (new _rowCellText helper + 7 extra dataset attributes)" the extraction of the "extra dataset attributes" actually doesn't work,
+although the actual entity title" + optional "comment" (to be used for the italic endering) extraction works fine.
+
+But it doesn't really matter for now, as we need to generalize the whole column value extraction for rendering in the
+big picture tooltip per pageType anyway:
+
+a.)
+
+Let's start with the two pageTypes "type: 'releasegroup-releases'" and "type: 'artist-releases'"
+
+For both add a new tooltipColumns section
+
+#+begin_example
+tooltipColumns: [ 'Release' , 'Artist', '---', {'Format', '(', 'Tracks', ')'}, 'Country/Date', {'Label', '-', 'Catalog#'}, 'Barcode' ],
+#+end_example
+
+inside the pageType definition as follows, e.g for the pageTypes "type: 'releasegroup-releases'"
+
+#+begin_example
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
+		tooltipColumns: [ 'Release' , 'Artist', '---', {'Format', '(', 'Tracks', ')'}, 'Country/Date', {'Label', '-', 'Catalog#'}, 'Barcode' ],
+                addCAA: 'Release',
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+b.)
+
+for the pageType "type: 'artist-recordings'" add a new tooltipColumns section of
+
+#+begin_example
+tooltipColumns: [ 'Release groups', 'Name' , 'Artist', '---', {'Length', '-', 'Video'}, 'ISRCs' ],
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-recordings',
+            match: (path) => path.includes('/recordings'),
+            buttons: [ { label: 'Show all Recordings for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release groups', erasers: ['▶', '➕', 'jesus2099'] },
+                    { sourceColumn: 'Name', erasers: ['wiencek'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                collapsableColumns: [ 'Release groups', 'CAA' ],
+                tooltipColumns: [ 'Release groups', 'Name' , 'Artist', '---', {'Length', '-', 'Video'}, 'ISRCs' ],
+                addCAA: 'Release groups',
+                extractMainColumn: 'Name'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+c.)
+
+When it comes to rendering the new "tooltipColumns" structure inside a tooltip, do the following
+
+- render each comma separated column in "tooltipColumns" below each other
+- except when there are multiple column names enclosed between "{" and "}", then render them inside the tooltip in the same line
+- the following symbols have a special meaning:
+  - '---': divider line (do NOT interpret as column name)
+  - '(', ')', '-': render as is  (do NOT interpret as column name)
+- when the column name in "tooltipColumns" matches the definition of "extractMainColumn" in the pageType, it's the column where the optional "disambiguation comment" should be extracted and be rendered in italic in brackets below the colum name
+
+Here is an example for the pageType 'artist-recordings' with a typical row with the following column values:
+
+#+begin_example
+COLUMN_NAME: VALUE
+Name: (4th of July, Asbury Park) Sandy (live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA)   <=  (live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA) is the disambiguation comment
+Artist: Bruce Springsteen & The E Street Band
+ISRCs: US-UPV-11-00014
+Lenght: 4:14
+Release groups: The Best of Rock and Roll Hall of Fame Live
+Video: [video icon]
+#+end_example
+
+It should be rendered like this
+
+#+begin_example
+The Best of Rock and Roll Hall of Fame Live
+(4th of July, Asbury Park) Sandy
+(live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA)   <== in italic
+---
+4:14 - [video icon]
+US-UPV-11-00014
+#+end_example
 
 
 3.)
