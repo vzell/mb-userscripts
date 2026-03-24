@@ -58663,6 +58663,17 @@ should also appear depending on which filter field the string has been applied. 
 
 ** TODO make clear X visible in filter after filter string from history has been copied on "Load from Disk" dialog
 
+Almost perfect. What's missing is:
+
+When a filter string from the filter string history on the "Load from Disk" UI dialog list has been applied and copied to the filter field, the "Clear filter" glyph "✕" 
+
+#+begin_example
+<button id="sa-filter-clear-btn" tabindex="-1" title="Clear filter expression" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgb(192, 57, 43); font-size: 1em; font-weight: bold; line-height: 1; padding: 2px 3px; border-radius: 3px; display: block;">✕</button>
+#+end_example
+
+should appear. Right now it only appears if the enduser types something in into the filter field
+
+
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
 
