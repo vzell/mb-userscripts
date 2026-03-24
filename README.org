@@ -58566,8 +58566,8 @@ Esc with quick-filter empty → closes panel (dialog stays open)
 Esc with panel closed → closes dialog
 #+end_example
 
-* DONE persistent filter history over global and sub-table and filters, with quick filter functionality + "+"-store (push to history) button
-** initial
+* TODO persistent filter history over global and sub-table and filters, with quick filter functionality + "+"-store (push to history) button
+** DONE initial
 
 In the uploaded userscript add some new functionality:
 
@@ -58620,7 +58620,7 @@ and for the sub-table filters
 #+begin_example
 <span title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(204, 204, 204); border-right: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span>
 #+end_example
-** solution
+** DONE solution
 *** What changed
 
 New shared factory: createFilterHistoryWidget(cfg) (inserted after setSubTableFilterBorder, before uiPrefilterInputCSS)
@@ -58645,6 +58645,21 @@ _syncStfClearBtn is wired to input events and called from updateInputStyle, the 
 Old clearBtn click listener replaced: the new button wires directly to filterInput.value = '' → _syncStfClearBtn → dispatchEvent('input').
 STF input event handler now also calls _syncStfClearBtn; Enter inside the STF input calls both applySubFilter() and _stfHistWidget.saveToLru().
 
+** make clear X visible in filter after filter string from history has been copied
+
+Almost prefect. What's missing is:
+
+When a filter string from the filter string history list has been applied and copied to the filter field, the "Clear filter" glyph "✕" 
+
+#+begin_example
+<button id="sa-filter-clear-btn" tabindex="-1" title="Clear filter expression" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgb(192, 57, 43); font-size: 1em; font-weight: bold; line-height: 1; padding: 2px 3px; border-radius: 3px; display: block;">✕</button>
+
+<button id="mb-global-filter-clear" type="button" tabindex="-1" title="Clear global filter" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgb(192, 57, 43); font-size: 1em; font-weight: bold; line-height: 1; padding: 2px 3px; border-radius: 3px; display: block;">✕</button>
+
+<button id="mb-stf-Album-clear" type="button" tabindex="-1" title="Clear filter for &quot;Album&quot;" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgb(192, 57, 43); font-size: 1em; font-weight: bold; line-height: 1; padding: 2px 3px; border-radius: 3px; display: block;">✕</button>
+#+end_example
+
+should also appear depending on which filter field the string has been applied. Right now it only appears if the enduser types something in one of the different filter fields
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
