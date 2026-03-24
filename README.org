@@ -60429,7 +60429,6 @@ A new _ensureArtBigboxTooltip() helper (modelled after _ensureArtHoverPreviewDiv
 
 ** fixes
 
-
 1.)
 
 For "the Bigbox strip HTML tooltip with italic comment (_artInitBigPics)":
@@ -60499,8 +60498,8 @@ in
 should be changed to an HTML based version like in bullet point 1.). It should look like
 
 #+begin_example
-" /  " separated HTML based badge type buttons
-(italic Comment from '<span class="mb-caa-art-comment">')
+<" /  " separated HTML based badge type buttons>
+(<italic Comment from '<span class="mb-caa-art-comment">'>)
 #+end_example
 
 e.g.
@@ -60509,7 +60508,6 @@ e.g.
 [Front] / [Other]
 (fold‐out postcard sleeve, back)
 #+end_example
-
 
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
