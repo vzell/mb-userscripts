@@ -58645,7 +58645,7 @@ _syncStfClearBtn is wired to input events and called from updateInputStyle, the 
 Old clearBtn click listener replaced: the new button wires directly to filterInput.value = '' → _syncStfClearBtn → dispatchEvent('input').
 STF input event handler now also calls _syncStfClearBtn; Enter inside the STF input calls both applySubFilter() and _stfHistWidget.saveToLru().
 
-** make clear X visible in filter after filter string from history has been copied
+** DONE make clear X visible in filter after filter string from history has been copied
 
 Almost prefect. What's missing is:
 
@@ -58660,6 +58660,8 @@ When a filter string from the filter string history list has been applied and co
 #+end_example
 
 should also appear depending on which filter field the string has been applied. Right now it only appears if the enduser types something in one of the different filter fields
+
+** TODO make clear X visible in filter after filter string from history has been copied on "Load from Disk" dialog
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
