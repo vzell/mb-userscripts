@@ -60278,6 +60278,7 @@ Please reimplement with a proper fix
 * TODO configurable CAA/EAA image display, either multi-row cell, or side-by-side (with optional wrapping after <n> thumbnails, tooltip should show "image comment"
 
 * TODO tooltip should show image comment, additionally to the image popup itself
+** DONE initial
 
 In the uploaded userscript,
 
@@ -60403,7 +60404,13 @@ image in the big image stripe
 
 Please also add a changelog
 
+** TODO change the tooltip to a real HTML based tooltip
 
+- for the the "Expanded cell thumbnail tooltip (_artBuildImageLi)", it should look like a 'botton'/'multiple " / " separated buttons' with a grey background and the "badge-type" as the button text
+
+- change the big image tooltip to a real HTML based tooltip, which displays the artwork comment from '<span class="comment">' (inclusive the opening '(' and closing ')') in "italic"
+
+  
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
