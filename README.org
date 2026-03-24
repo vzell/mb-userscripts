@@ -55840,6 +55840,7 @@ Actually it's not working, the cache-status emojis are still rendered inside the
 
 * DONE fix CCA art work count + add them + total rows to summary - on the table level it should be the filtered state and artwork count per event/release
 
+
 * TODO add fetching to local db storage and reading from it
 ** initial
 
@@ -58091,6 +58092,31 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 #+end_example
 
 
+* TODO add a generic function type to the  
+
+#+begin_example
+// CONFIG SCHEMA
+const configSchema = {
+#+end_example
+
+#+begin_example
+type: "function",
+default: "<function name>"
+#+end_example
+
+* TODO add a generic table input dialog (for e.g. Ctrl-U: unicode symbols + explanation, "Relationships" column + userscript (new and my version))
+
+#+begin_example
+type: "table",
+default: "<table declaration>" + UI support "add", "modify", "delete"
+#+end_example
+
+* TODO add keyboard navigation to "Edit Pinned Filter List"
+
+add keyboard navigation to "Edit Pinned Filter List" in the "Filter expression table", "Tab" should mark entries, and "x Remove"
+should act on all of them
+
+
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
 
@@ -58444,11 +58470,7 @@ from "recorded at:	Tramps in Flatiron District, New York, New York, United State
 to the event parts extracted
 
 
-* GOOD versions
-** /doubleCAAimages
-
-
-* TODO When pressing the GLOBAL "ALL Filters clear" check the behaviour of collapsing/uncollapsing
+* TODO When pressing the GLOBAL "Clear ALL Filters" check the behaviour of collapsing/uncollapsing
 * TODO investigate the collapsing of the RGs, they are special, as they first collapse, the releases and THEN the images, in https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
 * TODO for RGs CAA artwork also display the Release from where it's sourced
 * TODO add menu to hover CAA picture, for different actions
@@ -58467,7 +58489,8 @@ fetching of all paginated pages begins after pressing the "Show all.." action bu
 
 * TODO Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images (count=0), but on forcefull reload from the net display it again if the count > "0"
 
-Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images, see the following HTML code when rendered
+Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images, see the
+following HTML code when rendered
 
 #+begin_example
 <button id="mb-caa-toggle-btn-12" type="button" class="mb-caa-art-toggle-btn" title="Toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 3px; line-height: 1;">
@@ -58679,17 +58702,25 @@ should appear. Right now it only appears if the enduser types something in into 
 
 * TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
+* TODO the order of the buttons in a h2 sub-table row,  when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
 
-* TODO the order of the buttons when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
+the order of the buttons in a h2 sub-table row, when being visible should always be like in the global case:
+
+#+begin_example
+"Show all 456 rows"
+"Expand multi row cells"
+"Toggle highlightning"
+"Clear all column filters"
+"Clear all filters"
+#+end_example
 
 
 * TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
 
 
-* counting and display wrong: actually with indexedDB cache
-
-* test with final rendered page (so all are display)
+* TODO counting and display wrong: actually with indexedDB cache
+* TODO test with final rendered page (so all are display)
 ** starting with ALL rows fetched for officail an non-officail
 
 # "Discography": 1941 of 1946/2123  [artwork 567]   
@@ -59224,7 +59255,7 @@ Another bug
 
 * make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
 
-* make the whole CAA/EAA image fetching based on aa new (maybe experimental) boolean - 25m 22s for 4117 Springsteen images (network case)
+* make the whole CAA/EAA image fetching based on a new (maybe experimental) boolean - 25m 22s for 4117 Springsteen images (network case)
 
 Vivaldi memory consumption:  4247 MB all, 1529 MB biggest sub-process
 
@@ -60250,40 +60281,127 @@ Please reimplement with a proper fix
 
 In the uploaded userscript,
 
-show both, the popup big artwork image in the "CAA" column, AND as a tooltip the "comment" information of the thumbnail CAA image ?
+add some more functionality:
+
+1.)
+
+currently, when the glyph "▶"
 
 #+begin_example
-<td data-erg-injected="1" data-caa-multi-built="1">
-  <ul class="mb-caa-art-ul" data-mb-art-search="Front  Back Spine">
-    <li class="mb-caa-art-li mb-caa-art-li-summary">
-      <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (2) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
-      </span>
-      <a href="/release/e4375aa5-e381-4633-8666-033974d149c3/cover-art" data-caa-synthetic="1" title="2 images found for this release / release-group" data-caa-enriched="1">
-	<span class="caa-icon" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/front-250&quot;);" title="2 images found for this release / release-group">
-	</span>
-      </a>
-      <span class="mb-art-cache-hint-col-wrap">
-	<span class="mb-art-cache-hint-col" title="Network fetch (1965 ms)">🔵
-	</span>
-	<span class="mb-caa-count-badge" title="2 images found for this release / release-group">2
-	</span>
-      </span>
-      <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031291-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Front
-      </span>
-    </li>
-    <li class="mb-caa-art-li mb-caa-art-li-image" style="">
-      <img src="https://coverartarchive.org/release/e4375aa5-e381-4633-8666-033974d149c3/35431031887-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
-      <span class="mb-caa-type-badge">Back / Spine
-      </span>
-    </li>
-  </ul>
+"<span data-caa-expand-btn="collapsed" title="Show all CAA cover art images (5) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>"
+#+end_example
+
+is clicked on a pageType which have the "CAA"/"EAA" column, all the images are shown in a in-cell "<li>" structure, with
+their thumbnail image, the "mb-caa-type-badge" (e.g. "Front") and the optional "mb-caa-art-comment". Additionally when
+hovering over the image thumbnail with the mouse, a big version of the image is displayed in a popup window.
+
+Please implement that additionally to the big version of the image, a tooltip with the information about the
+"mb-caa-type-badge" and the "mb-caa-art-comment" is displayed, e.g. from the following container
+
+#+begin_example
+<li class="mb-caa-art-li mb-caa-art-li-image" style="">
+  <img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475413348-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+  <span class="mb-caa-type-badge">Front / Other
+  </span> –
+  <span class="mb-caa-art-comment">fold‐out postcard sleeve, back
+  </span>
+</li>
+#+end_example
+
+Do NOT change the behaviour of the popup image window AND the tooltip of the very first image thumbnail in data-cell in
+the "CAA"/EAA" column after the toggle glyph "▶"/"▼"
+
+#+begin_example
+<li class="mb-caa-art-li mb-caa-art-li-summary">
+  <span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (8) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
+  </span>
+  <a href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/cover-art" title="8 images found for this release / release-group" data-caa-enriched="1">
+    <span class="artwork-icon caa-icon" title="8 images found for this release / release-group" data-cache-hint="network" style="background-size: contain; background-image: url(&quot;https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250&quot;);">
+    </span>
+  </a>
+  <span class="mb-art-cache-hint-col-wrap">
+    <span class="mb-art-cache-hint-col" title="Network fetch (883 ms)">🔵
+    </span>
+    <span class="mb-caa-count-badge" title="8 images found for this release / release-group">8
+    </span>
+  </span>
+  <span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+  </span>
+</li>
+#+end_example
+
+2.)
+
+currently the tooltip for an image in the "big images stripe" in front of a table/sub-table
+
+#+begin_example
+<div id="mb-caa-bigbox-0" class="mb-caa-bigbox" data-caa-visible="true" style="display: flex; flex-wrap: wrap; gap: 4px; padding: 4px 0px; min-height: 0px;">
+  <a href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" title="Greetings From Asbury Park, N.J." data-caa-href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" style="display: inline-block; height: 100%; margin: 8px 8px 4px 4px; position: relative;">
+    <img alt="Greetings From Asbury Park, N.J." style="vertical-align: middle; display: inline; max-height: 125px; box-shadow: black 1px 1px 4px;" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250">
+    <span class="mb-art-cache-hint-big" title="Network fetch (883 ms)" style="position: absolute; top: 2px; left: 2px; font-size: 0.8em; line-height: 1; background: rgba(0, 0, 0, 0.35); border-radius: 3px; padding: 1px 2px; user-select: none; cursor: default; pointer-events: none; z-index: 1;">🔵
+    </span>
+  </a>
+  <a href="/release/4918b02c-c0ce-4d03-88f1-2eba7924a4ee" title="Greetings From Asbury Park, N.J." data-caa-href="/release/4918b02c-c0ce-4d03-88f1-2eba7924a4ee" style="display: inline-block; height: 100%; margin: 8px 8px 4px 4px; position: relative;">
+    <img alt="Greetings From Asbury Park, N.J." style="vertical-align: middle; display: inline; max-height: 125px; box-shadow: black 1px 1px 4px;" src="//coverartarchive.org/release/4918b02c-c0ce-4d03-88f1-2eba7924a4ee/front-250">
+    <span class="mb-art-cache-hint-big" title="Network fetch (1228 ms)" style="position: absolute; top: 2px; left: 2px; font-size: 0.8em; line-height: 1; background: rgba(0, 0, 0, 0.35); border-radius: 3px; padding: 1px 2px; user-select: none; cursor: default; pointer-events: none; z-index: 1;">🔵
+    </span>
+  </a>
+...
+#+end_example
+
+displays for
+
+- EAA images, just the text "2025‐12‐14: The Stone Pony, Asbury Park, NJ, USA" from the "<bdi>" container in the corresponding row in the table below the big image stripe, e.g.
+
+#+begin_example
+<td data-eaa-inline-done="1">
+  <span class="mb-eaa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="1 image found for this event">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="//eventartarchive.org/event/b0466931-607d-4033-aff3-022c3122ea2d/front-250">
+    <span class="mb-art-cache-hint-inline" title="Network fetch (1038 ms)" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🔵
+    </span>
+  </span>
+  <a class="wrap-anywhere" href="/event/b0466931-607d-4033-aff3-022c3122ea2d" style="">
+    <bdi>2025‐12‐14: The Stone Pony, Asbury Park, NJ, USA
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Hungerthon Benefit
+    </bdi>)
+  </span>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
 </td>
 #+end_example
+
+- CAA images, just the text "Greetings From Asbury Park, N.J." from the "<bdi>" container in the corresponding row in the table below the big image stripe, e.g.
+
+#+begin_example
+<td data-erg-injected="1" data-caa-inline-done="1">
+  <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="8 images found for this release / release-group">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250">
+    <span class="mb-art-cache-hint-inline" title="Network fetch (883 ms)" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🔵
+    </span>
+  </span>
+  <a class="wrap-anywhere" href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" style="">
+    <bdi>Greetings From Asbury Park, N.J.
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Pitman pressing
+    </bdi>)
+  </span>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+</td>
+#+end_example
+
+In BOTH cases the text, inclusive the opening '(' and closing ')' from the '<span class="comment">' (if present ) in the
+corresponding row in the table below the big image stripe, should also be rendered when the mouse is hovering over an
+image in the big image stripe
+
+Please also add a changelog
 
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
