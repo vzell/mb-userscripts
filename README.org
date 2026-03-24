@@ -60545,8 +60545,42 @@ where the tooltip is also always "top right aligned" with the corresponding big 
 
 3.)
 
-The changelog from the last session you presented for download was as actually the one with version "version": "9.99.301" instead of "version": "9.99.302"
+You actually positioned the changelog for '"version": "9.99.302"' at the end of the "ShowAllEntityData_CHANGELOG.json" changelog file
 
+#+begin_example
+  {
+    "version": "0.9.0",
+    "date": "2026-01-28",
+    "sections": [
+      {
+        "label": "🎉 Release",
+        "items": [
+          "First official release"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.302",
+    "date": "2026-03-24",
+    "sections": [
+      {
+        "label": "📦 Feature",
+        "items": [
+          "_artInitBigPics (bigbox strip): Enrich HTML tooltip with additional release row fields — Artist, Format (Tracks), Country/Date, Label (without comment) – Catalog#, Barcode — shown below the italic disambiguation comment when present.",
+          "_artInitBigPics (bigbox strip): HTML tooltip is now always shown (unconditionally), not only when a disambiguation comment is present.",
+          "_artInitBigPics (bigbox strip): Plain non-HTML wrapper.title is no longer set; the HTML tooltip is the sole tooltip mechanism.",
+          "_artBuildImageLi (type badge pills): Replace plain img.title with an HTML tooltip on the <li> element, showing type pill labels in bold on line 1 and the italic comment (in parentheses) on line 2 when present."
+        ]
+      }
+    ]
+  }
+]
+#+end_example
+
+instead of the beginning. Please fix in this session
+
+ 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
