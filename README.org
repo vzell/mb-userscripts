@@ -61695,31 +61695,114 @@ some bugs need to be fixed and some more pageTypes need to be supported:
 
 1.)
 
-you missed to deliver the last changelog in the file "ShowAllEntityData_CHANGELOG.json"
+the following "tooltipColumns" configuration should be changed (in two places in the configuration) from
 
 #+begin_example
-  {
-    "version": "9.99.308",
-    "date": "2026-03-25",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "_renderBigboxTooltipFromColumns (inline group): closing bracket ')' was always suppressed because the nextHas check found no following column after a trailing literal. Fix: '(' only requires a following column value; ')' only requires a preceding column value; separators ('-', '/', –, —) require both. Fixes 'Cassette ( 8' → 'Cassette (8)'.",
-          "_artTooltipCellText: raw JSON strings (e.g. '{\"isrcs\":[]}', '{\"events\":[...]}') from hidden data elements are now detected (value starts with '{' or '[') and suppressed, returning '' so the spec row is skipped.",
-          "_artTooltipCellText: multi-row cells (rendered by renderMultiRowCell as plain <ul><li>) are now handled by reading <li> text directly rather than the full textContent. This avoids the collapse-toggle noise ('▶N▤') that lives outside the <ul> in the <td>. Per-<li> anchor text is preferred (e.g. Label name).",
-          "_renderBigboxTooltipFromColumns (main column): the inline <span class='comment'> is no longer extracted and rendered when the main column is listed in tooltipColumns, because an explicit 'italic:Comment' spec always follows it. Fixes double italic-comment display on artist-recordings pages."
-        ]
-      }
-    ]
-  },
+tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Total Tracks', ')'], 'Country', 'Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+#+end_example
+
+to
+
+#+begin_example
+tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+#+end_example
+
+ - so the "Tracks" column instead of "Total Tracks" should be extracted
+ - and instead of extracting the country and date information from the two "'Country', 'Date'" columns extract directly
+   from the "Country/Date" column, see the following format
+
+#+begin_example
+<td>
+  <script type="application/json">{"events":[{"date":{"day":21,"year":1974,"month":7},"country":{"iso_3166_2_codes":[],"entityType":"area","primaryAlias":"Japan","iso_3166_3_codes":[],"typeID":1,"name":"Japan","comment":"","gid":"2db42837-c832-3c27-b4a3-08198f75693c","editsPending":false,"last_updated":"2013-05-27T12:29:56Z","id":107,"ended":false,"iso_3166_1_codes":["JP"],"primary_code":"JP","end_date":null,"country_code":"JP","begin_date":null}}]}
+  </script>
+  <div class="release-events-container">
+    <ul aria-label="Release events" class="release-events abbreviated">
+      <li aria-label="Release event" class="release-event">
+	<span class="flag flag-JP release-country">
+	  <a href="/area/2db42837-c832-3c27-b4a3-08198f75693c">
+	    <abbr title="Japan">JP
+	    </abbr>
+	  </a>
+	</span>
+	<span class="release-date">1974-07-21
+	  <span class="mb-day-of-week non-standard" title="Expected Wednesday for Japan, but is Sunday." style="cursor: help;">Sun
+	  </span>
+	</span>
+      </li>
+    </ul>
+  </div>
+</td>
+#+end_example
+
+The MusicBrainz website renders the country flag "<span class="flag flag-JP release-country">" in the table data cells,
+so because our tooltip is HTML based please render the complete information to the tooltips which is available in the
+example
+
+#+begin_example
+[flag-icon] <abbr title> (<abbr> text) <class="release-date" text> <class="mb-day-of-week non-standard" text>
+#+end_example
+
+e.g.
+
+#+begin_example
+[flag-JP icon] Japan (JP) 1974-07-21 Sun
 #+end_example
 
 2.)
 
-the debug.log statements should be re-written as in our standard framework but guarded with an additional boolen for very low level debugging
+change the "console.log" debug statements to debug calls from our library logging framework (Lib.debug('tooltips',...)
+but guarded with an additional boolen (default: true) for "tooltips" level debugging. Place it in the following
+configuration section
 
+#+begin_example
+// GENERIC SECTION
+#+end_example
 
+in the variable "const configSchema"
+
+3.)
+
+add additional configuration parameters to the following pageTypes:
+
+a.)
+
+#+begin_example
+type: 'recording-releases'
+..
+tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Release Artist', 'Release group type' '---', ['#', 'Title', '(', 'Lenght', ')'], 'Track artist', 'Country/Date', ['Label', '-', 'Catalog#'] ],
+#+end_example
+
+b.)
+
+#+begin_example
+type: 'artist-events'
+..
+tooltipColumns: [ 'Event', '---', 'Type', 'Role', 'Location' ['Date', '(', 'time', ')'], 'Cancelled' ],
+#+end_example
+
+c.)
+
+#+begin_example
+type: 'artist-relationships'
+..
+tooltipColumns: [ 'Title', 'Artist'.  '---', 'Credited as', 'Attributes' ],
+#+end_example
+
+d.)
+
+#+begin_example
+type: 'label-releases'
+..
+tooltipColumns: [ 'Release', 'Artist'.  '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', 'Catalog#', 'Barcode' ],
+#+end_example
+
+e.)
+
+#+begin_example
+type: series-releases'
+..
+tooltipColumns: [ 'Release', 'Artist'.  '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+#+end_example
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
