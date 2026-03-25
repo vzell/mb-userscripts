@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.301+2026-03-24
+// @version      9.99.307+2026-03-25
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3575,6 +3575,7 @@
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                 renderMultiRowCell: [ 'Label', 'Catalog#' ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Total Tracks', ')'], 'Country', 'Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
                 addCAA: 'Release',
                 extractMainColumn: 'Release'
             },
@@ -3594,6 +3595,7 @@
                 ],
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'Release groups', 'CAA' ],
+                tooltipColumns: [ 'Release groups', 'Name', 'italic:Comment', 'Artist', '---', ['Length', '-', 'Video'], 'ISRCs' ],
                 addCAA: 'Release groups',
                 extractMainColumn: 'Name'
             },
@@ -3640,6 +3642,7 @@
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                 renderMultiRowCell: [ 'Label', 'Catalog#' ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Total Tracks', ')'], 'Country', 'Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
                 addCAA: 'Release',
                 extractMainColumn: 'Release'
             },
@@ -29264,6 +29267,305 @@ a { color: #1565c0; }`;
         return tip;
     }
 
+
+    /**
+     * Resolves the zero-based index of the table column whose <th> header text
+     * matches `name` (case-insensitive).  Returns -1 when not found.
+     *
+     * @param {HTMLTableElement} table  The owning table.
+     * @param {string}           name   Column header text to look up.
+     * @returns {number}
+     */
+    function _artTooltipColIdx(table, name) {
+        const hdr = table.querySelector('thead tr:first-child');
+        if (!hdr) {
+            console.log('[_artTooltipColIdx] no thead found for "' + name + '"');
+            return -1;
+        }
+        const lower = name.toLowerCase();
+
+        /**
+         * Extracts the original column name from a <th> whose textContent has
+         * been augmented by the script with sort-toggle arrows (⇅▲▼), count
+         * badges (digits), stats icon (📊), and collapse toggles (▶▤).
+         *
+         * Strategy: walk the <th>'s child nodes and collect only the leading
+         * plain-text content that precedes any injected UI element (button,
+         * span with sort/badge role, or non-letter Unicode symbol).
+         * Falls back to splitting on the first ⇅ character when child-node
+         * walking yields nothing useful.
+         *
+         * @param {HTMLTableCellElement} th
+         * @returns {string}  Cleaned column name, lower-cased.
+         */
+        const _cleanHeader = (th) => {
+            // Walk direct child nodes; stop at the first Element child
+            // (all injected UI is wrapped in spans/buttons) or at a text
+            // node that itself contains ⇅ (sort-toggle text).
+            let text = '';
+            for (const node of th.childNodes) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const v = node.nodeValue;
+                    // If this text node contains a sort arrow, stop here.
+                    const arrowIdx = v.indexOf('⇅'); // ⇅
+                    if (arrowIdx !== -1) {
+                        text += v.slice(0, arrowIdx);
+                        break;
+                    }
+                    text += v;
+                } else {
+                    // First element child = injected UI — stop collecting.
+                    break;
+                }
+            }
+            text = text.trim();
+            // Fallback: if walking yielded nothing, split the full textContent
+            // on the first ⇅ and take the left part.
+            if (!text) {
+                text = th.textContent.split('⇅')[0].trim();
+            }
+            return text.toLowerCase();
+        };
+
+        let idx = -1;
+        const _allClean = [];
+        Array.from(hdr.cells).forEach((th, i) => {
+            const _clean = _cleanHeader(th);
+            _allClean.push(_clean);
+            if (_clean === lower) idx = i;
+        });
+        console.log('[_artTooltipColIdx] "' + name + '" -> idx=' + idx +
+            ' (cleaned headers: ' + _allClean.join(' | ') + ')');
+        return idx;
+    }
+
+    /**
+     * Returns the trimmed plain text of the cell in `row` at column index `ci`,
+     * or '' when the index is out of range.
+     *
+     * @param {HTMLTableRowElement} row  The data row.
+     * @param {number}              ci   Column index.
+     * @returns {string}
+     */
+    function _artTooltipCellText(row, ci) {
+        if (ci < 0 || ci >= row.cells.length) return '';
+        const cell = row.cells[ci];
+
+        // Prefer the text of the first anchor in the cell (e.g. Artist name,
+        // Label name) — it is always clean.  For cells with no anchor (Format,
+        // Tracks, Barcode) fall back to plain textContent.
+        // Strip the comment span text so it does not pollute the result.
+        const clone = cell.cloneNode(true);
+        // Remove injected UI: inline CAA placeholders, cache-hint spans,
+        // count badges, collapse-toggle spans, comment spans.
+        clone.querySelectorAll(
+            '.mb-caa-inline-ph,.mb-eaa-inline-ph,' +
+            '.mb-art-cache-hint-inline,.mb-art-cache-hint-col-wrap,' +
+            '.mb-art-cache-hint-col,.mb-caa-count-badge,.mb-eaa-count-badge,' +
+            '.mb-caa-art-li-image,.artwork-icon,.caa-icon,.icon,' +
+            'span.comment'
+        ).forEach(el => el.remove());
+
+        // If a primary anchor exists, prefer its clean text.
+        const anchor = clone.querySelector('a');
+        if (anchor) {
+            return anchor.textContent.replace(/\s+/g, ' ').trim();
+        }
+
+        // No anchor — use the cleaned clone's full text, then strip any
+        // leading non-printable / icon characters the eraser may have missed.
+        return clone.textContent
+            .replace(/\s+/g, ' ')
+            .replace(/^[\u25b6\u2795\u26a0\ufe0f\u{1F300}-\u{1FAFF}\u2600-\u27BF]+/gu, '')
+            .trim();
+    }
+
+    /**
+     * Splits a cell's visible text into a main title part and an optional
+     * disambiguation comment.  MusicBrainz wraps comments in a
+     * `<span class="comment">` element whose textContent renders as "(text)".
+     *
+     * The comment inner text is extracted from the comment span; the returned
+     * `title` is the cell text with the comment span's contribution removed.
+     *
+     * @param {HTMLTableRowElement} row  The data row.
+     * @param {number}              ci   Column index.
+     * @returns {{ title: string, comment: string }}
+     *   `title`   — cell text without the comment (comment span removed).
+     *   `comment` — inner comment text without surrounding parens, or ''.
+     */
+    function _artTooltipSplitComment(row, ci) {
+        if (ci < 0 || ci >= row.cells.length) return { title: '', comment: '' };
+        const cell = row.cells[ci];
+
+        const commentSpan = cell.querySelector('span.comment');
+        let comment = '';
+        if (commentSpan) {
+            const raw = commentSpan.textContent.trim();
+            comment = raw.replace(/^\(\s*/, '').replace(/\s*\)$/, '').trim();
+        }
+
+        // Build the title text by cloning the cell and stripping the comment span.
+        const clone = cell.cloneNode(true);
+        clone.querySelectorAll('span.comment').forEach(s => s.remove());
+        const title = clone.textContent.replace(/\s+/g, ' ').trim();
+
+        return { title, comment };
+    }
+
+    /**
+     * Populates the shared bigbox tooltip `tip` (already cleared by the caller)
+     * according to the active page definition's `tooltipColumns` and
+     * `extractMainColumn` features.
+     *
+     * tooltipColumns element forms:
+     *   \'---'             → horizontal divider rule
+     *   plain string      → one text row from the matching column.
+     *                        When the column name equals `extractMainColumn`,
+     *                        the title is rendered bold and any disambiguation
+     *                        comment (from `<span class="comment">`) appears in
+     *                        italic below it.
+     *   JS array of tokens → single inline row.  Each token is either a column
+     *                        name (resolved to cell text) or a literal punctuation
+     *                        string \'(\', \')\', \'-\', etc. (rendered as-is).
+     *                        The whole line is omitted when every column token
+     *                        resolves to an empty string.  Adjacent literals are
+     *                        suppressed when their neighbouring column value is
+     *                        absent.
+     *
+     * @param {HTMLDivElement}      tip      Cleared tooltip div to populate.
+     * @param {HTMLTableRowElement} row      The hovered data row.
+     * @param {object|null}         pageDef  Active page definition (may be null).
+     * @param {HTMLTableElement}    table    Owning table (for header lookups).
+     * @returns {boolean}  true when tooltipColumns was applied;
+     *                     false when the feature is absent (caller must fall back).
+     */
+    function _renderBigboxTooltipFromColumns(tip, row, pageDef, table) {
+        const features = pageDef && pageDef.features;
+        if (!features || !Array.isArray(features.tooltipColumns)) {
+            console.log('[_renderBigboxTooltipFromColumns] no tooltipColumns — returning false');
+            return false;
+        }
+
+        const mainColLower = (features.extractMainColumn || '').toLowerCase();
+        console.log('[_renderBigboxTooltipFromColumns] mainCol=' + mainColLower +
+            ' specs=' + JSON.stringify(features.tooltipColumns));
+
+        // Cache column header → index lookups so each name is scanned only once.
+        const colIdxCache = {};
+        const _ci = (name) => {
+            if (!(name in colIdxCache)) {
+                colIdxCache[name] = _artTooltipColIdx(table, name);
+            }
+            return colIdxCache[name];
+        };
+
+        // Tokens that are rendered literally and never looked up as column names.
+        const LITERALS = new Set(['(', ')', '-', '–', '—', '/']);
+
+        /**
+         * Appends a text row <div> to tip.
+         *
+         * @param {string} text  Text content (skipped when empty).
+         * @param {string} [css] Extra inline CSS appended to base style.
+         */
+        const _addRow = (text, css = '') => {
+            if (!text) {
+                console.log('[_addRow] skipped (empty text)');
+                return;
+            }
+            console.log('[_addRow] "' + text.substring(0, 80) + '"');
+            const d = document.createElement('div');
+            d.style.cssText = 'margin-bottom:2px;' + (css ? ' ' + css : '');
+            d.textContent = text;
+            tip.appendChild(d);
+        };
+
+        /** Appends a horizontal divider rule to tip. */
+        const _addDivider = () => {
+            const d = document.createElement('div');
+            d.style.cssText = 'border-top:1px solid #45475a; margin:4px 0;';
+            tip.appendChild(d);
+        };
+
+        features.tooltipColumns.forEach(spec => {
+            console.log('[_renderBigboxTooltipFromColumns] spec=' + JSON.stringify(spec));
+            // ── Divider token ─────────────────────────────────────────────────────────
+            if (spec === '---') {
+                _addDivider();
+                return;
+            }
+
+            // ── Inline group: array of column names + literal tokens ─────────────
+            if (Array.isArray(spec)) {
+                // Resolve each token to its value or null (for empties / literals).
+                const resolved = spec.map(tok =>
+                    LITERALS.has(tok) ? tok : (_artTooltipCellText(row, _ci(tok)) || null)
+                );
+                // Skip the entire line when no column contributed a non-empty value.
+                const hasColValue = spec.some((tok, i) =>
+                    !LITERALS.has(tok) && resolved[i] !== null
+                );
+                if (!hasColValue) return;
+
+                // Build token list, suppressing literals whose neighbours are absent.
+                const tokens = [];
+                spec.forEach((tok, i) => {
+                    if (LITERALS.has(tok)) {
+                        // Include literal only when both neighbours have a value.
+                        const prevHas = resolved.slice(0, i).some(
+                            (v, j) => !LITERALS.has(spec[j]) && v !== null
+                        );
+                        const nextHas = resolved.slice(i + 1).some(
+                            (v, j) => !LITERALS.has(spec[i + 1 + j]) && v !== null
+                        );
+                        if (prevHas && nextHas) tokens.push(tok);
+                    } else if (resolved[i] !== null) {
+                        tokens.push(resolved[i]);
+                    }
+                });
+                _addRow(tokens.join(' '));
+                return;
+            }
+
+            // ── Single column name (plain string) ────────────────────────────────────
+            if (typeof spec === 'string') {
+                // 'italic:ColumnName' prefix — always render this column's value
+                // in italic (used for disambiguation comment columns that are stored
+                // as separate synthetic columns rather than inside the main column).
+                const _isItalic = spec.startsWith('italic:');
+                const _colName  = _isItalic ? spec.slice(7) : spec;
+                const ci = _ci(_colName);
+
+                if (_isItalic) {
+                    const _val = _artTooltipCellText(row, ci);
+                    if (_val) {
+                        const d = document.createElement('div');
+                        d.style.cssText = 'font-style:italic; color:#cdd6f4; margin-bottom:2px;';
+                        d.textContent = '(' + _val + ')';
+                        tip.appendChild(d);
+                        console.log('[_addRow italic] "' + _val + '"');
+                    }
+                } else if (_colName.toLowerCase() === mainColLower) {
+                    // Main column: render title bold; extract inline comment in italic below.
+                    const { title, comment } = _artTooltipSplitComment(row, ci);
+                    _addRow(title, 'font-weight:600;');
+                    if (comment) {
+                        const d = document.createElement('div');
+                        d.style.cssText =
+                            'font-style:italic; color:#cdd6f4; margin-bottom:2px;';
+                        d.textContent = '(' + comment + ')';
+                        tip.appendChild(d);
+                    }
+                } else {
+                    _addRow(_artTooltipCellText(row, ci));
+                }
+            }
+        });
+
+        return true;
+    }
+
     // ── end Artwork hover-preview popup ───────────────────────────────────────
 
     // ── CAA / EAA multi-row art cell builders ─────────────────────────────────
@@ -29491,6 +29793,67 @@ a { color: #1565c0; }`;
             // etc. — so the preview URL is derived directly from imgData.thumbnails
             // rather than the entity's canonical front-image path.
             // Prefer the user-configured big size; fall back through available sizes.
+            // ── Hover preview + HTML badge tooltip wiring ────────────────────
+            // Both the hover-preview popup and the type-badge tooltip are anchored
+            // to the same img.mouseenter event so they always appear and disappear
+            // together.  The tooltip is positioned top-right of the preview popup
+            // when it is visible (sa_caa_hover_preview ON), or top-right of the img
+            // itself when the preview is disabled.
+
+            /**
+             * Shows the type-badge HTML tooltip positioned top-right of `anchorEl`.
+             *
+             * @param {HTMLElement} anchorEl  Element whose right/top edge is the anchor.
+             */
+            const _showLiTooltip = (anchorEl) => {
+                const _tip = _ensureArtBigboxTooltip();
+                if (!_tip) return;
+                _tip.innerHTML = '';
+
+                // Row 1: type pill labels (bold).
+                if (typeText) {
+                    const _typesLine = document.createElement('div');
+                    _typesLine.style.cssText = 'font-weight:600; margin-bottom:2px;';
+                    typeText.split(' / ').forEach((t, i) => {
+                        if (i > 0) _typesLine.appendChild(document.createTextNode(' / '));
+                        const _pill = document.createElement('span');
+                        _pill.style.cssText =
+                            'display:inline-block; background:#555; color:#cdd6f4;' +
+                            ' border-radius:3px; padding:0 4px; font-size:0.9em;' +
+                            ' font-weight:600; line-height:1.5; white-space:nowrap;';
+                        _pill.textContent = t;
+                        _typesLine.appendChild(_pill);
+                    });
+                    _tip.appendChild(_typesLine);
+                }
+                // Row 2: comment in italic (when present).
+                if (commentText) {
+                    const _commentLine = document.createElement('div');
+                    _commentLine.style.cssText = 'font-style:italic; color:#cdd6f4;';
+                    _commentLine.textContent   = '(' + commentText + ')';
+                    _tip.appendChild(_commentLine);
+                }
+
+                // Position top-right of anchorEl (the preview popup or the img).
+                const _r  = anchorEl.getBoundingClientRect();
+                const _vw = window.innerWidth, _vh = window.innerHeight;
+                _tip.style.display = 'block';
+                const _tw = _tip.offsetWidth, _th = _tip.offsetHeight;
+                let _x = _r.right + 8;
+                let _y = _r.top;
+                if (_x + _tw > _vw - 6) _x = _r.left - _tw - 8;
+                if (_y + _th > _vh - 6) _y = _vh - _th - 6;
+                if (_x < 4) _x = 4;
+                if (_y < 4) _y = 4;
+                _tip.style.left = _x + 'px';
+                _tip.style.top  = _y + 'px';
+            };
+
+            const _hideLiTooltip = () => {
+                const _tip = document.getElementById('mb-art-bigbox-tooltip');
+                if (_tip) _tip.style.display = 'none';
+            };
+
             if (Lib.settings.sa_caa_hover_preview) {
                 const bigSize  = Lib.settings.sa_caa_big_img_size || 250;
                 const bigThumb = imgData.thumbnails && (
@@ -29502,18 +29865,31 @@ a { color: #1565c0; }`;
                 const bigSrc = (bigThumb || imgData.image || '').replace(/^http:/, '');
                 if (bigSrc) {
                     img.style.cursor = 'crosshair';
-                    img.addEventListener('mouseenter', () => _showArtHoverPreview(bigSrc, img));
-                    img.addEventListener('mouseleave', _hideArtHoverPreview);
+                    img.addEventListener('mouseenter', () => {
+                        _showArtHoverPreview(bigSrc, img);
+                        // The preview popup is now visible and positioned — use it
+                        // as the anchor so the tooltip appears to its right.
+                        const _preview = document.getElementById('mb-art-hover-preview');
+                        _showLiTooltip(_preview && _preview.style.display !== 'none'
+                            ? _preview : img);
+                    });
+                    img.addEventListener('mouseleave', () => {
+                        _hideArtHoverPreview();
+                        _hideLiTooltip();
+                    });
+                } else {
+                    // No bigSrc — wire tooltip only (no preview).
+                    img.addEventListener('mouseenter', () => _showLiTooltip(img));
+                    img.addEventListener('mouseleave', _hideLiTooltip);
                 }
+            } else {
+                // sa_caa_hover_preview OFF — tooltip anchors to img directly.
+                img.addEventListener('mouseenter', () => _showLiTooltip(img));
+                img.addEventListener('mouseleave', _hideLiTooltip);
             }
 
-            // ── Thumbnail tooltip (type badge + optional comment) ──────────────
-            // Sets a native title on the per-image <li> thumbnail so hovering it
-            // shows the image metadata (type and comment) as a browser tooltip.
-            // This is applied only to expanded per-image <li> thumbnails
-            // (mb-caa-art-li-image); the summary <li> thumbnail (mb-caa-art-li-summary)
-            // already carries its own distinct tooltip and is never touched here.
-            img.title = commentText ? typeText + ' \u2013 ' + commentText : typeText;
+            // Plain img.title is intentionally omitted — the HTML tooltip above
+            // provides the same information with richer formatting.
         }
 
         // ── Type badge(s) — one button-like pill per type, separated by " / " ──
@@ -29556,6 +29932,12 @@ a { color: #1565c0; }`;
             pending.title       = 'Pending approval';
             li.appendChild(pending);
         }
+
+        // Tooltip type/comment data stored for external reference.
+        // The actual tooltip rendering is wired on img.mouseenter above,
+        // co-located with the hover-preview listener (_showLiTooltip / _hideLiTooltip).
+        li.dataset.liTooltipTypes   = typeText;
+        if (commentText) li.dataset.liTooltipComment = commentText;
 
         return li;
     }
@@ -30489,28 +30871,80 @@ a { color: #1565c0; }`;
                     const wrapper = document.createElement('a');
                     wrapper.href  = href;
                     // ── HTML-based tooltip for the bigbox wrapper ──────────────────────
-                    // Extract the comment text from the enclosing <td>'s <span class="comment">
-                    // to show it in italic inside a real HTML tooltip instead of a plain title.
-                    // The comment text (inclusive of opening '(' and closing ')') is rendered
-                    // in italic; the entity name is rendered in normal weight above it.
-                    // Falls back to plain wrapper.title when no comment is present.
+                    // Always use the rich HTML tooltip (no plain-title fallback).
+                    // In addition to the entity name and the italic comment, up to six
+                    // extra fields from the row are shown when present:
+                    //   Artist | divider | Format (Tracks) | Country/Date | Label – Cat# | Barcode
+                    //
+                    // Column indices are resolved once per wrapper by scanning the thead row
+                    // of the owning table; hidden columns are still readable because we access
+                    // cell text directly rather than relying on computed visibility.
+
+                    // Extract comment text (keep full "(…)" form including parens).
                     const _commentForTooltip = (() => {
                         if (!_td) return '';
                         const _cs = _td.querySelector('span.comment');
                         if (!_cs) return '';
-                        const _raw = _cs.textContent.trim();
-                        // Keep the full "(…)" form including parens as found in the DOM.
-                        return _raw;
+                        return _cs.textContent.trim();
                     })();
-                    if (_commentForTooltip) {
-                        // Store structured data for the HTML tooltip system.
-                        wrapper.dataset.artTooltipName    = _anchorText;
-                        wrapper.dataset.artTooltipComment = _commentForTooltip;
-                        // Also set a plain title as accessible fallback.
-                        wrapper.title = _wrapperTitle;
-                    } else {
-                        wrapper.title = _wrapperTitle;
-                    }
+
+                    /**
+                     * Returns the trimmed visible text of the table cell whose <th> header
+                     * matches `name` (case-insensitive), or '' when the column is absent.
+                     *
+                     * @param {string} name  Column header text to match.
+                     * @returns {string}
+                     */
+                    const _rowCellText = (name) => {
+                        if (!_td) return '';
+                        const _hdr = table.querySelector('thead tr:first-child');
+                        if (!_hdr) return '';
+                        const _nameLower = name.toLowerCase();
+                        let _ci = -1;
+                        Array.from(_hdr.cells).forEach((th, i) => {
+                            if (th.textContent.trim().toLowerCase() === _nameLower) _ci = i;
+                        });
+                        if (_ci === -1) return '';
+                        const _row = _td.closest('tr');
+                        if (!_row) return '';
+                        const _cell = _row.cells[_ci];
+                        return _cell ? _cell.textContent.replace(/\s+/g, ' ').trim() : '';
+                    };
+
+                    // Collect extra tooltip fields from sibling columns.
+                    // DEBUG: log what _rowCellText finds for each field at build time
+                    const _tipArtist  = _rowCellText('Artist');
+                    const _tipFormat  = _rowCellText('Format');
+                    const _tipTracks  = _rowCellText('Tracks');
+                    const _tipCD      = _rowCellText('Country/Date');
+                    console.log('[bigbox build] _td=' + !!_td +
+                        ' _td.closest(tr)=' + !!(_td && _td.closest('tr')) +
+                        ' Artist="' + _tipArtist + '"' +
+                        ' Format="' + _tipFormat + '"' +
+                        ' Tracks="' + _tipTracks + '"' +
+                        ' CD="' + _tipCD + '"');
+                    const _tipLabel   = (() => {
+                        // Strip any trailing comment in parens so only the label name is shown,
+                        // e.g. "Columbia" rather than "Columbia (some distribution note)".
+                        const _raw = _rowCellText('Label');
+                        return _raw.replace(/\s*\([^)]*\)\s*$/, '').trim();
+                    })();
+                    const _tipCatNum  = _rowCellText('Catalog#');
+                    const _tipBarcode = _rowCellText('Barcode');
+
+                    // Always store structured data for the HTML tooltip system.
+                    // The HTML tooltip is now shown unconditionally (not only when a
+                    // comment is present), so artTooltipName is always populated.
+                    wrapper.dataset.artTooltipName    = _anchorText;
+                    wrapper.dataset.artTooltipComment = _commentForTooltip;
+                    if (_tipArtist)  wrapper.dataset.artTooltipArtist  = _tipArtist;
+                    if (_tipFormat)  wrapper.dataset.artTooltipFormat  = _tipFormat;
+                    if (_tipTracks)  wrapper.dataset.artTooltipTracks  = _tipTracks;
+                    if (_tipCD)      wrapper.dataset.artTooltipCd      = _tipCD;
+                    if (_tipLabel)   wrapper.dataset.artTooltipLabel   = _tipLabel;
+                    if (_tipCatNum)  wrapper.dataset.artTooltipCatnum  = _tipCatNum;
+                    if (_tipBarcode) wrapper.dataset.artTooltipBarcode = _tipBarcode;
+                    // No plain wrapper.title — the HTML tooltip replaces it entirely.
                     wrapper.setAttribute(ctx.hrefAttrName, href);
                     wrapper.style.cssText = 'display:inline-block; height:100%; margin:8px 8px 4px 4px; position:relative;';
 
@@ -30670,31 +31104,146 @@ a { color: #1565c0; }`;
 
                     wrapper.appendChild(img);
 
-                    // ── HTML-based tooltip for bigbox wrappers with comment ────
-                    // When the wrapper carries art-tooltip-comment (set above when
-                    // the enclosing <td> has a <span class="comment">), wire a rich
-                    // HTML tooltip that renders the entity name in normal weight and
-                    // the comment text in italic, using the shared singleton div
-                    // #mb-art-bigbox-tooltip (lazily created below).
-                    if (wrapper.dataset.artTooltipComment) {
+                    // ── HTML-based tooltip for bigbox wrappers ──────────────────
+                    // Always wire the rich HTML tooltip (artTooltipName is now always
+                    // set, so the guard is simply whether the wrapper carries a name).
+                    // Renders:  <Title>  /  (<italic comment>)  /  Artist  /  divider
+                    //           /  Format (Tracks)  /  Country/Date  /  Label – Cat#  /  Barcode
+                    if (wrapper.dataset.artTooltipName) {
                         wrapper.addEventListener('mouseenter', function(ev) {
                             const _tip = _ensureArtBigboxTooltip();
                             if (!_tip) return;
-                            const _name    = this.dataset.artTooltipName    || '';
-                            const _comment = this.dataset.artTooltipComment || '';
                             _tip.innerHTML = '';
-                            if (_name) {
-                                const _nameLine = document.createElement('div');
-                                _nameLine.style.cssText = 'font-weight:600; margin-bottom:2px;';
-                                _nameLine.textContent = _name;
-                                _tip.appendChild(_nameLine);
+
+                            // ── Primary path: tooltipColumns-driven rendering ─────────────────────
+                            // When the active page definition declares a tooltipColumns
+                            // array, delegate all tooltip content to the generic helper.
+                            // `table` is captured from the enclosing _artInitBigPics scope.
+                            const _anchorEl = this; // the wrapper <a>
+                            // Bigbox wrapper anchors live outside the table (in the bigbox
+                            // div above it), so closest('tr') is always null here.  Resolve
+                            // the row by reading the stored href attribute (ctx.hrefAttrName
+                            // is either 'data-caa-href' or 'data-eaa-href') and finding the
+                            // matching anchor inside the live table tbody.
+                            const _wrapHref = _anchorEl.getAttribute('data-caa-href') ||
+                                              _anchorEl.getAttribute('data-eaa-href') ||
+                                              _anchorEl.getAttribute('href');
+                            const _rowEl = (() => {
+                                if (!_wrapHref) return null;
+                                const _a = table.querySelector(
+                                    'tbody td a[href="' + _wrapHref + '"]'
+                                );
+                                return _a ? _a.closest('tr') : null;
+                            })();
+
+                            // ── DEBUG: log everything we know at tooltip-open time ────────────
+                            console.log('[bigbox tooltip] wrapHref=' + _wrapHref);
+                            console.log('[bigbox tooltip] _rowEl found=' + !!_rowEl);
+                            console.log('[bigbox tooltip] activeDefinition type=' +
+                                (activeDefinition ? activeDefinition.type : 'null'));
+                            console.log('[bigbox tooltip] tooltipColumns=' +
+                                JSON.stringify(activeDefinition && activeDefinition.features &&
+                                    activeDefinition.features.tooltipColumns));
+                            if (_rowEl) {
+                                // Log every cell in the row with its header name
+                                const _dbgHdr = table.querySelector('thead tr:first-child');
+                                if (_dbgHdr) {
+                                    Array.from(_dbgHdr.cells).forEach((th, i) => {
+                                        const _cell = _rowEl.cells[i];
+                                        console.log('[bigbox tooltip] col[' + i + '] "' +
+                                            th.textContent.trim() + '" = "' +
+                                            (_cell ? _cell.textContent.replace(/\s+/g, ' ').trim().substring(0, 60) : 'n/a') +
+                                            '"');
+                                    });
+                                }
                             }
-                            if (_comment) {
-                                const _commentLine = document.createElement('div');
-                                _commentLine.style.cssText = 'font-style:italic; color:#cdd6f4;';
-                                _commentLine.textContent = _comment;
-                                _tip.appendChild(_commentLine);
+                            // ── END DEBUG ──────────────────────────────────────────────────────
+
+                            if (_rowEl && _renderBigboxTooltipFromColumns(
+                                    _tip, _rowEl, activeDefinition, table)) {
+                                console.log('[bigbox tooltip] rendered via tooltipColumns');
+                            } else {
+                                console.log('[bigbox tooltip] using static fallback; ' +
+                                    'name=' + JSON.stringify(this.dataset.artTooltipName) +
+                                    ' comment=' + JSON.stringify(this.dataset.artTooltipComment) +
+                                    ' artist=' + JSON.stringify(this.dataset.artTooltipArtist) +
+                                    ' format=' + JSON.stringify(this.dataset.artTooltipFormat));
+                                // ── Static fallback: use pre-collected data-* attributes ─────────
+                                const _name    = this.dataset.artTooltipName    || '';
+                                const _comment = this.dataset.artTooltipComment || '';
+                                const _artist  = this.dataset.artTooltipArtist  || '';
+                                const _format  = this.dataset.artTooltipFormat  || '';
+                                const _tracks  = this.dataset.artTooltipTracks  || '';
+                                const _cd      = this.dataset.artTooltipCd      || '';
+                                const _label   = this.dataset.artTooltipLabel   || '';
+                                const _catnum  = this.dataset.artTooltipCatnum  || '';
+                                const _barcode = this.dataset.artTooltipBarcode || '';
+
+                                // Row 1: entity title (bold).
+                                if (_name) {
+                                    const _nameLine = document.createElement('div');
+                                    _nameLine.style.cssText = 'font-weight:600; margin-bottom:2px;';
+                                    _nameLine.textContent = _name;
+                                    _tip.appendChild(_nameLine);
+                                }
+                                // Row 2: disambiguation comment in italic (when present).
+                                if (_comment) {
+                                    const _commentLine = document.createElement('div');
+                                    _commentLine.style.cssText = 'font-style:italic; color:#cdd6f4; margin-bottom:2px;';
+                                    _commentLine.textContent = _comment;
+                                    _tip.appendChild(_commentLine);
+                                }
+                                // Row 3: Artist (when present).
+                                if (_artist) {
+                                    const _artistLine = document.createElement('div');
+                                    _artistLine.style.cssText = 'margin-bottom:4px;';
+                                    _artistLine.textContent = _artist;
+                                    _tip.appendChild(_artistLine);
+                                }
+                                // Divider — only when at least one detail field follows.
+                                if (_format || _cd || _label || _catnum || _barcode) {
+                                    const _div = document.createElement('div');
+                                    _div.style.cssText =
+                                        'border-top:1px solid #45475a; margin:4px 0;';
+                                    _tip.appendChild(_div);
+                                }
+                                // Row 4: Format (Tracks) — e.g. "12” Vinyl (9)".
+                                if (_format) {
+                                    const _fmtLine = document.createElement('div');
+                                    _fmtLine.style.cssText = 'margin-bottom:2px;';
+                                    _fmtLine.textContent   = _tracks
+                                        ? _format + ' (' + _tracks + ')'
+                                        : _format;
+                                    _tip.appendChild(_fmtLine);
+                                }
+                                // Row 5: Country/Date (when present).
+                                if (_cd) {
+                                    const _cdLine = document.createElement('div');
+                                    _cdLine.style.cssText  = 'margin-bottom:2px;';
+                                    _cdLine.textContent    = _cd;
+                                    _tip.appendChild(_cdLine);
+                                }
+                                // Row 6: Label – Catalog# (when either is present).
+                                if (_label || _catnum) {
+                                    const _lcLine = document.createElement('div');
+                                    _lcLine.style.cssText  = 'margin-bottom:2px;';
+                                    _lcLine.textContent    = (_label && _catnum)
+                                        ? _label + ' – ' + _catnum
+                                        : (_label || _catnum);
+                                    _tip.appendChild(_lcLine);
+                                }
+                                // Row 7: Barcode (when present).
+                                if (_barcode) {
+                                    const _bcLine = document.createElement('div');
+                                    _bcLine.style.cssText = 'color:#a6adc8;';
+                                    _bcLine.textContent   = _barcode;
+                                    _tip.appendChild(_bcLine);
+                                }
                             }
+
+                            // ── Position the tooltip ───────────────────────────────────────────────────
+                            // Top-align to the right of the wrapper image; fall back
+                            // left if the right edge would overflow the viewport.
                             const _r  = this.getBoundingClientRect();
                             const _vw = window.innerWidth, _vh = window.innerHeight;
                             _tip.style.display = 'block';

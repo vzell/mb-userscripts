@@ -1,5 +1,95 @@
 [
   {
+    "version": "9.99.307",
+    "date": "2026-03-25",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "_artTooltipCellText: fixed SyntaxError — Python-style \\U0001F300 escape in JS regex is invalid. Corrected to JS \\u{1F300}-\\u{1FAFF} with the u flag."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.306",
+    "date": "2026-03-25",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "_artTooltipColIdx: fixed header matching — column <th> textContent is polluted with injected sort-toggle arrows (⇅▲▼), count badges, and stats icons (📊). The fix walks child nodes and stops at the first Element (all injected UI is wrapped in spans/buttons), falling back to splitting on the first ⇅ character. All column name lookups now resolve correctly.",
+          "_artTooltipCellText: fixed cell value extraction — raw textContent includes CAA inline placeholders, cache-hint spans, eraser remnants and other noise. The fix clones the cell, removes injected UI elements (same selector as _CLEAN_STRIP_SEL), then prefers the first anchor's text for linked columns (Artist, Label, …) or falls back to stripped plain text.",
+          "tooltipColumns for releasegroup-releases and artist-releases: switched to clean synthetic column names — 'MB-Name' (clean release title), 'italic:Comment' (disambiguation comment in italic, stored as separate synthetic column), 'Total Tracks', 'Country', 'Date' instead of the polluted 'Release', 'Country/Date', 'Tracks' raw columns.",
+          "tooltipColumns for artist-recordings: added 'italic:Comment' after 'Name' for the disambiguation comment.",
+          "_renderBigboxTooltipFromColumns: added 'italic:ColumnName' prefix support — column value is rendered in italic with surrounding parens, used for standalone disambiguation-comment columns."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.305",
+    "date": "2026-03-25",
+    "sections": [
+      {
+        "label": "🐛 Debug",
+        "items": [
+          "Added console.log debug instrumentation to the bigbox strip tooltip pipeline: build-time _rowCellText data collection, mouseenter row resolution, _artTooltipColIdx header scan, _renderBigboxTooltipFromColumns spec loop, and _addRow calls. Logs are unconditional (console.log, not gated by sa_enable_debug_logging) to diagnose the black-square tooltip regression."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.304",
+    "date": "2026-03-25",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "_artBuildImageLi (type badge pills): Tooltip now wired on img.mouseenter alongside the hover-preview listener, not on li.mouseenter. This ensures the tooltip fires exactly when (and only when) the user hovers the thumbnail image. The tooltip is positioned top-right of #mb-art-hover-preview when it is visible; falls back to top-right of the img itself when sa_caa_hover_preview is OFF or no bigSrc is available.",
+          "_artInitBigPics (bigbox strip): Fixed row resolution in the mouseenter tooltip handler. Bigbox wrapper anchors live outside the table so closest('tr') always returned null. The fix reads data-caa-href / data-eaa-href (or href) from the wrapper and re-queries the live table tbody to find the matching anchor row each time the tooltip opens. This resolves the empty/black-square tooltip regression introduced in 9.99.302."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.303",
+    "date": "2026-03-25",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "_artBuildImageLi (type badge pills): HTML tooltip now positions top-right of the hover-preview popup (#mb-art-hover-preview) when visible; falls back to top-right of the <li> element when the popup is hidden.",
+          "ShowAllEntityData_CHANGELOG.json: moved 9.99.302 entry from end of file to beginning (newest-first order)."
+        ]
+      },
+      {
+        "label": "📦 Feature",
+        "items": [
+          "Added tooltipColumns feature key to pageType definitions for 'releasegroup-releases', 'artist-releases', and 'artist-recordings', specifying which columns to render in the bigbox tooltip and how to group inline tokens.",
+          "New helper _renderBigboxTooltipFromColumns(tip, row, pageDef, table): generic tooltipColumns renderer. Supports: '---' divider, plain column names (main column rendered bold with italic comment below), and JS array groups for inline token rows (column values + literal punctuation, empty columns suppress adjacent literals).",
+          "New helpers _artTooltipColIdx, _artTooltipCellText, _artTooltipSplitComment: low-level building blocks for column-index resolution, cell text extraction, and title/comment splitting from <span class='comment'>.",
+          "_artInitBigPics (bigbox strip): mouseenter handler now delegates to _renderBigboxTooltipFromColumns when the active page definition has tooltipColumns; falls back to the existing static data-attribute rendering for other page types."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.302",
+    "date": "2026-03-24",
+    "sections": [
+      {
+        "label": "📦 Feature",
+        "items": [
+          "_artInitBigPics (bigbox strip): Enrich HTML tooltip with additional release row fields — Artist, Format (Tracks), Country/Date, Label (without comment) – Catalog#, Barcode — shown below the italic disambiguation comment when present.",
+          "_artInitBigPics (bigbox strip): HTML tooltip is now always shown (unconditionally), not only when a disambiguation comment is present.",
+          "_artInitBigPics (bigbox strip): Plain non-HTML wrapper.title is no longer set; the HTML tooltip is the sole tooltip mechanism.",
+          "_artBuildImageLi (type badge pills): Replace plain img.title with an HTML tooltip on the <li> element, showing type pill labels in bold on line 1 and the italic comment (in parentheses) on line 2 when present."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.301",
     "date": "2026-03-24",
     "sections": [
