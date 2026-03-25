@@ -61882,7 +61882,7 @@ tooltipColumns: [ 'Event', 'Type', 'Artists', '---', ['Date', '(', 'Time', ')'] 
 
 ** bugs
 
-In the uploaded userscript
+In the newly uploaded userscript "ShowAllEntityData.user.js" and ChangeLog file "ShowAllEntityData_CHANGELOG.json"
 
 regarding the
 
@@ -61964,7 +61964,7 @@ there is the same artificial
 caa-inline-yes
 #+end_example
 
-appended to the title in the first tooltip row, please remove
+appended to the title (like in 1.a) in the first tooltip row, please remove
 
 b.)
 
@@ -61972,7 +61972,7 @@ When the "Time" table data cell is empty, do NOT render as currently a single ")
 
 c.)
 
-please extract the complete 'class="artist-roles"' "<li>" elements (<bdi> text + performer roll eg. "(main performer)"), comm separated in the tooltip from the eg. following data cell in the column "Artists"
+please extract the complete 'class="artist-roles"' "<li>" elements (<bdi> text + performer role eg. "(main performer)"), comma separated in the tooltip from the eg. following data cell in the column "Artists"
 
 #+begin_example
 <td class="mb-has-collapse-toggle">
@@ -62013,7 +62013,6 @@ please extract the complete 'class="artist-roles"' "<li>" elements (<bdi> text +
 </td>
 #+end_example
 
-
 3.)
 
 for the 'artist-releasegroups' pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
@@ -62036,16 +62035,37 @@ When rendering columns in the tooltips, which are enclosed with brackets there i
 
 please remove the blanks right after the "(" and before the ")"
 
+** bugs
+
+last bugs
+
+1.)
+
+for the 'artist-releasegroups' pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+there is also the toggle glyph "▶" which needs to be removed from the "Title" column before inserting it into the
+tooltip first row
+
+2.)
+
+for the 'artist-events' pageType  https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+cancelled needs to be fixed
+
+
+
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
 
-In the uploaded userscript there is BUG with "multi-row" columns on URLs of pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings in the "Release groups" column.
+In the uploaded userscript there is BUG with "multi-row" columns on URLs of pageType
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings in the "Release groups" column.
 
 Here are the steps to reproduce:
 
-- first start uncollapsing a multi-row data cell in the "Release groups" column, e.g. the following with 4 release groups inside 
+- first start uncollapsing a multi-row data cell in the "Release groups" column, e.g. the following with 4 release
+  groups inside
 
 #+begin_example
 <span class="mb-cell-collapse-toggle" title="Show all multi-row cell items (4)" role="button" aria-expanded="false" aria-label="Expand: 4 items are collapsed">
