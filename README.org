@@ -62407,7 +62407,11 @@ which correctly walks backwards past any injected image stripes to find the true
 
 ** fix
 
+1.)
+
 on https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+
+a.)
 
 change
 
@@ -62459,6 +62463,11 @@ b.)
 
 the "comment " from the "Event" column is missing
 
+2.)
+
+on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+the italic "comment" is also missing
 
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
