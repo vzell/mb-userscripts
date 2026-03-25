@@ -61785,7 +61785,7 @@ c.)
 #+begin_example
 type: 'artist-relationships'
 ..
-tooltipColumns: [ 'Title', 'Artist'.  '---', 'Credited as', 'Attributes' ],
+tooltipColumns: [ 'Title', 'Artist', '---', 'Credited as', 'Attributes' ],
 #+end_example
 
 d.)
@@ -61793,7 +61793,7 @@ d.)
 #+begin_example
 type: 'label-releases'
 ..
-tooltipColumns: [ 'Release', 'Artist'.  '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', 'Catalog#', 'Barcode' ],
+tooltipColumns: [ 'Release', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', 'Catalog#', 'Barcode' ],
 #+end_example
 
 e.)
@@ -61801,8 +61801,77 @@ e.)
 #+begin_example
 type: series-releases'
 ..
-tooltipColumns: [ 'Release', 'Artist'.  '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+tooltipColumns: [ 'Release', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
 #+end_example
+
+** small fixes
+
+small fixes
+
+1.)
+
+on URLs of pageTypes
+
+#+begin_example
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+#+end_example
+
+the toggle glyph "▶" and the network cache icon, e.g.
+
+#+begin_example
+▶🔵
+#+end_example
+
+shouldn't be present when extracting the title column for the tooltip information in the first tooltip row
+
+2.)
+
+for the 'artist-events' pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+change the configuration from
+
+#+begin_example
+type: 'artist-events'
+..
+tooltipColumns: [ 'Event', '---', 'Type', 'Role', 'Location' ['Date', '(', 'time', ')'], 'Cancelled' ],
+#+end_example
+
+to
+
+#+begin_example
+type: 'artist-events'
+..
+tooltipColumns: [ 'Event', 'Type', '---', 'Role', 'Location' ['Date', '(', 'time', ')'], 'Cancelled' ],
+#+end_example
+
+The "Cancelled" column should be decoded in the tooltip as 
+
+#+begin_example
+"yes" == "Cancelled" in dark red
+"no" - "", empty
+#+end_example
+
+3.)
+
+add additional configuration parameters to the following pageTypes:
+
+a.)
+
+#+begin_example
+type: 'artist-releasegroups'
+..
+tooltipColumns: [ 'Title', 'Artist', '---', ['Date', '(', 'Releases', ')'] ],
+#+end_example
+
+b.)
+
+#+begin_example
+type: 'place-events'
+..
+tooltipColumns: [ 'Event', 'Type', 'Artists', '---', ['Date', '(', 'Time', ')'] ],
+#+end_example
+
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
@@ -62145,6 +62214,7 @@ On "Search" pages, sometimes the following error message is displayed on first r
 #+begin_example
 <p>Sorry, your query “(<code>Tracks II: The Lost Albums</code>)” does not contain enough information to carry out a search.</p>
 #+end_example
+
 
 * TODO Add a toggle "Collapse all [CAA icon]"-button to h2/h3 header line
 
