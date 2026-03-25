@@ -62533,7 +62533,7 @@ for "Keyboard Shortcuts" and below
 for "Application Help & Feature Overview"
 
 
-* TODO On "Search" pages, sometimes the following error messgae is displaye on first rendering of the final page 
+* TODO On "Search" pages, sometimes the following error message is displayed on first rendering of the final page 
 
 On "Search" pages, sometimes the following error message is displayed on first rendering of the final page
 
@@ -62550,3 +62550,4 @@ Configurable:
 
 - Maybe make the big picture tooltip a little wider to account for lonf dismabiguation comments
 - background color of the tooltip
+
