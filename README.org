@@ -60731,7 +60731,772 @@ You actually positioned the changelog for '"version": "9.99.302"' at the end of 
 
 instead of the beginning. Please fix in this session
 
- 
+** bugs
+
+Actually nothing is being fixed:
+
+1.)
+
+Fix 1 — _artBuildImageLi li tooltip positioning DOESN't work at all, it's the same behaviour as before, but it's supposed to do the following:
+
+The mouseenter handler now checks whether #mb-art-hover-preview is visible. If it is, the tooltip anchors top-right of that popup (matching the bigbox strip behaviour). If the popup is hidden it falls back to top-right of the <li> itself.
+
+for the "_artBuildImageLi (type badge pills)": always render the tooltip "top aligned" to the "right" of the big image
+popup when hovering over with the mouse. The tooltip should render like in the case for "_artInitBigPics (bigbox strip)",
+where the tooltip is also always "top right aligned" with the corresponding big image inside the artwork stripe.
+
+2.)
+
+The tooltip in the big-picture stripe now shows for every picture in the stripe a black square (with rounded corners) top right aligend to the actual big image.
+
+This is the HTML code e.g.
+
+#+begin_example
+<a href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" data-art-tooltip-name="Greetings From Asbury Park, N.J." data-art-tooltip-comment="(Pitman pressing)" data-caa-href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60" style="display: inline-block; height: 100%; margin: 8px 8px 4px 4px; position: relative;">
+  <img alt="Greetings From Asbury Park, N.J." style="vertical-align: middle; display: inline; max-height: 125px; box-shadow: black 1px 1px 4px;" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250">
+  <span class="mb-art-cache-hint-big" title="Network fetch (733 ms)" style="position: absolute; top: 2px; left: 2px; font-size: 0.8em; line-height: 1; background: rgba(0, 0, 0, 0.35); border-radius: 3px; padding: 1px 2px; user-select: none; cursor: default; pointer-events: none; z-index: 1;">🔵
+  </span>
+</a>
+#+end_example
+
+** still
+
+1.)
+
+_artBuildImageLi li tooltip positioning IS fixed now, thx.
+
+2.)
+
+The tooltip in the big-picture stripe STILL shows for every picture in the stripe a black square (with rounded corners) top right aligend to the actual big image. Please fix...
+
+Maybe it's a good idea to emit debug log statements to the console, to check which values from which columns get extracted and how they are used to construct the tooltip.
+
+** console log
+
+Here is the debug log run
+
+#+begin_example
+[bigbox tooltip] wrapHref=/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Pitman pressing)caa-inl"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"iso_3166_2_codes":[],"gid":"489ce91b"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "KC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"3ce46b79-5e8c-470a-bcdc-45f30"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵8yesFrontBackMediumMediumFront / Other – fold‐out postcar"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "United States (US)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973-01-05"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = "5"
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = "1"
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = "Friday"
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = "January"
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Pitman pressing"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/a24277ad-1376-4b52-868d-9d82343ed787
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Spain, version 4)caa-in"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"editsPending":false,"iso_3166_3_code"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "CBS (CBS Records’ international imprint from 1962–1990; rena"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "S 32210"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "5099703221015"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"a24277ad-1376-4b52-868d-9d823"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵4yesFrontBackMediumMedium"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Spain (ES)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1982"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1982"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Spain, version 4"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/677cd032-555c-4c3f-ac12-ffec7363b614
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Spain, version 3)caa-in"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"ended":false,"id":194,"comment":"",""
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "CBS (CBS Records’ international imprint from 1962–1990; rena"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "S 32210"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"677cd032-555c-4c3f-ac12-ffec7"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵6yesFront / StickerBackBackMediumMediumOther"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Spain (ES)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1982"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1982"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Spain, version 3"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/d93ba287-33ce-4935-aeba-f8a0135e024e
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 1)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"date":{"year":1973,"day":null,"month":null},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "KC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"d93ba287-33ce-4935-aeba-f8a01"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontBackMediumMediumBack / Other – fold-out postcard"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 1"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/02a3c67f-d415-4a79-bd26-5432bd44466e
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J.caa-inline-yes"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"editsPending":false,"iso_3166_3_code"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "16645"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"02a3c67f-d415-4a79-bd26-5432b"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontMediumMediumOther – inlet outer sideOther – inle"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Brazil (BR)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = ""
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/bbfabca0-ef57-428f-860d-eece549c0a99
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J.caa-inline-yes"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"date":{"year":1973,"month":null,"day":null},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "CBS (CBS Records’ international imprint from 1962–1990; rena"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "SBP 234758"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"bbfabca0-ef57-428f-860d-eece5"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontBackMediumMediumOther – insert, black on one sid"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Australia (AU)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = ""
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/bbfabca0-ef57-428f-860d-eece549c0a99
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J.caa-inline-yes"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"date":{"year":1973,"month":null,"day":null},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "CBS (CBS Records’ international imprint from 1962–1990; rena"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "SBP 234758"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"bbfabca0-ef57-428f-860d-eece5"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontBackMediumMediumOther – insert, black on one sid"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Australia (AU)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = ""
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/02a3c67f-d415-4a79-bd26-5432bd44466e
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J.caa-inline-yes"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"editsPending":false,"iso_3166_3_code"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "16645"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"02a3c67f-d415-4a79-bd26-5432b"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontMediumMediumOther – inlet outer sideOther – inle"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Brazil (BR)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = ""
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/d93ba287-33ce-4935-aeba-f8a0135e024e
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 1)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"date":{"year":1973,"day":null,"month":null},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "KC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"d93ba287-33ce-4935-aeba-f8a01"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontBackMediumMediumBack / Other – fold-out postcard"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 1"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/4e9e2b69-75e3-458b-9a4d-d42badf79205
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 1)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"gid":"71bbafaa-e825-3e15-8ca9-017dca"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "WPCT 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"4e9e2b69-75e3-458b-9a4d-d42ba"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵11yesFrontBackMediumMediumFront / Back / SpineOtherFrontM"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 1"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/4d9397d6-f997-4c76-b429-377726e241b4
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 4)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"date":{"day":null,"month":null,"year":1973},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "WPC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"4d9397d6-f997-4c76-b429-37772"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵6yesFront / StickerBackOther – fold-out postcard sleeveOt"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 4"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/0c9f2267-be63-4169-8f85-f090585725b5
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 3)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"gid":"71bbafaa-e825-3e15-8ca9-017dca"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "PC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"0c9f2267-be63-4169-8f85-f0905"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontBackMediumMediumOther – opened gatefold cover"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 3"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/0c9f2267-be63-4169-8f85-f090585725b5
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 3)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"gid":"71bbafaa-e825-3e15-8ca9-017dca"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "PC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"0c9f2267-be63-4169-8f85-f0905"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontBackMediumMediumOther – opened gatefold cover"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 3"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/4d9397d6-f997-4c76-b429-377726e241b4
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 4)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"date":{"day":null,"month":null,"year":1973},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "WPC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"4d9397d6-f997-4c76-b429-37772"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵6yesFront / StickerBackOther – fold-out postcard sleeveOt"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 4"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/4e9e2b69-75e3-458b-9a4d-d42badf79205
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 1)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"gid":"71bbafaa-e825-3e15-8ca9-017dca"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "WPCT 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"4e9e2b69-75e3-458b-9a4d-d42ba"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵11yesFrontBackMediumMediumFront / Back / SpineOtherFrontM"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 1"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/d93ba287-33ce-4935-aeba-f8a0135e024e
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Canada, version 1)caa-i"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"date":{"year":1973,"day":null,"month":null},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "KC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"d93ba287-33ce-4935-aeba-f8a01"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontBackMediumMediumBack / Other – fold-out postcard"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Canada (CA)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Canada, version 1"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/02a3c67f-d415-4a79-bd26-5432bd44466e
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J.caa-inline-yes"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"editsPending":false,"iso_3166_3_code"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "16645"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"02a3c67f-d415-4a79-bd26-5432b"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontMediumMediumOther – inlet outer sideOther – inle"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Brazil (BR)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "Cassette"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = ""
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/bbfabca0-ef57-428f-860d-eece549c0a99
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J.caa-inline-yes"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"date":{"year":1973,"month":null,"day":null},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "CBS (CBS Records’ international imprint from 1962–1990; rena"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "SBP 234758"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"bbfabca0-ef57-428f-860d-eece5"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵5yesFrontBackMediumMediumOther – insert, black on one sid"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Australia (AU)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = ""
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = ""
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = ""
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = ""
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = ""
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+[bigbox tooltip] wrapHref=/release/7c75d491-cf0d-4616-b730-7fec41f52973
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Japan, 1st issue)caa-in"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "CD"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"gid":"2db42837-c832-3c27-b4a3-08198f"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "CBS/Sony (imprint used in Japan, South Korea and Southeast A"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "32DP 353"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"7c75d491-cf0d-4616-b730-7fec4"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵3yesFront / ObiBack / ObiMedium"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "Japan (JP)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1985-04-01"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "CD"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = "1"
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = "4"
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1985"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = "Monday"
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = "April"
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Japan, 1st issue"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[bigbox tooltip] rendered via tooltipColumns
+#+end_example
+
+Here is the debug log run
+
+#+begin_example
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: built 5 image row(s) in CAA cell 
+[bigbox tooltip] wrapHref=/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=releasegroup-releases
+[bigbox tooltip] tooltipColumns=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼64📊" = "▶🔵Greetings From Asbury Park, N.J. (Pitman pressing)caa-inl"
+[bigbox tooltip] col[2] "Artist ⇅▲▼1📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶1▤72📊" = "{"events":[{"country":{"iso_3166_2_codes":[],"gid":"489ce91b"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶7▤17📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶28▤60📊" = "KC 31903"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼28📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"3ce46b79-5e8c-470a-bcdc-45f30"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼2📊" = "▶🔵8yesFrontBackMediumMediumFront / Other – fold‐out postcar"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶1▤21📊" = "United States (US)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶1▤36📊" = "1973-01-05"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼2📊" = "9"
+[bigbox tooltip] col[14] "Format Types ⇅▲▼7📊" = "12" Vinyl"
+[bigbox tooltip] col[15] "DD ⇅▲▼13📊" = "5"
+[bigbox tooltip] col[16] "MM ⇅▲▼11📊" = "1"
+[bigbox tooltip] col[17] "YYYY ⇅▲▼20📊" = "1973"
+[bigbox tooltip] col[18] "Day ⇅▲▼7📊" = "Friday"
+[bigbox tooltip] col[19] "Month ⇅▲▼11📊" = "January"
+[bigbox tooltip] col[20] "MB-Name ⇅▲▼2📊" = "▶Greetings From Asbury Park, N.J."
+[bigbox tooltip] col[21] "Comment ⇅▲▼62📊" = "Pitman pressing"
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["Release","Artist","---",["Format","(","Tracks",")"],"Country/Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="Release"
+[_artTooltipColIdx] "Release" -> idx=-1 (headers: , Release ⇅▲▼64📊, Artist ⇅▲▼1📊, Format ⇅▲▼7📊, Tracks ⇅▲▼2📊, Country/Date ⇅▲▼▶1▤72📊, Label ⇅▲▼▶7▤17📊, Catalog# ⇅▲▼▶28▤60📊, Barcode ⇅▲▼28📊, Tagger ⇅▲▼📊, ▶CAA ⇅▲▼2📊, Country ⇅▲▼▶1▤21📊, Date ⇅▲▼▶1▤36📊, Total Tracks ⇅▲▼2📊, Format Types ⇅▲▼7📊, DD ⇅▲▼13📊, MM ⇅▲▼11📊, YYYY ⇅▲▼20📊, Day ⇅▲▼7📊, Month ⇅▲▼11📊, MB-Name ⇅▲▼2📊, Comment ⇅▲▼62📊)
+[_addRow] skipped (empty text)
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_artTooltipColIdx] "Artist" -> idx=-1 (headers: , Release ⇅▲▼64📊, Artist ⇅▲▼1📊, Format ⇅▲▼7📊, Tracks ⇅▲▼2📊, Country/Date ⇅▲▼▶1▤72📊, Label ⇅▲▼▶7▤17📊, Catalog# ⇅▲▼▶28▤60📊, Barcode ⇅▲▼28📊, Tagger ⇅▲▼📊, ▶CAA ⇅▲▼2📊, Country ⇅▲▼▶1▤21📊, Date ⇅▲▼▶1▤36📊, Total Tracks ⇅▲▼2📊, Format Types ⇅▲▼7📊, DD ⇅▲▼13📊, MM ⇅▲▼11📊, YYYY ⇅▲▼20📊, Day ⇅▲▼7📊, Month ⇅▲▼11📊, MB-Name ⇅▲▼2📊, Comment ⇅▲▼62📊)
+[_addRow] skipped (empty text)
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Tracks",")"]
+[_artTooltipColIdx] "Format" -> idx=-1 (headers: , Release ⇅▲▼64📊, Artist ⇅▲▼1📊, Format ⇅▲▼7📊, Tracks ⇅▲▼2📊, Country/Date ⇅▲▼▶1▤72📊, Label ⇅▲▼▶7▤17📊, Catalog# ⇅▲▼▶28▤60📊, Barcode ⇅▲▼28📊, Tagger ⇅▲▼📊, ▶CAA ⇅▲▼2📊, Country ⇅▲▼▶1▤21📊, Date ⇅▲▼▶1▤36📊, Total Tracks ⇅▲▼2📊, Format Types ⇅▲▼7📊, DD ⇅▲▼13📊, MM ⇅▲▼11📊, YYYY ⇅▲▼20📊, Day ⇅▲▼7📊, Month ⇅▲▼11📊, MB-Name ⇅▲▼2📊, Comment ⇅▲▼62📊)
+[_artTooltipColIdx] "Tracks" -> idx=-1 (headers: , Release ⇅▲▼64📊, Artist ⇅▲▼1📊, Format ⇅▲▼7📊, Tracks ⇅▲▼2📊, Country/Date ⇅▲▼▶1▤72📊, Label ⇅▲▼▶7▤17📊, Catalog# ⇅▲▼▶28▤60📊, Barcode ⇅▲▼28📊, Tagger ⇅▲▼📊, ▶CAA ⇅▲▼2📊, Country ⇅▲▼▶1▤21📊, Date ⇅▲▼▶1▤36📊, Total Tracks ⇅▲▼2📊, Format Types ⇅▲▼7📊, DD ⇅▲▼13📊, MM ⇅▲▼11📊, YYYY ⇅▲▼20📊, Day ⇅▲▼7📊, Month ⇅▲▼11📊, MB-Name ⇅▲▼2📊, Comment ⇅▲▼62📊)
+[_renderBigboxTooltipFromColumns] spec="Country/Date"
+[_artTooltipColIdx] "Country/Date" -> idx=-1 (headers: , Release ⇅▲▼64📊, Artist ⇅▲▼1📊, Format ⇅▲▼7📊, Tracks ⇅▲▼2📊, Country/Date ⇅▲▼▶1▤72📊, Label ⇅▲▼▶7▤17📊, Catalog# ⇅▲▼▶28▤60📊, Barcode ⇅▲▼28📊, Tagger ⇅▲▼📊, ▶CAA ⇅▲▼2📊, Country ⇅▲▼▶1▤21📊, Date ⇅▲▼▶1▤36📊, Total Tracks ⇅▲▼2📊, Format Types ⇅▲▼7📊, DD ⇅▲▼13📊, MM ⇅▲▼11📊, YYYY ⇅▲▼20📊, Day ⇅▲▼7📊, Month ⇅▲▼11📊, MB-Name ⇅▲▼2📊, Comment ⇅▲▼62📊)
+[_addRow] skipped (empty text)
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_artTooltipColIdx] "Label" -> idx=-1 (headers: , Release ⇅▲▼64📊, Artist ⇅▲▼1📊, Format ⇅▲▼7📊, Tracks ⇅▲▼2📊, Country/Date ⇅▲▼▶1▤72📊, Label ⇅▲▼▶7▤17📊, Catalog# ⇅▲▼▶28▤60📊, Barcode ⇅▲▼28📊, Tagger ⇅▲▼📊, ▶CAA ⇅▲▼2📊, Country ⇅▲▼▶1▤21📊, Date ⇅▲▼▶1▤36📊, Total Tracks ⇅▲▼2📊, Format Types ⇅▲▼7📊, DD ⇅▲▼13📊, MM ⇅▲▼11📊, YYYY ⇅▲▼20📊, Day ⇅▲▼7📊, Month ⇅▲▼11📊, MB-Name ⇅▲▼2📊, Comment ⇅▲▼62📊)
+[_artTooltipColIdx] "Catalog#" -> idx=-1 (headers: , Release ⇅▲▼64📊, Artist ⇅▲▼1📊, Format ⇅▲▼7📊, Tracks ⇅▲▼2📊, Country/Date ⇅▲▼▶1▤72📊, Label ⇅▲▼▶7▤17📊, Catalog# ⇅▲▼▶28▤60📊, Barcode ⇅▲▼28📊, Tagger ⇅▲▼📊, ▶CAA ⇅▲▼2📊, Country ⇅▲▼▶1▤21📊, Date ⇅▲▼▶1▤36📊, Total Tracks ⇅▲▼2📊, Format Types ⇅▲▼7📊, DD ⇅▲▼13📊, MM ⇅▲▼11📊, YYYY ⇅▲▼20📊, Day ⇅▲▼7📊, Month ⇅▲▼11📊, MB-Name ⇅▲▼2📊, Comment ⇅▲▼62📊)
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[_artTooltipColIdx] "Barcode" -> idx=-1 (headers: , Release ⇅▲▼64📊, Artist ⇅▲▼1📊, Format ⇅▲▼7📊, Tracks ⇅▲▼2📊, Country/Date ⇅▲▼▶1▤72📊, Label ⇅▲▼▶7▤17📊, Catalog# ⇅▲▼▶28▤60📊, Barcode ⇅▲▼28📊, Tagger ⇅▲▼📊, ▶CAA ⇅▲▼2📊, Country ⇅▲▼▶1▤21📊, Date ⇅▲▼▶1▤36📊, Total Tracks ⇅▲▼2📊, Format Types ⇅▲▼7📊, DD ⇅▲▼13📊, MM ⇅▲▼11📊, YYYY ⇅▲▼20📊, Day ⇅▲▼7📊, Month ⇅▲▼11📊, MB-Name ⇅▲▼2📊, Comment ⇅▲▼62📊)
+[_addRow] skipped (empty text)
+[bigbox tooltip] rendered via tooltipColumns
+#+end_example
+
+
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
