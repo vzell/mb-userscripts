@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.307+2026-03-25
+// @version      9.99.308+2026-03-25
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -29366,18 +29366,39 @@ a { color: #1565c0; }`;
             'span.comment'
         ).forEach(el => el.remove());
 
-        // If a primary anchor exists, prefer its clean text.
+        // ── Multi-row cell: plain <ul><li> structure (renderMultiRowCell output) ──
+        // When the cell's primary content is a <ul>, collect text from its <li>
+        // children only.  The collapse-toggle (▶N▤) lives outside the <ul> in the
+        // <td>, so reading only <li> text avoids that noise entirely.
+        const ul = clone.querySelector(':scope > ul');
+        if (ul) {
+            const liTexts = Array.from(ul.querySelectorAll('li')).map(li => {
+                // Prefer the first anchor text in each <li> (e.g. Label name).
+                const a = li.querySelector('a');
+                if (a) return a.textContent.replace(/\s+/g, ' ').trim();
+                return li.textContent.replace(/\s+/g, ' ').trim();
+            }).filter(Boolean);
+            return liTexts.join(', ');
+        }
+
+        // ── Linked cell: prefer the first anchor's text ───────────────────────
         const anchor = clone.querySelector('a');
         if (anchor) {
             return anchor.textContent.replace(/\s+/g, ' ').trim();
         }
 
-        // No anchor — use the cleaned clone's full text, then strip any
-        // leading non-printable / icon characters the eraser may have missed.
-        return clone.textContent
+        // ── Plain text fallback ───────────────────────────────────────────────
+        const _raw = clone.textContent
             .replace(/\s+/g, ' ')
             .replace(/^[\u25b6\u2795\u26a0\ufe0f\u{1F300}-\u{1FAFF}\u2600-\u27BF]+/gu, '')
             .trim();
+
+        // Suppress raw JSON/data strings injected by the script into hidden
+        // elements (e.g. ISRCs: '{"isrcs":[]}', Country/Date: '{"events":[…]}').
+        if (_raw.startsWith('{') || _raw.startsWith('[')) return '';
+
+        // Strip any residual trailing collapse-toggle ▶N▤ sequences.
+        return _raw.replace(/\s*\u25b6\d+\u25a4\s*$/u, '').trim();
     }
 
     /**
@@ -29508,18 +29529,23 @@ a { color: #1565c0; }`;
                 );
                 if (!hasColValue) return;
 
-                // Build token list, suppressing literals whose neighbours are absent.
+                // Build token list, suppressing literals whose required neighbours are absent.
+                // '(' (opening bracket) only needs a following non-empty column.
+                // ')' (closing bracket) only needs a preceding non-empty column.
+                // All other separators ('-', '–', '/', …) need both neighbours.
                 const tokens = [];
                 spec.forEach((tok, i) => {
                     if (LITERALS.has(tok)) {
-                        // Include literal only when both neighbours have a value.
                         const prevHas = resolved.slice(0, i).some(
                             (v, j) => !LITERALS.has(spec[j]) && v !== null
                         );
                         const nextHas = resolved.slice(i + 1).some(
                             (v, j) => !LITERALS.has(spec[i + 1 + j]) && v !== null
                         );
-                        if (prevHas && nextHas) tokens.push(tok);
+                        const include = tok === '(' ? nextHas
+                                      : tok === ')' ? prevHas
+                                      : prevHas && nextHas;
+                        if (include) tokens.push(tok);
                     } else if (resolved[i] !== null) {
                         tokens.push(resolved[i]);
                     }
@@ -29547,16 +29573,13 @@ a { color: #1565c0; }`;
                         console.log('[_addRow italic] "' + _val + '"');
                     }
                 } else if (_colName.toLowerCase() === mainColLower) {
-                    // Main column: render title bold; extract inline comment in italic below.
-                    const { title, comment } = _artTooltipSplitComment(row, ci);
+                    // Main column: render title bold only.
+                    // The disambiguation comment is NOT extracted here — it is
+                    // rendered by an explicit 'italic:Comment' spec that follows
+                    // (using the dedicated synthetic Comment column), so extracting
+                    // it inline would produce a duplicate italic row.
+                    const { title } = _artTooltipSplitComment(row, ci);
                     _addRow(title, 'font-weight:600;');
-                    if (comment) {
-                        const d = document.createElement('div');
-                        d.style.cssText =
-                            'font-style:italic; color:#cdd6f4; margin-bottom:2px;';
-                        d.textContent = '(' + comment + ')';
-                        tip.appendChild(d);
-                    }
                 } else {
                     _addRow(_artTooltipCellText(row, ci));
                 }

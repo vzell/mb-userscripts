@@ -1,5 +1,20 @@
 [
   {
+    "version": "9.99.308",
+    "date": "2026-03-25",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "_renderBigboxTooltipFromColumns (inline group): closing bracket ')' was always suppressed because the nextHas check found no following column after a trailing literal. Fix: '(' only requires a following column value; ')' only requires a preceding column value; separators ('-', '/', –, —) require both. Fixes 'Cassette ( 8' → 'Cassette (8)'.",
+          "_artTooltipCellText: raw JSON strings (e.g. '{\"isrcs\":[]}', '{\"events\":[...]}') from hidden data elements are now detected (value starts with '{' or '[') and suppressed, returning '' so the spec row is skipped.",
+          "_artTooltipCellText: multi-row cells (rendered by renderMultiRowCell as plain <ul><li>) are now handled by reading <li> text directly rather than the full textContent. This avoids the collapse-toggle noise ('▶N▤') that lives outside the <ul> in the <td>. Per-<li> anchor text is preferred (e.g. Label name).",
+          "_renderBigboxTooltipFromColumns (main column): the inline <span class='comment'> is no longer extracted and rendered when the main column is listed in tooltipColumns, because an explicit 'italic:Comment' spec always follows it. Fixes double italic-comment display on artist-recordings pages."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.307",
     "date": "2026-03-25",
     "sections": [
