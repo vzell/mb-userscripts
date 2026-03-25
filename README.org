@@ -1,3 +1,8 @@
+* Claude
+
+https://claude.ai/referral/0po2z2N-xQ
+
+
 * MAYBE later again
 
 #+begin_example
@@ -61496,6 +61501,25 @@ Here is the debug log run
 [bigbox tooltip] rendered via tooltipColumns
 #+end_example
 
+** bugs
+
+some bugs need to be fixed and some more pageTypes need to be supported:
+
+1.)
+
+the closing bracket aftert the "Tracks" column is missing
+
+2.)
+
+the debug.log statements should be re-written as in our standard framework but guarded with an addiitonal boolen for very low level debugging
+
+3.)
+
+
+#+begin_example
+
+#+end_example
+
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
@@ -61829,3 +61853,15 @@ for "Keyboard Shortcuts" and below
 #+end_example
 
 for "Application Help & Feature Overview"
+
+
+* TODO On "Search" pages, sometimes the following error messgae is displaye on first rendering of the final page 
+
+On "Search" pages, sometimes the following error message is displayed on first rendering of the final page
+
+#+begin_example
+<p>Sorry, your query “(<code>Tracks II: The Lost Albums</code>)” does not contain enough information to carry out a search.</p>
+#+end_example
+
+* TODO Add a toggle "Collapse all [CAA icon]"-button to h2/h3 header line
+
