@@ -61503,22 +61503,199 @@ Here is the debug log run
 
 ** bugs
 
-some bugs need to be fixed and some more pageTypes need to be supported:
+some bugs need to be fixed:
 
 1.)
+
+on URLs of pageType  https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
 the closing bracket aftert the "Tracks" column is missing
 
 2.)
 
-the debug.log statements should be re-written as in our standard framework but guarded with an addiitonal boolen for very low level debugging
+a.)
+
+on URLs of pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings 
+
+there is a problem in the "ISRCs" column when there is NO value, then the following value is displayed in the tooltip
+
+#+begin_example
+{"isrcs":[]}
+#+end_example
+
+see the complete debug log
+
+#+begin_example
+[bigbox tooltip] wrapHref=/release-group/088e03a9-7abc-4392-8c9c-fc224f49b66b
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=artist-recordings
+[bigbox tooltip] tooltipColumns=["Release groups","Name","italic:Comment","Artist","---",["Length","-","Video"],"ISRCs"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Name ⇅▲▼362📊" = "(I Can’t Get No) Satisfaction (live)"
+[bigbox tooltip] col[2] "Artist ⇅▲▼14📊" = "Bruce Springsteen & The E Street Band"
+[bigbox tooltip] col[3] "ISRCs ⇅▲▼2📊" = "{"isrcs":[]}"
+[bigbox tooltip] col[4] "Length ⇅▲▼258📊" = "4:43"
+[bigbox tooltip] col[5] "Release groups ⇅▲▼▶7▤128📊" = "▶🔵Spare Workscaa-inline-yes"
+[bigbox tooltip] col[6] "Video ⇅▲▼2📊" = "audio"
+[bigbox tooltip] col[7] "MB-Name ⇅▲▼325📊" = "(I Can’t Get No) Satisfaction"
+[bigbox tooltip] col[8] "Comment ⇅▲▼104📊" = "live"
+[_renderBigboxTooltipFromColumns] mainCol=name specs=["Release groups","Name","italic:Comment","Artist","---",["Length","-","Video"],"ISRCs"]
+[_renderBigboxTooltipFromColumns] spec="Release groups"
+[_artTooltipColIdx] "Release groups" -> idx=5 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "Spare Works"
+[_renderBigboxTooltipFromColumns] spec="Name"
+[_artTooltipColIdx] "Name" -> idx=1 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "(I Can’t Get No) Satisfaction"
+[_renderBigboxTooltipFromColumns] spec="italic:Comment"
+[_artTooltipColIdx] "Comment" -> idx=8 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow italic] "live"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_artTooltipColIdx] "Artist" -> idx=2 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "Bruce Springsteen"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Length","-","Video"]
+[_artTooltipColIdx] "Length" -> idx=4 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_artTooltipColIdx] "Video" -> idx=6 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "4:43 - audio"
+[_renderBigboxTooltipFromColumns] spec="ISRCs"
+[_artTooltipColIdx] "ISRCs" -> idx=3 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "{"isrcs":[]}"
+[bigbox tooltip] rendered via tooltipColumns
+#+end_example
+
+b.)
+
+on URLs of pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+
+there is a problem displaying TWO times the italic comment in brackets from the "Name" column
+
+#+begin_example
+1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa
+(4th of July, Asbury Park) Sandy
+(live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA)
+(live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA)
+Bruce Springsteen
+...
+#+end_example
+
+see the complete debug log
+
+#+begin_example
+[bigbox tooltip] wrapHref=/release-group/3deb074d-81d1-4ddd-9b93-81e03d6ad2de
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=artist-recordings
+[bigbox tooltip] tooltipColumns=["Release groups","Name","italic:Comment","Artist","---",["Length","-","Video"],"ISRCs"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Name ⇅▲▼362📊" = "(4th of July, Asbury Park) Sandy (live, 1975‐09‐26: Hancher "
+[bigbox tooltip] col[2] "Artist ⇅▲▼14📊" = "Bruce Springsteen & The E Street Band"
+[bigbox tooltip] col[3] "ISRCs ⇅▲▼2📊" = "{"isrcs":[]}"
+[bigbox tooltip] col[4] "Length ⇅▲▼258📊" = "7:54"
+[bigbox tooltip] col[5] "Release groups ⇅▲▼▶7▤128📊" = "▶🔵1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa "
+[bigbox tooltip] col[6] "Video ⇅▲▼2📊" = "audio"
+[bigbox tooltip] col[7] "MB-Name ⇅▲▼325📊" = "(4th of July, Asbury Park) Sandy"
+[bigbox tooltip] col[8] "Comment ⇅▲▼104📊" = "live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Io"
+[_renderBigboxTooltipFromColumns] mainCol=name specs=["Release groups","Name","italic:Comment","Artist","---",["Length","-","Video"],"ISRCs"]
+[_renderBigboxTooltipFromColumns] spec="Release groups"
+[_artTooltipColIdx] "Release groups" -> idx=5 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA"
+[_renderBigboxTooltipFromColumns] spec="Name"
+[_artTooltipColIdx] "Name" -> idx=1 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "(4th of July, Asbury Park) Sandy"
+[_renderBigboxTooltipFromColumns] spec="italic:Comment"
+[_artTooltipColIdx] "Comment" -> idx=8 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow italic] "live, 1975‐09‐26: Hancher Auditorium, University of Iowa, Iowa City, IA, USA"
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_artTooltipColIdx] "Artist" -> idx=2 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "Bruce Springsteen"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Length","-","Video"]
+[_artTooltipColIdx] "Length" -> idx=4 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_artTooltipColIdx] "Video" -> idx=6 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "7:54 - audio"
+[_renderBigboxTooltipFromColumns] spec="ISRCs"
+[_artTooltipColIdx] "ISRCs" -> idx=3 (cleaned headers:  | name | artist | isrcs | length | release groups | video | mb-name | comment)
+[_addRow] "{"isrcs":[]}"
+[bigbox tooltip] rendered via tooltipColumns
+#+end_example
 
 3.)
 
+on URLs of pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1
+
+there is a problem displaying "multi-row" cells
 
 #+begin_example
-
+...
+Columbia 60 69660.696▶2▤
+...
 #+end_example
+
+see the complete debug log
+
+#+begin_example
+[bigbox tooltip] wrapHref=/release/1929d226-f145-414d-8f1c-0c85f3adad62
+[bigbox tooltip] _rowEl found=true
+[bigbox tooltip] activeDefinition type=artist-releases
+[bigbox tooltip] tooltipColumns=["MB-Name","italic:Comment","Artist","---",["Format","(","Total Tracks",")"],"Country","Date",["Label","-","Catalog#"],"Barcode"]
+[bigbox tooltip] col[0] "" = ""
+[bigbox tooltip] col[1] "Release ⇅▲▼285📊" = "▶🔵Born to Runcaa-inline-yes"
+[bigbox tooltip] col[2] "Artist ⇅▲▼8📊" = "Bruce Springsteen"
+[bigbox tooltip] col[3] "Format ⇅▲▼10📊" = "Cassette"
+[bigbox tooltip] col[4] "Tracks ⇅▲▼28📊" = "8"
+[bigbox tooltip] col[5] "Country/Date ⇅▲▼▶2▤127📊" = "{"events":[{"date":{"year":1975,"month":null,"day":null},"co"
+[bigbox tooltip] col[6] "Label ⇅▲▼▶12▤37📊" = "Columbia (owned by Sony Music Entertainment, worldwide excep"
+[bigbox tooltip] col[7] "Catalog# ⇅▲▼▶51▤171📊" = "60 69660.696▶2▤"
+[bigbox tooltip] col[8] "Barcode ⇅▲▼7📊" = "[none]"
+[bigbox tooltip] col[9] "Tagger ⇅▲▼📊" = "{"entityType":"release","gid":"1929d226-f145-414d-8f1c-0c85f"
+[bigbox tooltip] col[10] "▶CAA ⇅▲▼1📊" = "▶🔵5yesFrontFrontFront / Back / Spine / Other – opened J-car"
+[bigbox tooltip] col[11] "Country ⇅▲▼▶2▤35📊" = "Argentina (AR)"
+[bigbox tooltip] col[12] "Date ⇅▲▼▶2▤41📊" = "1975"
+[bigbox tooltip] col[13] "Total Tracks ⇅▲▼21📊" = "8"
+[bigbox tooltip] col[14] "DD ⇅▲▼11📊" = ""
+[bigbox tooltip] col[15] "MM ⇅▲▼10📊" = ""
+[bigbox tooltip] col[16] "YYYY ⇅▲▼9📊" = "1975"
+[bigbox tooltip] col[17] "Day ⇅▲▼5📊" = ""
+[bigbox tooltip] col[18] "Month ⇅▲▼10📊" = ""
+[bigbox tooltip] col[19] "MB-Name ⇅▲▼75📊" = "▶Born to Run"
+[bigbox tooltip] col[20] "Comment ⇅▲▼194📊" = ""
+[_renderBigboxTooltipFromColumns] mainCol=release specs=["MB-Name","italic:Comment","Artist","---",["Format","(","Total Tracks",")"],"Country","Date",["Label","-","Catalog#"],"Barcode"]
+[_renderBigboxTooltipFromColumns] spec="MB-Name"
+[_artTooltipColIdx] "MB-Name" -> idx=19 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_addRow] "Born to Run"
+[_renderBigboxTooltipFromColumns] spec="italic:Comment"
+[_artTooltipColIdx] "Comment" -> idx=20 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_renderBigboxTooltipFromColumns] spec="Artist"
+[_artTooltipColIdx] "Artist" -> idx=2 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_addRow] "Bruce Springsteen"
+[_renderBigboxTooltipFromColumns] spec="---"
+[_renderBigboxTooltipFromColumns] spec=["Format","(","Total Tracks",")"]
+[_artTooltipColIdx] "Format" -> idx=3 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_artTooltipColIdx] "Total Tracks" -> idx=13 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_addRow] "Cassette ( 8"
+[_renderBigboxTooltipFromColumns] spec="Country"
+[_artTooltipColIdx] "Country" -> idx=11 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_addRow] "Argentina (AR)"
+[_renderBigboxTooltipFromColumns] spec="Date"
+[_artTooltipColIdx] "Date" -> idx=12 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_addRow] "1975"
+[_renderBigboxTooltipFromColumns] spec=["Label","-","Catalog#"]
+[_artTooltipColIdx] "Label" -> idx=6 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_artTooltipColIdx] "Catalog#" -> idx=7 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_addRow] "Columbia - 60 69660.696▶2▤"
+[_renderBigboxTooltipFromColumns] spec="Barcode"
+[_artTooltipColIdx] "Barcode" -> idx=8 (cleaned headers:  | release | artist | format | tracks | country/date | label | catalog# | barcode | tagger | ▶caa | country | date | total tracks | dd | mm | yyyy | day | month | mb-name | comment)
+[_addRow] "[none]"
+[bigbox tooltip] rendered via tooltipColumns
+#+end_example
+
+** bugs
+
+some bugs need to be fixed and some more pageTypes need to be supported:
+
+1.)
+
+the debug.log statements should be re-written as in our standard framework but guarded with an additional boolen for very low level debugging
+
 
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
