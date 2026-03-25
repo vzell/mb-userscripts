@@ -62405,6 +62405,61 @@ However, because you previously toggled the artwork images, the script injected 
 The Fix: We need to replace the fragile previousElementSibling check with the script's built-in findH3ForTable() helper,
 which correctly walks backwards past any injected image stripes to find the true <h3> header.
 
+** fix
+
+on https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+
+change
+
+#+begin_example
+tooltipColumns: [ 'Event', '---', 'Type', 'Artists', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+#+end_example
+
+to
+
+#+begin_example
+tooltipColumns: [ 'Event', '---', 'Type', '-' ['Date', '(', 'Time', ')', 'Cancelled'], 'Artists' ],
+#+end_example
+
+in
+
+#+begin_example
+        {
+            type: 'place-events',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
+                ],
+                collapsableColumns: [ 'Artists', 'EAA' ],
+                tooltipColumns: [ 'Event', '---', 'Type', 'Artists', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event'
+            },
+#+end_example
+
+render like
+
+#+begin_example
+['Date', '(', 'Time', ')', 'Cancelled']
+#+end_example
+
+if 'Type' is missing
+
+or
+
+#+begin_example
+'Type', '-' ['Date', '(', 'Time', ')', 'Cancelled']
+#+end_example
+
+if 'Type' is there
+
+b.)
+
+the "comment " from the "Event" column is missing
+
+
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
