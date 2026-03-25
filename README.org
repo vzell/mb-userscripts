@@ -60735,7 +60735,216 @@ instead of the beginning. Please fix in this session
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - in "Release groups" column, uncollapsing a release group should uncollapse in place NOT after all the OTHER RGs
+
+In the uploaded userscript there is BUG with "multi-row" columns on URLs of pageType https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings in the "Release groups" column.
+
+Here are the steps to reproduce:
+
+- first start uncollapsing a multi-row data cell in the "Release groups" column, e.g. the following with 4 release groups inside 
+
+#+begin_example
+<span class="mb-cell-collapse-toggle" title="Show all multi-row cell items (4)" role="button" aria-expanded="false" aria-label="Expand: 4 items are collapsed">
+  <span class="mb-cell-collapse-glyph">▶
+  </span>
+  <span class="mb-cell-collapse-count">4
+  </span>
+  <span class="mb-cell-collapse-rack">▤
+  </span>
+</span>
+#+end_example
+
+- the 4 release groups are correctly uncollapsed and shown with their own toggle glyph "▶"
+
+#+begin_example
+<td class="mb-has-collapse-toggle" data-caa-inline-done="1">
+  <ul>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/cd0e866a-4449-407b-8d61-fae3ac4bb922">
+	<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+	</span>
+      </span>
+      <a href="/release-group/e4c25037-2864-4419-96bf-48ee4c65d0a0">
+	<bdi>The Best of Rock and Roll Hall of Fame Live
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/dc5b1cab-c85b-4a6c-951b-6ff6b676d38f">
+	<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+	</span>
+      </span>
+      <a href="/release-group/d4fdf2e5-625d-4a8f-8a5d-51373f11790b">
+	<bdi>The Best of Rock and Roll Hall of Fame + Museum Live
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/c410f694-9978-4b36-9e68-6a55f5873b63">
+	<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+	</span>
+      </span>
+      <a href="/release-group/cf4bbe3e-80b9-4994-975c-9b87eb4c1e4a">
+	<bdi>Rock and Roll Hall of Fame Volume 1: 1986–1991
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/c934d22a-ded0-4f5a-98b4-f3091a2d7456">
+	<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+	</span>
+      </span>
+      <a href="/release-group/462d98a1-99f0-44e8-aae2-c93e33d11dd0">
+	<bdi>Rock &amp; Roll Hall of Fame: Live, Volume 1
+	</bdi>
+      </a>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Collapse multi-row cell back to display just the first item (4 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 4 items">
+    <span class="mb-cell-collapse-glyph">▼
+    </span>
+    <span class="mb-cell-collapse-count">4
+    </span>
+    <span class="mb-cell-collapse-rack">▤
+    </span>
+  </span>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+</td>
+#+end_example
+
+- when clicking on the toggle glyph for the first release group, I would expect that the release(s) belonging to this
+  release group would show up in-place, right after the release group, but instead the release(s) is/are rendered AFTER
+  all 4 release groups, as can be seen in the following HTML artefact
+
+#+begin_example
+<td class="mb-has-collapse-toggle" data-caa-inline-done="1">
+  <ul>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▼
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/cd0e866a-4449-407b-8d61-fae3ac4bb922">
+	<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+	</span>
+      </span>
+      <a href="/release-group/e4c25037-2864-4419-96bf-48ee4c65d0a0">
+	<bdi>The Best of Rock and Roll Hall of Fame Live
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/dc5b1cab-c85b-4a6c-951b-6ff6b676d38f">
+	<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+	</span>
+      </span>
+      <a href="/release-group/d4fdf2e5-625d-4a8f-8a5d-51373f11790b">
+	<bdi>The Best of Rock and Roll Hall of Fame + Museum Live
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/c410f694-9978-4b36-9e68-6a55f5873b63">
+	<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+	</span>
+      </span>
+      <a href="/release-group/cf4bbe3e-80b9-4994-975c-9b87eb4c1e4a">
+	<bdi>Rock and Roll Hall of Fame Volume 1: 1986–1991
+	</bdi>
+      </a>
+    </li>
+    <li style="" data-erg-injected="1">
+      <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+      </span>
+      <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+	<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/c934d22a-ded0-4f5a-98b4-f3091a2d7456">
+	<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+	</span>
+      </span>
+      <a href="/release-group/462d98a1-99f0-44e8-aae2-c93e33d11dd0">
+	<bdi>Rock &amp; Roll Hall of Fame: Live, Volume 1
+	</bdi>
+      </a>
+    </li>
+  </ul>
+  <span class="mb-cell-collapse-toggle" title="Collapse multi-row cell back to display just the first item (4 total)" role="button" aria-expanded="true" aria-label="Collapse: showing all 4 items">
+    <span class="mb-cell-collapse-glyph">▼
+    </span>
+    <span class="mb-cell-collapse-count">4
+    </span>
+    <span class="mb-cell-collapse-rack">▤
+    </span>
+  </span>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+  <table style="margin-top: 1em; margin-left: 1em; padding-left: 1em;">
+    <tr>
+      <td>
+	<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+	</span>
+	<span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
+	  <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: none; border-radius: 2px;">
+	</span>
+	<a href="/release/fe00ab3e-2cb5-41c8-a33b-a7c5c9c18e25">The Best of Rock and Roll Hall of Fame Live
+	</a>
+      </td>
+      <td>Digital Media
+      </td>
+      <td>20
+      </td>
+      <td>2011-03-15
+      </td>
+      <td>US
+      </td>
+      <td>Official
+      </td>
+    </tr>
+    <tr>
+      <td colspan="6">
+      </td>
+    </tr>
+    <tr>
+      <td colspan="6" style="padding: 1em;">
+	<span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px;">
+	  <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: none; border-radius: 2px;">
+	</span>
+	<a href="/release-group/e4c25037-2864-4419-96bf-48ee4c65d0a0/edit" target="_blank" rel="noopener noreferrer">edit
+	</a> |
+	<a href="/release/add?release-group=e4c25037-2864-4419-96bf-48ee4c65d0a0" target="_blank" rel="noopener noreferrer">add release
+	</a> |
+	<a href="/release-group/e4c25037-2864-4419-96bf-48ee4c65d0a0/edits" target="_blank" rel="noopener noreferrer">editing history
+	</a>
+      </td>
+    </tr>
+  </table>
+</td>
+#+end_example
+
+- when toggling more than one release groups, all associated releases are rendered AFTER all the release groups, but in
+  the same order as the actual release groups
+
+Please fix and add a changelog entry
+
+  
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell strucure" areas in the unique value pull-down menu
+
 
 * TODO for series pages, we need to find the "type" from the h2 header name which precedes the table data
 
@@ -60747,11 +60956,84 @@ Show all <h2 header name> for Series
 #+end_example
 
 
-* TODO For the https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in merged view the h3 sections should be sorted by section name
+* TODO For the https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "Complete Discography (merged)" view the h3 sections should be sorted by section name and rendered that way
+
+Take into account for a section the big picture image stripe AND the actual table data after the stripe. Both can also be either in a collapsed or uncollapsed state. 
 
 * TODO For https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "Non-Official Discography" Ctrl-Click on the h2 header line, somehow shows in between the image stripes from the "Official Discography" view
 
-* "Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below the 
+In the uploaded userscript
+
+for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when the final page is rendered, the following happens:
+
+- first click on the "Official Discography"-button and toggle all artwork images for all sub-tables, then wait until all
+  images have been downloaded from the cover art archive
+
+- then switch to the "Non-Official Discography". Wait until all images have been downloaded.
+
+- then comes the bug: when "Ctrl-Click"-ing on one of the h2 header lines, somehow the image stripes from the "Official Discography" view
+  are shown intermangled with the table data from the "Non-Official Discography"
+
+Please explain and fix.
+
+Is the following patch something which makes sense ?
+
+#+begin_example
+modified   claude/artTooltips/2/ShowAllEntityData_user.js
+@@ -22324,7 +22324,7 @@ a { color: #1565c0; }`;
+                                 node.style.display = '';
+                             }
+                         } else if (node.tagName === 'TABLE' && node.classList.contains('tbl')) {
+-                            const prevH3 = node.previousElementSibling;
++                            const prevH3 = findH3ForTable(node);
+                             if (prevH3 && prevH3.classList.contains('mb-toggle-h3')) {
+                                 // Keep table hidden if its owning h3 is disc-view-hidden
+                                 if (prevH3.dataset.mbDiscHidden === 'true') {
+#+end_example
+
+Is the following analysis correct ?
+
+Why images get “intermingled”
+
+After switching views:
+
+Official bigboxes still exist in DOM
+Non-official tables get rendered
+Ctrl-click expand restores tables, but:
+
+👉 bigboxes are not re-bound to the correct table context
+
+So you end up with:
+
+[Bigbox from Official]
+[Table from Non-Official]
+💥 Root Cause (precise)
+
+The h2 expand handler restores display blindly for content nodes but does not re-sync bigboxes with their owning table, nor remove stale ones.
+
+Combined with:
+
+bigboxes live outside the table structure
+multiple render passes (Official → Non-Official)
+
+👉 results in DOM mixing
+
+
+OR, is this the better explanation:
+
+This is a classic DOM-mutation race condition caused by the dynamic injection of the artwork image stripes.
+
+Root Cause
+The bug occurs in the makeH2sCollapsible() function, which handles the expand/collapse logic when you Ctrl+Click an h2 header.
+
+When expanding, the script checks if a table's parent <h3> header is hidden by the discography view filter (e.g., hidden because it belongs to the "Official" view while you are in the "Non-Official" view). To find the parent <h3>, it uses const prevH3 = node.previousElementSibling;.
+
+However, because you previously toggled the artwork images, the script injected a div.mb-caa-bigbox (the image stripe) immediately before the table. Consequently, node.previousElementSibling returns the bigbox <div> instead of the <h3>. Because the script fails to find the <h3>, it falls back to an else branch that unconditionally unhides the table (node.style.display = '';), completely ignoring the active view filter and exposing the "Official" tables intermingled with your "Non-Official" view.
+
+The Fix
+We need to replace the fragile previousElementSibling check with the script's built-in findH3ForTable() helper, which correctly walks backwards past any injected image stripes to find the true <h3> header.
+
+* TODO "Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below the 
 
 "Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below
 
