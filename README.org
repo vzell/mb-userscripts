@@ -62465,7 +62465,6 @@ tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', '
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
-
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell strucure" areas in the unique value pull-down menu
 
 
@@ -62479,11 +62478,11 @@ Show all <h2 header name> for Series
 #+end_example
 
 
-* TODO For the https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "Complete Discography (merged)" view the h3 sections should be sorted by section name and rendered that way
+* DONE For the https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "Complete Discography (merged)" view the h3 sections should be sorted by section name and rendered that way
 
 Take into account for a section the big picture image stripe AND the actual table data after the stripe. Both can also be either in a collapsed or uncollapsed state. 
 
-* TODO For https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "Non-Official Discography" Ctrl-Click on the h2 header line, somehow shows in between the image stripes from the "Official Discography" view
+* DONE For https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f in the "Non-Official Discography" Ctrl-Click on the h2 header line, somehow shows in between the image stripes from the "Official Discography" view
 
 In the uploaded userscript
 
@@ -62556,7 +62555,7 @@ However, because you previously toggled the artwork images, the script injected 
 The Fix: We need to replace the fragile previousElementSibling check with the script's built-in findH3ForTable() helper,
 which correctly walks backwards past any injected image stripes to find the true <h3> header.
 
-* Click/Ctrl-Click behaviour on h2/h3 header lines 
+* TODO Click/Ctrl-Click behaviour on h2/h3 header lines 
 
 1.)
 
@@ -62564,25 +62563,31 @@ which correctly walks backwards past any injected image stripes to find the true
 
 a.)
 
-This currently works as designed for "single"-table mode:
+This currently WORKS as designed for "single"-table mode:
 
-it should take the current toggle state of the big image stripe above the table in "single"-table mode into account
+it TAKES the current toggle state of the big image stripe above the table in "single"-table mode into account:
 
-- if the big image stripe above the table is currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse JUST the table section below th h2 header line
-- if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
+- if the big image stripe above the table is currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table UNCOLLAPSES JUST the table section below th h2 header line
+- if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table UNCOLLAPSES BOTH, the big image stripe AND the table section below th h2 header line
 
 b.)
 
-This currently has bugs for "multi"-table mode:
+This currently has BUGS for "multi"-table mode (somehow the table data and big image stipes are shown intermignled when switching views, e.g between "Official Discography" and "NON-Official Discography":
 
-it should take the current toggle state of the big image stripes above the sub-tables in "multi"-table mode into account
+it should take the current toggle (collpase/uncollapse) state of the big image stripes above the sub-tables and the
+collapse/uncollapse state of the sub-tables itself in "multi"-table mode into account:
 
-- if the big image stripe above the table is currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse JUST the table section below th h2 header line
+So, "Clicking" or "Ctrl-Clicking" on the h2 header line in "multi"-table pageTypes should take the WHOLE toggle states of
+all h3 sub-sections under the h2 header line into account, where each h3 sub-section could have an individuell toggle
+state for it's big picture stripe and the sub-table data itself.
+
+So in easy words, "Clicking" or "Ctrl-Clicking" on an h2 header line should ONLY collpase/uncollapse everything "below" it, but never touches the internal state of the h3 sections at all
+
+** later
+
+- if the big image stripes above the sub-tables are currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line shoud uncollapse JUST the table section below the h2 header line
 - if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
 
-
-Clicking or "Ctrl-Clicking" should take the WHOLE toggle states of all h3 sub-sections into account, where each h3
-sub-section could have an individuell toggle state for it's big picture stripe and sub-table data
 
 
 * TODO "Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below the 
