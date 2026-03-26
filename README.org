@@ -62409,11 +62409,11 @@ which correctly walks backwards past any injected image stripes to find the true
 
 1.)
 
-on https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
-
 a.)
 
-change
+for the 'place-events' pageType https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+
+change column display order from
 
 #+begin_example
 tooltipColumns: [ 'Event', '---', 'Type', 'Artists', ['Date', '(', 'Time', ')'], 'Cancelled' ],
@@ -62425,23 +62425,7 @@ to
 tooltipColumns: [ 'Event', '---', 'Type', '-' ['Date', '(', 'Time', ')', 'Cancelled'], 'Artists' ],
 #+end_example
 
-in
-
-#+begin_example
-        {
-            type: 'place-events',
-            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] }
-                ],
-                collapsableColumns: [ 'Artists', 'EAA' ],
-                tooltipColumns: [ 'Event', '---', 'Type', 'Artists', ['Date', '(', 'Time', ')'], 'Cancelled' ],
-                addEAA: 'Event',
-                extractMainColumn: 'Event'
-            },
-#+end_example
+b.)
 
 render like
 
@@ -62562,6 +62546,34 @@ However, because you previously toggled the artwork images, the script injected 
 
 The Fix: We need to replace the fragile previousElementSibling check with the script's built-in findH3ForTable() helper,
 which correctly walks backwards past any injected image stripes to find the true <h3> header.
+
+* Click/Ctrl-Click behaviour on h2/h3 header lines 
+
+1.)
+
+"Ctrl-Click" on a h2 header line in "multi"table mode should work like in "single"-table mode
+
+a.)
+
+This currently works as designed for "single"-table mode:
+
+it should take the current toggle state of the big image stripe above the table in "single"-table mode into account
+
+- if the big image stripe above the table is currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse JUST the table section below th h2 header line
+- if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
+
+b.)
+
+This currently has bugs for "multi"-table mode:
+
+it should take the current toggle state of the big image stripes above the sub-tables in "multi"-table mode into account
+
+- if the big image stripe above the table is currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse JUST the table section below th h2 header line
+- if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
+
+
+Clicking or "Ctrl-Clicking" should take the WHOLE toggle states of all h3 sub-sections into account, where each h3
+sub-section could have an individuell toggle state for it's big picture stripe and sub-table data
 
 
 * TODO "Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below the 
