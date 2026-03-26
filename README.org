@@ -62469,7 +62469,7 @@ tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', '
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell strucure" areas in the unique value pull-down menu
 
 
-* TODO for series pages, we need to find the "type" from the h2 header name which precedes the table data
+* DONE for series pages, we need to find the "type" from the h2 header name which precedes the table data
 
 for series pages, we need to find the "type" of series from the h2 header name which precedes the table data. We then
 must dynamically set the "Show all.." button text to that name
@@ -62617,6 +62617,11 @@ for "Keyboard Shortcuts" and below
 
 for "Application Help & Feature Overview"
 
+Both implementations should highlight the filter string. When inside the filter field, the first "Escape" press should
+clear the filter field (there should also be a "X" icon visible for clearing the filter field when clicking the "X"), a
+second "Escape" should blur the filter field. We already have these kinds of filter-field (with highlightning)
+implementations in the userscript already, so please try and refactor if possible
+
 
 * TODO On "Search" pages, sometimes the following error message is displayed on first rendering of the final page 
 
@@ -62637,5 +62642,5 @@ Configurable:
 - background color of the tooltip
 
 
-* TODO event pages neew the primary alias below the h1 header "Bleachers"
+* TODO event pages need the primary alias below the h1 header "Bleachers"
 
