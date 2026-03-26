@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.315+2026-03-25
+// @version      9.99.314+2026-03-25
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8159,22 +8159,24 @@ ${sections.join('\n')}
         // Prevent drag starting from inside the filter bar
         bar.addEventListener('mousedown', e => e.stopPropagation());
 
-        // No separate 🔍 label span — the glyph is already in the placeholder text.
+        const lbl = document.createElement('span');
+        lbl.textContent = '🔍';
+        lbl.style.cssText = 'font-size:0.9em; flex-shrink:0; user-select:none;';
+        bar.appendChild(lbl);
 
         const input = document.createElement('input');
         input.type        = 'text';
         input.placeholder = opts.placeholder || '🔍 Quick-filter…';
         input.style.cssText =
-            'width:100%; padding:3px 26px 3px 7px; border:1.5px solid #ccc;' +
-            ' border-radius:4px; font-size:0.88em; outline:none;' +
+            'flex:1; padding:3px 26px 3px 7px; border:1.5px solid #ccc;' +
+            ' border-radius:4px; font-size:0.88em; outline:none; min-width:0;' +
             ' box-sizing:border-box;';
         input.addEventListener('mousedown', e => e.stopPropagation());
         input.addEventListener('focus', () => { input.style.borderColor = '#5b9bd5'; });
         input.addEventListener('blur',  () => { input.style.borderColor = '#ccc'; });
 
-        // inputWrap carries flex:1 so it stretches inside the bar; the input
-        // fills its wrapper at width:100% so the ✕ button can be positioned
-        // absolutely inside the right edge of the visible input field.
+        // Wrap input + clear-button in a relative-positioned container so the ✕
+        // floats inside the right edge of the input.
         const inputWrap = document.createElement('div');
         inputWrap.style.cssText = 'position:relative; flex:1; min-width:0;';
         inputWrap.appendChild(input);

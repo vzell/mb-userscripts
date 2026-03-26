@@ -62588,9 +62588,8 @@ So in easy words, "Clicking" or "Ctrl-Clicking" on an h2 header line should ONLY
 - if the big image stripes above the sub-tables are currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line shoud uncollapse JUST the table section below the h2 header line
 - if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
 
-
-
 * TODO "Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below the 
+** initial
 
 "Keyboard Shortcuts" and "Application Help & Feature Overview" need a Quickfilter field at the top of the UI dialog below
 
@@ -62627,6 +62626,65 @@ clear the filter field (there should also be a "X" icon visible for clearing the
 second "Escape" should blur the filter field. We already have these kinds of filter-field (with highlightning)
 implementations in the userscript already, so please try and refactor if possible
 
+** bugs
+
+some bugs
+
+1.)
+
+In the "Keyboard Shortcuts" dialog
+
+a.)
+
+The span
+
+#+begin_example
+<span style="font-size: 0.9em; flex-shrink: 0; user-select: none;">🔍</span>
+#+end_example
+
+in front of
+
+#+begin_example
+<input type="text" placeholder="🔍 Filter shortcuts…" style="flex: 1 1 0%; padding: 3px 26px 3px 7px; border: 1.5px solid rgb(204, 204, 204); border-radius: 4px; font-size: 0.88em; outline: none; min-width: 0px; box-sizing: border-box;">
+#+end_example
+
+should be removed, as we have the glyph "🔍" already inside the filter field 
+
+b.)
+
+the "X" clear icon
+
+#+begin_example
+<button title="Clear filter" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 0.8em; cursor: pointer; color: rgb(136, 136, 136); padding: 0px 2px; line-height: 1; display: block;">✕</button>
+#+end_example
+
+should be rendered INSIDE the filter field
+
+#+begin_example
+<input type="text" placeholder="🔍 Filter shortcuts…" style="flex: 1 1 0%; padding: 3px 26px 3px 7px; border: 1.5px solid rgb(204, 204, 204); border-radius: 4px; font-size: 0.88em; outline: none; min-width: 0px; box-sizing: border-box;">
+#+end_example
+
+only visible IF some text has been entered inside the filter field
+
+2.)
+
+In the "Application Help & Feature Overview" dialog
+
+a.)
+
+The span
+
+#+begin_example
+<span style="font-size: 0.9em; flex-shrink: 0; user-select: none;">🔍</span>
+#+end_example
+
+in front of
+
+#+begin_example
+<input type="text" placeholder="🔍 Filter help text…" style="flex: 1 1 0%; padding: 3px 26px 3px 7px; border: 1.5px solid rgb(204, 204, 204); border-radius: 4px; font-size: 0.88em; outline: none; min-width: 0px; box-sizing: border-box;">
+#+end_example
+
+should be removed, as we have the glyph "🔍" already inside the filter field 
 
 * TODO On "Search" pages, sometimes the following error message is displayed on first rendering of the final page 
 

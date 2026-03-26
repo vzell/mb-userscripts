@@ -1,18 +1,5 @@
 [
   {
-    "version": "9.99.315",
-    "date": "2026-03-25",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "_createInfoDialogQuickFilter: removed the redundant standalone 🔍 label <span> that was prepended to the filter bar — the glyph is already present in the input placeholder text, so it was appearing twice.",
-          "_createInfoDialogQuickFilter: fixed the ✕ clear button positioning. The input now uses width:100% (instead of flex:1) so it fully fills its relative-positioned inputWrap container; the inputWrap carries flex:1 instead. This ensures the absolutely-positioned ✕ button overlays the right edge of the visible input field correctly in both dialogs."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.314",
     "date": "2026-03-25",
     "sections": [
