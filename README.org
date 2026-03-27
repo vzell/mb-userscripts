@@ -62708,7 +62708,7 @@ Add a new "Artwork Tooltip" section in the configuration section
 
 Make the following configurable with variables in the "Artwork Tooltip" section
 
-- make the whole big picture tooltip functionaliyt optional
+- make the whole big picture tooltip functionality optional
 - create a boolean (default: true) variable to switch between the current big picture HTML based tooltips and (you need
   to reimplement it probably) the simple text based big picture tooltips (for the text based tooltips ONLY take into
   account the entity name and the entity comment in brackets)
@@ -62717,6 +62717,35 @@ Make the following configurable with variables in the "Artwork Tooltip" section
   variable for it so that the enduser can configure it)
 
 3.) please explain, why on MusicBrainz "Search" pages, e.g.
+
+Please add 
+
+#+begin_example
+                try {
+                    // If this page matches the current browser page and no specific overrides are requested, use the
+                    // existing document instead of a redundant network fetch.
+                    // For search pages the table is rendered by MusicBrainz JS after page load.
+                    // Using the live `document` on first visit causes a race: the script reads the
+                    // DOM before MusicBrainz has finished rendering, seeing either no table or
+                    // the transient "does not contain enough information" error paragraph.
+                    // Fix: always fetch search pages fresh from the network so the DOMParser
+                    // receives a fully server-rendered response, regardless of whether p===1.
+                    const _isSearchPage = activeDefinition && activeDefinition.type === 'search';
+                    if (!_isSearchPage && p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
+                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
+                        doc = document;
+#+end_example
+
+instead of
+
+#+begin_example
+                try {
+                    // If this page matches the current browser page and no specific overrides are requested, use the
+                    // existing document instead of a redundant network fetch.
+                    if (p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
+                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
+                        doc = document;
+#+end_example
 
 #+begin_example
 https://musicbrainz.org/search?query=Tracks+II%3A+The+Lost+Albums&type=release_group&method=indexed
@@ -62839,3 +62868,50 @@ JSON
 
 e.g. when "ctrl-clicking" a h3 header row in the lower part of the page, it repositiones to the top of the page
 
+
+
+
+* new
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" and ChangeLog file "ShowAllEntityData_CHANGELOG.json"
+
+add some fixes:
+
+1.)
+
+Please add 
+
+#+begin_example
+                try {
+                    // If this page matches the current browser page and no specific overrides are requested, use the
+                    // existing document instead of a redundant network fetch.
+                    // For search pages the table is rendered by MusicBrainz JS after page load.
+                    // Using the live `document` on first visit causes a race: the script reads the
+                    // DOM before MusicBrainz has finished rendering, seeing either no table or
+                    // the transient "does not contain enough information" error paragraph.
+                    // Fix: always fetch search pages fresh from the network so the DOMParser
+                    // receives a fully server-rendered response, regardless of whether p===1.
+                    const _isSearchPage = activeDefinition && activeDefinition.type === 'search';
+                    if (!_isSearchPage && p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
+                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
+                        doc = document;
+#+end_example
+
+instead of
+
+#+begin_example
+                try {
+                    // If this page matches the current browser page and no specific overrides are requested, use the
+                    // existing document instead of a redundant network fetch.
+                    if (p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
+                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
+                        doc = document;
+#+end_example
+
+2.)
+
+Add "Edit Pinned Filter List" button rigth aligned in the "Quick filter" dialog in the following container (when the quick filter popups)
+
+#+begin_example
+<div style="padding: 4px 8px 2px; background: rgb(232, 245, 233); border-bottom: 1px solid rgb(200, 230, 201);"><span style="font-size:0.76em;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:0.04em;">📌 Pinned</span></div>
+#+end_example
