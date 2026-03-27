@@ -57420,6 +57420,58 @@ When a filter string from the filter string history on the "Load from Disk" UI d
 
 should appear. Right now it only appears if the enduser types something in into the filter field
 
+* DONE On "Search" pages, sometimes the following error message is displayed on first rendering of the final page 
+** initial
+
+On "Search" pages, sometimes the following error message is displayed on first rendering of the final page
+
+#+begin_example
+<p>Sorry, your query “(<code>Tracks II: The Lost Albums</code>)” does not contain enough information to carry out a search.</p>
+#+end_example
+
+** again
+
+Please add 
+
+#+begin_example
+                try {
+                    // If this page matches the current browser page and no specific overrides are requested, use the
+                    // existing document instead of a redundant network fetch.
+                    // For search pages the table is rendered by MusicBrainz JS after page load.
+                    // Using the live `document` on first visit causes a race: the script reads the
+                    // DOM before MusicBrainz has finished rendering, seeing either no table or
+                    // the transient "does not contain enough information" error paragraph.
+                    // Fix: always fetch search pages fresh from the network so the DOMParser
+                    // receives a fully server-rendered response, regardless of whether p===1.
+                    const _isSearchPage = activeDefinition && activeDefinition.type === 'search';
+                    if (!_isSearchPage && p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
+                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
+                        doc = document;
+#+end_example
+
+instead of
+
+#+begin_example
+                try {
+                    // If this page matches the current browser page and no specific overrides are requested, use the
+                    // existing document instead of a redundant network fetch.
+                    if (p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
+                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
+                        doc = document;
+#+end_example
+* DONE Add "Edit Pinned Filter List" button rigth aligned in the "Quick filter" dialog in the following container
+
+add the following functionality:
+
+1.)
+
+Add "Edit Pinned Filter List" button rigth aligned in the "Quick filter" dialog in the following container (when the quick filter popups)
+
+#+begin_example
+<div style="padding: 4px 8px 2px; background: rgb(232, 245, 233); border-bottom: 1px solid rgb(200, 230, 201);"><span style="font-size:0.76em;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:0.04em;">📌 Pinned</span></div>
+#+end_example
+
+
 
 * TODO add fetching to local db storage and reading from it
 ** initial
@@ -59608,7 +59660,6 @@ In the uploaded userscript,
 Inspect the uploaded userscript "addRGsFromAbove.js" and extract the contents to include in our userscript as functions to run on
 the final rendered pages which have columns with name "CAA"
 
-* TODO add "Relationships" column support again, but configurable 
 * TODO add 'Batch-add "performance of" relationships' userscript functionality on final rendered pages
 
 #+begin_example
@@ -59672,6 +59723,15 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 #+end_example
 
 
+* TODO add "Relationships" column support again, but configurable 
+* TODO add a generic table input dialog (for e.g. Ctrl-U: unicode symbols + explanation, "Relationships" column + userscript (new and my version))
+
+#+begin_example
+type: "table",
+default: "<table declaration>" + UI support "add", "modify", "delete"
+#+end_example
+
+
 * TODO add a generic function type to the configuration
 
 #+begin_example
@@ -59682,13 +59742,6 @@ const configSchema = {
 #+begin_example
 type: "function",
 default: "<function name>"
-#+end_example
-
-* TODO add a generic table input dialog (for e.g. Ctrl-U: unicode symbols + explanation, "Relationships" column + userscript (new and my version))
-
-#+begin_example
-type: "table",
-default: "<table declaration>" + UI support "add", "modify", "delete"
 #+end_example
 
 
@@ -60085,19 +60138,148 @@ So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefu
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
+* TODO Implement column movement
 
 * TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
+
 * TODO the order of the buttons in a h2 sub-table row,  when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
 
-the order of the buttons in a h2 sub-table row, when being visible should always be like in the global case:
+A couple of renames and a new functionality:
+
+1.)
+
+Change "ALL"
 
 #+begin_example
-"Show all 456 rows"
-"Expand multi row cells"
-"Toggle highlightning"
-"Clear all column filters"
-"Clear all filters"
+<span>Expand</span><span>ALL</span></span>
+#+end_example
+
+to "all"
+
+#+begin_example
+<span>Expand</span><span>all</span></span>
+#+end_example
+
+in the sub-tables specific buttons
+
+#+begin_example
+<button id="mb-stf-....-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand ALL collapsed multi-row cells in &quot;Promotion release&quot; sub-section" aria-label="Expand all collapsed multi-row cells in: Promotion release" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
+#+end_example
+
+2.)
+
+Change the "title" in
+
+#+begin_example
+title="Globally toggle CAA cover art images - Show"
+#+end_example
+
+and 
+
+#+begin_example
+title="Globally toggle CAA cover art images - Hide"
+#+end_example
+
+to
+
+#+begin_example
+title="Show CAA cover art image stripes in ALL sections"
+#+end_example
+
+and
+
+#+begin_example
+title="Hide CAA cover art image stripes in ALL sections"
+#+end_example
+
+in the "mb-caa-toggle-btn-global" button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">53</span></button>
+#+end_example
+
+3.)
+
+In the sub-table specific toggle buttons
+
+#+begin_example
+<button id="mb-caa-toggle-btn-<n>" type="button" class="mb-caa-art-toggle-btn" title="Hide big artwork CAA cover art images stripe" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="6"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">51</span></button>
+#+end_example
+
+change
+
+#+begin_example
+title="Hide big artwork CAA cover art images stripe"
+#+end_example
+
+#+begin_example
+title="Show big artwork CAA cover art images stripe"
+#+end_example
+
+to
+
+#+begin_example
+title="Hide CAA cover art image stripe for this section"
+#+end_example
+
+#+begin_example
+title="Show CAA cover art image stripe for this section"
+#+end_example
+
+4.)
+
+Change
+
+#+begin_example
+        filterInput.placeholder = `Filter "${categoryName}"… just in this sub-table`;
+#+end_example
+
+to
+
+#+begin_example
+        filterInput.placeholder = `Filter "${categoryName}"… just in this sub-category`;
+#+end_example
+
+5.)
+
+the order of the buttons in each h2 header sub-line ("multi"-table pageTypes), when the buttons are all visible should always be like in the global case:
+
+#+begin_example
+"Expand ALL multi-row cells"
+"Toggle ALL highlightning"
+"Clear ALL COLUMN filters"
+"Clear ALL filters"
+#+end_example
+
+so, make sure that the buttons are all rendered after the "Exclude" checkbox
+
+#+begin_example
+<label id="mb-stf-Promotion_release-ex-label" for="mb-stf-Promotion_release-ex-checkbox" title="Exclude Matches (filter for &quot;Promotion release&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Promotion_release-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label>
+#+end_example
+
+in the following logical order (remember they are probably NOT all visible at the same time)
+
+#+begin_example
+<button id="mb-stf-Promotion_release-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand ALL collapsed multi-row cells in &quot;Promotion release&quot; sub-section" aria-label="Expand all collapsed multi-row cells in: Promotion release" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
+<button id="mb-stf-Promotion_release-toggle-filter-highlight-btn" type="button" title="Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle highlighting</button>
+<button class="mb-subtable-clear-btn" type="button" title="Clear ALL filters for this sub-table (the sub-table filter and ALL column filters)" style="display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span><span class="mb-subtable-clear-btn-label">Clear all filters</span></button>
+<button id="mb-stf-Promotion_release-clear-all-btn" class="mb-stf-clear-col-btn" type="button" title="Clear ALL column filters for this sub-table (the sub-table filter itself is kept)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all column filters</button>
+#+end_example
+
+6.)
+
+for "multi"-table pageTypes which have a "CAA" or "EAA" column, add a new toggle button with text "Uncollapse all CAA cover art images in all sections"/"Collapse all CAA cover art images in all sections" 
+after the button 
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
+#+end_example
+
+in the h2 header line, with the action of emulating a click on all toggle "CAA"/"EAA" column header buttons
+
+#+begin_example
+<span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images in this column" aria-expanded="false"><span>▶</span><img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"></span>
 #+end_example
 
 
@@ -62615,15 +62797,6 @@ So in easy words, "Clicking" or "Ctrl-Clicking" on an h2 header line should ONLY
 - if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
 
 
-* TODO On "Search" pages, sometimes the following error message is displayed on first rendering of the final page 
-
-On "Search" pages, sometimes the following error message is displayed on first rendering of the final page
-
-#+begin_example
-<p>Sorry, your query “(<code>Tracks II: The Lost Albums</code>)” does not contain enough information to carry out a search.</p>
-#+end_example
-
-
 * TODO Add a toggle "Collapse all [CAA icon]"-button to h2/h3 header line
 
 
@@ -62688,76 +62861,6 @@ Configurable:
 
 - background color of the tooltip
 - make the big picture tooltip a little wider to account for long disambiguation picture comments
-
-
-* TODO Add "Edit Pinned Filter List" button rigth aligned in the "Quick filter" dialog in the following container
-
-add the following functionality:
-
-1.)
-
-Add "Edit Pinned Filter List" button rigth aligned in the "Quick filter" dialog in the following container (when the quick filter popups)
-
-#+begin_example
-<div style="padding: 4px 8px 2px; background: rgb(232, 245, 233); border-bottom: 1px solid rgb(200, 230, 201);"><span style="font-size:0.76em;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:0.04em;">📌 Pinned</span></div>
-#+end_example
-
-2.)
-
-Add a new "Artwork Tooltip" section in the configuration section
-
-Make the following configurable with variables in the "Artwork Tooltip" section
-
-- make the whole big picture tooltip functionality optional
-- create a boolean (default: true) variable to switch between the current big picture HTML based tooltips and (you need
-  to reimplement it probably) the simple text based big picture tooltips (for the text based tooltips ONLY take into
-  account the entity name and the entity comment in brackets)
-- make the background color of the tooltip (default current color) configurable
-- make the big picture tooltip width a little wider to account for long disambiguation picture comments (then create a
-  variable for it so that the enduser can configure it)
-
-3.) please explain, why on MusicBrainz "Search" pages, e.g.
-
-Please add 
-
-#+begin_example
-                try {
-                    // If this page matches the current browser page and no specific overrides are requested, use the
-                    // existing document instead of a redundant network fetch.
-                    // For search pages the table is rendered by MusicBrainz JS after page load.
-                    // Using the live `document` on first visit causes a race: the script reads the
-                    // DOM before MusicBrainz has finished rendering, seeing either no table or
-                    // the transient "does not contain enough information" error paragraph.
-                    // Fix: always fetch search pages fresh from the network so the DOMParser
-                    // receives a fully server-rendered response, regardless of whether p===1.
-                    const _isSearchPage = activeDefinition && activeDefinition.type === 'search';
-                    if (!_isSearchPage && p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
-                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
-                        doc = document;
-#+end_example
-
-instead of
-
-#+begin_example
-                try {
-                    // If this page matches the current browser page and no specific overrides are requested, use the
-                    // existing document instead of a redundant network fetch.
-                    if (p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
-                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
-                        doc = document;
-#+end_example
-
-#+begin_example
-https://musicbrainz.org/search?query=Tracks+II%3A+The+Lost+Albums&type=release_group&method=indexed
-#+end_example
-
-sometimes the following error message is displayed on first rendering of the final page
-
-#+begin_example
-<p>Sorry, your query “(<code>Tracks II: The Lost Albums</code>)” does not contain enough information to carry out a search.</p>
-#+end_example
-
-but on reload of the page it always works
 
 
 * TODO column shift problem on some pages
@@ -62870,8 +62973,22 @@ e.g. when "ctrl-clicking" a h3 header row in the lower part of the page, it repo
 
 
 
+* TODO Add a new "Artwork Tooltip" section in the configuration section
 
-* new
+Add a new "Artwork Tooltip" section in the configuration section
+
+Make the following configurable with variables in the "Artwork Tooltip" section
+
+- make the whole big picture tooltip functionality optional
+- create a boolean (default: true) variable to switch between the current big picture HTML based tooltips and (you need
+  to reimplement it probably) the simple text based big picture tooltips (for the text based tooltips ONLY take into
+  account the entity name and the entity comment in brackets)
+- make the background color of the tooltip (default current color) configurable
+- make the big picture tooltip width a little wider to account for long disambiguation picture comments (then create a
+  variable for it so that the enduser can configure it)
+
+
+* TODO new
 
 In the newly uploaded userscript "ShowAllEntityData.user.js" and ChangeLog file "ShowAllEntityData_CHANGELOG.json"
 
@@ -62879,39 +62996,3 @@ add some fixes:
 
 1.)
 
-Please add 
-
-#+begin_example
-                try {
-                    // If this page matches the current browser page and no specific overrides are requested, use the
-                    // existing document instead of a redundant network fetch.
-                    // For search pages the table is rendered by MusicBrainz JS after page load.
-                    // Using the live `document` on first visit causes a race: the script reads the
-                    // DOM before MusicBrainz has finished rendering, seeing either no table or
-                    // the transient "does not contain enough information" error paragraph.
-                    // Fix: always fetch search pages fresh from the network so the DOMParser
-                    // receives a fully server-rendered response, regardless of whether p===1.
-                    const _isSearchPage = activeDefinition && activeDefinition.type === 'search';
-                    if (!_isSearchPage && p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
-                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
-                        doc = document;
-#+end_example
-
-instead of
-
-#+begin_example
-                try {
-                    // If this page matches the current browser page and no specific overrides are requested, use the
-                    // existing document instead of a redundant network fetch.
-                    if (p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
-                        Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
-                        doc = document;
-#+end_example
-
-2.)
-
-Add "Edit Pinned Filter List" button rigth aligned in the "Quick filter" dialog in the following container (when the quick filter popups)
-
-#+begin_example
-<div style="padding: 4px 8px 2px; background: rgb(232, 245, 233); border-bottom: 1px solid rgb(200, 230, 201);"><span style="font-size:0.76em;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:0.04em;">📌 Pinned</span></div>
-#+end_example
