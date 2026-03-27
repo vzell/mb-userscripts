@@ -60030,7 +60030,29 @@ default: "<table declaration>" + UI support "add", "modify", "delete"
 
 * TODO add a generic function type to the configuration
 
-add a generic function type to the configuration
+some new functionality:
+
+1.)
+
+rename the configuration section "FILTER HIGHLIGHT COLORS SECTION" from 
+
+#+begin_example
+        // ============================================================
+        // FILTER HIGHLIGHT COLORS SECTION
+        // ============================================================
+        divider_filter_colors: {
+            type: 'divider',
+            label: '🎨 FILTER HIGHLIGHT COLORS'
+        },
+#+end_example
+
+to
+
+#+begin_example
+TABE FILTER CONFIGURATION
+#+end_example
+
+and add a generic function type to the renamed configuration section
 
 #+begin_example
 // CONFIG SCHEMA
@@ -60043,6 +60065,18 @@ default: "<function name>"
 #+end_example
 
 and add the option to display the "Edit Pinned Filter List"
+
+#+begin_example
+type: "function",
+default: "<name of the function which displays the 'Edit Pinned Filter List'>"
+#+end_example
+
+also to the configuration UI.
+
+Implement it in the uploaded library "VZ_MBLibrary.user.js" in such a way that when the configuration dialog UI is
+rendered, these types of configuration entries get a button representation, when clicked, the corresponding function
+should be called.
+
 
 
 * TODO extract the VZ event disambiguation configurable in its constituents
