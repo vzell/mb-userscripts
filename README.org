@@ -62614,6 +62614,7 @@ So in easy words, "Clicking" or "Ctrl-Clicking" on an h2 header line should ONLY
 - if the big image stripes above the sub-tables are currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line shoud uncollapse JUST the table section below the h2 header line
 - if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
 
+
 * TODO On "Search" pages, sometimes the following error message is displayed on first rendering of the final page 
 
 On "Search" pages, sometimes the following error message is displayed on first rendering of the final page
@@ -62627,6 +62628,7 @@ On "Search" pages, sometimes the following error message is displayed on first r
 
 
 * TODO event pages need the primary alias below the h1 header "Bleachers"
+
 
 * TODO counting and display wrong: actually with indexedDB cache
 * TODO test with final rendered page (so all are display)
@@ -62687,6 +62689,7 @@ Configurable:
 - background color of the tooltip
 - make the big picture tooltip a little wider to account for long disambiguation picture comments
 
+
 * TODO Add "Edit Pinned Filter List" button rigth aligned in the "Quick filter" dialog in the following container
 
 add the following functionality:
@@ -62727,4 +62730,112 @@ sometimes the following error message is displayed on first rendering of the fin
 
 but on reload of the page it always works
 
+
+* TODO column shift problem on some pages
+** initial
+
+On pageType https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&link_type_id=693&page=1
+
+on the final rendered page the displayed columns got shifted by one to the right in between the foolowing two rendered rows
+
+#+begin_example
+<tr class="odd" data-mb-row-idx="6499"><td>2010-12-29</td><td><span class="recordinglink"></span><span class="video" title="This recording is a video"></span><a href="/recording/b7497054-7492-4ea5-ac21-d3f9a77dd150"><bdi>The Question of U (instr.)</bdi></a> <span class="comment">(<bdi>live, 2010‐12‐29: Madison Square Garden, New York, NY, USA</bdi>)</span></td><td></td><td><bdi><a href="/artist/070d193a-845c-479f-980e-bef15710653e" title="Prince (“The Artist Formerly Known as…”)">Prince</a></bdi></td><td>?:??</td><td><a href="/recording/b7497054-7492-4ea5-ac21-d3f9a77dd150"><bdi>The Question of U (instr.)</bdi></a></td><td>live, 2010‐12‐29: Madison Square Garden, New York, NY, USA</td></tr>
+<tr class="even" data-mb-row-idx="6500"><td>2010-12-29</td><td><span class="recordinglink"></span><span class="video" title="This recording is a video"></span><a href="/recording/74a592c7-6046-4c9b-b559-8df3234eda8d"><bdi>U Got the Look</bdi></a> <span class="comment">(<bdi>live, 2010‐12‐29: Madison Square Garden, New York, NY, USA</bdi>)</span></td><td></td><td></td><td><bdi><a href="/artist/070d193a-845c-479f-980e-bef15710653e" title="Prince (“The Artist Formerly Known as…”)">Prince</a></bdi></td><td>?:??</td><td><a href="/recording/74a592c7-6046-4c9b-b559-8df3234eda8d"><bdi>U Got the Look</bdi></a></td><td>live, 2010‐12‐29: Madison Square Garden, New York, NY, USA</td></tr>
+#+end_example
+
+What is the problem here, please explain and fix with a changelog entry
+
+** solution
+
+#+begin_example
+// Inside the column cleanup logic
+if (Lib.settings.sa_remove_release_events && pageType === 'place-performances') {
+    // Force strict index-based removal to prevent shifting
+    const releaseEventsIdx = Array.from(theadRow.cells).findIndex(th => 
+        th.textContent.includes('Release events')
+    );
+    if (releaseEventsIdx !== -1) {
+        // Remove from header and ensure all reconstructed rows skip this specific index
+        removeColumnByIndex(releaseEventsIdx); 
+    }
+}
+#+end_example
+
+#+begin_example
+{
+  "version": "9.99.316",
+  "date": "2026-03-27",
+  "sections": [
+    {
+      "label": "🐛 Fix",
+      "items": [
+        "place/performances: Fixed a column shifting bug where rows became misaligned when the 'Release events' or 'Rating' columns contained empty cells. The removal logic now uses strict index-tracking to maintain structural integrity across all rows."
+      ]
+    }
+  ]
+}
+#+end_example
+
+** the real source cod
+
+#+begin_example
+. Fix in ShowAllEntityData.user.js
+Locate the cleanupHeaders or the loop inside the fetch process where columns are excluded. You need to modify the logic that handles the indicesToExclude.
+
+Search for the indicesToExclude logic in the row processing loop (around the area where newRow cells are iterated):
+
+JavaScript
+// --- OLD CODE (Conceptual) ---
+// table.querySelectorAll('tbody tr').forEach(row => {
+//    indicesToExclude.forEach(idx => row.deleteCell(idx)); 
+// });
+
+// --- FIXED CODE ---
+// Update the row processing loop to remove cells from right-to-left 
+// to prevent index shifting during the removal process.
+table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
+    if (row.cells.length > 1) {
+        // Sort indices in descending order so removing index 5 
+        // doesn't change the position of index 2.
+        const sortedExclusions = [...indicesToExclude].sort((a, b) => b - a);
+        
+        sortedExclusions.forEach(idx => {
+            if (row.cells[idx]) {
+                row.deleteCell(idx);
+            }
+        });
+
+        const newRow = document.importNode(row, true);
+        // ... rest of the extraction logic
+Additionally, ensure the sa_remove_release_events check specifically targets the column labeled "Release events" by name rather than a hardcoded index:
+
+JavaScript
+// Inside the header scanning section
+const releaseEventsIdx = headerNames.findIndex(name => name.includes('Release events'));
+if (Lib.settings.sa_remove_release_events && releaseEventsIdx !== -1) {
+    indicesToExclude.push(releaseEventsIdx);
+    Lib.debug('cleanup', `Flagging "Release events" at index ${releaseEventsIdx} for removal`);
+}
+2. Update ShowAllEntityData_CHANGELOG.json
+Add the following entry to the top of your changelog file to document the fix:
+
+JSON
+  {
+    "version": "9.99.316",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "place/performances: Fixed column shifting issue caused by 'Release events' column removal. The script now uses a descending-order deletion strategy to ensure row data remains aligned with headers even when optional columns are present."
+        ]
+      }
+    ]
+  },
+#+end_example
+
+
+* TODO when Ctrl-Clicking a h2 header line, refocus to where we have clicked
+
+e.g. when "ctrl-clicking" a h3 header row in the lower part of the page, it repositiones to the top of the page
 
