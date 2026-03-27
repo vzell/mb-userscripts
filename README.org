@@ -57754,6 +57754,20 @@ clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and A
 
 Show tooltips for all the synthetic columns, when hovering over the "column name", basically show information how they are extracted from their sourceColumns
 
+* DONE auto resize columns after loading from disk, make it configurable
+
+Create a new boolean variable in the '💾 LOAD AND SAVE DATA TO/FROM DISK' configuration section (default: true) to "auto resize"
+columns after loading from disk right away, so emulating pressing the
+
+#+begin_example
+<button id="mb-resize-btn" title="Auto-resize columns to optimal width (click to toggle / Ctrl+M, then R)" type="button" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;"><span>↔️ <span style="text-decoration:underline">R</span>esize</span></button>
+#+end_example
+
+button
+
+
+
+
 
 * TODO add fetching to local db storage and reading from it
 ** initial
@@ -60424,8 +60438,8 @@ So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefu
 * TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
 
-* TODO Renames
-
+* TODO Rename button titles and tooltips
+** DONE initial
 1.)
 
 Change the text from
@@ -60439,7 +60453,6 @@ to
 #+begin_example
 clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
 #+end_example
-
 
 * TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
 
@@ -63010,7 +63023,7 @@ Configurable:
 - make the big picture tooltip a little wider to account for long disambiguation picture comments
 
 
-* TODO column shift problem on some pages
+* DONE column shift problem on some pages
 ** initial
 
 On pageType https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances?direction=1&link_type_id=693&page=1
@@ -63119,7 +63132,7 @@ JSON
 e.g. when "ctrl-clicking" a h3 header row in the lower part of the page, it repositiones to the top of the page
 
 
-* TODO Add a new "Artwork Tooltip" section in the configuration section
+* TODO Add a new "Artwork Tooltips" section in the configuration section
 
 Add a new "Artwork Tooltip" section in the configuration section
 
@@ -63147,7 +63160,4 @@ add some fixes:
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
-
-* TODO auto resize columns after loading from disk, make it configurable
-
 
