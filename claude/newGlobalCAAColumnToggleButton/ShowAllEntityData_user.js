@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.320+2026-03-27
+// @version      9.99.318+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -13404,7 +13404,7 @@ a { color: #1565c0; }`;
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle ALL highlighting';
     unhighlightAllBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
-    unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
+    unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
 
     /**
      * Update filter highlight button background color based on highlighting state
@@ -15290,8 +15290,6 @@ a { color: #1565c0; }`;
         const eplCancelBtn = dlg.querySelector('#sa-epl-cancel-btn');
         const eplStatus    = dlg.querySelector('#sa-epl-status');
         let editingIdx = -1; // -1 = adding new, >=0 = editing existing
-        /** @type {Set<number>} origIdx values currently marked for bulk removal via Tab */
-        let markedSet = new Set();
 
         const _eplGlyphs = (e) => {
             const g = [];
@@ -15314,198 +15312,49 @@ a { color: #1565c0; }`;
             eplStatus.textContent = msg; eplStatus.style.color = color;
         };
 
-        /**
-         * Selects a row by origIdx, applying selection and mark visuals to every
-         * visible row.  Uses data-orig-idx so it works correctly when the quick
-         * filter hides rows (visual index ≠ origIdx).
-         *
-         * @param {number} idx  origIdx to select, or -1 to deselect all.
-         */
         const _eplSelectRow = (idx) => {
             selectedIdx = idx;
-            eplTbody.querySelectorAll('tr[data-orig-idx]').forEach(tr => {
-                const oi    = parseInt(tr.dataset.origIdx);
-                const isSel = oi === idx;
-                const isMrk = markedSet.has(oi);
-                tr.style.background = isSel ? '#e3f2fd' : isMrk ? '#fffde7' : '';
-                tr.style.outline    = isSel ? '2px solid #90caf9' : isMrk ? '1px dashed #f9a825' : '';
+            eplTbody.querySelectorAll('tr').forEach((tr, i) => {
+                tr.style.background = i === idx ? '#e3f2fd' : '';
+                tr.style.outline    = i === idx ? '1px solid #90caf9' : '';
             });
-            eplEditBtn.disabled        = idx < 0;
+            eplEditBtn.disabled   = idx < 0;
+            eplRemoveBtn.disabled = idx < 0;
             eplEditBtn.style.opacity   = idx < 0 ? '0.4' : '';
-            _eplSyncRemoveBtn();
+            eplRemoveBtn.style.opacity = idx < 0 ? '0.4' : '';
         };
 
-        /**
-         * Refreshes the Remove button's label, enabled state, and tooltip to reflect
-         * the current marked set and selection state.
-         *
-         * - Marked entries take priority: button always enabled, label shows count.
-         * - No marks: button enabled only when a row is selected (existing behaviour).
-         */
-        const _eplSyncRemoveBtn = () => {
-            const n = markedSet.size;
-            if (n > 0) {
-                eplRemoveBtn.disabled      = false;
-                eplRemoveBtn.style.opacity = '';
-                eplRemoveBtn.innerHTML     =
-                    `&#10005; <span style="text-decoration:underline">R</span>emove (${n} marked)`;
-                eplRemoveBtn.title = `Remove all ${n} marked entries (Alt+R)`;
-            } else {
-                const hasSel               = selectedIdx >= 0;
-                eplRemoveBtn.disabled      = !hasSel;
-                eplRemoveBtn.style.opacity = hasSel ? '' : '0.4';
-                eplRemoveBtn.innerHTML     =
-                    '&#10005; <span style="text-decoration:underline">R</span>emove';
-                eplRemoveBtn.title = 'Remove selected entry (Alt+R)';
-            }
-        };
-
-        /**
-         * (Re-)renders the entry table.
-         *
-         * Each row is keyboard-focusable (tabindex="0") and supports:
-         *   ArrowUp / ArrowDown  — navigate rows; ArrowUp on first row returns to qf.
-         *   Tab (no shift)       — mark/unmark row for bulk removal, advance to next.
-         *   Shift+Tab            — move backwards without marking.
-         *   Space                — toggle mark without moving focus.
-         *   Enter                — open edit form for this entry.
-         *   Delete               — trigger Remove button.
-         *
-         * Marked rows are shown with a yellow "☑" indicator and dashed outline.
-         * Selected row (keyboard / click focus) is shown with blue highlight.
-         */
         const _eplRender = () => {
             const qf = quickFilterVal.trim().toLowerCase();
             const visible = workList
                 .map((e, origIdx) => ({ e, origIdx }))
                 .filter(({ e }) => !qf || e.query.toLowerCase().includes(qf));
 
-            // Prune stale entries from markedSet (entries deleted since last render).
-            [...markedSet].forEach(oi => { if (oi >= workList.length) markedSet.delete(oi); });
-
-            eplTbody.innerHTML = visible.map(({ e, origIdx }) => {
-                const hl       = _eplHighlight(e.query, qf);
-                const isMrk    = markedSet.has(origIdx);
-                const isSel    = origIdx === selectedIdx;
-                const rowStyle = isSel ? 'background:#e3f2fd;outline:2px solid #90caf9;'
-                               : isMrk ? 'background:#fffde7;outline:1px dashed #f9a825;'
-                               : '';
-                const markIcon = `<span class="sa-epl-mark-icon" title="Tab → mark/unmark for bulk removal" `
-                               + `style="font-size:0.9em;cursor:default;user-select:none;">`
-                               + (isMrk ? '&#9745;' : '&#9744;') + `</span>`;
-                return `<tr data-orig-idx="${origIdx}" tabindex="0" `
-                     + `style="cursor:pointer;border-bottom:1px solid #eee;${rowStyle}">`
-                     + `<td style="padding:5px 6px;color:#aaa;font-size:0.82em;white-space:nowrap;">`
-                     + `${markIcon}&thinsp;${origIdx + 1}</td>`
-                     + `<td style="padding:5px 10px;font-size:0.9em;word-break:break-all;">${hl}</td>`
-                     + `<td style="padding:5px 4px;text-align:center;">${e.useCase    ? '&#10003;' : ''}</td>`
-                     + `<td style="padding:5px 4px;text-align:center;">${e.useRegex   ? '&#10003;' : ''}</td>`
-                     + `<td style="padding:5px 4px;text-align:center;">${e.useExclude ? '&#10003;' : ''}</td>`
-                     + `</tr>`;
+            eplTbody.innerHTML = visible.map(({ e, origIdx }, visIdx) => {
+                const hl = _eplHighlight(e.query, qf);
+                return `<tr data-orig-idx="${origIdx}" style="cursor:pointer;border-bottom:1px solid #eee;">
+                    <td style="padding:5px 8px;color:#aaa;font-size:0.82em;white-space:nowrap;">${origIdx + 1}</td>
+                    <td style="padding:5px 10px;font-size:0.9em;word-break:break-all;">${hl}</td>
+                    <td style="padding:5px 4px;text-align:center;">${e.useCase    ? '&#10003;' : ''}</td>
+                    <td style="padding:5px 4px;text-align:center;">${e.useRegex   ? '&#10003;' : ''}</td>
+                    <td style="padding:5px 4px;text-align:center;">${e.useExclude ? '&#10003;' : ''}</td>
+                </tr>`;
             }).join('') || `<tr><td colspan="5" style="padding:12px;text-align:center;color:#aaa;font-size:0.88em;">No entries</td></tr>`;
 
-            // ── Wire row interactions ─────────────────────────────────────────
-            const rows = Array.from(eplTbody.querySelectorAll('tr[data-orig-idx]'));
-
-            /**
-             * Toggles the mark state on one row and updates its visual inline
-             * (without a full re-render) for instant feedback.
-             *
-             * @param {HTMLTableRowElement} tr  The row element.
-             * @param {number}              oi  origIdx of the row.
-             */
-            const _toggleMark = (tr, oi) => {
-                if (markedSet.has(oi)) {
-                    markedSet.delete(oi);
-                } else {
-                    markedSet.add(oi);
-                }
-                const isMrk    = markedSet.has(oi);
-                const isSel    = oi === selectedIdx;
-                const iconEl   = tr.querySelector('.sa-epl-mark-icon');
-                if (iconEl) iconEl.innerHTML = isMrk ? '&#9745;' : '&#9744;';
-                tr.style.background = isSel ? '#e3f2fd' : isMrk ? '#fffde7' : '';
-                tr.style.outline    = isSel ? '2px solid #90caf9' : isMrk ? '1px dashed #f9a825' : '';
-                _eplSyncRemoveBtn();
-            };
-
-            rows.forEach((tr, vi) => {
+            // Re-attach row click
+            eplTbody.querySelectorAll('tr[data-orig-idx]').forEach(tr => {
                 const oi = parseInt(tr.dataset.origIdx);
-
-                tr.addEventListener('click', () => { _eplSelectRow(oi); tr.focus(); });
+                const vi = Array.from(eplTbody.querySelectorAll('tr[data-orig-idx]')).indexOf(tr);
+                tr.addEventListener('click', () => _eplSelectRow(oi));
                 tr.addEventListener('dblclick', () => { _eplSelectRow(oi); _eplOpenForm(oi); });
-
-                tr.addEventListener('keydown', (ev) => {
-                    switch (ev.key) {
-                        case 'ArrowDown':
-                            ev.preventDefault(); ev.stopPropagation();
-                            if (vi < rows.length - 1) {
-                                rows[vi + 1].focus();
-                                _eplSelectRow(parseInt(rows[vi + 1].dataset.origIdx));
-                            }
-                            break;
-                        case 'ArrowUp':
-                            ev.preventDefault(); ev.stopPropagation();
-                            if (vi > 0) {
-                                rows[vi - 1].focus();
-                                _eplSelectRow(parseInt(rows[vi - 1].dataset.origIdx));
-                            } else {
-                                // Top of list → back to quick-filter input
-                                eplQF.focus();
-                                _eplSelectRow(-1);
-                            }
-                            break;
-                        case 'Tab':
-                            ev.preventDefault(); ev.stopPropagation();
-                            if (!ev.shiftKey) {
-                                // Tab forward: mark this row, advance focus
-                                _toggleMark(tr, oi);
-                                if (vi < rows.length - 1) {
-                                    rows[vi + 1].focus();
-                                    _eplSelectRow(parseInt(rows[vi + 1].dataset.origIdx));
-                                } else {
-                                    // Last row → wrap focus to Add button
-                                    eplAddBtn.focus();
-                                    _eplSelectRow(-1);
-                                }
-                            } else {
-                                // Shift+Tab: move backwards without marking
-                                if (vi > 0) {
-                                    rows[vi - 1].focus();
-                                    _eplSelectRow(parseInt(rows[vi - 1].dataset.origIdx));
-                                } else {
-                                    eplQF.focus();
-                                    _eplSelectRow(-1);
-                                }
-                            }
-                            break;
-                        case ' ':
-                            // Space: toggle mark in place (no focus move)
-                            ev.preventDefault(); ev.stopPropagation();
-                            _toggleMark(tr, oi);
-                            break;
-                        case 'Enter':
-                            ev.preventDefault(); ev.stopPropagation();
-                            _eplOpenForm(oi);
-                            break;
-                        case 'Delete':
-                            ev.preventDefault(); ev.stopPropagation();
-                            eplRemoveBtn.click();
-                            break;
-                        default:
-                            break;
-                    }
-                });
             });
 
-            const markHint = markedSet.size > 0
-                ? ` — ${markedSet.size} marked`
-                : ' — Tab on row to mark for bulk remove';
-            _eplStatus(
-                `${visible.length} of ${workList.length} entries${isDirty ? ' — unsaved changes' : ''}${markHint}`,
-                isDirty ? '#e65100' : '#888'
-            );
-            _eplSyncRemoveBtn();
+            // Preserve selection highlight after re-render
+            if (selectedIdx >= 0) {
+                const selTr = eplTbody.querySelector(`tr[data-orig-idx="${selectedIdx}"]`);
+                if (selTr) { selTr.style.background = '#e3f2fd'; selTr.style.outline = '1px solid #90caf9'; }
+            }
+            _eplStatus(`${visible.length} of ${workList.length} entries${isDirty ? ' — unsaved changes' : ''}`, isDirty ? '#e65100' : '#888');
         };
 
         const _eplOpenForm = (idx) => {
@@ -15527,35 +15376,16 @@ a { color: #1565c0; }`;
 
         eplAddBtn.onclick = () => _eplOpenForm(-1);
         eplEditBtn.onclick = () => { if (selectedIdx >= 0) _eplOpenForm(selectedIdx); };
-        /**
-         * Remove button handler — two modes:
-         *   Marked entries present → remove ALL marked entries (bulk removal).
-         *   No marks               → remove the single currently-selected entry.
-         */
         eplRemoveBtn.onclick = () => {
-            if (markedSet.size > 0) {
-                // Bulk remove: sort descending so splice indices stay valid.
-                const toRemove   = [...markedSet].sort((a, b) => b - a);
-                const removedCnt = toRemove.length;
-                toRemove.forEach(mi => { workList.splice(mi, 1); });
-                markedSet.clear();
-                isDirty    = true;
-                selectedIdx = -1;
-                _eplSelectRow(-1);
-                _eplCloseForm();
-                _eplRender();
-                _eplStatus(`Removed ${removedCnt} marked entries. Unsaved changes.`, '#e65100');
-            } else {
-                if (selectedIdx < 0 || selectedIdx >= workList.length) return;
-                const removed = workList[selectedIdx].query;
-                workList.splice(selectedIdx, 1);
-                isDirty    = true;
-                selectedIdx = -1;
-                _eplSelectRow(-1);
-                _eplCloseForm();
-                _eplRender();
-                _eplStatus(`Removed "${removed}". Unsaved changes.`, '#e65100');
-            }
+            if (selectedIdx < 0 || selectedIdx >= workList.length) return;
+            const removed = workList[selectedIdx].query;
+            workList.splice(selectedIdx, 1);
+            isDirty = true;
+            selectedIdx = -1;
+            _eplSelectRow(-1);
+            _eplCloseForm();
+            _eplRender();
+            _eplStatus(`Removed "${removed}". Unsaved changes.`, '#e65100');
         };
 
         eplFormApply.onclick = () => {
@@ -15573,8 +15403,6 @@ a { color: #1565c0; }`;
             }
             isDirty = true;
             selectedIdx = -1;
-            // Adding prepends → all origIdx values shift; clear stale marks.
-            if (!(editingIdx >= 0 && editingIdx < workList.length)) markedSet.clear();
             _eplCloseForm();
             _eplRender();
         };
@@ -15614,19 +15442,6 @@ a { color: #1565c0; }`;
             _eplRender();
             _syncEplQfClearBtn();
         });
-        // Tab inside the quick-filter moves focus to the first table row so the
-        // user can immediately navigate / mark entries without reaching for the mouse.
-        eplQF.addEventListener('keydown', (ev) => {
-            if (ev.key === 'Tab' && !ev.shiftKey) {
-                const firstRow = eplTbody.querySelector('tr[data-orig-idx]');
-                if (firstRow) {
-                    ev.preventDefault();
-                    ev.stopPropagation();
-                    firstRow.focus();
-                    _eplSelectRow(parseInt(firstRow.dataset.origIdx));
-                }
-            }
-        });
         if (eplQfClearBtn) {
             eplQfClearBtn.addEventListener('click', (ev) => {
                 ev.stopPropagation();
@@ -15655,13 +15470,6 @@ a { color: #1565c0; }`;
                     _eplSelectRow(-1);
                     _eplRender();
                     _syncEplQfClearBtn();
-                    return;
-                }
-                // If marks are active, first Escape clears them; second closes dialog.
-                if (markedSet.size > 0) {
-                    markedSet.clear();
-                    _eplSelectRow(selectedIdx); // refresh visuals
-                    _eplRender();
                     return;
                 }
                 eplCancelBtn.click();
@@ -21139,7 +20947,7 @@ a { color: #1565c0; }`;
         const highlightBtn = document.createElement('button');
         highlightBtn.id = `${pfx}-toggle-filter-highlight-btn`;
         highlightBtn.type = 'button';
-        highlightBtn.title = 'Toggle filter string highlighting for the sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
+        highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
         highlightBtn.textContent = '🎨 Toggle highlighting';
         // Initially hidden — shown by updateFilterButtonsVisibility() as soon as any
         // filter (subtable input or column filter) is active for this subtable.
@@ -32728,7 +32536,7 @@ a { color: #1565c0; }`;
                     '.' + ctx.btnClass + ':not(#' + globalBtnId + ')'
                 );
                 liveSubBtns.forEach(sb => {
-                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
+                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
                 });
 
                 // Update global button title.
@@ -33029,8 +32837,8 @@ a { color: #1565c0; }`;
                 liveBox.style.display        = nowVisible ? 'flex' : 'none';
                 liveBox.dataset[ctx.visAttr] = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
-                    ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
-                    : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+                    ? 'Hide ' + ctx.stripeLabel + ' for this section'
+                    : 'Show ' + ctx.stripeLabel + ' for this section';
                 Lib.debug(ctx.key, `${ctx.key} toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
             });
 
@@ -33077,8 +32885,8 @@ a { color: #1565c0; }`;
             ? liveBoxForTitle.dataset[ctx.visAttr] !== 'false'
             : false;
         btn.title = visible
-            ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
-            : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+            ? 'Hide ' + ctx.stripeLabel + ' for this section'
+            : 'Show ' + ctx.stripeLabel + ' for this section';
 
         Lib.debug(ctx.key, `${ctx.key}CreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
         return btnId;
@@ -33280,9 +33088,6 @@ a { color: #1565c0; }`;
                 btn = document.createElement('span');
                 btn.className = 'mb-caa-col-hdr-btn';
                 btn.setAttribute('role', 'button');
-                // Tag with the archive context key so the global toggle button
-                // can filter exclusively on its own column (CAA vs EAA).
-                btn.dataset.caaCtx = ctx.key;
 
                 // Glyph span comes first (▶ collapsed / ▼ expanded).
                 const glyph = document.createElement('span');
@@ -33354,18 +33159,13 @@ a { color: #1565c0; }`;
         // Only applicable on multi-table pages.
         if (!activeDefinition || activeDefinition.tableMode !== 'multi') return;
 
-        // Only consider column-header buttons that belong to THIS context (CAA vs EAA),
-        // identified by the data-caa-ctx attribute stamped on creation above.
-        // This prevents the EAA global button from appearing on pages that only have
-        // a CAA column (and vice-versa).
-        const ctxColHdrBtns = () =>
-            Array.from(document.querySelectorAll(
-                `.mb-caa-col-hdr-btn[data-caa-ctx="${ctx.key}"]`
-            ));
-
-        if (ctxColHdrBtns().length === 0) {
-            // No column for this context — hide any stale button and bail.
-            const stale = document.getElementById(`mb-caa-col-hdr-toggle-all-btn-${ctx.key}`);
+        // Check that at least one per-table column-header button actually exists.
+        const colHdrBtns = Array.from(document.querySelectorAll('.mb-caa-col-hdr-btn'));
+        if (colHdrBtns.length === 0) {
+            // No CAA/EAA column in any table — hide any stale button and bail.
+            const stale = document.querySelector(
+                `[data-mb-caa-col-all-ctx="${ctx.key}"]`
+            );
             if (stale) stale.style.display = 'none';
             return;
         }
@@ -33374,57 +33174,28 @@ a { color: #1565c0; }`;
         const globalCollapseBtn = document.getElementById('mb-col-collapse-all-btn');
         if (!globalCollapseBtn) return;
 
-        const btnId       = `mb-caa-col-hdr-toggle-all-btn-${ctx.key}`;
+        // Derive the button id unique to this context.
+        const btnId = `mb-caa-col-hdr-toggle-all-btn-${ctx.key}`;
+        let   btn   = document.getElementById(btnId);
         const archiveName = ctx.key.toUpperCase();
-        let   btn         = document.getElementById(btnId);
 
         /**
-         * Derives the first available thumbnail URL from the context-specific
-         * per-table column-header buttons (reuses the img already present there).
-         *
-         * @returns {string} src URL, or '' when none is loaded yet.
-         */
-        function _firstThumbSrc() {
-            for (const hb of ctxColHdrBtns()) {
-                const img = hb.querySelector('img');
-                if (img && img.src && img.style.display !== 'none') return img.src;
-            }
-            return '';
-        }
-
-        /**
-         * Resolves the aggregate expansion state and refreshes the button's
-         * thumbnail, text, and tooltip.
+         * Resolves the aggregate expansion state and refreshes button text/title.
          *
          * @param {HTMLButtonElement} b  The global toggle button to refresh.
          */
         function _syncGlobalCaaColHdrBtn(b) {
-            const all = ctxColHdrBtns();
+            const all = Array.from(document.querySelectorAll('.mb-caa-col-hdr-btn'));
             if (all.length === 0) { b.style.display = 'none'; return; }
-
             const anyCollapsed = all.some(hb => hb.dataset.caaColHdrState !== 'expanded');
             b.dataset.mbCaaColAllExpanded = anyCollapsed ? 'false' : 'true';
-
-            // Refresh thumbnail src (images may have loaded since last sync).
-            const thumbEl = b.querySelector('.mb-caa-col-hdr-all-thumb');
-            if (thumbEl) {
-                const src = _firstThumbSrc();
-                thumbEl.src          = src;
-                thumbEl.style.display = src ? 'inline-block' : 'none';
-            }
-
-            // Short button label (tooltip carries the full description).
-            const labelEl = b.querySelector('.mb-caa-col-hdr-all-label');
-            if (labelEl) {
-                labelEl.textContent = anyCollapsed
-                    ? `Uncollapse all ${archiveName} images`
-                    : `Collapse all ${archiveName} images`;
-            }
-
+            b.textContent = anyCollapsed
+                ? `Uncollapse all ${archiveName} cover art images in all sections`
+                : `Collapse all ${archiveName} cover art images in all sections`;
             b.title = anyCollapsed
                 ? `Expand all ${archiveName} column thumbnails across every sub-table section`
                 : `Collapse all ${archiveName} column thumbnails across every sub-table section`;
-            b.style.display = 'inline-flex';
+            b.style.display = 'inline-block';
         }
 
         if (!btn) {
@@ -33433,32 +33204,17 @@ a { color: #1565c0; }`;
             btn.type = 'button';
             btn.setAttribute('data-mb-caa-col-all-ctx', ctx.key);
             btn.style.cssText =
-                'font-size:0.8em; padding:2px 4px 2px 3px; border-radius:4px;' +
+                'font-size:0.8em; padding:2px 6px; border-radius:4px;' +
                 ' background:rgb(240,240,240); border:1px solid rgb(204,204,204);' +
                 ' cursor:pointer; vertical-align:middle; display:none;' +
-                ' align-items:center; gap:4px;' +
                 ' transition:background-color 0.2s, color 0.2s;';
-
-            // Thumbnail — mirrors the thumbnail from the per-table col-hdr button.
-            const thumbImg         = document.createElement('img');
-            thumbImg.className     = 'mb-caa-col-hdr-all-thumb';
-            thumbImg.alt           = '';
-            thumbImg.style.cssText =
-                'width:16px; height:16px; object-fit:cover; border-radius:2px;' +
-                ' vertical-align:middle; display:none;';
-            btn.appendChild(thumbImg);
-
-            // Short text label.
-            const labelSpan       = document.createElement('span');
-            labelSpan.className   = 'mb-caa-col-hdr-all-label';
-            btn.appendChild(labelSpan);
 
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const hdrBtns = ctxColHdrBtns();
+                const hdrBtns = Array.from(document.querySelectorAll('.mb-caa-col-hdr-btn'));
                 if (hdrBtns.length === 0) return;
-                // Expand if any are currently collapsed, else collapse all.
-                const nowExpanding = hdrBtns.some(hb => hb.dataset.caaColHdrState !== 'expanded');
+                // Target state: expand if any are currently collapsed, else collapse.
+                const nowExpanding = hdrBtns.some(b => b.dataset.caaColHdrState !== 'expanded');
                 hdrBtns.forEach(hb => {
                     const alreadyExpanded = hb.dataset.caaColHdrState === 'expanded';
                     if (alreadyExpanded !== nowExpanding) {
@@ -33468,8 +33224,7 @@ a { color: #1565c0; }`;
                 _syncGlobalCaaColHdrBtn(btn);
                 Lib.debug(ctx.key,
                     `_artInitGlobalCaaColHdrToggle: global col-hdr toggle clicked — ` +
-                    `${nowExpanding ? 'expanded' : 'collapsed'} all ${hdrBtns.length} ` +
-                    `${archiveName} column(s)`);
+                    `${nowExpanding ? 'expanded' : 'collapsed'} all ${hdrBtns.length} column(s)`);
             });
 
             // Insert immediately after the global column-collapse button.

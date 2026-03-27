@@ -1,21 +1,5 @@
 [
   {
-    "version": "9.99.320",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🚀 Features",
-        "items": [
-          "Edit Pinned Filter List — keyboard navigation: Tab in the quick-filter field moves focus to the first table row; ArrowUp/Down navigate rows; ArrowUp on the first row returns focus to the quick-filter; Shift+Tab moves backwards without marking; Enter opens the edit form; Delete triggers the Remove button",
-          "Edit Pinned Filter List — Tab-to-mark: pressing Tab on a focused row toggles its 'marked' state (☑/☐ indicator in the # column, yellow dashed highlight); Space toggles mark without moving focus; marks persist across re-renders via a Set<origIdx>",
-          "Edit Pinned Filter List — bulk removal: when any rows are marked the Remove button label changes to '✗ Remove (N marked)' and clicking it removes all marked entries at once; with no marks the button behaves as before (removes the single selected row)",
-          "Edit Pinned Filter List — mark hints: status bar shows 'Tab on row to mark for bulk remove' when no marks are active and '{N} marked' count when marks are set; first Escape press clears marks before closing the dialog",
-          "Edit Pinned Filter List — _eplSelectRow fixed: now uses data-orig-idx attribute to locate rows instead of visual index, so selection highlight is correct when the quick filter is active"
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.319",
     "date": "2026-03-27",
     "sections": [

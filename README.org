@@ -59734,6 +59734,8 @@ default: "<table declaration>" + UI support "add", "modify", "delete"
 
 * TODO add a generic function type to the configuration
 
+add a generic function type to the configuration
+
 #+begin_example
 // CONFIG SCHEMA
 const configSchema = {
@@ -59744,11 +59746,21 @@ type: "function",
 default: "<function name>"
 #+end_example
 
+and add the option to display the "Edit Pinned Filter List"
+
 
 * TODO add keyboard navigation to "Edit Pinned Filter List" and add it to the 
 
-add keyboard navigation to "Edit Pinned Filter List" in the "Filter expression table", "Tab" should mark entries, and "x Remove"
-should act on all of them
+add some new features:
+
+1.)
+
+add keyboard navigation to the "Edit Pinned Filter List" in the "Filter expression" table. So when pressing "Tab" when
+inside the filter field we should move to the first entry in the table. When we are there, the standard keyboad "Up"/"Down" keys should move inside the entries.
+
+2.)
+
+"Tab" should mark entries, and the "x Remove" button should remove all marked entries
 
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
@@ -60144,8 +60156,11 @@ So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefu
 
 
 * TODO the order of the buttons in a h2 sub-table row,  when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
+** DONE initial
 
-A couple of renames and a new functionality:
+In the newly uploaded userscript "ShowAllEntityData.user.js" and ChangeLog file "ShowAllEntityData_CHANGELOG.json"
+
+do a couple of renames and add a new functionality:
 
 1.)
 
@@ -60282,10 +60297,127 @@ in the h2 header line, with the action of emulating a click on all toggle "CAA"/
 <span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images in this column" aria-expanded="false"><span>▶</span><img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"></span>
 #+end_example
 
+** DONE bugs
+
+Some bugs
+
+1.)
+
+There should be ONLY one of the two currently rendered buttons
+
+#+begin_example
+<button id="mb-caa-col-hdr-toggle-all-btn-eaa" type="button" data-mb-caa-col-all-ctx="eaa" data-mb-caa-col-all-expanded="false" title="Expand all EAA column thumbnails across every sub-table section" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block; transition: background-color 0.2s, color 0.2s;">Uncollapse all EAA cover art images in all sections</button>
+#+end_example
+
+#+begin_example
+<button id="mb-caa-col-hdr-toggle-all-btn-caa" type="button" data-mb-caa-col-all-ctx="caa" data-mb-caa-col-all-expanded="false" title="Expand all CAA column thumbnails across every sub-table section" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block; transition: background-color 0.2s, color 0.2s;">Uncollapse all CAA cover art images in all sections</button>
+#+end_example
+
+depending on the presence of EITHER the "CAA" or "EAA" column
+
+E.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c there is ONLY the "CAA" column present, so only the CAA" button should be rendered
+
+2.)
+
+Change the button text from
+
+#+begin_example
+Uncollapse all CAA cover art images in all sections
+#+end_example
+
+#+begin_example
+Collapse all CAA cover art images in all sections
+#+end_example
+
+to
+
+#+begin_example
+Uncollapse all CAA images
+#+end_example
+
+#+begin_example
+Collapse all CAA images
+#+end_example
+
+but leave the tooltips intact
+
+3.)
+
+render the "CAA" thumbnail from the "CAA" header column
+
+#+begin_example
+<img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;">
+#+end_example
+
+inside the button in front of the button text e.g.
+
+#+begin_example
+[CAA thumbnail] Collapse/Uncollapse all CAA images
+#+end_example
+
+4.)
+
+In the sub-table specific toggle buttons
+
+#+begin_example
+<button id="mb-caa-toggle-btn-<n>" type="button" class="mb-caa-art-toggle-btn" title="Hide big artwork CAA cover art images stripe" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="6"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">51</span></button>
+#+end_example
+
+change
+
+#+begin_example
+title="Hide CAA cover art image stripe for this section"
+#+end_example
+
+#+begin_example
+title="Show CAA cover art image stripe for this section"
+#+end_example
+
+to
+
+#+begin_example
+title="Hide CAA cover art image stripe for this sub-section"
+#+end_example
+
+#+begin_example
+title="Show CAA cover art image stripe for this sub-section"
+#+end_example
+
+5.)
+
+
+Change
+
+#+begin_example
+unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
+highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
+#+end_example
+
+to
+
+#+begin_example
+unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
+highlightBtn.title = 'Toggle filter string highlighting for the sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
+#+end_example
+
+** TODO bugs
+
+1.)
+
+Change the text from
+
+#+begin_example
+clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+#+end_example
+
+to
+
+#+begin_example
+clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+#+end_example
+
 
 * TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
-
-
 
 * TODO inform the user that the CSV exporter exports the first table in "multi"-table mode
 
@@ -60369,13 +60501,6 @@ STF highlight: bg #90ee90 (hardcoded light green), color #000
      */
     async function renderFinalTable(rows) {
 #+end_example
-
-
-* TODO todos
-
-In the newly uploaded userscript,
-
-a couple of things are still missing (also add a changelog):
 
 
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
@@ -62799,9 +62924,7 @@ So in easy words, "Clicking" or "Ctrl-Clicking" on an h2 header line should ONLY
 
 * TODO Add a toggle "Collapse all [CAA icon]"-button to h2/h3 header line
 
-
 * TODO event pages need the primary alias below the h1 header "Bleachers"
-
 
 * TODO counting and display wrong: actually with indexedDB cache
 * TODO test with final rendered page (so all are display)
@@ -62908,7 +63031,7 @@ if (Lib.settings.sa_remove_release_events && pageType === 'place-performances') 
 }
 #+end_example
 
-** the real source cod
+** the real source code
 
 #+begin_example
 . Fix in ShowAllEntityData.user.js
@@ -62972,7 +63095,6 @@ JSON
 e.g. when "ctrl-clicking" a h3 header row in the lower part of the page, it repositiones to the top of the page
 
 
-
 * TODO Add a new "Artwork Tooltip" section in the configuration section
 
 Add a new "Artwork Tooltip" section in the configuration section
@@ -62995,4 +63117,11 @@ In the newly uploaded userscript "ShowAllEntityData.user.js" and ChangeLog file 
 add some fixes:
 
 1.)
+
+* TODO todos
+
+In the newly uploaded userscript,
+
+a couple of things are still missing (also add a changelog):
+
 
