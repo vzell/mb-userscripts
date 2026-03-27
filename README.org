@@ -57472,6 +57472,288 @@ Add "Edit Pinned Filter List" button rigth aligned in the "Quick filter" dialog 
 #+end_example
 
 
+* DONE add keyboard navigation to "Edit Pinned Filter List" and add it to the 
+
+add some new features:
+
+1.)
+
+add keyboard navigation to the "Edit Pinned Filter List" in the "Filter expression" table. So when pressing "Tab" when
+inside the filter field we should move to the first entry in the table. When we are there, the standard keyboad "Up"/"Down" keys should move inside the entries.
+
+2.)
+
+"Tab" should mark entries, and the "x Remove" button should remove all marked entries
+
+* DONE the order of the buttons in a h2 sub-table row, when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
+** DONE initial
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" and ChangeLog file "ShowAllEntityData_CHANGELOG.json"
+
+do a couple of renames and add a new functionality:
+
+1.)
+
+Change "ALL"
+
+#+begin_example
+<span>Expand</span><span>ALL</span></span>
+#+end_example
+
+to "all"
+
+#+begin_example
+<span>Expand</span><span>all</span></span>
+#+end_example
+
+in the sub-tables specific buttons
+
+#+begin_example
+<button id="mb-stf-....-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand ALL collapsed multi-row cells in &quot;Promotion release&quot; sub-section" aria-label="Expand all collapsed multi-row cells in: Promotion release" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
+#+end_example
+
+2.)
+
+Change the "title" in
+
+#+begin_example
+title="Globally toggle CAA cover art images - Show"
+#+end_example
+
+and 
+
+#+begin_example
+title="Globally toggle CAA cover art images - Hide"
+#+end_example
+
+to
+
+#+begin_example
+title="Show CAA cover art image stripes in ALL sections"
+#+end_example
+
+and
+
+#+begin_example
+title="Hide CAA cover art image stripes in ALL sections"
+#+end_example
+
+in the "mb-caa-toggle-btn-global" button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">53</span></button>
+#+end_example
+
+3.)
+
+In the sub-table specific toggle buttons
+
+#+begin_example
+<button id="mb-caa-toggle-btn-<n>" type="button" class="mb-caa-art-toggle-btn" title="Hide big artwork CAA cover art images stripe" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="6"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">51</span></button>
+#+end_example
+
+change
+
+#+begin_example
+title="Hide big artwork CAA cover art images stripe"
+#+end_example
+
+#+begin_example
+title="Show big artwork CAA cover art images stripe"
+#+end_example
+
+to
+
+#+begin_example
+title="Hide CAA cover art image stripe for this section"
+#+end_example
+
+#+begin_example
+title="Show CAA cover art image stripe for this section"
+#+end_example
+
+4.)
+
+Change
+
+#+begin_example
+        filterInput.placeholder = `Filter "${categoryName}"… just in this sub-table`;
+#+end_example
+
+to
+
+#+begin_example
+        filterInput.placeholder = `Filter "${categoryName}"… just in this sub-category`;
+#+end_example
+
+5.)
+
+the order of the buttons in each h2 header sub-line ("multi"-table pageTypes), when the buttons are all visible should always be like in the global case:
+
+#+begin_example
+"Expand ALL multi-row cells"
+"Toggle ALL highlightning"
+"Clear ALL COLUMN filters"
+"Clear ALL filters"
+#+end_example
+
+so, make sure that the buttons are all rendered after the "Exclude" checkbox
+
+#+begin_example
+<label id="mb-stf-Promotion_release-ex-label" for="mb-stf-Promotion_release-ex-checkbox" title="Exclude Matches (filter for &quot;Promotion release&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Promotion_release-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label>
+#+end_example
+
+in the following logical order (remember they are probably NOT all visible at the same time)
+
+#+begin_example
+<button id="mb-stf-Promotion_release-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand ALL collapsed multi-row cells in &quot;Promotion release&quot; sub-section" aria-label="Expand all collapsed multi-row cells in: Promotion release" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
+<button id="mb-stf-Promotion_release-toggle-filter-highlight-btn" type="button" title="Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle highlighting</button>
+<button class="mb-subtable-clear-btn" type="button" title="Clear ALL filters for this sub-table (the sub-table filter and ALL column filters)" style="display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span><span class="mb-subtable-clear-btn-label">Clear all filters</span></button>
+<button id="mb-stf-Promotion_release-clear-all-btn" class="mb-stf-clear-col-btn" type="button" title="Clear ALL column filters for this sub-table (the sub-table filter itself is kept)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all column filters</button>
+#+end_example
+
+6.)
+
+for "multi"-table pageTypes which have a "CAA" or "EAA" column, add a new toggle button with text "Uncollapse all CAA cover art images in all sections"/"Collapse all CAA cover art images in all sections" 
+after the button 
+
+#+begin_example
+<button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
+#+end_example
+
+in the h2 header line, with the action of emulating a click on all toggle "CAA"/"EAA" column header buttons
+
+#+begin_example
+<span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images in this column" aria-expanded="false"><span>▶</span><img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"></span>
+#+end_example
+
+** DONE bugs
+
+Some bugs
+
+1.)
+
+There should be ONLY one of the two currently rendered buttons
+
+#+begin_example
+<button id="mb-caa-col-hdr-toggle-all-btn-eaa" type="button" data-mb-caa-col-all-ctx="eaa" data-mb-caa-col-all-expanded="false" title="Expand all EAA column thumbnails across every sub-table section" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block; transition: background-color 0.2s, color 0.2s;">Uncollapse all EAA cover art images in all sections</button>
+#+end_example
+
+#+begin_example
+<button id="mb-caa-col-hdr-toggle-all-btn-caa" type="button" data-mb-caa-col-all-ctx="caa" data-mb-caa-col-all-expanded="false" title="Expand all CAA column thumbnails across every sub-table section" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block; transition: background-color 0.2s, color 0.2s;">Uncollapse all CAA cover art images in all sections</button>
+#+end_example
+
+depending on the presence of EITHER the "CAA" or "EAA" column
+
+E.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c there is ONLY the "CAA" column present, so only the CAA" button should be rendered
+
+2.)
+
+Change the button text from
+
+#+begin_example
+Uncollapse all CAA cover art images in all sections
+#+end_example
+
+#+begin_example
+Collapse all CAA cover art images in all sections
+#+end_example
+
+to
+
+#+begin_example
+Uncollapse all CAA images
+#+end_example
+
+#+begin_example
+Collapse all CAA images
+#+end_example
+
+but leave the tooltips intact
+
+3.)
+
+render the "CAA" thumbnail from the "CAA" header column
+
+#+begin_example
+<img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;">
+#+end_example
+
+inside the button in front of the button text e.g.
+
+#+begin_example
+[CAA thumbnail] Collapse/Uncollapse all CAA images
+#+end_example
+
+4.)
+
+In the sub-table specific toggle buttons
+
+#+begin_example
+<button id="mb-caa-toggle-btn-<n>" type="button" class="mb-caa-art-toggle-btn" title="Hide big artwork CAA cover art images stripe" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="6"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">51</span></button>
+#+end_example
+
+change
+
+#+begin_example
+title="Hide CAA cover art image stripe for this section"
+#+end_example
+
+#+begin_example
+title="Show CAA cover art image stripe for this section"
+#+end_example
+
+to
+
+#+begin_example
+title="Hide CAA cover art image stripe for this sub-section"
+#+end_example
+
+#+begin_example
+title="Show CAA cover art image stripe for this sub-section"
+#+end_example
+
+5.)
+
+
+Change
+
+#+begin_example
+unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
+highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
+#+end_example
+
+to
+
+#+begin_example
+unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
+highlightBtn.title = 'Toggle filter string highlighting for the sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
+#+end_example
+
+** DONE bugs
+
+* DONE Show tooltips for all the synthetic columns, basically how they are extracted from their sourceColumns
+
+some more things todo
+
+1.)
+
+Change the text from
+
+#+begin_example
+clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+#+end_example
+
+to
+
+#+begin_example
+clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+#+end_example
+
+2.)
+
+Show tooltips for all the synthetic columns, when hovering over the "column name", basically show information how they are extracted from their sourceColumns
+
 
 * TODO add fetching to local db storage and reading from it
 ** initial
@@ -59749,19 +60031,6 @@ default: "<function name>"
 and add the option to display the "Edit Pinned Filter List"
 
 
-* TODO add keyboard navigation to "Edit Pinned Filter List" and add it to the 
-
-add some new features:
-
-1.)
-
-add keyboard navigation to the "Edit Pinned Filter List" in the "Filter expression" table. So when pressing "Tab" when
-inside the filter field we should move to the first entry in the table. When we are there, the standard keyboad "Up"/"Down" keys should move inside the entries.
-
-2.)
-
-"Tab" should mark entries, and the "x Remove" button should remove all marked entries
-
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
 
@@ -60155,252 +60424,7 @@ So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefu
 * TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
 
-* TODO the order of the buttons in a h2 sub-table row,  when being visible should always be like in the global case: "Show all 456 rows", "Expand multi row cells", "Toggle highlightning", "Clear all column filters", "Clear all filters"
-** DONE initial
-
-In the newly uploaded userscript "ShowAllEntityData.user.js" and ChangeLog file "ShowAllEntityData_CHANGELOG.json"
-
-do a couple of renames and add a new functionality:
-
-1.)
-
-Change "ALL"
-
-#+begin_example
-<span>Expand</span><span>ALL</span></span>
-#+end_example
-
-to "all"
-
-#+begin_example
-<span>Expand</span><span>all</span></span>
-#+end_example
-
-in the sub-tables specific buttons
-
-#+begin_example
-<button id="mb-stf-....-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand ALL collapsed multi-row cells in &quot;Promotion release&quot; sub-section" aria-label="Expand all collapsed multi-row cells in: Promotion release" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
-#+end_example
-
-2.)
-
-Change the "title" in
-
-#+begin_example
-title="Globally toggle CAA cover art images - Show"
-#+end_example
-
-and 
-
-#+begin_example
-title="Globally toggle CAA cover art images - Hide"
-#+end_example
-
-to
-
-#+begin_example
-title="Show CAA cover art image stripes in ALL sections"
-#+end_example
-
-and
-
-#+begin_example
-title="Hide CAA cover art image stripes in ALL sections"
-#+end_example
-
-in the "mb-caa-toggle-btn-global" button
-
-#+begin_example
-<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Globally toggle CAA cover art images - Show" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">53</span></button>
-#+end_example
-
-3.)
-
-In the sub-table specific toggle buttons
-
-#+begin_example
-<button id="mb-caa-toggle-btn-<n>" type="button" class="mb-caa-art-toggle-btn" title="Hide big artwork CAA cover art images stripe" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="6"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">51</span></button>
-#+end_example
-
-change
-
-#+begin_example
-title="Hide big artwork CAA cover art images stripe"
-#+end_example
-
-#+begin_example
-title="Show big artwork CAA cover art images stripe"
-#+end_example
-
-to
-
-#+begin_example
-title="Hide CAA cover art image stripe for this section"
-#+end_example
-
-#+begin_example
-title="Show CAA cover art image stripe for this section"
-#+end_example
-
-4.)
-
-Change
-
-#+begin_example
-        filterInput.placeholder = `Filter "${categoryName}"… just in this sub-table`;
-#+end_example
-
-to
-
-#+begin_example
-        filterInput.placeholder = `Filter "${categoryName}"… just in this sub-category`;
-#+end_example
-
-5.)
-
-the order of the buttons in each h2 header sub-line ("multi"-table pageTypes), when the buttons are all visible should always be like in the global case:
-
-#+begin_example
-"Expand ALL multi-row cells"
-"Toggle ALL highlightning"
-"Clear ALL COLUMN filters"
-"Clear ALL filters"
-#+end_example
-
-so, make sure that the buttons are all rendered after the "Exclude" checkbox
-
-#+begin_example
-<label id="mb-stf-Promotion_release-ex-label" for="mb-stf-Promotion_release-ex-checkbox" title="Exclude Matches (filter for &quot;Promotion release&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Promotion_release-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label>
-#+end_example
-
-in the following logical order (remember they are probably NOT all visible at the same time)
-
-#+begin_example
-<button id="mb-stf-Promotion_release-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand ALL collapsed multi-row cells in &quot;Promotion release&quot; sub-section" aria-label="Expand all collapsed multi-row cells in: Promotion release" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
-<button id="mb-stf-Promotion_release-toggle-filter-highlight-btn" type="button" title="Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: inline-block;">🎨 Toggle highlighting</button>
-<button class="mb-subtable-clear-btn" type="button" title="Clear ALL filters for this sub-table (the sub-table filter and ALL column filters)" style="display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span><span class="mb-subtable-clear-btn-label">Clear all filters</span></button>
-<button id="mb-stf-Promotion_release-clear-all-btn" class="mb-stf-clear-col-btn" type="button" title="Clear ALL column filters for this sub-table (the sub-table filter itself is kept)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all column filters</button>
-#+end_example
-
-6.)
-
-for "multi"-table pageTypes which have a "CAA" or "EAA" column, add a new toggle button with text "Uncollapse all CAA cover art images in all sections"/"Collapse all CAA cover art images in all sections" 
-after the button 
-
-#+begin_example
-<button id="mb-col-collapse-all-btn" title="Expand ALL collapsed multi-row cells in EVERY collapsable table column" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; display: inline-flex;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>ALL</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button>
-#+end_example
-
-in the h2 header line, with the action of emulating a click on all toggle "CAA"/"EAA" column header buttons
-
-#+begin_example
-<span class="mb-caa-col-hdr-btn" role="button" data-caa-col-hdr-state="collapsed" title="Show all CAA images in this column" aria-expanded="false"><span>▶</span><img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;"></span>
-#+end_example
-
-** DONE bugs
-
-Some bugs
-
-1.)
-
-There should be ONLY one of the two currently rendered buttons
-
-#+begin_example
-<button id="mb-caa-col-hdr-toggle-all-btn-eaa" type="button" data-mb-caa-col-all-ctx="eaa" data-mb-caa-col-all-expanded="false" title="Expand all EAA column thumbnails across every sub-table section" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block; transition: background-color 0.2s, color 0.2s;">Uncollapse all EAA cover art images in all sections</button>
-#+end_example
-
-#+begin_example
-<button id="mb-caa-col-hdr-toggle-all-btn-caa" type="button" data-mb-caa-col-all-ctx="caa" data-mb-caa-col-all-expanded="false" title="Expand all CAA column thumbnails across every sub-table section" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: inline-block; transition: background-color 0.2s, color 0.2s;">Uncollapse all CAA cover art images in all sections</button>
-#+end_example
-
-depending on the presence of EITHER the "CAA" or "EAA" column
-
-E.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c there is ONLY the "CAA" column present, so only the CAA" button should be rendered
-
-2.)
-
-Change the button text from
-
-#+begin_example
-Uncollapse all CAA cover art images in all sections
-#+end_example
-
-#+begin_example
-Collapse all CAA cover art images in all sections
-#+end_example
-
-to
-
-#+begin_example
-Uncollapse all CAA images
-#+end_example
-
-#+begin_example
-Collapse all CAA images
-#+end_example
-
-but leave the tooltips intact
-
-3.)
-
-render the "CAA" thumbnail from the "CAA" header column
-
-#+begin_example
-<img alt="" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="width: 16px; height: 16px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: inline-block;">
-#+end_example
-
-inside the button in front of the button text e.g.
-
-#+begin_example
-[CAA thumbnail] Collapse/Uncollapse all CAA images
-#+end_example
-
-4.)
-
-In the sub-table specific toggle buttons
-
-#+begin_example
-<button id="mb-caa-toggle-btn-<n>" type="button" class="mb-caa-art-toggle-btn" title="Hide big artwork CAA cover art images stripe" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="6"><img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">51</span></button>
-#+end_example
-
-change
-
-#+begin_example
-title="Hide CAA cover art image stripe for this section"
-#+end_example
-
-#+begin_example
-title="Show CAA cover art image stripe for this section"
-#+end_example
-
-to
-
-#+begin_example
-title="Hide CAA cover art image stripe for this sub-section"
-#+end_example
-
-#+begin_example
-title="Show CAA cover art image stripe for this sub-section"
-#+end_example
-
-5.)
-
-
-Change
-
-#+begin_example
-unhighlightAllBtn.title = 'Toggle filter string highlighting for global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
-highlightBtn.title = 'Toggle filter string highlighting for sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
-#+end_example
-
-to
-
-#+begin_example
-unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
-highlightBtn.title = 'Toggle filter string highlighting for the sub-table filter and ALL column filters in this sub-table (except the filter string when "Loading from Disk" was used)';
-#+end_example
-
-** TODO bugs
+* TODO Renames
 
 1.)
 
@@ -63123,5 +63147,7 @@ add some fixes:
 In the newly uploaded userscript,
 
 a couple of things are still missing (also add a changelog):
+
+* TODO auto resize columns after loading from disk, make it configurable
 
 
