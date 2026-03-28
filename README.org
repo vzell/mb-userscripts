@@ -64342,6 +64342,15 @@ now the ghost icons are there again
 now the ghost icons are still there, but behind the relationships icons. you can see them if the relatinship icon is a
 smaller size than the ghost icon itself.
 
+** implement persistent indexedDB storage
+
+It's finally fixed, the ghost icon and the empty space is gone.. thx a lot
+
+Now please implement the following:
+
+
+
+
 * TODO VZ Library
 ** DONE initial
 
