@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Display shortcut for relationships on MusicBrainz
 // @namespace    https://musicbrainz.org/user/vzell
-// @version      1.1+2026-03-27
+// @version      1.0+2025-11-29
 // @description  Display icon shortcuts for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia,... but also selfconfigured ones are supported
 // @author       vzell (based on "Display shortcut for relationships on MusicBrainz" by Aurelien Mino <aurelien.mino@gmail.com>)
 // @tag          AI generated
@@ -22,9 +22,9 @@
 // @license      MIT
 // ==/UserScript==
 
-//***********************************************************************************************//
-// Heaviky based on the "Display shortcut for relationships on MusicBrainz" script by Aurelien Mino
-//***********************************************************************************************//
+//**************************************************************************//
+// Based on the "Display shortcut for relationships on MusicBrainz" script by Aurelien Mino.
+//**************************************************************************//
 
 // Default icon to use when a favicon can't be found
 const DEFAULT_ICON_URL = 'https://volkerzell.de/favicons/questionmark.ico';

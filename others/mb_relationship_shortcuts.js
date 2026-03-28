@@ -1,40 +1,19 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Display shortcut for relationships on MusicBrainz
-// @namespace    https://musicbrainz.org/user/vzell
-// @version      1.1+2026-03-27
-// @description  Display icon shortcuts for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia,... but also selfconfigured ones are supported
-// @author       vzell (based on "Display shortcut for relationships on MusicBrainz" by Aurelien Mino <aurelien.mino@gmail.com>)
-// @tag          AI generated
+// @name         Display shortcut for relationships on MusicBrainz
+// @description  Display icon shortcut for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia, ... links. This allows to access some relationships without opening the entity page.
+// @version      2026.1.21
+// @author       Aurelien Mino <aurelien.mino@gmail.com>
 // @licence      GPL (http://www.gnu.org/copyleft/gpl.html)
-// @homepageURL  https://github.com/vzell/mb-userscripts
-// @supportURL   https://github.com/vzell/mb-userscripts/issues
-// @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationshipWithCustomFavicons.user.js
-// @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/DisplayShortcutForRelationshipWithCustomFavicons.user.js
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @include      http*://*musicbrainz.org/artist/*
-// @include      http*://*musicbrainz.org/release-group/*
-// @include      http*://*musicbrainz.org/label/*
+// @downloadURL  https://raw.github.com/murdos/musicbrainz-userscripts/master/mb_relationship_shortcuts.user.js
+// @updateURL    https://raw.github.com/murdos/musicbrainz-userscripts/master/mb_relationship_shortcuts.user.js
+// @namespace    https://github.com/murdos/musicbrainz-userscripts
+// @match        *://*.musicbrainz.org/artist/*
+// @match        *://*.musicbrainz.org/release-group/*
+// @match        *://*.musicbrainz.org/label/*
 // @exclude      */artist/*/recordings*
 // @exclude      */edit
-// @grant        GM_xmlhttpRequest
-// @connect      *
 // @require      https://code.jquery.com/jquery-3.6.0.min.js
-// @license      MIT
 // ==/UserScript==
-
-//***********************************************************************************************//
-// Heaviky based on the "Display shortcut for relationships on MusicBrainz" script by Aurelien Mino
-//***********************************************************************************************//
-
-// Default icon to use when a favicon can't be found
-const DEFAULT_ICON_URL = 'https://volkerzell.de/favicons/questionmark.ico';
-
-// Mappings for specific discography entry favicons
-const DISCOGRAPHY_MAPPINGS = {
-    'bruceboots.com': 'https://volkerzell.de/favicons/bruceboots.png',
-    'web.archive.org': 'https://volkerzell.de/favicons/wayback.png',
-    'www.jungleland.it': 'https://volkerzell.de/favicons/jungeland-it.png',
-};
 
 // Definitions: relations-type and corresponding icons we are going to treat
 const relationsIconsURLs = {
@@ -90,14 +69,13 @@ const streamingIconClasses = {
 /**
  * @param {string} mbid
  * @param {string} targetUrl
- * @param {string} iconUrl - The direct URL for the favicon.
- * @param {boolean} ended - Whether the relationship is ended.
+ * @param {string} iconClass
  */
-function injectShortcutIcon(mbid, targetUrl, iconUrl, ended) {
-    if (!iconUrl) return;
-    let endedClass = ended ? ' ended' : '';
-    const faviconHtml = `<a href='${targetUrl}'><img src='${iconUrl}' class='favicon${endedClass}' style='width: 16px; height: 16px; vertical-align: middle; margin: 2px;' /></a>`;
-    $(`#${mbid} td.relationships`).append(faviconHtml);
+function injectShortcutIcon(mbid, targetUrl, iconClass) {
+    if (!iconClass) return;
+    $(`#${mbid} td.relationships`).append(
+        `<a href='${targetUrl.replace(/'/g, '&apos;')}'><span class='favicon ${iconClass}-favicon' /></a>`,
+    );
 }
 
 /**
@@ -110,65 +88,6 @@ function findIconClassOfUrl(url, iconClassMap) {
             return iconClassMap[partialUrl];
         }
     }
-}
-
-/**
- * Asynchronously tries to fetch a favicon URL, falling back if needed, and using a local mapping table first.
- * @param {string} url
- * @returns {Promise<string>} The working favicon URL or a default icon URL.
- */
-async function fetchFaviconUrl(url) {
-    const parsedUrl = new URL(url);
-    const domain = parsedUrl.hostname;
-
-    // Check against the local mapping table first
-    for (const key in DISCOGRAPHY_MAPPINGS) {
-        if (domain.startsWith(key)) {
-            return DISCOGRAPHY_MAPPINGS[key];
-        }
-    }
-
-    const httpsFaviconUrl = `https://${domain}/favicon.ico`;
-    const httpFaviconUrl = `http://${domain}/favicon.ico`;
-
-    return new Promise(resolve => {
-        GM_xmlhttpRequest({
-            method: 'HEAD',
-            url: httpsFaviconUrl,
-            onload: response => {
-                if (response.status === 200) {
-                    resolve(httpsFaviconUrl);
-                } else {
-                    GM_xmlhttpRequest({
-                        method: 'HEAD',
-                        url: httpFaviconUrl,
-                        onload: response => {
-                            if (response.status === 200) {
-                                resolve(httpFaviconUrl);
-                            } else {
-                                resolve(DEFAULT_ICON_URL);
-                            }
-                        },
-                        onerror: () => resolve(DEFAULT_ICON_URL)
-                    });
-                }
-            },
-            onerror: () => {
-                GM_xmlhttpRequest({
-                    method: 'HEAD',
-                    url: httpFaviconUrl,
-                    onload: response => {
-                        if (response.status === 200) {
-                            resolve(httpFaviconUrl);
-                        } else {
-                            resolve(DEFAULT_ICON_URL);
-                        }
-                    },
-                    onerror: () => resolve(DEFAULT_ICON_URL)
-                });
-            }
-        });
-    });
 }
 
 const incOptions = {
@@ -297,20 +216,18 @@ $(document).ready(function () {
     // Call the MB webservice
     const url = `/ws/2/${child.type}?${parent.type}=${parent.mbid}&inc=${incOptions[child.type].join('+')}&limit=100&offset=${offset}`;
 
-    $.get(url, function (data, textStatus, jqXHR) {
+    $.get(url, function (data) {
         // Parse each child
         $(data)
             .find(child.type)
             .each(function () {
                 let mbid = $(this).attr('id');
-                const rowId = `#${mbid} td.relationships`;
-                const $row = $(rowId);
 
                 // URL relationships
                 let alreadyInjectedUrls = [];
                 $(this)
                     .find("relation-list[target-type='url'] relation")
-                    .each(async function () {
+                    .each(function () {
                         let relType = $(this).attr('type');
                         let targetUrl = $(this).children('target').text();
                         let ended = $(this).children('ended').text() === 'true';
@@ -319,26 +236,21 @@ $(document).ready(function () {
                         if (alreadyInjectedUrls.includes(targetUrl)) return;
                         alreadyInjectedUrls.push(targetUrl);
 
-                        if (relType === 'discography entry') {
-                            const iconUrl = await fetchFaviconUrl(targetUrl);
-                            injectShortcutIcon(mbid, targetUrl, iconUrl, ended);
+                        let iconClass;
+                        if (relType in urlRelationsIconClasses) {
+                            iconClass = urlRelationsIconClasses[relType];
+                        } else if (['free streaming', 'streaming', 'download for free', 'purchase for download'].includes(relType)) {
+                            iconClass = findIconClassOfUrl(targetUrl, streamingIconClasses);
                         } else {
-                            let iconClass;
-                            if (relType in urlRelationsIconClasses) {
-                                iconClass = urlRelationsIconClasses[relType];
-                            } else if (['free streaming', 'streaming', 'download for free', 'purchase for download'].includes(relType)) {
-                                iconClass = findIconClassOfUrl(targetUrl, streamingIconClasses);
-                            } else {
-                                // Other database?
-                                iconClass = findIconClassOfUrl(targetUrl, otherDatabasesIconClasses);
-                            }
+                            // Other database?
+                            iconClass = findIconClassOfUrl(targetUrl, otherDatabasesIconClasses);
+                        }
 
-                            if (iconClass) {
-                                if (ended) {
-                                    iconClass = ['ended', iconClass].join(' ');
-                                }
-                                $(rowId).append(`<a href='${targetUrl}'><span class='favicon ${iconClass}-favicon' /></a>`);
+                        if (iconClass) {
+                            if (ended) {
+                                iconClass = ['ended', iconClass].join(' ');
                             }
+                            injectShortcutIcon(mbid, targetUrl, iconClass);
                         }
                     });
 
@@ -369,10 +281,10 @@ $(document).ready(function () {
                         $.each(relations, function (reltype, urls) {
                             let html = '';
                             if (urls.length < -1) {
-                                html += `<img src='${relationsIconsURLs[targettype][reltype]}' />(${urls.length}) `;
+                                html += `<img src='${relationsIconsURLs[targettype][reltype]}' />(${urls.length})&nbsp;`;
                             } else {
                                 $.each(urls, function (index, url) {
-                                    html += `<a href='${url}'><img src='${relationsIconsURLs[targettype][reltype]}' /></a> `;
+                                    html += `<a href='${url}'><img src='${relationsIconsURLs[targettype][reltype]}' /></a>&nbsp;`;
                                 });
                             }
                             $(`#${mbid} td.relationships`).append(html);
