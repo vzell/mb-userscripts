@@ -63805,4 +63805,16 @@ type: "table",
 default: "<table declaration>" + UI support "add", "modify", "delete"
 #+end_example
 
+* Library
+
+In the library "VZ_MBLibrary.user.js"
+
+please add the missing changelog entries for "3.15.0+2026-03-27" and "3.16.0+2026-03-27"
+to the commented "changelog_library" variable
+
+#+begin_example
+// CHANGELOG
+// let changelog_library = [
+//     {version: '3.14.3+2026-03-04', description: 'Fix two regressions introduced in 3.14.0: (1) Changelog CLOSE link was made conditional (clearing the filter instead of closing when text was present) which broke the link entirely in some code paths. Reverted to unconditional closeDialog() — CLOSE always closes the dialog regardless of filter state. (2) Changelog Escape handler had a spurious third branch that intercepted Escape when the search field was not focused but had text, clearing the filter instead of closing the dialog. Removed that branch. Correct behaviour is now: Escape while search is focused + has text → clear filter; Escape while search is focused + empty → blur field; Escape while search is not focused → close the dialog unconditionally.'},
+#+end_example
 
