@@ -1,53 +1,5 @@
 [
   {
-    "version": "9.99.339",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Ghost icon: MBS stylesheet adds ::before/::after pseudo-elements to <a> elements (e.g. external-link arrow via a[target=_blank]::after). These render as sprite icons alongside our Google favicon images. Fix: td.mb-rel-cell a::before and td.mb-rel-cell a::after are now suppressed via content:none !important. Also added font-size:0 on the cell, anchors, and images to collapse any anonymous inline boxes, and explicit width/height on img to ensure correct sizing."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.338",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Ghost icon: removed 'relationships' class from injected <td> elements (MBS td.relationships CSS adds visual content that appeared as ghost icons), and removed class='favicon' from <img> elements (MBS .favicon CSS applies sprite background-image to any element with that class). Injected <td> is now plain 'mb-rel-cell'. Google favicon <img> carries no MBS classes."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.338",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Ghost icon: removed 'relationships' class from injected <td> elements (MBS td.relationships CSS adds visual content that appeared as ghost icons), and removed class='favicon' from <img> elements (MBS .favicon CSS applies sprite background-image to any element with that class). Injected <td> is now plain 'mb-rel-cell'. Google favicon <img> carries no MBS classes."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.337",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Ghost icon (definitive fix): switched from CSS sprites to Google favicon service (https://www.google.com/s2/favicons?sz=16&domain=...). CSS sprites (.favicon + .allmusic-favicon etc.) require the MBS td.relationships CSS context to render correctly — our consolidated table td cells don't reliably inherit that context, causing ghost icons regardless of what CSS we inject. Google S2 favicons are plain <img src> — no CSS sprites, no background-image, no anonymous inline struts, no ghosts, in any CSS context. _relAppendIcon now always generates <img>. New _relGoogleFaviconUrl(url) helper returns the Google favicon URL for any domain. REL_*_CLASSES maps are kept for filtering (deciding which rels get icons); rendering switches to Google favicons. Discography entries also switch from async HEAD-probe (_relFetchFaviconUrl) to synchronous Google favicon — faster, no GM_xmlhttpRequest needed for favicons, no async delay."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.336",
     "date": "2026-03-27",
     "sections": [

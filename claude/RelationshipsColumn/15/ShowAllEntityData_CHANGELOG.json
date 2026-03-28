@@ -1,17 +1,5 @@
 [
   {
-    "version": "9.99.339",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Ghost icon: MBS stylesheet adds ::before/::after pseudo-elements to <a> elements (e.g. external-link arrow via a[target=_blank]::after). These render as sprite icons alongside our Google favicon images. Fix: td.mb-rel-cell a::before and td.mb-rel-cell a::after are now suppressed via content:none !important. Also added font-size:0 on the cell, anchors, and images to collapse any anonymous inline boxes, and explicit width/height on img to ensure correct sizing."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.338",
     "date": "2026-03-27",
     "sections": [

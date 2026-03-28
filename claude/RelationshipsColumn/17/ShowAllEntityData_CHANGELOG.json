@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.340",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Empty space between icons: changed ::before/::after suppression from display:none to position:absolute + width:0 + height:0 + overflow:hidden. This removes pseudo-elements from flow regardless of MBS stylesheet specificity — display:none can be overridden by higher-specificity MBS rules, but an absolutely-positioned 0x0 element always occupies zero layout space. Added position:relative on <a> to contain the absolute pseudo-elements. Changed <img> margin from 2px to 1px for tight icon packing. <img> is now display:block inside the display:inline-block <a> so layout is entirely block-based with no anonymous inline boxes."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.339",
     "date": "2026-03-27",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.339+2026-03-27
+// @version      9.99.336+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14619,33 +14619,12 @@ a { color: #1565c0; }`;
                with no class, matching the reference script exactly so that MBS
                stylesheet rules apply to span.favicon / img.favicon identically. */
             td.mb-rel-cell {
-                vertical-align: middle;
-                white-space: nowrap;
+                vertical-align: middle; white-space: nowrap;
                 padding: 2px 4px;
-                line-height: 1;
-                font-size: 0;
             }
-            /* Suppress MBS pseudo-elements on <a> (e.g. external-link arrow
-               added by a[target=_blank]::after in the MBS stylesheet). */
-            td.mb-rel-cell a::before,
-            td.mb-rel-cell a::after {
-                content: none !important;
-                display: none !important;
-                background: none !important;
-                width: 0 !important;
-                height: 0 !important;
-            }
-            td.mb-rel-cell a {
-                font-size: 0;
-            }
-            td.mb-rel-cell img {
-                display: inline-block;
-                width: 16px;
-                height: 16px;
-                vertical-align: middle;
-                margin: 2px;
-                font-size: 0;
-            }
+            /* td.mb-rel-cell also carries the MBS 'relationships' class so it
+               inherits the MBS stylesheet rules for td.relationships — those
+               rules suppress the sprite ghost icon. No extra CSS needed here. */
         `;
         document.head.appendChild(_rs);
     })();
@@ -20314,7 +20293,7 @@ a { color: #1565c0; }`;
                                     activeInjectedColumns.forEach(() => {
                                         const _tdInj = document.createElement('td');
                                         // 'relationships' = inherit MBS ghost-suppressing CSS
-                                        _tdInj.className = 'mb-rel-cell';
+                                        _tdInj.className = 'mb-rel-cell relationships';
                                         if (_mbidM) _tdInj.dataset.mbid = _mbidM;
                                         _tdInj.style.backgroundColor =
                                             (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
@@ -20570,7 +20549,7 @@ a { color: #1565c0; }`;
                                         activeInjectedColumns.forEach(() => {
                                             const _tdInjS = document.createElement('td');
                                             // 'relationships' = inherit MBS ghost-suppressing CSS
-                                            _tdInjS.className = 'mb-rel-cell';
+                                            _tdInjS.className = 'mb-rel-cell relationships';
                                             if (_mbidS) _tdInjS.dataset.mbid = _mbidS;
                                             _tdInjS.style.backgroundColor =
                                                 (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
@@ -27243,23 +27222,6 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Returns a Google S2 favicon URL for the domain of targetUrl.
-     * These load synchronously as <img src> with no GM_xmlhttpRequest needed,
-     * produce no CSS sprite ghosts, and work in any CSS context.
-     * Falls back to a local question-mark icon on URL parse failure.
-     * @param {string} targetUrl
-     * @returns {string}
-     */
-    function _relGoogleFaviconUrl(targetUrl) {
-        try {
-            const domain = new URL(targetUrl).hostname;
-            return `https://www.google.com/s2/favicons?sz=16&domain=${encodeURIComponent(domain)}`;
-        } catch {
-            return 'https://volkerzell.de/favicons/questionmark.ico';
-        }
-    }
-
-    /**
      * Appends a favicon icon anchor to a .mb-rel-cell <td>.
      * When iconClass is provided a <span class='favicon {cls}-favicon'> is used;
      * otherwise an <img src=iconUrl>. Ended rels get .mb-rel-ended (opacity 35%).
@@ -27283,34 +27245,27 @@ a { color: #1565c0; }`;
      * @param {string|null} iconUrl    Direct favicon img src, used when iconClass is null
      * @param {boolean} ended      Whether the relationship has ended
      */
-    /**
-     * Appends a favicon icon link to a .mb-rel-cell <td>.
-     * Always renders as <img> — never as <span class='favicon'>.
-     * CSS sprites require the MBS td.relationships CSS context which our
-     * consolidated table cannot reliably inherit. Using <img> avoids all
-     * ghost-icon issues regardless of the surrounding CSS context.
-     *
-     * When iconUrl is provided directly (discography entry, non-URL rels),
-     * it is used as-is. When only a domain hint is needed (known services),
-     * the caller passes a Google favicon URL derived from the target URL.
-     *
-     * @param {HTMLTableCellElement} cell
-     * @param {string}  url      Target href
-     * @param {string}  iconUrl  Favicon img src
-     * @param {boolean} ended
-     */
-    function _relAppendIcon(cell, url, iconUrl, ended) {
-        if (!iconUrl) return;
+    function _relAppendIcon(cell, url, iconClass, iconUrl, ended) {
+        if (!iconClass && !iconUrl) return;
         const a = document.createElement('a');
         a.href = url;
-        a.title = url;
-        a.target = '_blank';
+        a.title = url;           // tooltip: show the relationship URL
+        a.target = '_blank';     // always open in new tab
         a.rel = 'noopener noreferrer';
         if (ended) a.style.opacity = '0.25';
-        const img = document.createElement('img');
-        img.src = iconUrl;
-        img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin:2px;';
-        a.appendChild(img);
+        if (iconClass) {
+            // Exact reference output: <a href=URL><span class="favicon cls-favicon"></span></a>
+            const sp = document.createElement('span');
+            sp.className = `favicon ${iconClass}-favicon`;
+            a.appendChild(sp);
+        } else {
+            // Exact reference output: <a href=URL><img src=URL class="favicon" style="..."></a>
+            const img = document.createElement('img');
+            img.src = iconUrl;
+            img.className = 'favicon';
+            img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin:2px;';
+            a.appendChild(img);
+        }
         cell.appendChild(a);
     }
 
@@ -27524,25 +27479,19 @@ a { color: #1565c0; }`;
                 seen.add(tUrl);
                 _relDbg(`_populateCells: rel type='${relType}' url='${tUrl}' ended=${ended}`);
                 if (relType === 'discography entry') {
-                    // Discography entries: use Google favicon (no HEAD probe needed,
-                    // no GM_xmlhttpRequest, no async delay, no ghost).
-                    const gUrl = _relGoogleFaviconUrl(tUrl);
-                    _relDbg(`_populateCells: discography entry favicon ${tUrl} → ${gUrl}`);
-                    cells.forEach(td => _relAppendIcon(td, tUrl, gUrl, ended));
+                    _relFetchFaviconUrl(tUrl).then(u => {
+                        _relDbg(`_populateCells: favicon for ${tUrl} → ${u}`);
+                        cells.forEach(td => _relAppendIcon(td, tUrl, null, u, ended));
+                    });
                     continue;
                 }
-                // For known service types: filter using REL_*_CLASSES maps,
-                // but render using Google favicons (avoids CSS sprite ghost).
                 const cls = REL_URL_ICON_CLASSES[relType] ||
                     (['free streaming','streaming','download for free','purchase for download']
                         .includes(relType)
                         ? _relFindIconClass(tUrl, REL_STREAMING_CLASSES)
                         : _relFindIconClass(tUrl, REL_OTHER_DB_CLASSES));
-                _relDbg(`_populateCells: type='${relType}' cls='${cls || 'none'}' url='${tUrl}'`);
-                if (cls) {
-                    const gUrl = _relGoogleFaviconUrl(tUrl);
-                    cells.forEach(td => _relAppendIcon(td, tUrl, gUrl, ended));
-                }
+                _relDbg(`_populateCells: resolved cls='${cls || 'none'}' for type='${relType}'`);
+                if (cls) cells.forEach(td => _relAppendIcon(td, tUrl, cls, null, ended));
             }
 
             // ── Non-URL relationships (release-group, release) ────────────
@@ -27581,7 +27530,7 @@ a { color: #1565c0; }`;
                 seenNonUrl.add(href);
                 const ended = !!rel.ended;
                 _relDbg(`_populateCells: non-url rel type='${relType}' href='${href}' ended=${ended}`);
-                cells.forEach(td => _relAppendIcon(td, href, iconUrl, ended));
+                cells.forEach(td => _relAppendIcon(td, href, null, iconUrl, ended));
             }
         }
 

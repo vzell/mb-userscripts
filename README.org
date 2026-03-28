@@ -64064,7 +64064,278 @@ Please fix
 
 ** bugs
 
+OK, now the "REL_NON_URL_ICONS" IS working and also ALL other icons are also rendered, BUT we are back to the case where
+each rendered relationship icon gets it's ghost icon again. Here the newly generated code again for the same data cell as before
 
+#+begin_example
+<td class="mb-rel-cell" data-mbid="39b22944-7503-3937-8bba-09b17281cc6a" style="" data-rel-done="1">
+  <a href="https://www.allmusic.com/album/mw0000650803" title="https://www.allmusic.com/album/mw0000650803" target="_blank" rel="noopener noreferrer">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26725" title="https://www.discogs.com/master/26725" target="_blank" rel="noopener noreferrer">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run" title="https://genius.com/albums/Bruce-springsteen/Born-to-run" target="_blank" rel="noopener noreferrer">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" title="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" target="_blank" rel="noopener noreferrer">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/" title="https://www.musik-sammler.de/album/14188/" target="_blank" rel="noopener noreferrer">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366" title="https://www.wikidata.org/wiki/Q752366" target="_blank" rel="noopener noreferrer">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" title="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" title="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" title="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.last.fm/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" title="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run" title="http://brucebase.wikidot.com/retail:born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm" title="http://famclair.free.fr/BornUSAAlbum.htm" target="_blank" rel="noopener noreferrer">
+    <img src="http://famclair.free.fr/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html" title="http://springsteencollection.altervista.org/pagina-2546709.html" target="_blank" rel="noopener noreferrer">
+    <img src="http://springsteencollection.altervista.org/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+the reference implementation DOESN't produce the ghost icons
+
+** still
+
+the ghost icons are still there
+
+** hmm
+
+Now only the ghost icons are rendered for the following part
+
+#+begin_example
+  <a href="https://www.allmusic.com/album/mw0000650803" title="https://www.allmusic.com/album/mw0000650803" target="_blank" rel="noopener noreferrer">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26725" title="https://www.discogs.com/master/26725" target="_blank" rel="noopener noreferrer">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run" title="https://genius.com/albums/Bruce-springsteen/Born-to-run" target="_blank" rel="noopener noreferrer">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" title="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" target="_blank" rel="noopener noreferrer">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/" title="https://www.musik-sammler.de/album/14188/" target="_blank" rel="noopener noreferrer">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366" title="https://www.wikidata.org/wiki/Q752366" target="_blank" rel="noopener noreferrer">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" title="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" title="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+#+end_example
+
+of the complete cell
+
+#+begin_example
+<td class="mb-rel-cell relationships" data-mbid="39b22944-7503-3937-8bba-09b17281cc6a" style="" data-rel-done="1">
+  <a href="https://www.allmusic.com/album/mw0000650803" title="https://www.allmusic.com/album/mw0000650803" target="_blank" rel="noopener noreferrer">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26725" title="https://www.discogs.com/master/26725" target="_blank" rel="noopener noreferrer">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run" title="https://genius.com/albums/Bruce-springsteen/Born-to-run" target="_blank" rel="noopener noreferrer">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" title="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" target="_blank" rel="noopener noreferrer">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/" title="https://www.musik-sammler.de/album/14188/" target="_blank" rel="noopener noreferrer">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366" title="https://www.wikidata.org/wiki/Q752366" target="_blank" rel="noopener noreferrer">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" title="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" title="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" title="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.last.fm/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" title="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run" title="http://brucebase.wikidot.com/retail:born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm" title="http://famclair.free.fr/BornUSAAlbum.htm" target="_blank" rel="noopener noreferrer">
+    <img src="http://famclair.free.fr/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html" title="http://springsteencollection.altervista.org/pagina-2546709.html" target="_blank" rel="noopener noreferrer">
+    <img src="http://springsteencollection.altervista.org/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+These again get both types of icons, the rela ones + the ghost ones
+
+#+begin_example
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" title="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.last.fm/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" title="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run" title="http://brucebase.wikidot.com/retail:born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm" title="http://famclair.free.fr/BornUSAAlbum.htm" target="_blank" rel="noopener noreferrer">
+    <img src="http://famclair.free.fr/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html" title="http://springsteencollection.altervista.org/pagina-2546709.html" target="_blank" rel="noopener noreferrer">
+    <img src="http://springsteencollection.altervista.org/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+#+end_example
+
+** still
+
+Now I get
+
+#+begin_example
+<td class="mb-rel-cell relationships" data-mbid="39b22944-7503-3937-8bba-09b17281cc6a" style="" data-rel-done="1" data-erg-injected="1">
+  <a href="https://www.allmusic.com/album/mw0000650803" title="https://www.allmusic.com/album/mw0000650803" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.allmusic.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run" title="http://brucebase.wikidot.com/retail:born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=brucebase.wikidot.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm" title="http://famclair.free.fr/BornUSAAlbum.htm" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=famclair.free.fr" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html" title="http://springsteencollection.altervista.org/pagina-2546709.html" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=springsteencollection.altervista.org" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" title="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.last.fm" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" title="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.springsteenlyrics.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.discogs.com/master/26725" title="https://www.discogs.com/master/26725" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.discogs.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run" title="https://genius.com/albums/Bruce-springsteen/Born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=genius.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" title="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=rateyourmusic.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/" title="https://www.musik-sammler.de/album/14188/" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.musik-sammler.de" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366" title="https://www.wikidata.org/wiki/Q752366" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.wikidata.org" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" title="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" title="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+ALL the icons are rendered now, but the ghost icons are still visible. SO please leave the google favicons solution in and try to fix the ghost icon stuff
+
+** spacing
+
+It finally worked, here the now rendered HTML code
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="39b22944-7503-3937-8bba-09b17281cc6a" style="" data-rel-done="1">
+  <a href="https://www.allmusic.com/album/mw0000650803" title="https://www.allmusic.com/album/mw0000650803" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.allmusic.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run" title="http://brucebase.wikidot.com/retail:born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=brucebase.wikidot.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm" title="http://famclair.free.fr/BornUSAAlbum.htm" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=famclair.free.fr" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html" title="http://springsteencollection.altervista.org/pagina-2546709.html" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=springsteencollection.altervista.org" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" title="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.last.fm" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" title="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.springsteenlyrics.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.discogs.com/master/26725" title="https://www.discogs.com/master/26725" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.discogs.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run" title="https://genius.com/albums/Bruce-springsteen/Born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=genius.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" title="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=rateyourmusic.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/" title="https://www.musik-sammler.de/album/14188/" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.musik-sammler.de" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366" title="https://www.wikidata.org/wiki/Q752366" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.wikidata.org" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" title="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" title="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+There is only one thing left. instead of the ghost icon there is now empyt space rendered instead. Coudd this be removed
+and the relationship icons rendered right after each other without the artificial empty blank space 
+
+** now the ghost icons are there again
+
+now the ghost icons are there again
 
 
 * TODO VZ Library
@@ -64118,3 +64389,52 @@ to
 #+end_example
 
 
+
+* remove the double changelog entry
+
+#+begin_example
+  {
+    "version": "9.99.329",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> and exactly 'favicon {cls}-favicon' on <span> — matching the reference DisplayShortcutForRelationship script. The extra 'mb-rel-favicon' class combined with the CSS display:inline-block rule created a phantom rendered box alongside the real MBS sprite icon. CSS block updated from a.mb-rel-link to a.mb-rel-icon selectors.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() now writes the built-in defaults to GM storage on first use, so all 4 relationship mapping table editors (sa_rel_discography_mappings, sa_rel_url_icon_classes, sa_rel_other_db_classes, sa_rel_streaming_classes) open pre-populated with defaults instead of empty."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.329",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> (not 'mb-rel-link') and exactly 'favicon {cls}-favicon' on <span> — matching the reference script. The extra 'mb-rel-favicon' class was triggering conflicting CSS rules that rendered a phantom sprite box alongside each real icon. CSS selectors updated to match 'a.mb-rel-icon'.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() seeds GM storage with built-in default rows on first use (empty storage). Table editors now open pre-populated with defaults for all 4 relationship mapping tables."
+        ]
+      }
+    ]
+  },
+#+end_example
+
+#+begin_example
+  {
+    "version": "9.99.329",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> and exactly 'favicon {cls}-favicon' on <span> — matching the reference DisplayShortcutForRelationship script. The extra 'mb-rel-favicon' class combined with the CSS display:inline-block rule created a phantom rendered box alongside the real MBS sprite icon. CSS block updated from a.mb-rel-link to a.mb-rel-icon selectors.",
+          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> (not 'mb-rel-link') and exactly 'favicon {cls}-favicon' on <span> — matching the reference script. The extra 'mb-rel-favicon' class was triggering conflicting CSS rules that rendered a phantom sprite box alongside each real icon. CSS selectors updated to match 'a.mb-rel-icon'.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() now writes the built-in defaults to GM storage on first use, so all 4 relationship mapping table editors (sa_rel_discography_mappings, sa_rel_url_icon_classes, sa_rel_other_db_classes, sa_rel_streaming_classes) open pre-populated with defaults instead of empty.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() seeds GM storage with built-in default rows on first use (empty storage). Table editors now open pre-populated with defaults for all 4 relationship mapping tables."
+        ]
+      }
+    ]
+  },
+#+end_example

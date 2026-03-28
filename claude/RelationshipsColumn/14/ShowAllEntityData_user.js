@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.339+2026-03-27
+// @version      9.99.337+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14619,33 +14619,12 @@ a { color: #1565c0; }`;
                with no class, matching the reference script exactly so that MBS
                stylesheet rules apply to span.favicon / img.favicon identically. */
             td.mb-rel-cell {
-                vertical-align: middle;
-                white-space: nowrap;
+                vertical-align: middle; white-space: nowrap;
                 padding: 2px 4px;
-                line-height: 1;
-                font-size: 0;
             }
-            /* Suppress MBS pseudo-elements on <a> (e.g. external-link arrow
-               added by a[target=_blank]::after in the MBS stylesheet). */
-            td.mb-rel-cell a::before,
-            td.mb-rel-cell a::after {
-                content: none !important;
-                display: none !important;
-                background: none !important;
-                width: 0 !important;
-                height: 0 !important;
-            }
-            td.mb-rel-cell a {
-                font-size: 0;
-            }
-            td.mb-rel-cell img {
-                display: inline-block;
-                width: 16px;
-                height: 16px;
-                vertical-align: middle;
-                margin: 2px;
-                font-size: 0;
-            }
+            /* td.mb-rel-cell also carries the MBS 'relationships' class so it
+               inherits the MBS stylesheet rules for td.relationships — those
+               rules suppress the sprite ghost icon. No extra CSS needed here. */
         `;
         document.head.appendChild(_rs);
     })();
@@ -20314,7 +20293,7 @@ a { color: #1565c0; }`;
                                     activeInjectedColumns.forEach(() => {
                                         const _tdInj = document.createElement('td');
                                         // 'relationships' = inherit MBS ghost-suppressing CSS
-                                        _tdInj.className = 'mb-rel-cell';
+                                        _tdInj.className = 'mb-rel-cell relationships';
                                         if (_mbidM) _tdInj.dataset.mbid = _mbidM;
                                         _tdInj.style.backgroundColor =
                                             (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
@@ -20570,7 +20549,7 @@ a { color: #1565c0; }`;
                                         activeInjectedColumns.forEach(() => {
                                             const _tdInjS = document.createElement('td');
                                             // 'relationships' = inherit MBS ghost-suppressing CSS
-                                            _tdInjS.className = 'mb-rel-cell';
+                                            _tdInjS.className = 'mb-rel-cell relationships';
                                             if (_mbidS) _tdInjS.dataset.mbid = _mbidS;
                                             _tdInjS.style.backgroundColor =
                                                 (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';

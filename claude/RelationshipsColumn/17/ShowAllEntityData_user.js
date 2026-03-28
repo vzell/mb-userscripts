@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.339+2026-03-27
+// @version      9.99.340+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14622,29 +14622,36 @@ a { color: #1565c0; }`;
                 vertical-align: middle;
                 white-space: nowrap;
                 padding: 2px 4px;
-                line-height: 1;
-                font-size: 0;
+                font-size: 0;       /* collapse whitespace text nodes */
+                line-height: 0;     /* collapse anonymous inline struts */
             }
-            /* Suppress MBS pseudo-elements on <a> (e.g. external-link arrow
-               added by a[target=_blank]::after in the MBS stylesheet). */
+            /* Remove MBS pseudo-elements (e.g. external-link arrow on
+               a[target=_blank]::after) using position:absolute + zero size
+               so they are taken out of flow regardless of MBS specificity. */
             td.mb-rel-cell a::before,
             td.mb-rel-cell a::after {
-                content: none !important;
-                display: none !important;
-                background: none !important;
+                content: '' !important;
+                display: block !important;
+                position: absolute !important;
                 width: 0 !important;
                 height: 0 !important;
+                overflow: hidden !important;
+                background: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
             }
             td.mb-rel-cell a {
-                font-size: 0;
+                position: relative; /* contain the absolute pseudo-elements */
+                display: inline-block;
+                vertical-align: middle;
+                line-height: 0;
             }
             td.mb-rel-cell img {
-                display: inline-block;
+                display: block;
                 width: 16px;
                 height: 16px;
-                vertical-align: middle;
-                margin: 2px;
-                font-size: 0;
+                margin: 1px;
             }
         `;
         document.head.appendChild(_rs);
@@ -27309,7 +27316,7 @@ a { color: #1565c0; }`;
         if (ended) a.style.opacity = '0.25';
         const img = document.createElement('img');
         img.src = iconUrl;
-        img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin:2px;';
+        img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin:1px;';
         a.appendChild(img);
         cell.appendChild(a);
     }

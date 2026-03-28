@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.339+2026-03-27
+// @version      9.99.338+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14619,33 +14619,11 @@ a { color: #1565c0; }`;
                with no class, matching the reference script exactly so that MBS
                stylesheet rules apply to span.favicon / img.favicon identically. */
             td.mb-rel-cell {
-                vertical-align: middle;
-                white-space: nowrap;
+                vertical-align: middle; white-space: nowrap;
                 padding: 2px 4px;
-                line-height: 1;
-                font-size: 0;
             }
-            /* Suppress MBS pseudo-elements on <a> (e.g. external-link arrow
-               added by a[target=_blank]::after in the MBS stylesheet). */
-            td.mb-rel-cell a::before,
-            td.mb-rel-cell a::after {
-                content: none !important;
-                display: none !important;
-                background: none !important;
-                width: 0 !important;
-                height: 0 !important;
-            }
-            td.mb-rel-cell a {
-                font-size: 0;
-            }
-            td.mb-rel-cell img {
-                display: inline-block;
-                width: 16px;
-                height: 16px;
-                vertical-align: middle;
-                margin: 2px;
-                font-size: 0;
-            }
+            /* td.mb-rel-cell: plain cell, no MBS classes.
+               Icons are <img> with Google favicons — no CSS sprites, no ghost. */
         `;
         document.head.appendChild(_rs);
     })();
