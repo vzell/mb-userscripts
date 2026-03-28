@@ -63462,6 +63462,341 @@ by the table renderer.
 So we probably need more than one configuration entry for each "REL_..._MAPPINGS" and "REL_..._CLASSES" variable. Each
 table renderer is responsible for it's own data structure
 
+** bugs
+
+something is wrong with the library:
+
+1.)
+
+The previous version you presented in the second to last session, hat the following header:
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Unified Library
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      3.15.0+2026-03-27
+// @description  Unified library for Logging, Settings, Changelog management, and remote content fetching
+// @author       vzell
+// @tag          AI generated
+// @license      MIT
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// ==/UserScript==
+
+/*
+ * VZ_MBLibrary
+ *
+ * A unified library to handle:
+ * 1. Advanced Logging with timestamps and icons.
+ * 2. Settings/Configuration Management (Schema-driven).
+ * 3. Changelog UI display.
+ * 4. Menu Integration (Tampermonkey & MB Editing menu).
+ */
+
+const LIBRARY_VERSION = '3.15.0+2026-03-27';
+#+end_example
+
+The last one from this session has
+
+#+begin_example
+// ==UserScript==
+// @name         VZ: MusicBrainz - Unified Library
+// @namespace    https://github.com/vzell/mb-userscripts
+// @version      3.16.0+2026-03-27
+// @description  Unified library for Logging, Settings, Changelog management, and remote content fetching
+// @author       vzell
+// @tag          AI generated
+// @license      MIT
+// @grant        GM_info
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_registerMenuCommand
+// ==/UserScript==
+
+/*
+ * VZ_MBLibrary
+ *
+ * A unified library to handle:
+ * 1. Advanced Logging with timestamps and icons.
+ * 2. Settings/Configuration Management (Schema-driven).
+ * 3. Changelog UI display.
+ * 4. Menu Integration (Tampermonkey & MB Editing menu).
+ */
+
+const LIBRARY_VERSION = '3.14.3+2026-03-04';
+#+end_example
+
+2.)
+
+The configuration UI, when clicking the button
+
+#+begin_example
+<button id="mb-settings-btn" type="button" title="Open userscript settings manager to configure script behavior (Ctrl+M, then ,)" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; background-color: rgb(96, 125, 139); color: white; border: 1px solid rgb(84, 110, 122);">⚙️</button>
+#+end_example
+
+doesn't open at all
+
+3.)
+
+the "Relationships" column is also broken, compared to the previous to last session. Previously there were all defind icons showing up (albeit with a second dummy entry fer each one). Now there
+
+are only the "springsteenlyrics.com" icons and the dummy ones
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="1d404e1d-fcb6-3a52-b478-e706e893c897" style="" data-rel-done="1"><a href="https://www.discogs.com/release/1874253" class="mb-rel-link" target="_blank" rel="noopener noreferrer"><span class="mb-rel-favicon discogs-favicon" title="https://www.discogs.com/release/1874253"></span></a></td>
+#+end_example
+
+please fix
+
+** bugs
+
+Still some bugs:
+
+1.)
+
+There is still a ghost icon for every relationship icon rendered together (right behind) with it.
+
+This is the actual rendered code from the original userscript "DisplayShortcutForRelationshipWithCustomFavicons.user.js"
+
+#+begin_example
+<td class="relationships">
+  <a href="https://www.allmusic.com/album/mw0000195808">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26750">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14204/">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q1470381">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="/release-group/2744af02-7e4e-4b72-9f26-d6bc6565a8bd">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7">
+  </a>
+  <a href="/release-group/1eb64a0c-29df-4e5f-abc4-16a6d0d803ed">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7">
+  </a>
+  <a href="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+And this is the code generated by our userscript, which has for each relationship icon the ghost icon which looks like two folder icons over each other
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" style="" data-rel-done="1">
+  <a href="https://www.allmusic.com/album/mw0000195808" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <span class="mb-rel-favicon favicon allmusic-favicon" title="https://www.allmusic.com/album/mw0000195808">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26750" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <span class="mb-rel-favicon favicon discogs-favicon" title="https://www.discogs.com/master/26750">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <span class="mb-rel-favicon favicon lyrics-favicon" title="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <span class="mb-rel-favicon favicon rateyourmusic-favicon" title="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14204/" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <span class="mb-rel-favicon favicon musiksammler-favicon" title="https://www.musik-sammler.de/album/14204/">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q1470381" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <span class="mb-rel-favicon favicon wikidata-favicon" title="https://www.wikidata.org/wiki/Q1470381">
+    </span>
+  </a>
+  <a href="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <img class="mb-rel-favicon" src="https://www.springsteenlyrics.com/favicon.ico" alt="" title="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53" style="width: 16px; height: 16px; object-fit: contain;">
+  </a>
+  <a href="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <img class="mb-rel-favicon" src="https://www.springsteenlyrics.com/favicon.ico" alt="" title="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05" style="width: 16px; height: 16px; object-fit: contain;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj" class="mb-rel-link" target="_blank" rel="noopener noreferrer">
+    <img class="mb-rel-favicon" src="https://volkerzell.de/favicons/questionmark.ico" alt="" title="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj" style="width: 16px; height: 16px; object-fit: contain;">
+  </a>
+</td>
+#+end_example
+
+2.)
+
+the following variables are actually empty
+
+#+begin_example
+        // Configurable lookup tables for the Relationships column.
+        // Each entry populates one REL_* constant at startup.
+        sa_rel_discography_mappings: {
+            label: 'Discography entry domain → favicon URL',
+            type: 'table',
+            table_name: 'Discography Entry Favicons',
+            columns: ['Domain', 'Favicon URL'],
+            description: 'Domain → custom favicon URL overrides for "discography entry" '
+                         + 'relationships. When a release-group or release has a discography '
+                         + 'entry URL whose domain matches an entry here, the specified icon '
+                         + 'is used instead of fetching favicon.ico. '
+                         + 'Populates REL_DISCOGRAPHY_MAPPINGS.'
+        },
+
+        sa_rel_url_icon_classes: {
+            label: 'Relation type → icon CSS class',
+            type: 'table',
+            table_name: 'URL Relation Type Icons',
+            columns: ['Relation Type', 'Icon Class'],
+            description: 'Maps MB URL relation type strings (e.g. "discogs", "allmusic") '
+                         + 'to MusicBrainz stylesheet CSS class suffixes '
+                         + '(e.g. "discogs", "allmusic"). '
+                         + 'Populates REL_URL_ICON_CLASSES.'
+        },
+
+        sa_rel_other_db_classes: {
+            label: 'Other-database domain → icon CSS class',
+            type: 'table',
+            table_name: 'Other Database Icons',
+            columns: ['Domain', 'Icon Class'],
+            description: 'Maps partial domain strings for "other database" entries '
+                         + '(e.g. "rateyourmusic.com") to MBS CSS class suffixes. '
+                         + 'Populates REL_OTHER_DB_CLASSES.'
+        },
+
+        sa_rel_streaming_classes: {
+            label: 'Streaming service URL pattern → icon CSS class',
+            type: 'table',
+            table_name: 'Streaming Service Icons',
+            columns: ['URL Pattern', 'Icon Class'],
+            description: 'Maps partial URL strings for streaming and download services '
+                         + '(e.g. "open.spotify.com") to MBS CSS class suffixes. '
+                         + 'Populates REL_STREAMING_CLASSES.'
+        },
+#+end_example
+
+when opening the table editor for it. I would expect them to be filled with the default values from the code. The idea
+for the enduser is, to later only show the relationship icons he want to see, by editing the list with the table editor
+
+** bugs
+
+Now the configuration variables are actually filled in, but the ghost icons are still there
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" style="" data-rel-done="1">
+  <a href="https://www.allmusic.com/album/mw0000195808" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <span class="favicon allmusic-favicon" title="https://www.allmusic.com/album/mw0000195808">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26750" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <span class="favicon discogs-favicon" title="https://www.discogs.com/master/26750">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <span class="favicon lyrics-favicon" title="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <span class="favicon rateyourmusic-favicon" title="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14204/" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <span class="favicon musiksammler-favicon" title="https://www.musik-sammler.de/album/14204/">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q1470381" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <span class="favicon wikidata-favicon" title="https://www.wikidata.org/wiki/Q1470381">
+    </span>
+  </a>
+  <a href="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" alt="" title="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;">
+  </a>
+  <a href="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" alt="" title="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj" class="mb-rel-icon" target="_blank" rel="noopener noreferrer">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" alt="" title="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;">
+  </a>
+</td>
+#+end_example
+
+but not all relationship icons are visually rendered..
+
+** still
+
+There are still the ghost icons,
+
+Why can'we just generate the exact code what the refernec script is doing
+
+#+begin_example
+<td class="relationships">
+  <a href="https://www.allmusic.com/album/mw0000195808">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26750">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14204/">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q1470381">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="/release-group/2744af02-7e4e-4b72-9f26-d6bc6565a8bd">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7">
+  </a>
+  <a href="/release-group/1eb64a0c-29df-4e5f-abc4-16a6d0d803ed">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7">
+  </a>
+  <a href="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+I think our problem is probably the "class="mb-rel-icon" in the generated code from our script
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" style="" data-rel-done="1"><a href="https://www.allmusic.com/album/mw0000195808" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon allmusic-favicon" title="https://www.allmusic.com/album/mw0000195808"></span></a><a href="https://www.discogs.com/master/26750" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon discogs-favicon" title="https://www.discogs.com/master/26750"></span></a><a href="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon lyrics-favicon" title="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j"></span></a><a href="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon rateyourmusic-favicon" title="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/"></span></a><a href="https://www.musik-sammler.de/album/14204/" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon musiksammler-favicon" title="https://www.musik-sammler.de/album/14204/"></span></a><a href="https://www.wikidata.org/wiki/Q1470381" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon wikidata-favicon" title="https://www.wikidata.org/wiki/Q1470381"></span></a><a href="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><img src="https://www.springsteenlyrics.com/favicon.ico" alt="" title="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;"></a><a href="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><img src="https://www.springsteenlyrics.com/favicon.ico" alt="" title="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;"></a><a href="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><img src="https://volkerzell.de/favicons/questionmark.ico" alt="" title="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;"></a></td>
+#+end_example
 
 * TODO add a generic table input dialog (for e.g. Ctrl-U: unicode symbols + explanation, "Relationships" column + userscript (new and my version))
 
