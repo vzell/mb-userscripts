@@ -64337,6 +64337,10 @@ and the relationship icons rendered right after each other without the artificia
 
 now the ghost icons are there again
 
+** still
+
+now the ghost icons are still there, but behind the relationships icons. you can see them if the relatinship icon is a
+smaller size than the ghost icon itself.
 
 * TODO VZ Library
 ** DONE initial

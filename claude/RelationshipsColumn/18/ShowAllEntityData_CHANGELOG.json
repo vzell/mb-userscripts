@@ -1,17 +1,5 @@
 [
   {
-    "version": "9.99.342",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Ghost icon: ghost appears behind real icon = background-image on <a> element from an MBS CSS rule (e.g. a[target=_blank] or a.external). Added background:none !important and background-image:none !important to td.mb-rel-cell a."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.341",
     "date": "2026-03-27",
     "sections": [
