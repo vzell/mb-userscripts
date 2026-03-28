@@ -63798,14 +63798,277 @@ I think our problem is probably the "class="mb-rel-icon" in the generated code f
 <td class="mb-rel-cell" data-mbid="c497fc44-ddaf-3cce-a9b4-bfec958a0f3c" style="" data-rel-done="1"><a href="https://www.allmusic.com/album/mw0000195808" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon allmusic-favicon" title="https://www.allmusic.com/album/mw0000195808"></span></a><a href="https://www.discogs.com/master/26750" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon discogs-favicon" title="https://www.discogs.com/master/26750"></span></a><a href="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon lyrics-favicon" title="https://genius.com/albums/Bruce-springsteen/Greetings-from-asbury-park-n-j"></span></a><a href="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon rateyourmusic-favicon" title="https://rateyourmusic.com/release/album/bruce-springsteen/greetings-from-asbury-park-n_j/"></span></a><a href="https://www.musik-sammler.de/album/14204/" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon musiksammler-favicon" title="https://www.musik-sammler.de/album/14204/"></span></a><a href="https://www.wikidata.org/wiki/Q1470381" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><span class="favicon wikidata-favicon" title="https://www.wikidata.org/wiki/Q1470381"></span></a><a href="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><img src="https://www.springsteenlyrics.com/favicon.ico" alt="" title="https://www.springsteenlyrics.com/forum/viewtopic.php?f=7&amp;t=53" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;"></a><a href="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><img src="https://www.springsteenlyrics.com/favicon.ico" alt="" title="http://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1973-01-05" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;"></a><a href="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj" class="mb-rel-icon" target="_blank" rel="noopener noreferrer" style="display: inline; vertical-align: middle; margin: 0px 1px;"><img src="https://volkerzell.de/favicons/questionmark.ico" alt="" title="http://brucebase.wikidot.com/retail:greetings-from-asbury-park-nj" style="width: 16px; height: 16px; object-fit: contain; vertical-align: middle;"></a></td>
 #+end_example
 
-* TODO add a generic table input dialog (for e.g. Ctrl-U: unicode symbols + explanation, "Relationships" column + userscript (new and my version))
+** still
+
+some bugs:
+
+1.)
+
+it looks like the "REL_..._CLASSES" variables ARE NOT taken into account when it comes to rendering the relationship icons
 
 #+begin_example
-type: "table",
-default: "<table declaration>" + UI support "add", "modify", "delete"
+    let REL_URL_ICON_CLASSES = {
+    let REL_OTHER_DB_CLASSES = {
+    let REL_STREAMING_CLASSES = {
 #+end_example
 
-* Library
+As there are NONE rendered, but when using the reference userscript "DisplayShortcutForRelationshipWithCustomFavicons.user.js" they are.
+
+This is the HTML code fragment of the "Relationship" column data cell when rendered with the reference userscript "DisplayShortcutForRelationshipWithCustomFavicons.user.js"
+
+#+begin_example
+<td class="relationships">
+  <a href="https://www.allmusic.com/album/mw0000650803">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26725">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run">
+    <img src="https://www.last.fm/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm">
+    <img src="http://famclair.free.fr/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html">
+    <img src="http://springsteencollection.altervista.org/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+This is the HTML code fragment of the "Relationship" column data cell when rendered with our userscript "ShowAllEntityData.user.js"
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="39b22944-7503-3937-8bba-09b17281cc6a" style="" data-rel-done="1">
+  <a href="https://www.allmusic.com/album/mw0000650803">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26725">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run">
+    <img src="https://www.last.fm/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm">
+    <img src="http://famclair.free.fr/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html">
+    <img src="http://springsteencollection.altervista.org/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+These ARE rendered with the reference user script but not with OUR version
+
+#+begin_example
+  <a href="https://www.allmusic.com/album/mw0000650803">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26725">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7">
+  </a>
+#+end_example
+
+So it looks like the only relationship icons which get rendered are the ones which are defined in the variable
+"REL_DISCOGRAPHY_MAPPINGS" and URLs like 
+
+#+begin_example
+http://brucebase.wikidot.com/
+https://www.springsteenlyrics.com/
+https://www.last.fm/
+#+end_example
+
+the also have a real thumbnail, whereas th following URLs get rendered with the standard browser broken image reference
+icon
+
+#+begin_example
+http://famclair.free.fr/
+http://springsteencollection.altervista.org/
+#+end_example
+
+See also the uploaded file "debugRelIcons"" with the console debug log, maybe you get some hint how to fix this.
+
+2.)
+
+please also add tooltips for the renderd relationship icons. The tooltip text should be the releationship URL.
+
+** bugs
+
+still some bugs
+
+1.)
+
+when clicking on a relation ship icon, the underlying URL should always open in a new tab
+
+2.)
+
+out script still produces the following HTML code
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="39b22944-7503-3937-8bba-09b17281cc6a" style="" data-rel-done="1">
+  <a href="https://www.allmusic.com/album/mw0000650803" title="https://www.allmusic.com/album/mw0000650803">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26725" title="https://www.discogs.com/master/26725">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run" title="https://genius.com/albums/Bruce-springsteen/Born-to-run">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" title="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/" title="https://www.musik-sammler.de/album/14188/">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366" title="https://www.wikidata.org/wiki/Q752366">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" title="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run">
+    <img src="https://www.last.fm/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" title="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25">
+    <img src="https://www.springsteenlyrics.com/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run" title="http://brucebase.wikidot.com/retail:born-to-run">
+    <img src="https://volkerzell.de/favicons/questionmark.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm" title="http://famclair.free.fr/BornUSAAlbum.htm">
+    <img src="http://famclair.free.fr/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html" title="http://springsteencollection.altervista.org/pagina-2546709.html">
+    <img src="http://springsteencollection.altervista.org/favicon.ico" class="favicon" style="width: 16px; height: 16px; vertical-align: middle; margin: 2px;">
+  </a>
+</td>
+#+end_example
+
+AND although the code is present for
+
+#+begin_example  <a href="https://www.allmusic.com/album/mw0000650803" title="https://www.allmusic.com/album/mw0000650803">
+    <span class="favicon allmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.discogs.com/master/26725" title="https://www.discogs.com/master/26725">
+    <span class="favicon discogs-favicon">
+    </span>
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run" title="https://genius.com/albums/Bruce-springsteen/Born-to-run">
+    <span class="favicon lyrics-favicon">
+    </span>
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" title="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/">
+    <span class="favicon rateyourmusic-favicon">
+    </span>
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/" title="https://www.musik-sammler.de/album/14188/">
+    <span class="favicon musiksammler-favicon">
+    </span>
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366" title="https://www.wikidata.org/wiki/Q752366">
+    <span class="favicon wikidata-favicon">
+    </span>
+  </a>
+#+end_example
+
+they are NOT visually rendered by OUR script, but they DO render in the reference implementation
+
+3.)
+
+also the "REL_NON_URL_ICONS" are still not working
+
+Please fix
+
+** bugs
+
+
+
+
+* TODO VZ Library
+** DONE initial
 
 In the library "VZ_MBLibrary.user.js"
 
@@ -63817,4 +64080,41 @@ to the commented "changelog_library" variable
 // let changelog_library = [
 //     {version: '3.14.3+2026-03-04', description: 'Fix two regressions introduced in 3.14.0: (1) Changelog CLOSE link was made conditional (clearing the filter instead of closing when text was present) which broke the link entirely in some code paths. Reverted to unconditional closeDialog() — CLOSE always closes the dialog regardless of filter state. (2) Changelog Escape handler had a spurious third branch that intercepted Escape when the search field was not focused but had text, clearing the filter instead of closing the dialog. Removed that branch. Correct behaviour is now: Escape while search is focused + has text → clear filter; Escape while search is focused + empty → blur field; Escape while search is not focused → close the dialog unconditionally.'},
 #+end_example
+
+** TODO add a generic table input dialog for "Ctrl-U": unicode symbols + explanation
+
+#+begin_example
+type: "table",
+default: "<table declaration>" + UI support "add", "modify", "delete"
+#+end_example
+
+
+* TODO give credit to original author of "Display Relationships" icons
+
+* TODO add persisten storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
+
+* TODO rename tooltip for toggle CAA "single"-table button
+
+rename tooltip for toggle CAA "single"-table button
+
+from
+
+#+begin_example
+  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
+  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
+  33831:                    : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
+  33879:            : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+#+end_example
+
+to
+
+#+begin_example
+  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
+  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this section'
+  33831:                    : 'Show ' + ctx.stripeLabel + ' for this section';
+  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this section'
+  33879:            : 'Show ' + ctx.stripeLabel + ' for this section';
+#+end_example
+
 

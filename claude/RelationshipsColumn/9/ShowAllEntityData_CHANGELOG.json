@@ -1,19 +1,5 @@
 [
   {
-    "version": "9.99.333",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Bug 1: All relationship icon links now open in a new tab. Added a.target='_blank' and a.rel='noopener noreferrer' to _relAppendIcon.",
-          "Bug 2: CSS-class sprite icons (allmusic, discogs, lyrics, rateyourmusic, etc.) now render visually. Root cause: MBS stylesheet provides background-image and background-position globally via .favicon/.{cls}-favicon, but display:inline-block and explicit 16x16 dimensions were only in the reference script's td.relationships-scoped rule. Added equivalent td.mb-rel-cell span.favicon { display:inline-block; width:16px; height:16px; vertical-align:middle; margin:2px; } to our injected CSS.",
-          "Bug 3: non-URL rel debug rewrite — added comprehensive _relDbg logging for all non-URL rels (type, target-type, entity ID), and defensive key lookup using both 'release-group' (hyphen) and 'release_group' (underscore) since WS2 JSON uses underscore in target-type but hyphen in the nested entity key."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.332",
     "date": "2026-03-27",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.333+2026-03-27
+// @version      9.99.332+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14622,18 +14622,6 @@ a { color: #1565c0; }`;
                 vertical-align: middle; white-space: nowrap;
                 padding: 2px 4px;
             }
-            /* Provide explicit sizing for .favicon spans in our cell context.
-               The MBS stylesheet supplies background-image and background-position
-               via .favicon and .{cls}-favicon classes globally, but display:inline-block
-               and explicit 16x16 dimensions may only be present in MBS rules scoped to
-               td.relationships — our td.mb-rel-cell needs its own equivalent rule. */
-            td.mb-rel-cell span.favicon {
-                display: inline-block;
-                width: 16px;
-                height: 16px;
-                vertical-align: middle;
-                margin: 2px;
-            }
         `;
         document.head.appendChild(_rs);
     })();
@@ -27256,9 +27244,9 @@ a { color: #1565c0; }`;
         if (!iconClass && !iconUrl) return;
         const a = document.createElement('a');
         a.href = url;
-        a.title = url;           // tooltip: show the relationship URL
-        a.target = '_blank';     // always open in new tab
-        a.rel = 'noopener noreferrer';
+        a.title = url;  // tooltip showing the relationship URL
+        // Match reference exactly: no class, no target, no rel on <a>.
+        // Ended relationships: opacity 25% (matching reference script CSS).
         if (ended) a.style.opacity = '0.25';
         if (iconClass) {
             // Exact reference output: <a href=URL><span class="favicon cls-favicon"></span></a>
@@ -27502,36 +27490,18 @@ a { color: #1565c0; }`;
             }
 
             // ── Non-URL relationships (release-group, release) ────────────
-            // Renders icons for relationship types listed in REL_NON_URL_ICONS.
-            // WS2 JSON: target-type uses underscore (release_group);
-            //           nested entity key uses hyphen (release-group).
-            _relDbg(`_populateCells: ${nonUrlRels.length} non-url-rels for ${mbid}`);
-            if (Lib.settings.sa_enable_relationship_debug) {
-                nonUrlRels.forEach((r, i) => {
-                    Lib.debug('relationships',
-                        `  non-url-rel[${i}] type='${r.type}' target-type='${r['target-type']}' ` +
-                        `rg-id='${r['release-group']?.id}' rel-id='${r.release?.id}'`);
-                });
-            }
+            // Renders relationship icons for types listed in REL_NON_URL_ICONS
+            // (e.g. 'single from' renders with the left-arrow GIF).
+            // Target href: /release-group/{id} or /release/{id}
             const seenNonUrl = new Set();
             for (const rel of nonUrlRels) {
                 const relType = rel.type || '';
                 const iconUrl = REL_NON_URL_ICONS[relType];
-                if (!iconUrl) {
-                    _relDbg(`_populateCells: non-url-rel type='${relType}' not in REL_NON_URL_ICONS — skipped`);
-                    continue;
-                }
-                const tt = rel['target-type'] || '';
-                // WS2 uses 'release_group' (underscore) for target-type
-                // but 'release-group' (hyphen) for the nested entity key
-                const isRG = tt.replace('-','_') === 'release_group';
-                // Try both hyphen and underscore key variants defensively
-                const rgEntity = rel['release-group'] || rel['release_group'];
-                const targetId = isRG ? rgEntity?.id : rel.release?.id;
-                if (!targetId) {
-                    _relDbg(`_populateCells: non-url-rel type='${relType}' no targetId — skipped`);
-                    continue;
-                }
+                if (!iconUrl) continue;
+                const tt = rel['target-type'];
+                const isRG = tt === 'release_group' || tt === 'release-group';
+                const targetId = isRG ? rel['release-group']?.id : rel.release?.id;
+                if (!targetId) continue;
                 const href = isRG ? `/release-group/${targetId}` : `/release/${targetId}`;
                 if (seenNonUrl.has(href)) continue;
                 seenNonUrl.add(href);
