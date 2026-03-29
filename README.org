@@ -62085,6 +62085,7 @@ the final rendered pages which have columns with name "CAA"
 #+end_example
 
 * TODO Reintroduce jesus2099 "Release events"
+** initial
 
 some new features:
 
@@ -62379,6 +62380,44 @@ column, render the "Release events" column before the "Relationships" column
 #+end_example
 
 otherwise as the last column in the table.
+
+** bugs
+
+some bugs:
+
+1.)
+
+On the URL https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances and https://musicbrainz.org/label/0b805b9c-ea03-4fc1-b50d-6dcef76433e0/relationships
+
+the former "Relationships" column is now named "Release Events" but still holds in the data cells the relationship
+icons.
+
+2.)
+
+The new column with the actual "Release event" information is completely missing
+
+** bugs
+
+Now BOTH columns "Relationships" and "Release Events" are missing from
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances and https://musicbrainz.org/label/0b805b9c-ea03-4fc1-b50d-6dcef76433e0/relationships
+
+** bugs
+
+Some bugs:
+
+1.)
+
+all the definitions of
+
+#+begin_example
+                injectedColumns: [ 'Release events' ],
+#+end_example
+
+should actually be changed to
+
+#+begin_example
+                injectedColumns: [ 'Release events', 'Relationships' ],
+#+end_example
 
 
 * DONE addCAA: 'Title' to more pageTypes
@@ -64973,7 +65012,8 @@ As soon as filtering either with the global filter or one of the column level fi
 Filtering with the sub-table specific filter works so, the relationship icons do not vanish in this case. Also filtering
 works in all cases when loading the data from the network
 
-* add Synthetic entries for each different relationship icon
+* TODO add Synthetic entries for each different relationship icon
+** DONE initial
 
 In the following code section
 
@@ -64987,3 +65027,21 @@ Find all unique relationship icons over all the data cells in the "Relationship"
 separate row in the "Cell structure" area of the "unique value drop-down" list. When selecting one from the pull-down
 list, add it to the column filter field and filter all table rows in such a way that only rows should be shown which
 have that icon in the "Relationship" data cell
+
+** bugs
+
+
+* TODO error
+
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+
+#+begin_example
+20:41:06.076 [VZ-ShowAllEntityData: place-performances] 📝 _relRetryMbids: force-reloading 2 MBID(s) 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:30621 Uncaught (in promise) ReferenceError: _artIdbDelete is not defined
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:30621:72
+    at Array.map (<anonymous>)
+    at _relRetryMbids (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:30620:37)
+    at _relRetryTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:30655:9)
+    at HTMLButtonElement.<anonymous> (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:36969:21)
+    at HTMLButtonElement.r (helpers.js:97:17)
+#+end_example
