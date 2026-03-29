@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.355+2026-03-27
+// @version      9.99.357+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3535,7 +3535,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
-                injectedColumns: [ 'Release events' ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
@@ -3550,7 +3550,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
-                injectedColumns: [ 'Release events' ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
@@ -3609,7 +3609,7 @@
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
             features: {
-                injectedColumns: [ 'Release events' ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title' // Specific header
@@ -3622,7 +3622,7 @@
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Relationships for Label' } ],
             features: {
-                injectedColumns: [ 'Release events' ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title' // Specific header
@@ -17757,8 +17757,11 @@ a { color: #1565c0; }`;
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     const tag = node.tagName.toLowerCase();
                     if (tag === 'script' || tag === 'style' || tag === 'head') return NodeFilter.FILTER_REJECT;
-                    // Skip per-image CAA/EAA rows — their content must not pollute sort/filter text.
-                    if (node.classList && node.classList.contains('mb-caa-art-li-image')) return NodeFilter.FILTER_REJECT;
+                    // Skip per-image CAA/EAA rows and rel filter key spans.
+                    if (node.classList && (
+                        node.classList.contains('mb-caa-art-li-image') ||
+                        node.classList.contains('mb-rel-filter-key')
+                    )) return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
             }
@@ -23954,6 +23957,34 @@ a { color: #1565c0; }`;
         const caaYesCount = isCaaOrEaaCol ? (valueCounts.get('yes') || 0) : 0;
         const caaNoCount  = isCaaOrEaaCol ? (valueCounts.get('no')  || 0) : 0;
 
+        const isRelCellCol = (() => {
+            if (!tbody) return false;
+            for (const row of tbody.rows) {
+                if (row.style.display === 'none') continue;
+                const cell = row.cells[colIndex];
+                if (cell && cell.classList.contains('mb-rel-cell')) return true;
+            }
+            return false;
+        })();
+
+        const relIconCounts = isRelCellCol ? (() => {
+            const counts = new Map();
+            if (!tbody) return counts;
+            for (const row of tbody.rows) {
+                if (row.style.display === 'none') continue;
+                const cell = row.cells[colIndex];
+                if (!cell) continue;
+                const seenInRow = new Set();
+                for (const a of cell.querySelectorAll('a[href]')) {
+                    const href = a.getAttribute('href');
+                    if (!href || seenInRow.has(href)) continue;
+                    seenInRow.add(href);
+                    counts.set(href, (counts.get(href) || 0) + 1);
+                }
+            }
+            return counts;
+        })() : new Map();
+
         // Is this the inline-thumbnail column for an addCAA or addEAA feature?
         // Detected by the presence of .mb-caa-inline-ph or .mb-eaa-inline-ph spans
         // in the column's visible cells.  Counts are derived directly from the DOM:
@@ -24216,6 +24247,47 @@ a { color: #1565c0; }`;
             // Non-collapsable column: only '○ empty cells' — no section header needed
             // since this is the sole synthetic entry.
             makeSynItem('empty', '○ empty cells', emptyCellCount);
+            appendSynDivider();
+        }
+
+        // ── Relationships column: unique icon entries ─────────────────────────────
+        if (isRelCellCol && relIconCounts.size > 0) {
+            const relHdr = document.createElement('div');
+            relHdr.textContent = 'Relationship icons';
+            relHdr.style.cssText = 'font-size:0.75em;font-weight:600;color:#555;'
+                + 'padding:4px 8px 2px 8px;letter-spacing:0.03em;user-select:none;';
+            synBox.appendChild(relHdr);
+            const sortedRels = Array.from(relIconCounts.entries())
+                .sort(([ua, ca], [ub, cb]) => cb - ca || ua.localeCompare(ub));
+            for (const [href, count] of sortedRels) {
+                const item = document.createElement('div');
+                item.className = 'mb-col-uniq-item mb-col-uniq-multirow-item';
+                item.setAttribute('role', 'option');
+                item.title = href;
+                const badge = document.createElement('span');
+                badge.className = 'mb-uniq-count-badge';
+                badge.textContent = `(${count})`;
+                badge.setAttribute('aria-hidden', 'true');
+                badge.style.cssText = `color:${cntColor};background:${cntBg};font-weight:bold;`
+                    + 'font-family:monospace;border-radius:3px;padding:0 3px;'
+                    + 'margin-right:5px;font-size:0.85em;display:inline-block;';
+                item.appendChild(badge);
+                const isExt = href.startsWith('http');
+                const ico = document.createElement('img');
+                if (isExt) {
+                    let domain = '';
+                    try { domain = new URL(href).hostname; } catch (_) {}
+                    ico.src = domain ? `https://www.google.com/s2/favicons?sz=16&domain=${domain}` : '/favicon.ico';
+                } else { ico.src = '/favicon.ico'; }
+                ico.style.cssText = 'width:14px;height:14px;vertical-align:middle;margin-right:4px;';
+                ico.setAttribute('aria-hidden', 'true');
+                item.appendChild(ico);
+                const label = href.length > 55 ? href.slice(0, 52) + '\u2026' : href;
+                item.appendChild(document.createTextNode(label));
+                item.addEventListener('mousedown', ev => ev.preventDefault());
+                item.addEventListener('click', () => { applyUniqVal(href, table, colIndex); closeUniqDrop(); });
+                synBox.appendChild(item);
+            }
             appendSynDivider();
         }
 
@@ -27459,6 +27531,12 @@ a { color: #1565c0; }`;
         img.src = iconUrl;
         img.style.cssText = 'width:16px;height:16px;vertical-align:middle;margin:1px;';
         a.appendChild(img);
+        const key = document.createElement('span');
+        key.className = 'mb-rel-filter-key';
+        key.textContent = url;
+        key.setAttribute('aria-hidden', 'true');
+        key.style.cssText = 'display:none;';
+        a.appendChild(key);
         cell.appendChild(a);
     }
 

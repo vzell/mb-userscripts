@@ -1,6 +1,19 @@
 [
   {
-    "version": "9.99.355",
+    "version": "9.99.357",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix / 🚀 Feature",
+        "items": [
+          "Bug 1: added 'Relationships' to injectedColumns and collapsableColumns for all four page types (place-performances-filtered, place-performances, label-relationships-filtered, label-relationships). These pages now show both a 'Release events' column and a 'Relationships' column.",
+          "Bug 2: Relationships column unique-value dropdown now has a 'Relationship icons' synthetic section. Each unique relationship URL is listed with its favicon, a count badge, and a truncated URL label. Clicking filters to rows containing that relationship. _relAppendIcon appends a hidden .mb-rel-filter-key span so getCleanColumnText includes the URL in column-filter matching. getCleanVisibleText excludes these spans so sort/global-filter text is unaffected."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.356",
     "date": "2026-03-27",
     "sections": [
       {
@@ -12,25 +25,13 @@
     ]
   },
   {
-    "version": "9.99.354",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Release events column showed relationship icons; actual release events column missing. Root cause: buildActiveInjectedColumns() was picking up all injectedColumns entries including 'Release events', treating them as Relationships. Fixed by filtering to colName === 'Relationships' only. Added missing Release Events functions (extractReleaseEvents, _rePopulateCell, initReleaseEventsColumn) and their call sites."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.355",
     "date": "2026-03-27",
     "sections": [
       {
         "label": "🐛 Fix",
         "items": [
-          "Release events column showed relationship icons, actual release events column missing: buildActiveInjectedColumns() was mapping ALL entries in injectedColumns — including 'Release events' — into the Relationships pipeline. Fixed by filtering to colName === 'Relationships' only."
+           "Release events column showed relationship icons; actual release events column missing. Root cause: buildActiveInjectedColumns() was picking up all injectedColumns entries including 'Release events', treating them as Relationships. Fixed by filtering to colName === 'Relationships' only. Added missing Release Events functions (extractReleaseEvents, _rePopulateCell, initReleaseEventsColumn) and their call sites."
         ]
       }
     ]
@@ -367,19 +368,8 @@
         "label": "🐛 Fix",
         "items": [
           "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> and exactly 'favicon {cls}-favicon' on <span> — matching the reference DisplayShortcutForRelationship script. The extra 'mb-rel-favicon' class combined with the CSS display:inline-block rule created a phantom rendered box alongside the real MBS sprite icon. CSS block updated from a.mb-rel-link to a.mb-rel-icon selectors.",
-          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() now writes the built-in defaults to GM storage on first use, so all 4 relationship mapping table editors (sa_rel_discography_mappings, sa_rel_url_icon_classes, sa_rel_other_db_classes, sa_rel_streaming_classes) open pre-populated with defaults instead of empty."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.329",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
           "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> (not 'mb-rel-link') and exactly 'favicon {cls}-favicon' on <span> — matching the reference script. The extra 'mb-rel-favicon' class was triggering conflicting CSS rules that rendered a phantom sprite box alongside each real icon. CSS selectors updated to match 'a.mb-rel-icon'.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() now writes the built-in defaults to GM storage on first use, so all 4 relationship mapping table editors (sa_rel_discography_mappings, sa_rel_url_icon_classes, sa_rel_other_db_classes, sa_rel_streaming_classes) open pre-populated with defaults instead of empty.",
           "Bug 2 (empty table editors): _loadMap() in _initRelMappings() seeds GM storage with built-in default rows on first use (empty storage). Table editors now open pre-populated with defaults for all 4 relationship mapping tables."
         ]
       }
