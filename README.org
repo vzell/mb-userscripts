@@ -64416,7 +64416,7 @@ default: "<table declaration>" + UI support "add", "modify", "delete"
 
 * TODO give credit to original author of "Display Relationships" icons
 
-* TODO add persistent storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
+* DONE add persistent storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
 
 * TODO rename tooltip for toggle CAA "single"-table button
 
@@ -64444,7 +64444,7 @@ to
 
 
 
-* remove the double changelog entry
+* TODO remove the double changelog entries
 
 #+begin_example
   {
@@ -64500,8 +64500,7 @@ to
 
 Relocate trailing h2 sections not honoured ("sa_enable_h2_section_relocation_on_final_page: true") when "Load from Disk" is clicked
 
-
-* TODO ghost icons there when "Load from Disk"
+* DONE ghost icons there when "Load from Disk"
 ** initial
 
 ghost relationship icons shop up again when "Load from Disk" is clicked
