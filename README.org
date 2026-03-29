@@ -62084,7 +62084,7 @@ the final rendered pages which have columns with name "CAA"
 // @author       Michael Wiencek
 #+end_example
 
-* TODO Reintroduce jesus2099 "Release events"
+* DONE Reintroduce jesus2099 "Release events"
 ** initial
 
 some new features:
@@ -63555,9 +63555,6 @@ default: "<table declaration>" + UI support "add", "modify", "delete"
 #+end_example
 
 
-* TODO give credit to original author of "Display Relationships" icons
-
-
 * TODO rename tooltip for toggle CAA "single"-table button
 
 rename tooltip for toggle CAA "single"-table button
@@ -63584,6 +63581,7 @@ to
 
 
 
+* DONE give credit to original author of "Display Relationships" icons
 * DONE remove the double changelog entries
 
 #+begin_example
