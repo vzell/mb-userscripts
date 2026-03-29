@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.350+2026-03-27
+// @version      9.99.349+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -27549,7 +27549,7 @@ a { color: #1565c0; }`;
      * Only runs when sa_enable_relationships_column is true and
      * activeInjectedColumns is non-empty.
      */
-    async function initRelationshipsColumn() {
+    function initRelationshipsColumn() {
         if (!Lib.settings.sa_enable_relationships_column) return;
         if (!activeInjectedColumns.length) return;
 

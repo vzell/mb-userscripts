@@ -64416,7 +64416,7 @@ default: "<table declaration>" + UI support "add", "modify", "delete"
 
 * TODO give credit to original author of "Display Relationships" icons
 
-* TODO add persisten storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
+* TODO add persistent storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
 
 * TODO rename tooltip for toggle CAA "single"-table button
 
@@ -64494,15 +64494,93 @@ to
 #+end_example
 
 
-* TODO Add tooltips which describe the "release-group" releationship icons better
+* TODO Add tooltips which describe the "release-group" relationship icons better
 
-* TODO Relocate trailing h2 sections not honoured when "Load from Disk"
+* DONE Relocate trailing h2 sections not honoured when "Load from Disk"
 
 Relocate trailing h2 sections not honoured ("sa_enable_h2_section_relocation_on_final_page: true") when "Load from Disk" is clicked
 
+
 * TODO ghost icons there when "Load from Disk"
+** initial
 
 ghost relationship icons shop up again when "Load from Disk" is clicked
 
+** bugs
+
+some bugs
+
+1.)
+
+When already on the final rendered age, and then pressing the "Load from Disk" button, the ghost icons after every
+relationship icon show up again, the latest fix didn't work
+
+2.)
+
+When on the initial page and then pressing the "Load from Disk" button, the column header for the "Relationship" column
+is NOT rendered at all, but the column data cells ARE rendered and again WITH the ghost icons, e.g. the first data cell in the first row
+
+#+begin_example
+<td><a href="https://www.springsteenlyrics.com/bootlegs.php?item=6475" title="https://www.springsteenlyrics.com/bootlegs.php?item=6475" target="_blank" rel="noopener noreferrer"><img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.springsteenlyrics.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;"></a><a href="https://www.discogs.com/release/6889744" title="https://www.discogs.com/release/6889744" target="_blank" rel="noopener noreferrer"><img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.discogs.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;"></a></td>
+#+end_example
+
+3.)
+
+the buttons
+
+#+begin_example
+<button id="mb-rel-retry-global" type="button" title="Globally retry loading all Relationship icons for every sub-table (forces network reload, clears IDB cache)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">🔗⟳</button>
+#+end_example
+
+and
+
+#+begin_example
+<button id="mb-rel-retry-0" type="button" title="Retry loading Relationship icons for this sub-table (forces network reload, clears IDB cache)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">🔗⟳</button>
+#+end_example
+
+are both missing when on the initial page and then pressing the "Load from Disk" button
+
+4.)
+
+When already on the final rendered age, and then pressing the "Load from Disk" button, the above buttons ARE rendered,
+but clicking them doesn't seem to have any effect
+
+5.)
+
+both buttons are missing the "mouse pressing" effect. They should have visual feedback when pressed. 
+
+** bugs
+
+some bugs:
+
+1.)
+
+The global button "mb-rel-retry-global" and the sub-table specific buttons "mb-rel-retry-0" doesn't seem to have any
+effect whe pressed after loading from disk, either on the initial page or on the final rendered page. At least there is
+NO debugging output in the console in these cases, whereas there is console output when NOT loading from disk
+
+2.
+
+the ghost icons are still present in both above cases when loading from disk
+
+** bugs
 
 
+some bugs
+
+1.)
+
+when saving to disk with the latest version, there are NO relationship icons rendered at all after "Loading from Disk"
+again, either on the initial page or on the final rendered page. Also the reload buttons have no effect. please fix
+
+** bugs
+
+OK, it works now, when loading from disk.
+
+But please check the uploaded debug console output in the file "debugRelationshipIndexedDB-2nd". Does the loading from
+the indexedDB really works as intended ? Because it takes the same amount of time to render the relationship icons when
+reentering the same page, as in the first case when loading from the network. Are the releationship icons and their URLs
+really stored in the indexedDB.
+
+For example loading the CAA artwork thumbnails fomr the indexedDB is almost instantenous compared to loading the
+relationship icons, where the icons shpw up i more or less a second intervall per row

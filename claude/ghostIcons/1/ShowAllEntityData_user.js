@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.350+2026-03-27
+// @version      9.99.346+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -26598,6 +26598,7 @@ a { color: #1565c0; }`;
      *   transient JS-only state.
      */
     function getCleanCellHtml(cell) {
+        if (cell.classList && cell.classList.contains('mb-rel-cell')) return '';
         const clone = cell.cloneNode(true);
 
         // ── 1. Strip filter-highlight wrapper spans ───────────────────────────
@@ -27549,7 +27550,7 @@ a { color: #1565c0; }`;
      * Only runs when sa_enable_relationships_column is true and
      * activeInjectedColumns is non-empty.
      */
-    async function initRelationshipsColumn() {
+    function initRelationshipsColumn() {
         if (!Lib.settings.sa_enable_relationships_column) return;
         if (!activeInjectedColumns.length) return;
 
@@ -27562,23 +27563,6 @@ a { color: #1565c0; }`;
         };
 
         const { entityType, incOptions } = activeInjectedColumns[0];
-        // ── Ensure mb-rel-cell tds exist in every data row ───────────────────
-        // Disk-loaded rows bypass the live row-builder pipeline (step 5b) that
-        // normally appends mb-rel-cell placeholder tds. Inject them here if missing.
-        if (activeInjectedColumns.length) {
-            const _injBg = (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '22';
-            document.querySelectorAll('table.tbl tbody tr').forEach(row => {
-                if (row.querySelector('td.mb-rel-cell')) return;  // already has one
-                const _mbid = _extractMbidFromRow(row);
-                if (!_mbid) return;  // can't identify this row
-                const _tdInj = document.createElement('td');
-                _tdInj.className = 'mb-rel-cell';
-                _tdInj.dataset.mbid = _mbid;
-                _tdInj.style.backgroundColor = _injBg;
-                row.appendChild(_tdInj);
-            });
-        }
-
         const allCells = Array.from(document.querySelectorAll('td.mb-rel-cell'))
             .filter(td => td.dataset.mbid && !td.dataset.relDone);  // mb-rel-cell is always present
         if (!allCells.length) {
@@ -27684,34 +27668,8 @@ a { color: #1565c0; }`;
             }
         }
 
-        // ── Two-phase fetch: IDB hits in parallel, misses throttled (1 req/s) ───
-        // Phase 1: attempt IDB lookup for every MBID simultaneously.
-        //   Hits  → populate immediately (no network, no delay needed).
-        //   Misses → collect for Phase 2.
-        // Phase 2: run IDB-miss MBIDs through a sequential queue with the
-        //   1100ms inter-request delay that respects the MusicBrainz API
-        //   rate limit (1 req/s).
-        // Net effect: pages visited before (IDB warm) render all icons at once;
-        // first visits still show icons one per second as before.
-        const _phase1 = uniqueMbids.map(async mbid => {
-            const cached = await _relIdbGet(`${entityType}:${mbid}`);
-            if (cached) {
-                _relDbg(`initRelationshipsColumn: phase1 IDB hit for ${mbid}`);
-                // Also store in L1 memory cache so _relFetchWs2 sees it
-                _relWs2Cache.set(`${entityType}:${mbid}`, Promise.resolve(cached));
-                await _populateCells(mbid, cached);
-                return true;   // hit
-            }
-            return false;  // miss
-        });
-        const _hitFlags = await Promise.all(_phase1);
-        const _missMbids = uniqueMbids.filter((_, i) => !_hitFlags[i]);
-        _relDbg(`initRelationshipsColumn: phase1 done — ` +
-            `${_hitFlags.filter(Boolean).length} IDB hits, ${_missMbids.length} network misses`);
-
-        // Phase 2: throttled network queue for misses only
         let queue = Promise.resolve();
-        _missMbids.forEach((mbid, i) => {
+        uniqueMbids.forEach((mbid, i) => {
             queue = queue.then(async () => {
                 if (i > 0) await new Promise(r => setTimeout(r, 1100));
                 await _populateCells(mbid, await _relFetchWs2(mbid, entityType, incOptions));
@@ -27719,7 +27677,6 @@ a { color: #1565c0; }`;
         });
         const _relStartMs = performance.now();
         queue.then(() => {
-            _relRetryActive = false;  // reset retry flag from _relRetryMbids
             _relDbg('initRelationshipsColumn: complete');
             _relCreateRetryButtons();
             const _relElapsed = performance.now() - _relStartMs;
@@ -27919,9 +27876,7 @@ a { color: #1565c0; }`;
                     key: group.key,
                     category: group.category,
                     rows: group.rows.map(row => {
-                        return Array.from(row.cells)
-                            .filter(cell => !cell.classList.contains('mb-rel-cell'))
-                            .map(cell => ({
+                        return Array.from(row.cells).map(cell => ({
                             html: getCleanCellHtml(cell),
                             colSpan: cell.colSpan || 1,
                             rowSpan: cell.rowSpan || 1
@@ -27935,9 +27890,7 @@ a { color: #1565c0; }`;
                 // Same rationale as above — use getCleanCellHtml() to avoid persisting
                 // highlight spans that are active at the moment the user clicks "Save".
                 dataToSave.rows = allRows.map(row => {
-                    return Array.from(row.cells)
-                        .filter(cell => !cell.classList.contains('mb-rel-cell'))
-                        .map(cell => ({
+                    return Array.from(row.cells).map(cell => ({
                         html: getCleanCellHtml(cell),
                         colSpan: cell.colSpan || 1,
                         rowSpan: cell.rowSpan || 1

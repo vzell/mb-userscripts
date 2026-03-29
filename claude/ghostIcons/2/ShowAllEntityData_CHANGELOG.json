@@ -1,41 +1,5 @@
 [
   {
-    "version": "9.99.350",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "SyntaxError 'await is only valid in async functions': initRelationshipsColumn() was not declared async but v9.99.349 added `await Promise.all(_phase1)` inside it. Fixed by adding the `async` keyword to the function declaration."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.349",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🚀 Improvement",
-        "items": [
-          "Relationship icons now load nearly instantly on repeated page visits (IDB warm). Root cause: initRelationshipsColumn used a single sequential queue with a fixed 1100ms inter-request delay between every MBID — including IDB hits that require no network request. With 7 rows all cached, that meant 7 × 1.1s = 7.7s to render all icons even though IDB reads take ~1ms. Fix: two-phase fetch strategy. Phase 1 checks all MBIDs against IDB in parallel (Promise.all) and populates cells immediately for hits. Phase 2 runs only the IDB misses through the throttled 1100ms queue for network fetches. Warm-cache pages now render all relationship icons simultaneously in milliseconds; cold-cache first visits are unchanged (1 icon/second)."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.348",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "No relationship icons after disk load: renderGroupedTable and renderFinalTable append disk-loaded rows directly without going through the live row-builder pipeline (step 5b) that normally appends mb-rel-cell placeholder tds. Since v9.99.347 also removed rel cells from serialization, disk-loaded rows had no mb-rel-cell tds at all → initRelationshipsColumn found 0 cells → returned immediately. Fix: initRelationshipsColumn now checks every data row for a missing mb-rel-cell td and injects one (with data-mbid from _extractMbidFromRow) before collecting cells. This runs for both disk-load and live paths, is idempotent (skips rows that already have the td), and keeps serialization clean."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.347",
     "date": "2026-03-27",
     "sections": [
