@@ -1,0 +1,342 @@
+﻿2:27:24.769 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.343+2026-03-27) loaded with external library (3.16.0+2026-03-27) active on MusicBrainz page: https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2?tport=8000 
+12:27:24.834 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2?tport=8000 
+12:27:24.834 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2 
+12:27:24.834 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2 
+12:27:24.834 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters: tport=8000 
+12:27:24.834 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+12:27:24.839 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: releasegroup-releases 
+12:27:24.840 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+12:27:24.840 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 Initializing script for path: /release-group/a60daf03-c7d5-4947-82e6-0f2c73ff51b2
+12:27:24.841 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 Cached entity name at init time: "1981‐01‐26: Athletic & Convocation Center, University of Notre Dame, South Bend, IN, USA" 
+12:27:24.849 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 applyH1CommentSpanRelocation [initial]: relocated → #mb-h1-alias-line Object
+12:27:24.878 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 Blurred #headerid-query input on page entry 
+12:27:24.882 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Changelog source: remote — replaced 0 local entries with 518 remote entries (fromCache=true) 
+12:27:26.553 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 syntheticColumnExtractors configured: "dateParts"("Date") → [DD, MM, YYYY, Day, Month] 
+12:27:26.556 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 injectedColumns: ["Relationships"(release)] 
+12:27:26.556 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 columnErasers configured: "Release" → [▶] 
+12:27:26.556 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 renderMultiRowCell configured: ["Label", "Catalog#"] 
+12:27:26.556 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 integerColumns configured: ["DD"(R), "MM"(R), "YYYY"(C), "Total Tracks"(R)] 
+12:27:26.557 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Signalling other scripts to stop... 
+12:27:26.557 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Starting fetch process... null
+12:27:26.557 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+12:27:26.558 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+12:27:26.558 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Total pages to fetch: 1 
+12:27:26.559 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Starting clutter element removal. 
+12:27:26.560 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Removed 1 jesus2099 bigbox elements. 
+12:27:26.565 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Page 1 is current page. Using existing document. 
+12:27:26.566 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+12:27:26.567 [VZ-ShowAllEntityData: releasegroup-releases] 📝 No targetHeader provided; returning all tables found in container. 
+12:27:26.568 [VZ-ShowAllEntityData: releasegroup-releases] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+12:27:26.568 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+12:27:26.569 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Detected indices → mainColIdx=1 (Release), extractors=[caa("Release"@1), splitCountryDate("Country/Date"@6), sumTracks("Tracks"@5), extractFormatTypes("Format"@4)], syntheticExtractors=[dateParts("Date"→[DD,MM,YYYY,Day,Month])], erasers=[[▶]@"Release"(colIdx=1)], renderMultiRow=["Label"@7, "Catalog#"@8], integerColumns=["DD"(R)@14, "MM"(R)@15, "YYYY"(C)@16, "Total Tracks"(R)@12], excluded=[2,10] for pageType: releasegroup-releases 
+12:27:26.569 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table body found. Processing child nodes. Total nodes: 8 
+12:27:26.570 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Subgroup Change/Type: "Bootleg". Rows so far: 0 
+12:27:26.571 [VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+12:27:26.572 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — wrapped into 1 li row(s) 
+12:27:26.573 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=8) — wrapped into 1 li row(s) 
+12:27:26.575 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Subgroup resolved: "Bootleg" → "Bootleg release" 
+12:27:26.576 [VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+12:27:26.576 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — wrapped into 1 li row(s) 
+12:27:26.576 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=8) — wrapped into 1 li row(s) 
+12:27:26.577 [VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+12:27:26.578 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — wrapped into 1 li row(s) 
+12:27:26.578 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=8) — wrapped into 1 li row(s) 
+12:27:26.579 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caa extractor: Path C — synthesised cover-art anchor for /release/d58ca80e-79c3-4233-9d9a-c64070af8411 
+12:27:26.581 [VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+12:27:26.581 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — wrapped into 1 li row(s) 
+12:27:26.581 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=8) — wrapped into 1 li row(s) 
+12:27:26.582 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caa extractor: Path C — synthesised cover-art anchor for /release/f3a174fd-5a0e-4004-a16c-34e03bb339de 
+12:27:26.584 [VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+12:27:26.584 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — wrapped into 1 li row(s) 
+12:27:26.584 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=8) — wrapped into 1 li row(s) 
+12:27:26.585 [VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+12:27:26.585 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — wrapped into 1 li row(s) 
+12:27:26.586 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=8) — wrapped into 1 li row(s) 
+12:27:26.586 [VZ-ShowAllEntityData: releasegroup-releases] 📝 columnEraser: removed span "▶" from column "Release" (colIdx=1) 
+12:27:26.587 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Label" (colIdx=7) — wrapped into 1 li row(s) 
+12:27:26.587 [VZ-ShowAllEntityData: releasegroup-releases] 📝 renderMultiRowCell: column "Catalog#" (colIdx=8) — wrapped into 1 li row(s) 
+12:27:26.587 [VZ-ShowAllEntityData: releasegroup-releases] 📥 Page 1/1 processed in 0.02s. Rows on page: 7. Total: 7 
+12:27:26.588 [VZ-ShowAllEntityData: releasegroup-releases] 📥   Summary: Bootleg release: +7 (Total: 7) 
+12:27:26.588 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 DOM rendering starting... 
+12:27:26.589 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Starting updateH2Count: filtered=7, total=7, absoluteTotal=null 
+12:27:26.589 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Searching for target H2. Current pageType: releasegroup-releases 
+12:27:26.590 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+12:27:26.590 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+12:27:26.590 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target element identified: "Album + Compilation + Live..." 
+12:27:26.591 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+12:27:26.591 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Updated header/target Album + Compilation + Live count: (7) 
+12:27:26.592 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
+12:27:26.593 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Cloning table head for template. 
+12:27:26.595 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 cleanupHeaders() called → existing headers=[ | Release | Relationships | Artist | Format | Tracks | Country/Date | Label | Catalog# | Barcode | Tagger] 
+12:27:26.596 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Marking column 2 ("Relationships") for removal. Match: "Relationships", Setting: "sa_remove_rel" 
+12:27:26.596 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Marking column 10 ("Tagger") for removal. Match: "Tagger", Setting: "sa_remove_tagger" 
+12:27:26.597 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Removing 2 columns from table. 
+12:27:26.597 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Successfully deleted column: Tagger 
+12:27:26.597 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Successfully deleted column: Relationships 
+12:27:26.598 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: CAA (via extractor: caa) 
+12:27:26.598 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Country (via extractor: splitCountryDate) 
+12:27:26.598 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Date (via extractor: splitCountryDate) 
+12:27:26.599 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Total Tracks (via extractor: sumTracks) 
+12:27:26.599 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Format Types (via extractor: extractFormatTypes) 
+12:27:26.599 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: DD (via synthetic extractor: dateParts) 
+12:27:26.600 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: MM (via synthetic extractor: dateParts) 
+12:27:26.600 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: YYYY (via synthetic extractor: dateParts) 
+12:27:26.600 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Day (via synthetic extractor: dateParts) 
+12:27:26.600 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Month (via synthetic extractor: dateParts) 
+12:27:26.600 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: MB-Name 
+12:27:26.601 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting synthetic header: Comment 
+12:27:26.601 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Injecting injected-column header: Relationships (release) 
+12:27:26.601 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Searching for target H2. Current pageType: releasegroup-releases 
+12:27:26.602 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+12:27:26.602 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+12:27:26.602 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 No query provided; performing initial cleanup of existing elements. 
+12:27:26.603 [VZ-ShowAllEntityData: releasegroup-releases] 🎨  Injecting master toggle button and filter container after target header Album + Compilation + Live(7). 
+12:27:26.604 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Processing group: "Bootleg release" with 7 rows. 
+12:27:26.605 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Creating new table and H3 for group "Bootleg release". 
+12:27:26.607 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Group "Bootleg release" auto-expand status: true (singleSubTable=true) 
+12:27:26.621 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: columns=[Country/Date, Country, Date, Label, Catalog#, CAA] 
+12:27:26.622 [VZ-ShowAllEntityData: releasegroup-releases] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
+12:27:26.624 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Country/Date" (col 5) — no multi-row cells found, skipping. 
+12:27:26.625 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Country" (col 10) — no multi-row cells found, skipping. 
+12:27:26.625 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Date" (col 11) — no multi-row cells found, skipping. 
+12:27:26.625 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Label" (col 6) — no multi-row cells found, skipping. 
+12:27:26.625 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "Catalog#" (col 7) — no multi-row cells found, skipping. 
+12:27:26.626 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: "CAA" (col 9) — no multi-row cells found, skipping. 
+12:27:26.636 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCollapsableColumns: done — 6 declared, 0 with multi-row cells. 
+12:27:26.638 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initExpandRGsFeature: injected 14 expand button(s) 
+12:27:26.640 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initBarcodeHighlight: processed table 0 
+12:27:26.640 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCaaPics: request queue created (concurrency=4) 
+12:27:26.642 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/front-250 
+12:27:26.644 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/0156e118-a07f-490c-849d-510ccd059e3b/front-250 
+12:27:26.644 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/d58ca80e-79c3-4233-9d9a-c64070af8411/front-250 
+12:27:26.644 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/f3a174fd-5a0e-4004-a16c-34e03bb339de/front-250 
+12:27:26.645 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitSmallPics: enqueued 7 load request(s) (queue: 4 running, 3 pending) 
+12:27:26.646 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichTable: enqueued 7 enrichment request(s) (queue: 4 running, 10 pending) 
+12:27:26.647 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-0 (7 link(s)) 
+12:27:26.648 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artCreateOrUpdateRetryButton: created retry btn mb-caa-toggle-btn-retry-0 
+12:27:26.649 [VZ-ShowAllEntityData: releasegroup-releases] 📝 created rel retry btn mb-rel-retry-0 
+12:27:26.658 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaInitBigPics: built bigbox for table 0 with 7 image(s), initially hidden 
+12:27:26.658 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAPics: processed 1 table(s) with CAA column 
+12:27:26.659 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artCreateOrUpdateGlobalToggleButton: created global btn mb-caa-toggle-btn-global 
+12:27:26.660 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artCreateOrUpdateGlobalToggleButton: created global retry btn mb-caa-toggle-btn-global-retry 
+12:27:26.660 [VZ-ShowAllEntityData: releasegroup-releases] 📝 created global rel retry btn 
+12:27:26.663 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artInitGlobalCaaColHdrToggle: created global caa col-hdr toggle btn 
+12:27:26.665 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
+12:27:26.665 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initEAAPics: processed 0 table(s) with EAA column 
+12:27:26.666 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+12:27:26.667 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: addCAA column = "Release" 
+12:27:26.669 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: processing table 0, column "Release" at index 1 
+12:27:26.670 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/front-250 
+12:27:26.671 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/0156e118-a07f-490c-849d-510ccd059e3b/front-250 
+12:27:26.671 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/d58ca80e-79c3-4233-9d9a-c64070af8411/front-250 
+12:27:26.672 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/f3a174fd-5a0e-4004-a16c-34e03bb339de/front-250 
+12:27:26.672 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f/front-250 
+12:27:26.672 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/front-250 
+12:27:26.672 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:26.672 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: done — injected=7 enqueued=7 skipped(done=0 noLink=0 noGuid=0) column="Release" (queue: 4 running, 24 pending) 
+12:27:26.673 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+12:27:26.673 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Finished renderGroupedTable. 
+12:27:26.673 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Stats snapshot: 7 rows, 0 CAA links, 9 original + 7 extracted + 5 derived + 1 injected cols 
+12:27:26.675 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Running final cleanup... 
+12:27:26.676 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 No Sanojjonas elements found during final cleanup. 
+12:27:26.676 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+12:27:26.676 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+12:27:26.677 [VZ-ShowAllEntityData: releasegroup-releases] 🧹 Relocated 1 trailing h2 section(s) before data h2 
+12:27:26.677 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+12:27:26.679 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 Initializing collapsible H2 headers... 
+12:27:26.682 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+12:27:26.682 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Auto-resize button added to controls 
+12:27:26.684 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Made 22 columns resizable 
+12:27:26.688 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Column visibility toggle added to controls 
+12:27:26.689 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Barcode highlight toggle button added to controls 
+12:27:26.690 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Density control button added to controls 
+12:27:26.691 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Statistics button added to controls 
+12:27:26.692 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Keyboard shortcuts initialized 
+12:27:26.692 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Shortcuts help button already exists, skipping 
+12:27:26.694 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Export button with dropdown menu added to controls 
+12:27:26.695 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 Initializing aggressive full-width sidebar toggle. 
+12:27:26.696 [VZ-ShowAllEntityData: releasegroup-releases] 🚀 Sidebar initially collapsed per sa_sidebar_collapsed setting. 
+12:27:26.698 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initExpandRGsFeature: injected 14 expand button(s) 
+12:27:26.698 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initBarcodeHighlight: processed table 0 
+12:27:26.699 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _initRelMappings: REL_* tables refreshed 
+12:27:26.699 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initRelationshipsColumn: 7 unique MBIDs, 7 cells, entityType=release 
+12:27:26.701 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Unicode character picker initialised 
+12:27:26.701 [VZ-ShowAllEntityData: releasegroup-releases] 🎨 DOM rendering finished in 113.10ms 
+12:27:26.701 [VZ-ShowAllEntityData: releasegroup-releases] ✅ Process complete. Final Row Count: 7. Total Time: 0.14s 
+12:27:26.793 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artOpenIdb: database opened successfully 
+12:27:26.804 [VZ-ShowAllEntityData: releasegroup-releases] 📝 sa_auto_resize_columns: triggering auto-resize on load 
+12:27:26.805 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Auto-resizing 1 table(s)... 
+12:27:26.806 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Enabled horizontal scrolling at window level to preserve sticky headers 
+12:27:26.810 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 0: "" = 29px 
+12:27:26.812 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 1: "Release ⇅▲▼7📊" = 119px 
+12:27:26.814 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 2: "Artist ⇅▲▼1📊" = 105px 
+12:27:26.815 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 3: "Format ⇅▲▼2📊" = 115px 
+12:27:26.817 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 4: "Tracks ⇅▲▼7📊" = 111px 
+12:27:26.819 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 5: "Country/Date ⇅▲▼1📊" = 155px 
+12:27:26.820 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 6: "Label ⇅▲▼3📊" = 104px 
+12:27:26.822 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 7: "Catalog# ⇅▲▼2📊" = 127px 
+12:27:26.823 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 8: "Barcode ⇅▲▼1📊" = 121px 
+12:27:26.825 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 9: "▶CAA ⇅▲▼2📊" = 131px 
+12:27:26.826 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 10: "Country ⇅▲▼1📊" = 119px 
+12:27:26.828 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 11: "Date ⇅▲▼1📊" = 100px 
+12:27:26.830 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 12: "Total Tracks ⇅▲▼3📊" = 146px 
+12:27:26.831 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 13: "Format Types ⇅▲▼2📊" = 154px 
+12:27:26.832 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 14: "DD ⇅▲▼📊" = 84px 
+12:27:26.833 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 15: "MM ⇅▲▼📊" = 86px 
+12:27:26.835 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 16: "YYYY ⇅▲▼📊" = 98px 
+12:27:26.836 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 17: "Day ⇅▲▼📊" = 89px 
+12:27:26.837 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 18: "Month ⇅▲▼📊" = 104px 
+12:27:26.839 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 19: "MB-Name ⇅▲▼7📊" = 130px 
+12:27:26.841 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 20: "Comment ⇅▲▼2📊" = 129px 
+12:27:26.842 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Header 21: "Relationships ⇅▲▼📊" = 148px 
+12:27:26.901 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 0: 50px min-width (visible) 
+12:27:26.901 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 1: 734px min-width (visible) 
+12:27:26.902 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 2: 267px min-width (visible) 
+12:27:26.902 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 3: 135px min-width (visible) 
+12:27:26.902 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 4: 131px min-width (visible) 
+12:27:26.902 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 5: 190px min-width (visible) 
+12:27:26.902 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 6: 684px min-width (visible) 
+12:27:26.903 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 7: 158px min-width (visible) 
+12:27:26.903 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 8: 141px min-width (visible) 
+12:27:26.903 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 9: 151px min-width (visible) 
+12:27:26.904 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 10: 151px min-width (visible) 
+12:27:26.904 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 11: 120px min-width (visible) 
+12:27:26.904 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 12: 166px min-width (visible) 
+12:27:26.904 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 13: 174px min-width (visible) 
+12:27:26.905 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 14: 104px min-width (visible) 
+12:27:26.905 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 15: 106px min-width (visible) 
+12:27:26.905 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 16: 118px min-width (visible) 
+12:27:26.905 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 17: 109px min-width (visible) 
+12:27:26.905 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 18: 124px min-width (visible) 
+12:27:26.906 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 19: 598px min-width (visible) 
+12:27:26.906 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 20: 149px min-width (visible) 
+12:27:26.906 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0, Column 21: 168px min-width (visible) 
+12:27:26.907 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Made 22 columns resizable 
+12:27:26.907 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Table 0: Resized 22 columns, total width: 4728px 
+12:27:26.907 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Auto-resize complete: 22 visible columns across 1 table(s) in 101ms 
+12:27:26.934 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/front-250 
+12:27:26.939 [VZ-ShowAllEntityData: releasegroup-releases] 🖥️ Auto-focused global filter input after final render 
+12:27:26.952 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/0156e118-a07f-490c-849d-510ccd059e3b/front-250 
+12:27:26.956 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/d58ca80e-79c3-4233-9d9a-c64070af8411/front-250 
+12:27:26.960 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/f3a174fd-5a0e-4004-a16c-34e03bb339de/front-250 
+12:27:26.963 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: fetching /ws/2/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846?inc=url-rels&fmt=json 
+12:27:27.077 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: HTTP 200 for release:6ccbd780-3eb1-48ff-8fe0-04d4669e8846 
+12:27:27.088 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: release:6ccbd780-3eb1-48ff-8fe0-04d4669e8846 → 2 total rels, 2 url-rels 
+12:27:27.089 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 6ccbd780-3eb1-48ff-8fe0-04d4669e8846 → 2 url-rels, 0 non-url-rels, 1 cell(s) 
+12:27:27.089 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: rel type='discography entry' url='https://www.springsteenlyrics.com/bootlegs.php?item=6475' ended=false 
+12:27:27.090 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: discography entry favicon https://www.springsteenlyrics.com/bootlegs.php?item=6475 → https://www.google.com/s2/favicons?sz=16&domain=www.springsteenlyrics.com 
+12:27:27.090 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: rel type='discogs' url='https://www.discogs.com/release/6889744' ended=false 
+12:27:27.090 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: type='discogs' cls='discogs' url='https://www.discogs.com/release/6889744' 
+12:27:27.091 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 0 non-url-rels for 6ccbd780-3eb1-48ff-8fe0-04d4669e8846 
+12:27:27.445 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
+12:27:28.195 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: fetching /ws/2/release/0156e118-a07f-490c-849d-510ccd059e3b?inc=url-rels&fmt=json 
+12:27:28.325 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: HTTP 200 for release:0156e118-a07f-490c-849d-510ccd059e3b 
+12:27:28.326 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: release:0156e118-a07f-490c-849d-510ccd059e3b → 1 total rels, 1 url-rels 
+12:27:28.326 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 0156e118-a07f-490c-849d-510ccd059e3b → 1 url-rels, 0 non-url-rels, 1 cell(s) 
+12:27:28.326 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: rel type='discography entry' url='https://www.springsteenlyrics.com/bootlegs.php?item=6157' ended=false 
+12:27:28.326 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: discography entry favicon https://www.springsteenlyrics.com/bootlegs.php?item=6157 → https://www.google.com/s2/favicons?sz=16&domain=www.springsteenlyrics.com 
+12:27:28.327 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 0 non-url-rels for 0156e118-a07f-490c-849d-510ccd059e3b 
+12:27:28.650 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/front-250 
+12:27:28.651 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f/front-250 
+12:27:28.652 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/front-250 
+12:27:29.611 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: fetching /ws/2/release/d58ca80e-79c3-4233-9d9a-c64070af8411?inc=url-rels&fmt=json 
+12:27:29.616 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f/front-250 
+12:27:29.698 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: HTTP 200 for release:d58ca80e-79c3-4233-9d9a-c64070af8411 
+12:27:29.699 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: release:d58ca80e-79c3-4233-9d9a-c64070af8411 → 1 total rels, 1 url-rels 
+12:27:29.699 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: d58ca80e-79c3-4233-9d9a-c64070af8411 → 1 url-rels, 0 non-url-rels, 1 cell(s) 
+12:27:29.700 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: rel type='discography entry' url='https://www.springsteenlyrics.com/bootlegs.php?item=5003' ended=false 
+12:27:29.700 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: discography entry favicon https://www.springsteenlyrics.com/bootlegs.php?item=5003 → https://www.google.com/s2/favicons?sz=16&domain=www.springsteenlyrics.com 
+12:27:29.700 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 0 non-url-rels for d58ca80e-79c3-4233-9d9a-c64070af8411 
+12:27:30.818 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: fetching /ws/2/release/f3a174fd-5a0e-4004-a16c-34e03bb339de?inc=url-rels&fmt=json 
+12:27:30.866 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/0156e118-a07f-490c-849d-510ccd059e3b/front-250 
+12:27:30.866 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/front-250 
+12:27:30.867 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/0156e118-a07f-490c-849d-510ccd059e3b/front-250 
+12:27:30.925 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: HTTP 200 for release:f3a174fd-5a0e-4004-a16c-34e03bb339de 
+12:27:30.925 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: release:f3a174fd-5a0e-4004-a16c-34e03bb339de → 1 total rels, 1 url-rels 
+12:27:30.926 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: f3a174fd-5a0e-4004-a16c-34e03bb339de → 1 url-rels, 0 non-url-rels, 1 cell(s) 
+12:27:30.926 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: rel type='discography entry' url='https://www.springsteenlyrics.com/bootlegs.php?item=3059' ended=false 
+12:27:30.926 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: discography entry favicon https://www.springsteenlyrics.com/bootlegs.php?item=3059 → https://www.google.com/s2/favicons?sz=16&domain=www.springsteenlyrics.com 
+12:27:30.927 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 0 non-url-rels for f3a174fd-5a0e-4004-a16c-34e03bb339de 
+12:27:30.959 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: IDB/network fetch failed — HTTP 404 for https://coverartarchive.org/release/d58ca80e-79c3-4233-9d9a-c64070af8411/front-250 
+12:27:30.959 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: failed to load //coverartarchive.org/release/d58ca80e-79c3-4233-9d9a-c64070af8411/front-250 — injecting ⚠⟳ retry indicator 
+12:27:30.960 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loading //coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:31.006 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: IDB/network fetch failed — HTTP 404 for https://coverartarchive.org/release/f3a174fd-5a0e-4004-a16c-34e03bb339de/front-250 
+12:27:31.007 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: failed to load //coverartarchive.org/release/f3a174fd-5a0e-4004-a16c-34e03bb339de/front-250 — injecting ⚠⟳ retry indicator 
+12:27:31.155 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/front-250 
+12:27:31.157 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:31.496 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 7 image(s) for /release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846 
+12:27:31.500 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: built 7 image row(s) in CAA cell 
+12:27:31.502 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbPutMetadata: stored — /release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846 (7 images) 
+12:27:32.544 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 3 image(s) for /release/0156e118-a07f-490c-849d-510ccd059e3b 
+12:27:32.545 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: built 3 image row(s) in CAA cell 
+12:27:32.789 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f/front-250 
+12:27:33.146 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbPutMetadata: stored — /release/0156e118-a07f-490c-849d-510ccd059e3b (3 images) 
+12:27:33.146 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f/front-250 
+12:27:33.272 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: HTTP 404 (no entry) for /release/d58ca80e-79c3-4233-9d9a-c64070af8411 
+12:27:33.273 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: HTTP 404 (no entry) for /release/f3a174fd-5a0e-4004-a16c-34e03bb339de 
+12:27:33.754 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbPutMetadata: stored — /release/d58ca80e-79c3-4233-9d9a-c64070af8411 (0 images) 
+12:27:33.755 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbPutMetadata: stored — /release/f3a174fd-5a0e-4004-a16c-34e03bb339de (0 images) 
+12:27:33.770 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: fetching /ws/2/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f?inc=url-rels&fmt=json 
+12:27:34.094 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: HTTP 200 for release:5644c907-9ab7-41ca-ab78-bdc3df21b90f 
+12:27:34.095 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: release:5644c907-9ab7-41ca-ab78-bdc3df21b90f → 1 total rels, 1 url-rels 
+12:27:34.095 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 5644c907-9ab7-41ca-ab78-bdc3df21b90f → 1 url-rels, 0 non-url-rels, 1 cell(s) 
+12:27:34.095 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: rel type='discography entry' url='https://archive.org/details/bs1981-01-26.aud.rb.flac16' ended=false 
+12:27:34.095 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: discography entry favicon https://archive.org/details/bs1981-01-26.aud.rb.flac16 → https://www.google.com/s2/favicons?sz=16&domain=archive.org 
+12:27:34.096 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 0 non-url-rels for 5644c907-9ab7-41ca-ab78-bdc3df21b90f 
+12:27:34.951 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/front-250 
+12:27:34.952 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/front-250 
+12:27:35.166 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 1 image(s) for /release/5644c907-9ab7-41ca-ab78-bdc3df21b90f 
+12:27:35.169 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: built 1 image row(s) in CAA cell 
+12:27:35.171 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/front-250 
+12:27:35.174 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/0156e118-a07f-490c-849d-510ccd059e3b/front-250 
+12:27:35.310 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbPutMetadata: stored — /release/5644c907-9ab7-41ca-ab78-bdc3df21b90f (1 images) 
+12:27:35.310 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: fetching /ws/2/release/ec93bde6-134c-404c-99eb-5a8bbd247d29?inc=url-rels&fmt=json 
+12:27:35.311 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/d58ca80e-79c3-4233-9d9a-c64070af8411/front-250 
+12:27:35.643 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 3 image(s) for /release/ec93bde6-134c-404c-99eb-5a8bbd247d29 
+12:27:35.645 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: built 3 image row(s) in CAA cell 
+12:27:35.650 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbPutMetadata: stored — /release/ec93bde6-134c-404c-99eb-5a8bbd247d29 (3 images) 
+12:27:35.651 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/f3a174fd-5a0e-4004-a16c-34e03bb339de/front-250 
+12:27:35.699 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: HTTP 200 for release:ec93bde6-134c-404c-99eb-5a8bbd247d29 
+12:27:35.699 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: release:ec93bde6-134c-404c-99eb-5a8bbd247d29 → 1 total rels, 1 url-rels 
+12:27:35.700 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: ec93bde6-134c-404c-99eb-5a8bbd247d29 → 1 url-rels, 0 non-url-rels, 1 cell(s) 
+12:27:35.700 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: rel type='discography entry' url='https://www.jungleland.it/html/19810126.htm' ended=false 
+12:27:35.700 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: discography entry favicon https://www.jungleland.it/html/19810126.htm → https://www.google.com/s2/favicons?sz=16&domain=www.jungleland.it 
+12:27:35.700 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 0 non-url-rels for ec93bde6-134c-404c-99eb-5a8bbd247d29 
+12:27:36.605 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaEnrichIcon: 3 image(s) for /release/3168f405-b1a2-4be7-888c-a71240c2ee8d 
+12:27:36.607 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artBuildMultiRowArtCell: built 3 image row(s) in CAA cell 
+12:27:36.609 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f/front-250 
+12:27:36.611 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/front-250 
+12:27:36.618 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artIdbPutMetadata: stored — /release/3168f405-b1a2-4be7-888c-a71240c2ee8d (3 images) 
+12:27:36.619 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:36.805 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: fetching /ws/2/release/3168f405-b1a2-4be7-888c-a71240c2ee8d?inc=url-rels&fmt=json 
+12:27:36.885 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: HTTP 200 for release:3168f405-b1a2-4be7-888c-a71240c2ee8d 
+12:27:36.887 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _relFetchWs2: release:3168f405-b1a2-4be7-888c-a71240c2ee8d → 1 total rels, 1 url-rels 
+12:27:36.887 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 3168f405-b1a2-4be7-888c-a71240c2ee8d → 1 url-rels, 0 non-url-rels, 1 cell(s) 
+12:27:36.888 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: rel type='discography entry' url='https://www.jungleland.it/html/19810126_2.htm' ended=false 
+12:27:36.888 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: discography entry favicon https://www.jungleland.it/html/19810126_2.htm → https://www.google.com/s2/favicons?sz=16&domain=www.jungleland.it 
+12:27:36.888 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _populateCells: 0 non-url-rels for 3168f405-b1a2-4be7-888c-a71240c2ee8d 
+12:27:36.889 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initRelationshipsColumn: complete 
+12:27:37.642 [VZ-ShowAllEntityData: releasegroup-releases] 📝 caaLoadIcon: loaded OK (idb=false memory=false) — //coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:37.643 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/front-250 
+12:27:37.644 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+12:27:37.646 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: loaded OK (idb=false memory=true) — //coverartarchive.org/release/6ccbd780-3eb1-48ff-8fe0-04d4669e8846/front-250 
+12:27:37.646 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/0156e118-a07f-490c-849d-510ccd059e3b/front-250 
+12:27:37.647 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+12:27:37.647 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: loaded OK (idb=false memory=true) — //coverartarchive.org/release/0156e118-a07f-490c-849d-510ccd059e3b/front-250 
+12:27:37.647 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:37.926 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f/front-250 
+12:27:37.927 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+12:27:37.927 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: loaded OK (idb=false memory=true) — //coverartarchive.org/release/5644c907-9ab7-41ca-ab78-bdc3df21b90f/front-250 
+12:27:37.927 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/front-250 
+12:27:37.927 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+12:27:37.929 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: loaded OK (idb=false memory=true) — //coverartarchive.org/release/ec93bde6-134c-404c-99eb-5a8bbd247d29/front-250 
+12:27:37.929 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: memory hit — https://coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:37.930 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+12:27:37.930 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: loaded OK (idb=false memory=true) — //coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:38.016 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/d58ca80e-79c3-4233-9d9a-c64070af8411/front-250 
+12:27:38.017 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: network fetch — https://coverartarchive.org/release/f3a174fd-5a0e-4004-a16c-34e03bb339de/front-250 
+12:27:39.414 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artSetInlineSortKey: td → caa-inline-no 
+12:27:39.415 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: failed to load //coverartarchive.org/release/d58ca80e-79c3-4233-9d9a-c64070af8411/front-250 — placeholder stays as spacer 
+12:27:39.415 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artFetchCachedImage: IDB stored — https://coverartarchive.org/release/3168f405-b1a2-4be7-888c-a71240c2ee8d/front-250 
+12:27:39.419 [VZ-ShowAllEntityData: releasegroup-releases] 📝 _artSetInlineSortKey: td → caa-inline-no 
+12:27:39.419 [VZ-ShowAllEntityData: releasegroup-releases] 📝 initCAAInlinePics: failed to load //coverartarchive.org/release/f3a174fd-5a0e-4004-a16c-34e03bb339de/front-250 — placeholder stays as spacer 

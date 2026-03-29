@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.342+2026-03-27
+// @version      9.99.343+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -933,6 +933,18 @@
                          + '(url-rels for each release-group or release). '
                          + 'Applies to: artist-releasegroups, artist-releases, label-releases, '
                          + 'releasegroup-releases. Disable to suppress the column entirely.'
+        },
+
+        sa_rels_idb_enable: {
+            label: 'Enable IndexedDB Relationships WS2 data cache',
+            type: 'checkbox',
+            default: true,
+            description: 'Cache MusicBrainz WS2 relationship data in IndexedDB so that '
+                         + 'the same page does not re-fetch from the network on every visit. '
+                         + 'Cached entries are keyed by entity type + MBID and expire after '
+                         + '7 days. Disable to always fetch fresh data from the network. '
+                         + 'Uses the same IndexedDB database as the artwork cache '
+                         + '(vz-mb-saed-art-cache, store: rel-ws2).'
         },
 
         sa_enable_relationship_debug: {
@@ -27352,6 +27364,42 @@ a { color: #1565c0; }`;
     /** Cache: '${entityType}:${mbid}' → Promise<Object|null> */
     const _relWs2Cache = new Map();
 
+    /** IDB TTL for relationship WS2 data: 7 days in ms. */
+    const _REL_IDB_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+    /** Set to true while a force-retry is active so _relFetchWs2 skips caches. */
+    let _relRetryActive = false;
+
+    /**
+     * Reads one WS2 rel-data record from IndexedDB.
+     * Returns null when IDB is disabled, unavailable, or the entry is missing/expired.
+     * @param {string} ckey  '${entityType}:${mbid}'
+     * @returns {Promise<Object|null>}
+     */
+    function _relIdbGet(ckey) {
+        if (!Lib.settings.sa_rels_idb_enable) return Promise.resolve(null);
+        return _artIdbGet('rel-ws2', ckey)
+            .then(rec => {
+                if (!rec) return null;
+                if (Date.now() - (rec.ts || 0) > _REL_IDB_TTL_MS) {
+                    _artIdbDelete('rel-ws2', ckey).catch(() => {});
+                    return null;
+                }
+                return rec.data;
+            })
+            .catch(() => null);
+    }
+
+    /**
+     * Writes one WS2 rel-data record to IndexedDB.
+     * @param {string} ckey  '${entityType}:${mbid}'
+     * @param {Object} data  Parsed WS2 JSON response
+     */
+    function _relIdbPut(ckey, data) {
+        if (!Lib.settings.sa_rels_idb_enable) return;
+        _artIdbPut('rel-ws2', { ckey, data, ts: Date.now() }).catch(() => {});
+    }
+
     /**
      * Fetches /ws/2/{entityType}/{mbid}?inc=...&fmt=json with in-memory caching.
      * @param {string} mbid
@@ -27369,30 +27417,51 @@ a { color: #1565c0; }`;
      * @param {string[]} incOptions  WS2 inc= values, e.g. ['url-rels']
      * @returns {Promise<Object|null>}
      */
-    function _relFetchWs2(mbid, entityType, incOptions) {
+    /**
+     * Fetches WS2 relationship data with two-level cache: L1 memory + L2 IDB.
+     * forceNetwork=true (or _relRetryActive flag) bypasses both caches.
+     * @param {string}   mbid
+     * @param {string}   entityType
+     * @param {string[]} incOptions
+     * @param {boolean}  [forceNetwork=false]
+     * @returns {Promise<Object|null>}
+     */
+    function _relFetchWs2(mbid, entityType, incOptions, forceNetwork) {
         const ckey = `${entityType}:${mbid}`;
-        if (_relWs2Cache.has(ckey)) return _relWs2Cache.get(ckey);
-        const wsUrl = `/ws/2/${entityType}/${mbid}?inc=${incOptions.join('+')}&fmt=json`;
         const _dbg = (...a) => { if (Lib.settings.sa_enable_relationship_debug) Lib.debug('relationships', ...a); };
-        _dbg(`_relFetchWs2: fetching ${wsUrl}`);
-        const p = fetch(wsUrl, { headers: { Accept: 'application/json' } })
-            .then(r => {
-                _dbg(`_relFetchWs2: HTTP ${r.status} for ${ckey}`);
-                if (!r.ok) return null;
-                return r.json();
-            })
-            .then(data => {
-                if (data) {
-                    const relCount = (data.relations || []).length;
-                    const urlRelCount = (data.relations || []).filter(r => r['target-type'] === 'url').length;
-                    _dbg(`_relFetchWs2: ${ckey} → ${relCount} total rels, ${urlRelCount} url-rels`);
-                }
-                return data || null;
-            })
-            .catch(err => {
-                _dbg(`_relFetchWs2: fetch error for ${ckey}:`, err.message || String(err));
-                return null;
-            });
+        const bypass = forceNetwork || _relRetryActive;
+        if (!bypass && _relWs2Cache.has(ckey)) {
+            _dbg(`_relFetchWs2: L1 memory hit for ${ckey}`);
+            return _relWs2Cache.get(ckey);
+        }
+        const wsUrl = `/ws/2/${entityType}/${mbid}?inc=${incOptions.join('+')}&fmt=json`;
+        const idbCheck = bypass ? Promise.resolve(null) : _relIdbGet(ckey);
+        const p = idbCheck.then(cached => {
+            if (cached) {
+                _dbg(`_relFetchWs2: L2 IDB hit for ${ckey}`);
+                return cached;
+            }
+            _dbg(`_relFetchWs2: fetching ${wsUrl}`);
+            return fetch(wsUrl, { headers: { Accept: 'application/json' } })
+                .then(r => {
+                    _dbg(`_relFetchWs2: HTTP ${r.status} for ${ckey}`);
+                    if (!r.ok) return null;
+                    return r.json();
+                })
+                .then(data => {
+                    if (data) {
+                        const relCount    = (data.relations || []).length;
+                        const urlRelCount = (data.relations || []).filter(r => r['target-type'] === 'url').length;
+                        _dbg(`_relFetchWs2: ${ckey} → ${relCount} total rels, ${urlRelCount} url-rels`);
+                        _relIdbPut(ckey, data);
+                    }
+                    return data || null;
+                })
+                .catch(err => {
+                    _dbg(`_relFetchWs2: fetch error for ${ckey}:`, err.message || String(err));
+                    return null;
+                });
+        });
         _relWs2Cache.set(ckey, p);
         return p;
     }
@@ -27651,6 +27720,49 @@ a { color: #1565c0; }`;
         toast.addEventListener('click', dismiss);
         document.body.appendChild(toast);
         setTimeout(dismiss, duration);
+    }
+
+    /**
+     * Retries Relationships for a specific set of MBIDs.
+     * Clears L1+L2 caches for those MBIDs, resets rel-done markers,
+     * then re-runs initRelationshipsColumn() with the retry flag set.
+     */
+    async function _relRetryMbids(mbids, entityType, incOptions) {
+        if (!mbids.length) return;
+        Lib.debug('relationships', `_relRetryMbids: force-reloading ${mbids.length} MBID(s)`);
+        mbids.forEach(mbid => _relWs2Cache.delete(`${entityType}:${mbid}`));
+        if (Lib.settings.sa_rels_idb_enable) {
+            await Promise.all(mbids.map(mbid =>
+                _artIdbDelete('rel-ws2', `${entityType}:${mbid}`).catch(() => {})
+            ));
+        }
+        mbids.forEach(mbid => {
+            document.querySelectorAll(`td.mb-rel-cell[data-mbid='${mbid}']`)
+                .forEach(td => { td.dataset.relDone = ''; td.innerHTML = ''; });
+        });
+        _relRetryActive = true;
+        initRelationshipsColumn();
+        _relRetryActive = false;
+    }
+    function _relRetryTable(table) {
+        if (!Lib.settings.sa_enable_relationships_column) return;
+        const { entityType, incOptions } = activeInjectedColumns[0] || {};
+        if (!entityType) return;
+        const mbids = [...new Set(
+            Array.from(table.querySelectorAll('td.mb-rel-cell[data-mbid]'))
+                .map(td => td.dataset.mbid).filter(Boolean)
+        )];
+        _relRetryMbids(mbids, entityType, incOptions);
+    }
+    function _relRetryAll() {
+        if (!Lib.settings.sa_enable_relationships_column) return;
+        const { entityType, incOptions } = activeInjectedColumns[0] || {};
+        if (!entityType) return;
+        const mbids = [...new Set(
+            Array.from(document.querySelectorAll('td.mb-rel-cell[data-mbid]'))
+                .map(td => td.dataset.mbid).filter(Boolean)
+        )];
+        _relRetryMbids(mbids, entityType, incOptions);
     }
 
     function _openEditPinnedFilterListFromSettings() {
@@ -30099,7 +30211,7 @@ a { color: #1565c0; }`;
 
     /** DB name and current schema version. */
     const _ART_IDB_NAME    = 'vz-mb-saed-art-cache';
-    const _ART_IDB_VERSION = 1;
+    const _ART_IDB_VERSION = 2;  // bumped to add rel-ws2 store
 
     /**
      * Cached IDB database connection promise.
@@ -30161,6 +30273,9 @@ a { color: #1565c0; }`;
                 }
                 if (!db.objectStoreNames.contains('metadata')) {
                     db.createObjectStore('metadata', { keyPath: 'entityPath' });
+                }
+                if (!db.objectStoreNames.contains('rel-ws2')) {
+                    db.createObjectStore('rel-ws2', { keyPath: 'ckey' });
                 }
             };
             req.onsuccess  = (ev) => {
@@ -33712,6 +33827,33 @@ a { color: #1565c0; }`;
             btn.after(retryBtn);
             Lib.debug(ctx.key, `_artCreateOrUpdateGlobalToggleButton: created global retry btn ${globalRetryId}`);
         }
+
+        // ── Global Relationships retry button ─────────────────────────────
+        const globalRelRetryId = 'mb-rel-retry-global';
+        if (!document.getElementById(globalRelRetryId) &&
+                Lib.settings.sa_enable_relationships_column &&
+                typeof activeInjectedColumns !== 'undefined' && activeInjectedColumns.length) {
+            const relRetryBtn   = document.createElement('button');
+            relRetryBtn.id      = globalRelRetryId;
+            relRetryBtn.type    = 'button';
+            relRetryBtn.title   = 'Globally retry loading all Relationship icons '
+                                + 'for every sub-table (forces network reload, clears IDB cache)';
+            relRetryBtn.textContent = '🔗⟳';
+            relRetryBtn.style.cssText =
+                'cursor:pointer; padding:1px 4px; border:1px solid #aaa;'
+                + ' border-radius:3px; background:#f5f5f5; vertical-align:middle;'
+                + ' font-size:0.8em; margin-left:3px; line-height:1;'
+                + ' display:inline-flex; align-items:center; box-sizing:border-box;'
+                + ' transition:transform 0.1s, box-shadow 0.1s;';
+            relRetryBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (typeof _relRetryAll === 'function') _relRetryAll();
+            });
+            const globalRetryEl = document.getElementById(globalRetryId);
+            if (globalRetryEl) globalRetryEl.after(relRetryBtn);
+            else btn.after(relRetryBtn);
+            Lib.debug(ctx.key, 'created global rel retry btn');
+        }
     }
 
     /**
@@ -33877,6 +34019,35 @@ a { color: #1565c0; }`;
 
         toggleBtn.after(btn);
         Lib.debug(ctx.key, `_artCreateOrUpdateRetryButton: created retry btn ${retryBtnId}`);
+
+        // ── Per-subtable Relationships retry button ───────────────────────
+        const relRetryBtnId = 'mb-rel-retry-' + tableIndex;
+        if (!document.getElementById(relRetryBtnId) &&
+                Lib.settings.sa_enable_relationships_column &&
+                typeof activeInjectedColumns !== 'undefined' && activeInjectedColumns.length) {
+            const relRetryBtn2   = document.createElement('button');
+            relRetryBtn2.id      = relRetryBtnId;
+            relRetryBtn2.type    = 'button';
+            relRetryBtn2.title   = 'Retry loading Relationship icons for this sub-table '
+                                 + '(forces network reload, clears IDB cache)';
+            relRetryBtn2.textContent = '🔗⟳';
+            relRetryBtn2.style.cssText =
+                'cursor:pointer; padding:1px 4px; border:1px solid #aaa;'
+                + ' border-radius:3px; background:#f5f5f5; vertical-align:middle;'
+                + ' font-size:0.8em; margin-left:3px; line-height:1;'
+                + ' display:inline-flex; align-items:center; box-sizing:border-box;'
+                + ' transition:transform 0.1s, box-shadow 0.1s;';
+            relRetryBtn2.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const tables = Array.from(document.querySelectorAll('table.tbl'));
+                const targetTable = tables[tableIndex];
+                if (targetTable && typeof _relRetryTable === 'function') {
+                    _relRetryTable(targetTable);
+                }
+            });
+            btn.after(relRetryBtn2);
+            Lib.debug(ctx.key, `created rel retry btn ${relRetryBtnId}`);
+        }
     }
 
     /**

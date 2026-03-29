@@ -1,19 +1,5 @@
 [
   {
-    "version": "9.99.343",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🚀 Feature",
-        "items": [
-          "New config sa_rels_idb_enable (default true): caches WS2 relationship data in IndexedDB (store 'rel-ws2' in vz-mb-saed-art-cache, schema bumped to v2, 7-day TTL). _relFetchWs2 gains a two-level cache (L1 memory + L2 IDB); network result is written to IDB on success. _relRetryActive flag lets retry helpers bypass both caches.",
-          "New Relationship retry buttons 🔗⟳: one in h2 (id='mb-rel-retry-global', after the global CAA ⟳ button) and one per h3 sub-table (id='mb-rel-retry-N', after the per-table ⟳ button). Clicking clears L1+L2 caches for affected MBIDs, resets rel-done markers on all rel cells, and re-runs initRelationshipsColumn().",
-          "New internal functions: _relIdbGet, _relIdbPut, _relRetryMbids, _relRetryTable, _relRetryAll."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.342",
     "date": "2026-03-27",
     "sections": [
