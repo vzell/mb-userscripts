@@ -64348,6 +64348,47 @@ It's finally fixed, the ghost icon and the empty space is gone.. thx a lot
 
 Now please implement the following:
 
+1.)
+
+add a new boolean "sa_rels_idb_enable:" (default:true) to the section
+
+#+begin_example
+        // RELATIONSHIPS COLUMN SECTION
+#+end_example
+
+along the line of
+
+#+begin_example
+        sa_art_idb_enable: {
+            label: 'Enable IndexedDB art image/metadata cache',
+            type: 'checkbox',
+            default: true,
+#+end_example
+
+2.)
+
+Implement the same indexedDB functionality for the "Relationships" icons and their URLs, so that they will NOT be
+reloaded everytime the same page is accessed again.
+
+Use the same approach as for the "sa_art_idb_enable: true" case.
+
+3.)
+
+Also add two new buttons, each to the right of the current "retry loading CAA artwork" buttons
+
+- one in the h2 header line after
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+#+end_example
+
+- and one in each of the h3 header lines after
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-0" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+#+end_example
+
+when clicked, reload all the "Relationships" icons from the network instead of reading them from the indexedDB
 
 
 
@@ -64451,3 +64492,17 @@ to
     ]
   },
 #+end_example
+
+
+* TODO Add tooltips which describe the "release-group" releationship icons better
+
+* TODO Relocate trailing h2 sections not honoured when "Load from Disk"
+
+Relocate trailing h2 sections not honoured ("sa_enable_h2_section_relocation_on_final_page: true") when "Load from Disk" is clicked
+
+* TODO ghost icons there when "Load from Disk"
+
+ghost relationship icons shop up again when "Load from Disk" is clicked
+
+
+
