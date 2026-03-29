@@ -64495,6 +64495,76 @@ to
 
 * TODO Add tooltips which describe the "release-group" relationship icons better
 
+In the "Relationship" column, if a data cell e.g.
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="39b22944-7503-3937-8bba-09b17281cc6a" style="" data-rel-done="1">
+  <a href="https://www.allmusic.com/album/mw0000650803" title="https://www.allmusic.com/album/mw0000650803" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.allmusic.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="http://brucebase.wikidot.com/retail:born-to-run" title="http://brucebase.wikidot.com/retail:born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=brucebase.wikidot.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="http://famclair.free.fr/BornUSAAlbum.htm" title="http://famclair.free.fr/BornUSAAlbum.htm" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=famclair.free.fr" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="http://springsteencollection.altervista.org/pagina-2546709.html" title="http://springsteencollection.altervista.org/pagina-2546709.html" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=springsteencollection.altervista.org" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" title="https://www.last.fm/music/Bruce+Springsteen/Born+to+Run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.last.fm" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" title="https://www.springsteenlyrics.com/collection.php?cmd=list&amp;category=album&amp;f_date_main=1975-08-25" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.springsteenlyrics.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="https://www.discogs.com/master/26725" title="https://www.discogs.com/master/26725" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.discogs.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="https://genius.com/albums/Bruce-springsteen/Born-to-run" title="https://genius.com/albums/Bruce-springsteen/Born-to-run" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=genius.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" title="https://rateyourmusic.com/release/album/bruce-springsteen/born-to-run/" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=rateyourmusic.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="https://www.musik-sammler.de/album/14188/" title="https://www.musik-sammler.de/album/14188/" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.musik-sammler.de" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="https://www.wikidata.org/wiki/Q752366" title="https://www.wikidata.org/wiki/Q752366" target="_blank" rel="noopener noreferrer">
+    <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.wikidata.org" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" title="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" title="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+</td>
+#+end_example
+
+has entries of type '<a href="/release-group/' e.g.
+
+#+begin_example
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" title="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+  <a href="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" title="/release-group/3216e81c-509a-499b-a2a3-7aabc7cbe164" target="_blank" rel="noopener noreferrer">
+    <img src="data:image/gif;base64,R0lGODlhDwALAJEAAP2ZAZmZmf///wAAACH5BAAAAAAALAAAAAAPAAsAAAIflI+pq2ABY0DAiYmwqOyaCoaHxjHaZp0e9UhQB8dCAQA7" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+  </a>
+#+end_example
+
+the tooltip should be enhanced with the title of the release group. 
+
+The title can be fetched by following the link '<a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75"' and parsing it from the "<bdi>" container in the h1 header line 
+
+#+begin_example
+<h1>
+  <a href="/release-group/e6e5a3fc-80da-4cd9-954f-bd8b6cf1cb75">
+    <bdi>Born to Run
+    </bdi>
+  </a>
+#+end_example
+
+
 * DONE add persistent storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
 * DONE Relocate trailing h2 sections not honoured when "Load from Disk"
 
