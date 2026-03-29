@@ -64416,7 +64416,6 @@ default: "<table declaration>" + UI support "add", "modify", "delete"
 
 * TODO give credit to original author of "Display Relationships" icons
 
-* DONE add persistent storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
 
 * TODO rename tooltip for toggle CAA "single"-table button
 
@@ -64496,6 +64495,7 @@ to
 
 * TODO Add tooltips which describe the "release-group" relationship icons better
 
+* DONE add persistent storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
 * DONE Relocate trailing h2 sections not honoured when "Load from Disk"
 
 Relocate trailing h2 sections not honoured ("sa_enable_h2_section_relocation_on_final_page: true") when "Load from Disk" is clicked
@@ -64583,3 +64583,13 @@ really stored in the indexedDB.
 
 For example loading the CAA artwork thumbnails fomr the indexedDB is almost instantenous compared to loading the
 relationship icons, where the icons shpw up i more or less a second intervall per row
+
+** bugs
+
+There is a bug when loading from disk and filtering:
+
+As soon as filtering either with the global filter or one of the column level filters, the relationship icons in the
+"Relationship" column vanish and also do not reappear when clearing the filter.
+
+Filtering with the sub-table specific filter works so, the relationship icons do not vanish in this case. Also filtering
+works in all cases when loading the data from the network
