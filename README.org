@@ -63584,7 +63584,7 @@ to
 
 
 
-* TODO remove the double changelog entries
+* DONE remove the double changelog entries
 
 #+begin_example
   {
@@ -63632,7 +63632,6 @@ to
     ]
   },
 #+end_example
-
 
 * DONE add "Relationships" column support again, but configurable
 ** initial
@@ -64841,7 +64840,6 @@ Also add two new buttons, each to the right of the current "retry loading CAA ar
 
 when clicked, reload all the "Relationships" icons from the network instead of reading them from the indexedDB
 
-
 * DONE Add tooltips which describe the "release-group" relationship icons better
 
 In the "Relationship" column, if a data cell e.g.
@@ -65012,6 +65010,7 @@ As soon as filtering either with the global filter or one of the column level fi
 Filtering with the sub-table specific filter works so, the relationship icons do not vanish in this case. Also filtering
 works in all cases when loading the data from the network
 
+
 * TODO add Synthetic entries for each different relationship icon
 ** DONE initial
 
@@ -65028,7 +65027,10 @@ separate row in the "Cell structure" area of the "unique value drop-down" list. 
 list, add it to the column filter field and filter all table rows in such a way that only rows should be shown which
 have that icon in the "Relationship" data cell
 
-** bugs
+** TODO bugs
+
+In the "Relationship icons" section of the unique value drop down list ONLY show the icons itself not the actual URLs. I
+want to filter generically e.g for "amazon" or "discogs" entries without the details of the actual virtual pathes
 
 
 * TODO error
@@ -65045,3 +65047,7 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
     at HTMLButtonElement.<anonymous> (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:36969:21)
     at HTMLButtonElement.r (helpers.js:97:17)
 #+end_example
+
+* TODO why is "collapsableColumns: [ 'Release events' ]" on Label-Relationships "PolyGram Distribution Inc." not working
+
+why is "collapsableColumns: [ 'Release events' ]" on Label-Relationships "PolyGram Distribution Inc." not working
