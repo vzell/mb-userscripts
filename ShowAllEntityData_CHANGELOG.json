@@ -1,5 +1,56 @@
 [
   {
+    "version": "9.99.355",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Both Release events and Relationships columns missing on place/label pages: activeReleaseEventColumns was never populated during a live fetch. buildActiveReleaseEventColumns(activeDefinition) was only called in the disk-load path but was missing from startFetchingProcess. Added the call immediately after buildActiveInjectedColumns in startFetchingProcess."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.354",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Release events column showed relationship icons; actual release events column missing. Root cause: buildActiveInjectedColumns() was picking up all injectedColumns entries including 'Release events', treating them as Relationships. Fixed by filtering to colName === 'Relationships' only. Added missing Release Events functions (extractReleaseEvents, _rePopulateCell, initReleaseEventsColumn) and their call sites."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.355",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Release events column showed relationship icons, actual release events column missing: buildActiveInjectedColumns() was mapping ALL entries in injectedColumns — including 'Release events' — into the Relationships pipeline. Fixed by filtering to colName === 'Relationships' only."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.354",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "New 'Release events' injected column for place-performances(-filtered) and label-relationships(-filtered) page types. One WS2 call per page entity (/ws/2/{type}/{guid}?inc=release-rels) populates each release row with country flag divs (MBS flag.flag-XX CSS) and dates. Events >4 collapse with 'show N more' toggle. Column injected BEFORE Relationships (if present), else last.",
+          "New config: sa_enable_release_events_column (default true) and sa_enable_release_events_debug (default true) in new RELEASE EVENTS COLUMN SECTION.",
+          "New functions: extractReleaseEvents(), _rePopulateCell(), initReleaseEventsColumn(). mb-re-cell tds excluded from serialization; ghost CSS applied; source-row sync ensures filter re-renders preserve content.",
+          "artist-relationships(-filtered): added missing 'video' columnExtractor."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.353",
     "date": "2026-03-27",
     "sections": [

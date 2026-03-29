@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.353+2026-03-27
+// @version      9.99.355+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1561,6 +1561,32 @@
         },
 
         // ============================================================
+        // RELEASE EVENTS COLUMN SECTION
+        // ============================================================
+        divider_release_events_col: {
+            type: 'divider',
+            label: '📅 RELEASE EVENTS COLUMN'
+        },
+
+        sa_enable_release_events_column: {
+            label: 'Enable Release events column',
+            type: 'checkbox',
+            default: true,
+            description: 'When enabled and the page type declares injectedColumns:["Release events"], '
+                         + 'a synthetic "Release events" column is injected and populated '
+                         + 'with country flags and dates from the MusicBrainz Web Service. '
+                         + 'One WS2 call per page entity (not per row).'
+        },
+
+        sa_enable_release_events_debug: {
+            label: 'Enable Release events column debug logging',
+            type: 'checkbox',
+            default: true,
+            description: 'Enable detailed console logging for the Release events column pipeline. '
+                         + 'Uses Lib.debug(\'release-events\', ...).'
+        },
+
+        // ============================================================
         // RESOURCE TIMING API SECTION
         //
         // Controls the cache-hint indicator feature that probes the
@@ -2698,6 +2724,22 @@
      * @param {Object} def
      * @returns {Array<{colName:string,entityType:string,incOptions:string[]}>}
      */
+    /**
+     * Builds the activeReleaseEventColumns list from the page definition.
+     * Returns a non-empty array when the definition declares 'Release events'
+     * in its injectedColumns feature and the setting is enabled.
+     * @param {Object} def  activeDefinition
+     * @returns {{ colName: string }[]}
+     */
+    function buildActiveReleaseEventColumns(def) {
+        if (!Lib.settings.sa_enable_release_events_column) return [];
+        const cols = def?.features?.injectedColumns;
+        if (!Array.isArray(cols)) return [];
+        return cols
+            .filter(c => c === 'Release events')
+            .map(colName => ({ colName }));
+    }
+
     function buildActiveInjectedColumns(def) {
         const cols = def?.features?.injectedColumns;
         if (!Array.isArray(cols) || cols.length === 0) return [];
@@ -2706,7 +2748,9 @@
         const _et = (_pType === 'artist-releasegroups') ? 'release-group' : 'release';
         const _inc = (_et === 'release-group')
             ? ['url-rels', 'release-group-rels'] : ['url-rels'];
-        return cols.map(colName => ({ colName, entityType: _et, incOptions: _inc }));
+        return cols
+            .filter(colName => colName === 'Relationships')
+            .map(colName => ({ colName, entityType: _et, incOptions: _inc }));
     }
 
     function buildActiveColumnErasers(def) {
@@ -3488,6 +3532,11 @@
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                injectedColumns: [ 'Release events' ],
+                collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
             },
@@ -3501,6 +3550,8 @@
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
+                injectedColumns: [ 'Release events' ],
+                collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
             },
@@ -3558,6 +3609,8 @@
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
             features: {
+                injectedColumns: [ 'Release events' ],
+                collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title' // Specific header
             },
@@ -3569,6 +3622,8 @@
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Relationships for Label' } ],
             features: {
+                injectedColumns: [ 'Release events' ],
+                collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title' // Specific header
             },
@@ -3653,6 +3708,7 @@
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
                 ],
                 columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
@@ -3672,6 +3728,7 @@
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
                 ],
                 columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
@@ -12981,6 +13038,9 @@ a { color: #1565c0; }`;
     // Each entry: { colName: string, entityType: string, incOptions: string[] }
     let activeInjectedColumns = [];
 
+    /** Release-events injected column list; parallel to activeInjectedColumns. */
+    let activeReleaseEventColumns = [];
+
     // Runtime eraser list populated by buildActiveColumnErasers() in startFetchingProcess.
     // Each entry: { sourceColumn, erasers, colIdx }
     // colIdx is resolved per-page during header scanning and reset to -1 between pages.
@@ -14648,12 +14708,17 @@ a { color: #1565c0; }`;
                than display:none which MBS can override with higher specificity.
                This prevents the MBS a[target=_blank]::after sprite ghost. */
             td.mb-rel-cell a::before,
-            td.mb-rel-cell a::after {
+            td.mb-rel-cell a::after,
+        td.mb-re-cell a::before,
+            td.mb-re-cell a::after {
                 content: none !important;
             }
             td.mb-rel-cell,
             td.mb-rel-cell a,
-            td.mb-rel-cell img {
+            td.mb-rel-cell img,
+            td.mb-re-cell,
+            td.mb-re-cell a,
+            td.mb-re-cell img {
                 background: none !important;
                 background-image: none !important;
                 box-shadow: none !important;
@@ -19381,10 +19446,27 @@ a { color: #1565c0; }`;
             }
         }
 
-        // Inject column headers for injectedColumns (e.g. 'Relationships') LAST so
-        // they always appear after every other synthetic column (MB-Name, Comment, …).
-        // The row-building pipeline appends injected <td> cells after MB-Name/Comment
-        // (step 5b), so header and data columns must stay in the same order.
+        // Inject column headers for injectedColumns LAST (after MB-Name, Comment, …).
+        // Order: Release events (if present) → Relationships (if present).
+        // The row-building pipeline (step 5b) appends tds in the same order.
+        if (activeReleaseEventColumns.length) {
+            const _reBg = Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0';
+            const _htxtRe = Array.from(theadRow.cells)
+                .map(th => (th.dataset.colName || th.textContent
+                    .replace(/[\u21c5\u25b2\u25bc\u2702\u25b6\u25c0\u25a4]/g, '').trim()));
+            activeReleaseEventColumns.forEach(entry => {
+                if (_htxtRe.includes(entry.colName)) return;
+                const thRe = document.createElement('th');
+                thRe.textContent = entry.colName;
+                thRe.dataset.colName = entry.colName;
+                thRe.classList.add('mb-injected-column');
+                thRe.style.backgroundColor = _reBg;
+                thRe.title = 'Injected column — populated from the MusicBrainz Web Service '
+                           + '(release-events for each release).';
+                Lib.debug('cleanup', `Injecting release-events header: ${entry.colName}`);
+                theadRow.appendChild(thRe);
+            });
+        }
         if (activeInjectedColumns.length) {
             const _injBg = Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0';
             const _htxtInj = Array.from(theadRow.cells)
@@ -19599,8 +19681,12 @@ a { color: #1565c0; }`;
         // Build the unified column eraser list from the merged activeDefinition.
         // Each eraser descriptor removes specific marker spans from a designated source column.
         activeInjectedColumns = buildActiveInjectedColumns(activeDefinition);
+        activeReleaseEventColumns = buildActiveReleaseEventColumns(activeDefinition);
         if (activeInjectedColumns.length) {
             Lib.debug('init', `injectedColumns: [${activeInjectedColumns.map(e => `"${e.colName}"(${e.entityType})`).join(', ')}]`);
+        }
+        if (activeReleaseEventColumns.length) {
+            Lib.debug('init', `releaseEventColumns: [${activeReleaseEventColumns.map(e => `"${e.colName}"`).join(', ')}]`);
         }
 
         activeColumnErasers = buildActiveColumnErasers(activeDefinition);
@@ -20338,12 +20424,23 @@ a { color: #1565c0; }`;
                                     newRow.appendChild(tdComment);
                                 }
 
-                                // 5b. Append empty placeholder cells for injected columns.
+                                // 5b. Append injected-column placeholder cells.
+                                // Order must match cleanupHeaders: Release events first, Relationships second.
+                                if (activeReleaseEventColumns.length) {
+                                    const _mbidRe = _extractMbidFromRow(newRow);
+                                    activeReleaseEventColumns.forEach(() => {
+                                        const _tdRe = document.createElement('td');
+                                        _tdRe.className = 'mb-re-cell';
+                                        if (_mbidRe) _tdRe.dataset.mbid = _mbidRe;
+                                        _tdRe.style.backgroundColor =
+                                            (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
+                                        newRow.appendChild(_tdRe);
+                                    });
+                                }
                                 if (activeInjectedColumns.length) {
                                     const _mbidM = _extractMbidFromRow(newRow);
                                     activeInjectedColumns.forEach(() => {
                                         const _tdInj = document.createElement('td');
-                                        // 'relationships' = inherit MBS ghost-suppressing CSS
                                         _tdInj.className = 'mb-rel-cell';
                                         if (_mbidM) _tdInj.dataset.mbid = _mbidM;
                                         _tdInj.style.backgroundColor =
@@ -20594,12 +20691,23 @@ a { color: #1565c0; }`;
                                         newRow.appendChild(tdComment);
                                     }
 
-                                    // 5b. Append empty placeholder cells for injected columns.
+                                    // 5b. Append injected-column placeholder cells.
+                                    // Order: Release events first, Relationships second.
+                                    if (activeReleaseEventColumns.length) {
+                                        const _mbidReS = _extractMbidFromRow(newRow);
+                                        activeReleaseEventColumns.forEach(() => {
+                                            const _tdReS = document.createElement('td');
+                                            _tdReS.className = 'mb-re-cell';
+                                            if (_mbidReS) _tdReS.dataset.mbid = _mbidReS;
+                                            _tdReS.style.backgroundColor =
+                                                (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
+                                            newRow.appendChild(_tdReS);
+                                        });
+                                    }
                                     if (activeInjectedColumns.length) {
                                         const _mbidS = _extractMbidFromRow(newRow);
                                         activeInjectedColumns.forEach(() => {
                                             const _tdInjS = document.createElement('td');
-                                            // 'relationships' = inherit MBS ghost-suppressing CSS
                                             _tdInjS.className = 'mb-rel-cell';
                                             if (_mbidS) _tdInjS.dataset.mbid = _mbidS;
                                             _tdInjS.style.backgroundColor =
@@ -21044,6 +21152,9 @@ a { color: #1565c0; }`;
 
             // Highlight identical barcodes in Barcode columns (post-render)
             initBarcodeHighlight();
+
+            // Populate Release events column (one WS2 call per page entity).
+            if (activeReleaseEventColumns.length) initReleaseEventsColumn();
 
             // Populate Relationships column cells via async WS2 fetches (if configured).
             if (activeInjectedColumns.length) initRelationshipsColumn();
@@ -27561,6 +27672,161 @@ a { color: #1565c0; }`;
      * Only runs when sa_enable_relationships_column is true and
      * activeInjectedColumns is non-empty.
      */
+
+    /**
+     * Extracts a release-MBID → release-events map from a WS2 relations array.
+     * @param {Object[]} relations  Parsed WS2 .relations array
+     * @returns {Map<string, Array>}  release MBID → release-events[]
+     */
+    function extractReleaseEvents(relations) {
+        const map = new Map();
+        for (const rel of relations) {
+            if (rel.release && rel.release.id && rel.release['release-events']) {
+                map.set(rel.release.id, rel.release['release-events']);
+            }
+        }
+        return map;
+    }
+
+    /**
+     * Renders release-events into one mb-re-cell <td>.
+     * Each event → <div class="flag flag-XX"> with date text + area tooltip.
+     * Events beyond 4 collapse with a "show N more / show less" toggle.
+     * @param {HTMLTableCellElement} cell
+     * @param {Array} events  release-events array from WS2
+     */
+    function _rePopulateCell(cell, events) {
+        if (!events || !events.length) return;
+        const total    = events.length;
+        const collapse = total > 4;
+        for (let e = 0; e < total; e++) {
+            const ev   = events[e];
+            const div  = document.createElement('div');
+            div.textContent = ev.date || '\u00a0';
+            if (ev.area) {
+                const codes = ev.area['iso-3166-1-codes'];
+                const name  = ev.area.name || '';
+                if (codes && codes.length > 0) {
+                    div.classList.add('flag', 'flag-' + codes[0]);
+                    div.title = name ? `${name} (${codes[0]})` : codes[0];
+                } else if (name) {
+                    div.title = name;
+                }
+            }
+            if (collapse && e >= 2 && e < total - 1) {
+                div.classList.add('mb-re-hidden-event');
+                div.style.display = 'none';
+            }
+            cell.appendChild(div);
+            if (collapse && e === 1) {
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'padding:2px 0;font-size:0.85em;';
+                const lnk = document.createElement('a');
+                lnk.href = '#';
+                lnk.textContent = `show ${total - 3} more`;
+                lnk.addEventListener('click', function(ev2) {
+                    ev2.preventDefault();
+                    const hidden = cell.querySelector('.mb-re-hidden-event')?.style.display === 'none';
+                    cell.querySelectorAll('.mb-re-hidden-event').forEach(d => {
+                        d.style.display = hidden ? '' : 'none';
+                    });
+                    lnk.textContent = hidden ? 'show less' : `show ${total - 3} more`;
+                });
+                wrap.appendChild(lnk);
+                cell.appendChild(wrap);
+            }
+        }
+    }
+
+    /**
+     * Populates all mb-re-cell <td> elements using one WS2 call for the page entity.
+     * /ws/2/{entityType}/{entityId}?inc=release-rels&fmt=json
+     */
+    async function initReleaseEventsColumn() {
+        if (!Lib.settings.sa_enable_release_events_column) return;
+        if (!activeReleaseEventColumns.length) return;
+
+        const _dbg = (...a) => {
+            if (Lib.settings.sa_enable_release_events_debug) Lib.debug('release-events', ...a);
+        };
+
+        const _injBg = (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '22';
+        function _ensureReCell(row) {
+            if (row.querySelector('td.mb-re-cell')) return;
+            const mbid = _extractMbidFromRow(row);
+            if (!mbid) return;
+            const td = document.createElement('td');
+            td.className = 'mb-re-cell';
+            td.dataset.mbid = mbid;
+            td.style.backgroundColor = _injBg;
+            row.appendChild(td);
+        }
+        document.querySelectorAll('table.tbl tbody tr').forEach(_ensureReCell);
+        if (typeof groupedRows !== 'undefined') groupedRows.forEach(g => g.rows.forEach(_ensureReCell));
+        if (typeof allRows    !== 'undefined' && allRows.length) allRows.forEach(_ensureReCell);
+
+        const allCells = Array.from(document.querySelectorAll('td.mb-re-cell'))
+            .filter(td => td.dataset.mbid && !td.dataset.reDone);
+        if (!allCells.length) { _dbg('initReleaseEventsColumn: no unpopulated cells'); return; }
+        _dbg(`initReleaseEventsColumn: ${allCells.length} cell(s) to populate`);
+
+        const _pathM = window.location.pathname.match(
+            /^\/(artist|label|place|recording|release-group|release)\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/
+        );
+        if (!_pathM) { _dbg('initReleaseEventsColumn: cannot extract entity from URL'); return; }
+        const _eType = _pathM[1], _eId = _pathM[2];
+        const _wsUrl = `/ws/2/${_eType}/${_eId}?inc=release-rels&fmt=json`;
+        _dbg(`initReleaseEventsColumn: fetching ${_wsUrl}`);
+
+        let relations;
+        try {
+            const resp = await fetch(_wsUrl, { headers: { Accept: 'application/json' } });
+            if (!resp.ok) { _dbg(`initReleaseEventsColumn: HTTP ${resp.status}`); return; }
+            relations = (await resp.json()).relations || [];
+        } catch (err) {
+            _dbg('initReleaseEventsColumn: fetch error:', err.message || String(err));
+            return;
+        }
+        _dbg(`initReleaseEventsColumn: ${relations.length} relations`);
+
+        const eventsMap = extractReleaseEvents(relations);
+        _dbg(`initReleaseEventsColumn: ${eventsMap.size} release(s) with events`);
+
+        const byMbid = new Map();
+        allCells.forEach(td => {
+            if (!byMbid.has(td.dataset.mbid)) byMbid.set(td.dataset.mbid, []);
+            byMbid.get(td.dataset.mbid).push(td);
+        });
+        byMbid.forEach((cells, mbid) => {
+            const events = eventsMap.get(mbid) || [];
+            cells.forEach(td => {
+                td.dataset.reDone = '1';
+                td.style.backgroundColor = '';
+                _rePopulateCell(td, events);
+            });
+        });
+
+        if (typeof groupedRows !== 'undefined' || typeof allRows !== 'undefined') {
+            document.querySelectorAll('td.mb-re-cell[data-re-done="1"]').forEach(domTd => {
+                const mid = domTd.dataset.mbid;
+                if (!mid) return;
+                const html = domTd.innerHTML;
+                const sync = rows => rows.forEach(r => {
+                    const src = r.querySelector(`td.mb-re-cell[data-mbid='${mid}']`);
+                    if (src && src !== domTd) {
+                        src.innerHTML = html;
+                        src.dataset.reDone = '1';
+                        src.style.backgroundColor = '';
+                    }
+                });
+                if (typeof groupedRows !== 'undefined') groupedRows.forEach(g => sync(g.rows));
+                if (typeof allRows    !== 'undefined') sync(allRows);
+            });
+            _dbg('initReleaseEventsColumn: source rows synced');
+        }
+        _dbg('initReleaseEventsColumn: complete');
+    }
+
     async function initRelationshipsColumn() {
         if (!Lib.settings.sa_enable_relationships_column) return;
         if (!activeInjectedColumns.length) return;
@@ -27976,7 +28242,8 @@ a { color: #1565c0; }`;
                     category: group.category,
                     rows: group.rows.map(row => {
                         return Array.from(row.cells)
-                            .filter(cell => !cell.classList.contains('mb-rel-cell'))
+                            .filter(cell => !cell.classList.contains('mb-rel-cell') &&
+                                            !cell.classList.contains('mb-re-cell'))
                             .map(cell => ({
                             html: getCleanCellHtml(cell),
                             colSpan: cell.colSpan || 1,
@@ -27992,7 +28259,8 @@ a { color: #1565c0; }`;
                 // highlight spans that are active at the moment the user clicks "Save".
                 dataToSave.rows = allRows.map(row => {
                     return Array.from(row.cells)
-                        .filter(cell => !cell.classList.contains('mb-rel-cell'))
+                        .filter(cell => !cell.classList.contains('mb-rel-cell') &&
+                                        !cell.classList.contains('mb-re-cell'))
                         .map(cell => ({
                         html: getCleanCellHtml(cell),
                         colSpan: cell.colSpan || 1,
@@ -28290,6 +28558,10 @@ a { color: #1565c0; }`;
                     activeInjectedColumns = buildActiveInjectedColumns(activeDefinition);
                     Lib.debug('cache', `disk-load: rebuilt activeInjectedColumns (${activeInjectedColumns.length})`);
                 }
+                if (!activeReleaseEventColumns.length) {
+                    activeReleaseEventColumns = buildActiveReleaseEventColumns(activeDefinition);
+                    Lib.debug('cache', `disk-load: rebuilt activeReleaseEventColumns (${activeReleaseEventColumns.length})`);
+                }
 
                 // Visually mark the action button that corresponds to the loaded data with
                 // the same "#ccffcc" success colour used at the end of a live fetch, so the
@@ -28560,6 +28832,9 @@ a { color: #1565c0; }`;
 
                 // Highlight identical barcodes in Barcode columns (post-render)
                 initBarcodeHighlight();
+
+                // Populate Release events column.
+                if (activeReleaseEventColumns.length) initReleaseEventsColumn();
 
                 // Populate Relationships column cells via async WS2 fetches (if configured).
                 if (activeInjectedColumns.length) initRelationshipsColumn();
