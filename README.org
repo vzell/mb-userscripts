@@ -60958,9 +60958,7 @@ Otherwise the the script woudn't even load
 
 * TODO interact with other USERSCRIPTs - jesus2099
 ** copy image links for releases to final rendered data if available, or grap them again on the rendered page
-
 ** copy background colors on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
 ** redirect to an artificial page after rendering and call all plugins again, maybe my own versions
 
 Lets say I enter a web page with tabular data, where a couple of userscripts are running and enrich the data with new
@@ -62088,6 +62086,172 @@ the final rendered pages which have columns with name "CAA"
 
 * TODO Reintroduce jesus2099 "Release events"
 
+some new features:
+
+1.)
+
+add a new "RELEASE EVENTS COLUMN SECTION" to the variable "const configSchema"
+
+#+begin_example
+        // ============================================================
+        // RELEASE EVENTS COLUMN SECTION
+        // ============================================================
+        divider_release_events_col: {
+            type: 'divider',
+            label: '<release event icon> RELEASE EVENTS COLUMN'
+        },
+
+        sa_enable_release_events_column: {
+            label: 'Enable Release events column',
+            type: 'checkbox',
+            default: true,
+        },
+
+        sa_enable_release_events_debug: {
+            label: 'Enable Release events column debug logging',
+            type: 'checkbox',
+            default: true,
+        },
+#+end_example
+
+2.)
+
+add the "injectedColumns" definition 
+
+#+begin_example
+injectedColumns: [ 'Release events' ],
+#+end_example
+
+to the following pageType definitions
+
+#+begin_example
+
+#+end_example
+
+when "sa_enable_release_events_column: true"
+
+#+begin_example
+	// ## RELEASE_EVENT_COLUMN ## requested by Lotheric https://github.com/jesus2099/konami-command/issues/132
+	// =========================================================================
+	if (
+		j2sets.RECORDING_LENGTH_COLUMN && (enttype == "work" && location.pathname.match(new RegExp("^/work/" + stre_GUID + "$")) || enttype == "artist" && location.pathname.match(new RegExp("^/artist/" + stre_GUID + "/relationships$")) || enttype == "place" && location.pathname.match(new RegExp("^/place/" + stre_GUID + "/performances$")))
+		||
+		j2sets.RELEASE_EVENT_COLUMN && location.pathname.match(new RegExp("^/(artist|label)/" + stre_GUID + "/relationships$"))
+	) {
+		debug("RECORDING_LENGTH_COLUMN and/or RELEASE_EVENT_COLUMN");
+		var relationshipTable = document.querySelector("div#content table.tbl");
+		if (relationshipTable) {
+			var fetchRecordingLength = j2sets.RECORDING_LENGTH_COLUMN && relationshipTable.getElementsByClassName("treleases").length == 0 && relationshipTable.querySelector("a[href*='/recording/']");
+			var fetchReleaseEvents = j2sets.RELEASE_EVENT_COLUMN && relationshipTable.getElementsByClassName(userjs.id + "releaseEvents").length == 0 && relationshipTable.querySelector("a[href*='/release/']");
+			if (fetchRecordingLength || fetchReleaseEvents) {
+				var xhr_recording_length_column = new XMLHttpRequest();
+				xhr_recording_length_column.addEventListener("load", function(event) {
+					var relations = JSON.parse(this.responseText).relations;
+					var recordingLengths = {};
+					var recordingLengthFound = false;
+					var releaseEvents = {};
+					var releaseEventFound = false;
+					// collecting recording length and release events
+					for (let r = 0; r < relations.length; r++) {
+						if (fetchRecordingLength && relations[r].recording && relations[r].recording.id && relations[r].recording.length) {
+							recordingLengthFound = true;
+							recordingLengths[relations[r].recording.id] = relations[r].recording.length;
+						}
+						if (fetchReleaseEvents && relations[r].release && relations[r].release.id && relations[r].release["release-events"]) {
+							releaseEventFound = true;
+							releaseEvents[relations[r].release.id] = relations[r].release["release-events"];
+						}
+					}
+					if (recordingLengthFound || releaseEventFound) {
+						// column headers
+						if (recordingLengthFound) {
+							var length_header = relationshipTable.querySelector("thead > tr").lastChild;
+							length_header.style.setProperty("text-shadow", "0 0 2px yellow");
+							length_header.classList.add("treleases");
+							length_header.setAttribute("title", userjs.name);
+						}
+						if (releaseEventFound) {
+							relationshipTable.querySelector("thead > tr").insertBefore(createTag("th", {a: {title: userjs.name, class: userjs.id + "releaseEvents"}, s: {textShadow: "0 0 2px yellow"}}, "Release events"), relationshipTable.querySelector("thead > tr > th:nth-child(2)"));
+						}
+						var rows = relationshipTable.querySelectorAll("tbody > tr");
+						for (let r = 0; r < rows.length; r++) {
+							if (rows[r].classList.contains("subh")) {
+								// sub title row
+								if (releaseEventFound) {
+									var secondHeader = rows[r].querySelector("tr.subh > th:nth-child(2)");
+									if (secondHeader) {
+										rows[r].insertBefore(document.createElement("th"), secondHeader);
+									}
+								}
+							} else {
+								// normal data row
+								if (recordingLengthFound) {
+									var length_cell = rows[r].lastChild;
+									length_cell.style.setProperty("text-align", "right");
+									length_cell.classList.add("treleases");
+									length_cell.setAttribute("title", userjs.name);
+									var recordingID = rows[r].querySelector("a[href*='/recording/']");
+									if (recordingID && (recordingID = recordingID.getAttribute("href").match(re_GUID)[0])) {
+										replaceChildren(document.createTextNode(recordingLengths[recordingID] ? time(recordingLengths[recordingID]) : "?:??"), length_cell);
+									}
+								}
+								if (releaseEventFound) {
+									var secondCell = rows[r].querySelector("tr:not(.subh) > td:nth-child(2)");
+									if (secondCell) {
+										let newCell = rows[r].insertBefore(document.createElement("td"), secondCell);
+										var releaseID = secondCell.querySelector("a[href*='/release/']");
+										if (releaseID && (releaseID = releaseID.getAttribute("href").match(re_GUID)[0]) && releaseEvents[releaseID]) {
+											for (let e = 0; e < releaseEvents[releaseID].length; e++) {
+												var releaseDate = releaseEvents[releaseID][e].date ? releaseEvents[releaseID][e].date : "\u00a0";
+												var releaseEvent = createTag("div", {}, releaseDate);
+												if (releaseEvents[releaseID][e].area) {
+													if (releaseEvents[releaseID][e].area.name) {
+														releaseEvent.setAttribute("title", releaseEvents[releaseID][e].area.name);
+													}
+													if (releaseEvents[releaseID][e].area["iso-3166-1-codes"] && releaseEvents[releaseID][e].area["iso-3166-1-codes"].length > 0) {
+														releaseEvent.classList.add("flag");
+														releaseEvent.classList.add("flag-" + releaseEvents[releaseID][e].area["iso-3166-1-codes"][0]);
+														releaseEvent.setAttribute("title", releaseEvent.getAttribute("title") + " (" + releaseEvents[releaseID][e].area["iso-3166-1-codes"][0] + ")");
+													}
+												}
+												newCell.appendChild(releaseEvent);
+												if (releaseEvents[releaseID].length > 4) {
+													if (e > 1 && e != releaseEvents[releaseID].length - 1) {
+														releaseEvent.classList.add(userjs.id + "hiddenEvent");
+														releaseEvent.style.setProperty("display", "none");
+													}
+													if (e == 1) {
+														newCell.appendChild(createTag("div", {s: {padding: "8px"}}, ["(", createTag("a", {e: {click: tooManyEventsToggle}}, "show " + (releaseEvents[releaseID].length - 3) + " more"), ")"]));
+													} else if (e == releaseEvents[releaseID].length - 1) {
+														newCell.appendChild(createTag("div", {a: {class: userjs.id + "hiddenEvent"}, s: {display: "none", padding: "8px"}}, ["(", createTag("a", {e: {click: tooManyEventsToggle}}, "show less"), ")"]));
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				});
+				xhr_recording_length_column.open("get", MBS + "/ws/2" + location.pathname.match(new RegExp("^/" + enttype + "/" + stre_GUID)) + "?inc=recording-rels+release-rels&fmt=json", true);
+				xhr_recording_length_column.send(null);
+			}
+		}
+	}
+#+end_example
+
+
+
+
+#+begin_example
+        // Inject column headers for injectedColumns (e.g. 'Relationships') LAST so
+        // they always appear after every other synthetic column (MB-Name, Comment, …).
+        // The row-building pipeline appends injected <td> cells after MB-Name/Comment
+        // (step 5b), so header and data columns must stay in the same order.
+#+end_example
+
+
 #+begin_example
         {
             type: 'place-performances-filtered',
@@ -62136,8 +62300,79 @@ the final rendered pages which have columns with name "CAA"
 
 #+begin_example
 https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/label/0b805b9c-ea03-4fc1-b50d-6dcef76433e0/relationships
 https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships?direction=1&link_type_id=709 - "holds copyright (c) for" relationships
 #+end_example
+
+* DONE addCAA: 'Title' to more pageTypes
+
+Add
+
+#+begin_example
+                addCAA: 'Title',
+#+end_example
+
+to the following pageType definitions
+
+#+begin_example
+
+            type: 'label-relationships-filtered',
+            type: 'label-relationships',
+            type: 'place-performances-filtered',
+            type: 'place-performances',
+#+end_example
+
+so it should look like the following
+
+#+begin_example
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                addCAA: 'Title',
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                addCAA: 'Title',
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
 
 
 * TODO extract the VZ event disambiguation configurable in its constituents
@@ -63052,8 +63287,7 @@ comumn cell level accordingly)
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell strucure" areas in the unique value pull-down menu
 
-
-* TODO Click/Ctrl-Click behaviour on h2/h3 header lines 
+* DONE Click/Ctrl-Click behaviour on h2/h3 header lines 
 
 1.)
 
@@ -63183,7 +63417,108 @@ In the newly uploaded userscript,
 a couple of things are still missing (also add a changelog):
 
 
-* TODO add "Relationships" column support again, but configurable
+* TODO VZ Library
+** DONE initial
+
+In the library "VZ_MBLibrary.user.js"
+
+please add the missing changelog entries for "3.15.0+2026-03-27" and "3.16.0+2026-03-27"
+to the commented "changelog_library" variable
+
+#+begin_example
+// CHANGELOG
+// let changelog_library = [
+//     {version: '3.14.3+2026-03-04', description: 'Fix two regressions introduced in 3.14.0: (1) Changelog CLOSE link was made conditional (clearing the filter instead of closing when text was present) which broke the link entirely in some code paths. Reverted to unconditional closeDialog() — CLOSE always closes the dialog regardless of filter state. (2) Changelog Escape handler had a spurious third branch that intercepted Escape when the search field was not focused but had text, clearing the filter instead of closing the dialog. Removed that branch. Correct behaviour is now: Escape while search is focused + has text → clear filter; Escape while search is focused + empty → blur field; Escape while search is not focused → close the dialog unconditionally.'},
+#+end_example
+
+** TODO add a generic table input dialog for "Ctrl-U": unicode symbols + explanation
+
+#+begin_example
+type: "table",
+default: "<table declaration>" + UI support "add", "modify", "delete"
+#+end_example
+
+
+* TODO give credit to original author of "Display Relationships" icons
+
+
+* TODO rename tooltip for toggle CAA "single"-table button
+
+rename tooltip for toggle CAA "single"-table button
+
+from
+
+#+begin_example
+  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
+  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
+  33831:                    : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
+  33879:            : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+#+end_example
+
+to
+
+#+begin_example
+  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
+  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this section'
+  33831:                    : 'Show ' + ctx.stripeLabel + ' for this section';
+  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this section'
+  33879:            : 'Show ' + ctx.stripeLabel + ' for this section';
+#+end_example
+
+
+
+* TODO remove the double changelog entries
+
+#+begin_example
+  {
+    "version": "9.99.329",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> and exactly 'favicon {cls}-favicon' on <span> — matching the reference DisplayShortcutForRelationship script. The extra 'mb-rel-favicon' class combined with the CSS display:inline-block rule created a phantom rendered box alongside the real MBS sprite icon. CSS block updated from a.mb-rel-link to a.mb-rel-icon selectors.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() now writes the built-in defaults to GM storage on first use, so all 4 relationship mapping table editors (sa_rel_discography_mappings, sa_rel_url_icon_classes, sa_rel_other_db_classes, sa_rel_streaming_classes) open pre-populated with defaults instead of empty."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.329",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> (not 'mb-rel-link') and exactly 'favicon {cls}-favicon' on <span> — matching the reference script. The extra 'mb-rel-favicon' class was triggering conflicting CSS rules that rendered a phantom sprite box alongside each real icon. CSS selectors updated to match 'a.mb-rel-icon'.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() seeds GM storage with built-in default rows on first use (empty storage). Table editors now open pre-populated with defaults for all 4 relationship mapping tables."
+        ]
+      }
+    ]
+  },
+#+end_example
+
+#+begin_example
+  {
+    "version": "9.99.329",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> and exactly 'favicon {cls}-favicon' on <span> — matching the reference DisplayShortcutForRelationship script. The extra 'mb-rel-favicon' class combined with the CSS display:inline-block rule created a phantom rendered box alongside the real MBS sprite icon. CSS block updated from a.mb-rel-link to a.mb-rel-icon selectors.",
+          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> (not 'mb-rel-link') and exactly 'favicon {cls}-favicon' on <span> — matching the reference script. The extra 'mb-rel-favicon' class was triggering conflicting CSS rules that rendered a phantom sprite box alongside each real icon. CSS selectors updated to match 'a.mb-rel-icon'.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() now writes the built-in defaults to GM storage on first use, so all 4 relationship mapping table editors (sa_rel_discography_mappings, sa_rel_url_icon_classes, sa_rel_other_db_classes, sa_rel_streaming_classes) open pre-populated with defaults instead of empty.",
+          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() seeds GM storage with built-in default rows on first use (empty storage). Table editors now open pre-populated with defaults for all 4 relationship mapping tables."
+        ]
+      }
+    ]
+  },
+#+end_example
+
+
+* DONE add "Relationships" column support again, but configurable
 ** initial
 
 some new functionality
@@ -64391,109 +64726,7 @@ Also add two new buttons, each to the right of the current "retry loading CAA ar
 when clicked, reload all the "Relationships" icons from the network instead of reading them from the indexedDB
 
 
-
-* TODO VZ Library
-** DONE initial
-
-In the library "VZ_MBLibrary.user.js"
-
-please add the missing changelog entries for "3.15.0+2026-03-27" and "3.16.0+2026-03-27"
-to the commented "changelog_library" variable
-
-#+begin_example
-// CHANGELOG
-// let changelog_library = [
-//     {version: '3.14.3+2026-03-04', description: 'Fix two regressions introduced in 3.14.0: (1) Changelog CLOSE link was made conditional (clearing the filter instead of closing when text was present) which broke the link entirely in some code paths. Reverted to unconditional closeDialog() — CLOSE always closes the dialog regardless of filter state. (2) Changelog Escape handler had a spurious third branch that intercepted Escape when the search field was not focused but had text, clearing the filter instead of closing the dialog. Removed that branch. Correct behaviour is now: Escape while search is focused + has text → clear filter; Escape while search is focused + empty → blur field; Escape while search is not focused → close the dialog unconditionally.'},
-#+end_example
-
-** TODO add a generic table input dialog for "Ctrl-U": unicode symbols + explanation
-
-#+begin_example
-type: "table",
-default: "<table declaration>" + UI support "add", "modify", "delete"
-#+end_example
-
-
-* TODO give credit to original author of "Display Relationships" icons
-
-
-* TODO rename tooltip for toggle CAA "single"-table button
-
-rename tooltip for toggle CAA "single"-table button
-
-from
-
-#+begin_example
-  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
-  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
-  33831:                    : 'Show ' + ctx.stripeLabel + ' for this sub-section';
-  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
-  33879:            : 'Show ' + ctx.stripeLabel + ' for this sub-section';
-#+end_example
-
-to
-
-#+begin_example
-  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
-  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this section'
-  33831:                    : 'Show ' + ctx.stripeLabel + ' for this section';
-  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this section'
-  33879:            : 'Show ' + ctx.stripeLabel + ' for this section';
-#+end_example
-
-
-
-* TODO remove the double changelog entries
-
-#+begin_example
-  {
-    "version": "9.99.329",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> and exactly 'favicon {cls}-favicon' on <span> — matching the reference DisplayShortcutForRelationship script. The extra 'mb-rel-favicon' class combined with the CSS display:inline-block rule created a phantom rendered box alongside the real MBS sprite icon. CSS block updated from a.mb-rel-link to a.mb-rel-icon selectors.",
-          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() now writes the built-in defaults to GM storage on first use, so all 4 relationship mapping table editors (sa_rel_discography_mappings, sa_rel_url_icon_classes, sa_rel_other_db_classes, sa_rel_streaming_classes) open pre-populated with defaults instead of empty."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.329",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> (not 'mb-rel-link') and exactly 'favicon {cls}-favicon' on <span> — matching the reference script. The extra 'mb-rel-favicon' class was triggering conflicting CSS rules that rendered a phantom sprite box alongside each real icon. CSS selectors updated to match 'a.mb-rel-icon'.",
-          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() seeds GM storage with built-in default rows on first use (empty storage). Table editors now open pre-populated with defaults for all 4 relationship mapping tables."
-        ]
-      }
-    ]
-  },
-#+end_example
-
-#+begin_example
-  {
-    "version": "9.99.329",
-    "date": "2026-03-27",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> and exactly 'favicon {cls}-favicon' on <span> — matching the reference DisplayShortcutForRelationship script. The extra 'mb-rel-favicon' class combined with the CSS display:inline-block rule created a phantom rendered box alongside the real MBS sprite icon. CSS block updated from a.mb-rel-link to a.mb-rel-icon selectors.",
-          "Bug 1 (ghost icon): _relAppendIcon now uses class 'mb-rel-icon' on <a> (not 'mb-rel-link') and exactly 'favicon {cls}-favicon' on <span> — matching the reference script. The extra 'mb-rel-favicon' class was triggering conflicting CSS rules that rendered a phantom sprite box alongside each real icon. CSS selectors updated to match 'a.mb-rel-icon'.",
-          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() now writes the built-in defaults to GM storage on first use, so all 4 relationship mapping table editors (sa_rel_discography_mappings, sa_rel_url_icon_classes, sa_rel_other_db_classes, sa_rel_streaming_classes) open pre-populated with defaults instead of empty.",
-          "Bug 2 (empty table editors): _loadMap() in _initRelMappings() seeds GM storage with built-in default rows on first use (empty storage). Table editors now open pre-populated with defaults for all 4 relationship mapping tables."
-        ]
-      }
-    ]
-  },
-#+end_example
-
-
-* TODO Add tooltips which describe the "release-group" relationship icons better
+* DONE Add tooltips which describe the "release-group" relationship icons better
 
 In the "Relationship" column, if a data cell e.g.
 
@@ -64563,7 +64796,6 @@ The title can be fetched by following the link '<a href="/release-group/e6e5a3fc
     </bdi>
   </a>
 #+end_example
-
 
 * DONE add persistent storage for "Relationships" information and only load when a new icon is pressed "Retry loading all Relationships" per sub-table and globally
 * DONE Relocate trailing h2 sections not honoured when "Load from Disk"
@@ -64663,3 +64895,18 @@ As soon as filtering either with the global filter or one of the column level fi
 
 Filtering with the sub-table specific filter works so, the relationship icons do not vanish in this case. Also filtering
 works in all cases when loading the data from the network
+
+* add Synthetic entries for each different relationship icon
+
+In the following code section
+
+#+begin_example
+// ── Synthetic entries
+#+end_example
+
+special case the "unique value drop-down" list for the "Relationship" column in the following manner:
+
+Find all unique relationship icons over all the data cells in the "Relationship" column and render each unique icon in a
+separate row in the "Cell structure" area of the "unique value drop-down" list. When selecting one from the pull-down
+list, add it to the column filter field and filter all table rows in such a way that only rows should be shown which
+have that icon in the "Relationship" data cell
