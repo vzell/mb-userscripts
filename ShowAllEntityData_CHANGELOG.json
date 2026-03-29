@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.344",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Trailing h2 section relocation (sa_enable_h2_section_relocation_on_final_page) now works when 'Load from Disk' is used. Root cause: finalCleanup() identifies the data h2 by searching for .mb-row-count-stat, but during disk load updateH2Count() (which creates that span) runs at line 28463 — well after finalCleanup() at line 28329. So _dataH2 was always null and the relocation silently no-oped. Fix: extracted the relocation logic into a standalone _relocateTrailingH2Sections() function and added an explicit call after updateH2Count() in loadTableDataFromDisk. finalCleanup() still calls it for the live-fetch path (where the stat already exists). The function is idempotent and returns early if the stat is not yet in the DOM."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.343",
     "date": "2026-03-27",
     "sections": [

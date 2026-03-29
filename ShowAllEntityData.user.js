@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.343+2026-03-27
+// @version      9.99.344+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -25985,6 +25985,53 @@ a { color: #1565c0; }`;
      * leaving only a single <br> if multiple were found together.
      * Logs the occurrences and count of tags removed.
      */
+    /**
+     * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
+     * data-table h2 to immediately before it, preserving their original order.
+     *
+     * Idempotent: sections that are already before the data h2 are skipped.
+     * Must be called AFTER the .mb-row-count-stat span has been inserted into
+     * the h2 by updateH2Count() — that span is the anchor used to identify the
+     * data h2.  During a live fetch finalCleanup() runs after the render which
+     * already created the stat; during a disk load this function must be called
+     * explicitly after updateH2Count().
+     *
+     * Controlled by sa_enable_h2_section_relocation_on_final_page (default: true).
+     */
+    function _relocateTrailingH2Sections() {
+        if (!Lib.settings.sa_enable_h2_section_relocation_on_final_page) return;
+        try {
+            const _content = document.getElementById('content');
+            if (!_content) return;
+            const _allH2s = Array.from(_content.querySelectorAll('h2'));
+            const _dataH2 = _allH2s.find(h => h.querySelector('.mb-row-count-stat'));
+            if (!_dataH2) return;  // count stat not yet in DOM — caller must retry later
+            const _trailing = _allH2s.filter(h =>
+                h !== _dataH2 &&
+                (_dataH2.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)
+            );
+            if (!_trailing.length) return;
+            // Process in reverse order so earlier sections land first
+            [..._trailing].reverse().forEach(h2 => {
+                const _sectionNodes = [];
+                let _cur = h2;
+                while (_cur) {
+                    if (_cur !== h2 && _cur.nodeType === Node.ELEMENT_NODE &&
+                        _cur.tagName === 'H2') break;
+                    _sectionNodes.push(_cur);
+                    _cur = _cur.nextSibling;
+                }
+                _sectionNodes.forEach(node => {
+                    _dataH2.parentNode.insertBefore(node, _dataH2);
+                });
+            });
+            Lib.debug('cleanup',
+                `_relocateTrailingH2Sections: moved ${_trailing.length} section(s) before data h2`);
+        } catch (_h2Err) {
+            Lib.debug('cleanup', '_relocateTrailingH2Sections skipped:', _h2Err);
+        }
+    }
+
     function finalCleanup() {
         Lib.debug('cleanup', 'Running final cleanup...');
 
@@ -26071,57 +26118,9 @@ a { color: #1565c0; }`;
         }
 
         // ── Trailing h2 relocation ───────────────────────────────────────────
-        // Some pages have h2 sections (Relationships, Related works, etc.) that
-        // MusicBrainz renders AFTER the data-table h2.  Move each such section
-        // — the h2 heading AND all sibling elements that follow it up to the next
-        // h2 — to immediately before the data-table h2.  Sections that were
-        // already before the data h2 are left in place.
-        if (Lib.settings.sa_enable_h2_section_relocation_on_final_page) {
-        try {
-            const _content = document.getElementById('content');
-            if (_content) {
-                const _allH2s = Array.from(_content.querySelectorAll('h2'));
-                const _dataH2 = _allH2s.find(h => h.querySelector('.mb-row-count-stat'));
-                if (_dataH2) {
-                    // Trailing h2s: those that the data h2 precedes in document order
-                    const _trailing = _allH2s.filter(h =>
-                        h !== _dataH2 &&
-                        (_dataH2.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_FOLLOWING)
-                    );
-
-                    if (_trailing.length > 0) {
-                        // Process in reverse order so earlier sections land first
-                        // (each insert goes before the data h2, so reversing
-                        // ensures the original sequence is preserved).
-                        [..._trailing].reverse().forEach(h2 => {
-                            // Collect all nodes from h2 through its following siblings
-                            // up to (but not including) the next h2 sibling.
-                            // We snapshot them first because insertBefore mutates the live
-                            // NodeList as we iterate.
-                            const _sectionNodes = [];
-                            let _cur = h2;
-                            while (_cur) {
-                                if (_cur !== h2 && _cur.nodeType === Node.ELEMENT_NODE &&
-                                    _cur.tagName === 'H2') break; // stop before next h2
-                                _sectionNodes.push(_cur);
-                                _cur = _cur.nextSibling;
-                            }
-
-                            // Move each node in forward order before the data h2
-                            _sectionNodes.forEach(node => {
-                                _dataH2.parentNode.insertBefore(node, _dataH2);
-                            });
-                        });
-
-                        Lib.debug('cleanup',
-                            `Relocated ${_trailing.length} trailing h2 section(s) before data h2`);
-                    }
-                }
-            }
-        } catch (_h2Err) {
-            Lib.debug('cleanup', 'Trailing h2 relocation skipped:', _h2Err);
-        }
-        } // end sa_enable_h2_section_relocation_on_final_page
+        // Delegated to _relocateTrailingH2Sections() which can be called
+        // independently from loadTableDataFromDisk after updateH2Count() runs.
+        _relocateTrailingH2Sections();
     }
 
     /**
@@ -28461,6 +28460,12 @@ a { color: #1565c0; }`;
                 // is the authoritative and sufficient call site.
 
                 updateH2Count(loadedRowCount, loadedRowCount);
+
+                // Trailing h2 relocation: must run AFTER updateH2Count() because
+                // _relocateTrailingH2Sections() anchors on .mb-row-count-stat which
+                // is inserted by updateH2Count().  finalCleanup() (called earlier)
+                // already attempted this but found no stat and silently no-oped.
+                _relocateTrailingH2Sections();
 
                 // Explicitly place the CAA/EAA global toggle buttons in the h2
                 // after the count stat has been created.
