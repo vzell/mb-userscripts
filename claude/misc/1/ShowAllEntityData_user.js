@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.359+2026-03-30
+// @version      9.99.358+2026-03-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -23971,31 +23971,20 @@ a { color: #1565c0; }`;
         })();
 
         const relIconCounts = isRelCellCol ? (() => {
-            const counts  = new Map(); // domain → row count
-            const iconFor = new Map(); // domain → representative href for favicon
+            const counts = new Map();
             if (!tbody) return counts;
             for (const row of tbody.rows) {
                 if (row.style.display === 'none') continue;
                 const cell = row.cells[colIndex];
                 if (!cell) continue;
-                const seenDomainsInRow = new Set();
+                const seenInRow = new Set();
                 for (const a of cell.querySelectorAll('a[href]')) {
                     const href = a.getAttribute('href');
-                    if (!href) continue;
-                    let domain;
-                    if (href.startsWith('http')) {
-                        try { domain = new URL(href).hostname; } catch(_) { domain = href; }
-                    } else {
-                        const m = href.match(/^\/([^/]+)/);
-                        domain = m ? m[1] : href;
-                    }
-                    if (seenDomainsInRow.has(domain)) continue;
-                    seenDomainsInRow.add(domain);
-                    counts.set(domain, (counts.get(domain) || 0) + 1);
-                    if (!iconFor.has(domain)) iconFor.set(domain, href);
+                    if (!href || seenInRow.has(href)) continue;
+                    seenInRow.add(href);
+                    counts.set(href, (counts.get(href) || 0) + 1);
                 }
             }
-            counts._iconFor = iconFor;
             return counts;
         })() : new Map();
 
@@ -24271,15 +24260,13 @@ a { color: #1565c0; }`;
             relHdr.style.cssText = 'font-size:0.75em;font-weight:600;color:#555;'
                 + 'padding:4px 8px 2px 8px;letter-spacing:0.03em;user-select:none;';
             synBox.appendChild(relHdr);
-            const _iconFor   = relIconCounts._iconFor || new Map();
             const sortedRels = Array.from(relIconCounts.entries())
-                .filter(([k]) => k !== '_iconFor')
                 .sort(([ua, ca], [ub, cb]) => cb - ca || ua.localeCompare(ub));
-            for (const [domain, count] of sortedRels) {
+            for (const [href, count] of sortedRels) {
                 const item = document.createElement('div');
                 item.className = 'mb-col-uniq-item mb-col-uniq-multirow-item';
                 item.setAttribute('role', 'option');
-                item.title = domain;
+                item.title = href;
                 const badge = document.createElement('span');
                 badge.className = 'mb-uniq-count-badge';
                 badge.textContent = `(${count})`;
@@ -24288,21 +24275,19 @@ a { color: #1565c0; }`;
                     + 'font-family:monospace;border-radius:3px;padding:0 3px;'
                     + 'margin-right:5px;font-size:0.85em;display:inline-block;';
                 item.appendChild(badge);
-                const repHref = _iconFor.get(domain) || '';
+                const isExt = href.startsWith('http');
                 const ico = document.createElement('img');
-                if (repHref.startsWith('http')) {
-                    let _dom = ''; try { _dom = new URL(repHref).hostname; } catch(_) {}
-                    ico.src = _dom
-                        ? `https://www.google.com/s2/favicons?sz=16&domain=${_dom}`
-                        : '/favicon.ico';
+                if (isExt) {
+                    let domain = '';
+                    try { domain = new URL(href).hostname; } catch (_) {}
+                    ico.src = domain ? `https://www.google.com/s2/favicons?sz=16&domain=${domain}` : '/favicon.ico';
                 } else { ico.src = '/favicon.ico'; }
-                ico.style.cssText = 'width:14px;height:14px;vertical-align:middle;margin-right:0;';
+                ico.style.cssText = 'width:14px;height:14px;vertical-align:middle;margin-right:4px;';
                 ico.setAttribute('aria-hidden', 'true');
                 item.appendChild(ico);
+                // Icon only — no text label; title attribute shows full href on hover
                 item.addEventListener('mousedown', ev => ev.preventDefault());
-                item.addEventListener('click', () => {
-                    applyUniqVal(domain, table, colIndex); closeUniqDrop();
-                });
+                item.addEventListener('click', () => { applyUniqVal(href, table, colIndex); closeUniqDrop(); });
                 synBox.appendChild(item);
             }
             appendSynDivider();
@@ -27784,6 +27769,13 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Renders release-events into one mb-re-cell <td>.
+     * Each event → <div class="flag flag-XX"> with date text + area tooltip.
+     * Events beyond 4 collapse with a "show N more / show less" toggle.
+     * @param {HTMLTableCellElement} cell
+     * @param {Array} events  release-events array from WS2
+     */
+    /**
      * Renders release-events into one mb-re-cell <td> as a <ul><li> list so
      * that initCollapsableColumns can manage the expand/collapse toggle.
      * Each <li> represents one release event: country flag + date text.
@@ -27803,12 +27795,13 @@ a { color: #1565c0; }`;
                 if (codes && codes.length > 0) {
                     li.classList.add('flag', 'flag-' + codes[0]);
                     li.title = name ? `${name} (${codes[0]})` : codes[0];
-                } else if (name) { li.title = name; }
+                } else if (name) {
+                    li.title = name;
+                }
             }
             ul.appendChild(li);
         }
         cell.appendChild(ul);
-
     }
 
     /**
@@ -27898,11 +27891,6 @@ a { color: #1565c0; }`;
             _dbg('initReleaseEventsColumn: source rows synced');
         }
         _dbg('initReleaseEventsColumn: complete');
-        // Re-run initCollapsableColumns: it ran before cells were populated so
-        // found 0 ul>li items. Now that cells have real content, install toggles.
-        if (activeReleaseEventColumns.length) {
-            document.querySelectorAll('table.tbl').forEach(t => initCollapsableColumns(t));
-        }
     }
 
     async function initRelationshipsColumn() {

@@ -1,14 +1,13 @@
 [
   {
-    "version": "9.99.359",
-    "date": "2026-03-30",
+    "version": "9.99.358",
+    "date": "2026-03-27",
     "sections": [
       {
         "label": "🐛 Fix",
         "items": [
-          "Release events collapsableColumns timing: initCollapsableColumns ran inside renderGroupedTable before cells were populated, finding 0 ul>li items. Now re-runs after initReleaseEventsColumn completes.",
-          "_rePopulateCell renders events as <ul><li> (no built-in toggle), letting collapsableColumns framework handle expand/collapse.",
-          "Relationship icons dropdown groups by domain — one favicon per unique domain (discogs.com, amazon.com…). Clicking filters by domain, matching all URLs for that domain via the hidden .mb-rel-filter-key span."
+          "Bug 1 (Release events collapsableColumns still had no effect): _rePopulateCell now renders events as a <ul><li> list instead of individual <div> elements. initCollapsableColumns requires ul>li structure (≥2 items) to install its expand/collapse toggle — the previous <div> approach was incompatible. The built-in 'show N more' toggle logic was removed from _rePopulateCell; the standard collapsableColumns framework now handles expand/collapse for Release events.",
+          "Bug 2 (Relationship icons dropdown showed domain text): icon entries in the 'Relationship icons' unique-value dropdown now show the favicon image only — no domain label text. The full href is still shown in the title tooltip on hover, and clicking still filters by the full href via the hidden .mb-rel-filter-key span."
         ]
       }
     ]
@@ -59,7 +58,7 @@
       {
         "label": "🐛 Fix",
         "items": [
-           "Release events column showed relationship icons; actual release events column missing. Root cause: buildActiveInjectedColumns() was picking up all injectedColumns entries including 'Release events', treating them as Relationships. Fixed by filtering to colName === 'Relationships' only. Added missing Release Events functions (extractReleaseEvents, _rePopulateCell, initReleaseEventsColumn) and their call sites."
+          "Release events column showed relationship icons; actual release events column missing. Root cause: buildActiveInjectedColumns() was picking up all injectedColumns entries including 'Release events', treating them as Relationships. Fixed by filtering to colName === 'Relationships' only. Added missing Release Events functions (extractReleaseEvents, _rePopulateCell, initReleaseEventsColumn) and their call sites."
         ]
       }
     ]

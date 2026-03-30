@@ -24271,6 +24271,7 @@ a { color: #1565c0; }`;
             relHdr.style.cssText = 'font-size:0.75em;font-weight:600;color:#555;'
                 + 'padding:4px 8px 2px 8px;letter-spacing:0.03em;user-select:none;';
             synBox.appendChild(relHdr);
+            const // One entry per domain.
             const _iconFor   = relIconCounts._iconFor || new Map();
             const sortedRels = Array.from(relIconCounts.entries())
                 .filter(([k]) => k !== '_iconFor')
@@ -27784,9 +27785,9 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Renders release-events into one mb-re-cell <td> as a <ul><li> list so
-     * that initCollapsableColumns can manage the expand/collapse toggle.
-     * Each <li> represents one release event: country flag + date text.
+     * Renders release-events into one mb-re-cell <td>.
+     * Each event → <div class="flag flag-XX"> with date text + area tooltip.
+     * Events beyond 4 collapse with a "show N more / show less" toggle.
      * @param {HTMLTableCellElement} cell
      * @param {Array} events  release-events array from WS2
      */

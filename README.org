@@ -65094,3 +65094,118 @@ Please remove the built in functionality from _rePopulateCell and instead render
 
 Relationship icons unique value dropdown still shows FOR Each icon entry now the favicon + bare domain only (e.g. discogs.com, amazon.com, springsteenlyrics.com).
 I only want to have the favicon itself, so when selecting e.g the favicon for discogs.com all rows which have whatever discogs URL should be filtered/shown 
+
+3.)
+
+Please also add a changelog entry
+
+** bugs
+
+some bugs
+
+1.)
+
+You added by mistake the same version info to the uploaded changelog file (albeit with the wrong date)
+
+#+begin_example
+  {
+    "version": "9.99.358",
+    "date": "2026-03-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (Release events collapsableColumns still had no effect): _rePopulateCell now renders events as a <ul><li> list instead of individual <div> elements. initCollapsableColumns requires ul>li structure (≥2 items) to install its expand/collapse toggle — the previous <div> approach was incompatible. The built-in 'show N more' toggle logic was removed from _rePopulateCell; the standard collapsableColumns framework now handles expand/collapse for Release events.",
+          "Bug 2 (Relationship icons dropdown showed domain text): icon entries in the 'Relationship icons' unique-value dropdown now show the favicon image only — no domain label text. The full href is still shown in the title tooltip on hover, and clicking still filters by the full href via the hidden .mb-rel-filter-key span."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.358",
+    "date": "2026-03-30",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (collapsableColumns: ['Release events'] had no effect): initCollapsableColumns requires ul>li cell structure; mb-re-cell cells use <div> elements with a built-in 'show N more' toggle. Removed 'Release events' from collapsableColumns on all four page types (the column already handles its own collapse internally).",
+          "Bug 2 (icon dropdown showed raw URLs): Relationship icons section in the unique-value dropdown now shows only the favicon icon and the bare domain (e.g. 'discogs.com', 'amazon.com') without the full URL path. Clicking still filters by the full href via the hidden .mb-rel-filter-key span, enabling generic domain-level filtering.",
+          "Bug 3 (_artIdbDelete is not defined): the function was commented out with a '/* UNUSED */' block comment. _relRetryMbids calls it to purge cached WS2 relationship data from IDB when retrying. Uncommented and updated the JSDoc."
+        ]
+      }
+    ]
+  },
+#+end_example
+
+so it should be 
+
+#+begin_example
+    "version": "9.99.359",
+    "date": "2026-03-30",
+#+end_example
+
+also in the userscript itself
+
+2.)
+
+also the "Release events" column is now rendered in multi-row cell mode ("ul > li" structure) 
+
+for example in https://musicbrainz.org/label/0b805b9c-ea03-4fc1-b50d-6dcef76433e0/relationships
+
+#+begin_example
+<td class="mb-re-cell" data-mbid="ffcab557-b981-47c1-aa00-1ba59083e4db" style="" data-re-done="1">
+  <ul style="list-style: none; margin: 0px; padding: 0px;">
+    <li class="flag flag-CA" title="Canada (CA)">1986
+    </li>
+    <li class="flag flag-US" title="United States (US)">1986
+    </li>
+  </ul>
+</td>
+#+end_example
+
+but the
+
+#+begin_example
+                collapsableColumns: [ 'Release events' ],
+#+end_example
+
+in
+
+#+begin_example
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+doesn't seem to have any effect
+
+3.)
+
+the relationship icons unique value dropdown still shows MULTIPLE favicons for the same base URL, so e.g. multiple
+discogs.com favicons. I only want ONE icon per unique base URL, so one for discogs.com, one for amazon.com, one for springsteenlyrics.com etc.
+
+When clicking on one of the unique favicons, still ALL rows where this base URL is part of should be displayed
+
+** bugs
+
+#+begin_example
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:26713 Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Unexpected token 'const' (at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:26713:13)
+    at At (<anonymous>:10:89)
+    at m (<anonymous>:21:352)
+    at c (<anonymous>:24:266)
+    at <anonymous>:24:328
+    at co (<anonymous>:18:250)
+    at Object.send (<anonymous>:24:188)
+    at <anonymous>:91:328
+    at _ (<anonymous>:22:406)
+#+end_example
