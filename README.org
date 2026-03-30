@@ -65048,4 +65048,26 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
 
 * TODO why is "collapsableColumns: [ 'Release events' ]" on Label-Relationships "PolyGram Distribution Inc." not working
 
+1.)
+
 why is "collapsableColumns: [ 'Release events' ]" on Label-Relationships "PolyGram Distribution Inc." not working
+
+2.)
+
+In the "Relationship icons" section of the unique value drop down list ONLY show the icons itself not the actual URLs. I
+want to filter generically e.g for "amazon" or "discogs" entries without the details of the actual virtual pathes
+
+3.)
+
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+
+#+begin_example
+20:41:06.076 [VZ-ShowAllEntityData: place-performances] 📝 _relRetryMbids: force-reloading 2 MBID(s) 
+userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:30621 Uncaught (in promise) ReferenceError: _artIdbDelete is not defined
+    at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:30621:72
+    at Array.map (<anonymous>)
+    at _relRetryMbids (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:30620:37)
+    at _relRetryTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:30655:9)
+    at HTMLButtonElement.<anonymous> (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:36969:21)
+    at HTMLButtonElement.r (helpers.js:97:17)
+#+end_example
