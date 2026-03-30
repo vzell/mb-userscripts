@@ -932,7 +932,9 @@
                          + 'asynchronously with favicon icon links from the MusicBrainz Web Service '
                          + '(url-rels for each release-group or release). '
                          + 'Applies to: artist-releasegroups, artist-releases, label-releases, '
-                         + 'releasegroup-releases. Disable to suppress the column entirely.'
+                         + 'releasegroup-releases. Disable to suppress the column entirely. '
+                         + 'Adapted from "Display shortcut for relationships on MusicBrainz" '
+	                 + 'by Aurelien Mino <aurelien.mino@gmail.com>'
         },
 
         sa_rels_idb_enable: {
@@ -1575,7 +1577,8 @@
             description: 'When enabled and the page type declares injectedColumns:["Release events"], '
                          + 'a synthetic "Release events" column is injected and populated '
                          + 'with country flags and dates from the MusicBrainz Web Service. '
-                         + 'One WS2 call per page entity (not per row).'
+                         + 'One WS2 call per page entity (not per row). '
+	                 + 'Adapted from jesus2099 SUPERMIND CONTROL II X TURBO.'
         },
 
         sa_enable_release_events_debug: {
@@ -3536,7 +3539,7 @@
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
-                collapsableColumns: [ 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
             },
@@ -3551,7 +3554,7 @@
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
-                collapsableColumns: [ 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title'
             },
@@ -3610,7 +3613,7 @@
             buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
             features: {
                 injectedColumns: [ 'Release events', 'Relationships' ],
-                collapsableColumns: [ 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title' // Specific header
             },
@@ -3623,7 +3626,7 @@
             buttons: [ { label: 'Show all Relationships for Label' } ],
             features: {
                 injectedColumns: [ 'Release events', 'Relationships' ],
-                collapsableColumns: [ 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title' // Specific header
             },

@@ -24285,8 +24285,14 @@ a { color: #1565c0; }`;
                 ico.style.cssText = 'width:14px;height:14px;vertical-align:middle;margin-right:4px;';
                 ico.setAttribute('aria-hidden', 'true');
                 item.appendChild(ico);
-                const label = href.length > 55 ? href.slice(0, 52) + '\u2026' : href;
-                item.appendChild(document.createTextNode(label));
+                // No URL text — icon + domain only for generic filtering
+                let _dispDomain = '';
+                if (href.startsWith('http')) {
+                    try { _dispDomain = new URL(href).hostname.replace(/^www\./, ''); } catch(_) {}
+                } else {
+                    const _m = href.match(/^\/([^/]+)\//); if (_m) _dispDomain = _m[1];
+                }
+                if (_dispDomain) item.appendChild(document.createTextNode(_dispDomain));
                 item.addEventListener('mousedown', ev => ev.preventDefault());
                 item.addEventListener('click', () => { applyUniqVal(href, table, colIndex); closeUniqDrop(); });
                 synBox.appendChild(item);
@@ -30843,7 +30849,13 @@ a { color: #1565c0; }`;
      * @param   {string} key        Record key to delete.
      * @returns {Promise<void>}
      */
-    /* UNUSED — no call site; kept for potential future use
+    /**
+     * Deletes one record from an IDB object store.
+     * Used by _relRetryMbids to purge cached WS2 relationship data.
+     * @param {string} storeName  Object store name (e.g. 'rel-ws2')
+     * @param {string} key        Record key to delete
+     * @returns {Promise<void>}
+     */
     function _artIdbDelete(storeName, key) {
         return _artOpenIdb().then(db => new Promise((resolve, reject) => {
             try {
@@ -30856,7 +30868,6 @@ a { color: #1565c0; }`;
             }
         }));
     }
-    */
 
     /**
      * Normalises a protocol-relative CAA/EAA URL to an https:// absolute URL

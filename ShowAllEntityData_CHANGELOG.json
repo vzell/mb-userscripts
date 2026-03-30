@@ -1,7 +1,21 @@
 [
   {
+    "version": "9.99.358",
+    "date": "2026-03-30",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (collapsableColumns: ['Release events'] had no effect): initCollapsableColumns requires ul>li cell structure; mb-re-cell cells use <div> elements with a built-in 'show N more' toggle. Removed 'Release events' from collapsableColumns on all four page types (the column already handles its own collapse internally).",
+          "Bug 2 (icon dropdown showed raw URLs): Relationship icons section in the unique-value dropdown now shows only the favicon icon and the bare domain (e.g. 'discogs.com', 'amazon.com') without the full URL path. Clicking still filters by the full href via the hidden .mb-rel-filter-key span, enabling generic domain-level filtering.",
+          "Bug 3 (_artIdbDelete is not defined): the function was commented out with a '/* UNUSED */' block comment. _relRetryMbids calls it to purge cached WS2 relationship data from IDB when retrying. Uncommented and updated the JSDoc."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.357",
-    "date": "2026-03-27",
+    "date": "2026-03-28",
     "sections": [
       {
         "label": "🐛 Fix / 🚀 Feature",
@@ -14,7 +28,7 @@
   },
   {
     "version": "9.99.356",
-    "date": "2026-03-27",
+    "date": "2026-03-28",
     "sections": [
       {
         "label": "🐛 Fix",
@@ -26,7 +40,7 @@
   },
   {
     "version": "9.99.355",
-    "date": "2026-03-27",
+    "date": "2026-03-28",
     "sections": [
       {
         "label": "🐛 Fix",
@@ -38,7 +52,7 @@
   },
   {
     "version": "9.99.354",
-    "date": "2026-03-27",
+    "date": "2026-03-28",
     "sections": [
       {
         "label": "🚀 Feature",

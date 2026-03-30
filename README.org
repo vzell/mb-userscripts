@@ -65047,6 +65047,7 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
 #+end_example
 
 * TODO why is "collapsableColumns: [ 'Release events' ]" on Label-Relationships "PolyGram Distribution Inc." not working
+** initial
 
 1.)
 
@@ -65071,3 +65072,25 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
     at HTMLButtonElement.<anonymous> (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:36969:21)
     at HTMLButtonElement.r (helpers.js:97:17)
 #+end_example
+
+** bugs
+
+I uploaded new versions of the userscript "ShowAllEntityData.user.js" and the changelog file "ShowAllEntityData_CHANGELOG.json"
+
+Please fix the following bugs
+
+1.)
+
+collapsableColumns: ['Release events'] has no effect
+
+initCollapsableColumns scans cells for ul > li structure (≥2 items triggers the toggle). mb-re-cell cells use <div>
+elements, not <ul><li>, so it always found 0 multi-row cells and silently skipped the column. The Release events column
+already has its own built-in "show N more / show less" toggle in _rePopulateCell.
+
+Please remove the built in functionality from _rePopulateCell and instead render the "Release events" column data in a
+"ul > li" structure, so that the "collapsableColumns: ['Release events']" framework can take over
+
+2.)
+
+Relationship icons unique value dropdown still shows FOR Each icon entry now the favicon + bare domain only (e.g. discogs.com, amazon.com, springsteenlyrics.com).
+I only want to have the favicon itself, so when selecting e.g the favicon for discogs.com all rows which have whatever discogs URL should be filtered/shown 
