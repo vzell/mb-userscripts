@@ -65008,30 +65008,7 @@ As soon as filtering either with the global filter or one of the column level fi
 Filtering with the sub-table specific filter works so, the relationship icons do not vanish in this case. Also filtering
 works in all cases when loading the data from the network
 
-
-* TODO add Synthetic entries for each different relationship icon
-** DONE initial
-
-In the following code section
-
-#+begin_example
-// ── Synthetic entries
-#+end_example
-
-special case the "unique value drop-down" list for the "Relationship" column in the following manner:
-
-Find all unique relationship icons over all the data cells in the "Relationship" column and render each unique icon in a
-separate row in the "Cell structure" area of the "unique value drop-down" list. When selecting one from the pull-down
-list, add it to the column filter field and filter all table rows in such a way that only rows should be shown which
-have that icon in the "Relationship" data cell
-
-** TODO bugs
-
-In the "Relationship icons" section of the unique value drop down list ONLY show the icons itself not the actual URLs. I
-want to filter generically e.g for "amazon" or "discogs" entries without the details of the actual virtual pathes
-
-
-* TODO error
+* DONE error
 
 https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 
@@ -65046,7 +65023,7 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
     at HTMLButtonElement.r (helpers.js:97:17)
 #+end_example
 
-* TODO why is "collapsableColumns: [ 'Release events' ]" on Label-Relationships "PolyGram Distribution Inc." not working
+* DONE why is "collapsableColumns: [ 'Release events' ]" on Label-Relationships "PolyGram Distribution Inc." not working
 ** initial
 
 1.)
@@ -65209,3 +65186,43 @@ userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-
     at <anonymous>:91:328
     at _ (<anonymous>:22:406)
 #+end_example
+
+** still bugs
+
+still bugs:
+
+1.)
+
+the unique value dropdown for the "Relationship" column now only shows ONE icon per unique base URL (like it should),
+but please also show the base URL itself after the favicon e.g.
+
+#+begin_example
+[amazon.com favicon] https://www.amazon.de/
+[discogs.com favicon] https://www.discogs.com/
+etc
+#+end_example
+
+When clicking on one of the unique favicons + base URL, ALL rows where this favicon and base URL is part of should be
+displayed
+
+* TODO add Synthetic entries for each different relationship icon
+** DONE initial
+
+In the following code section
+
+#+begin_example
+// ── Synthetic entries
+#+end_example
+
+special case the "unique value drop-down" list for the "Relationship" column in the following manner:
+
+Find all unique relationship icons over all the data cells in the "Relationship" column and render each unique icon in a
+separate row in the "Cell structure" area of the "unique value drop-down" list. When selecting one from the pull-down
+list, add it to the column filter field and filter all table rows in such a way that only rows should be shown which
+have that icon in the "Relationship" data cell
+
+** DONE bugs
+
+In the "Relationship icons" section of the unique value drop down list ONLY show the icons itself not the actual URLs. I
+want to filter generically e.g for "amazon" or "discogs" entries without the details of the actual virtual pathes
+** TODO sort the Relationships icons 
