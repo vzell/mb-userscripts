@@ -65228,7 +65228,31 @@ should be like in all other "unique value drop down" lists for other columns, so
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
+
+In web development and UI/UX design, this feature is most commonly called Sticky Columns or Fixed Columns.
+
+Depending on the context or the specific software you are using, you might also hear it referred to as:
+
+Pinned Columns: Common in data grid libraries and UI frameworks (like AG Grid or Material-UI).
+
+Frozen Columns: Often used in enterprise software or spreadsheet applications. For example, in Microsoft Excel or Google Sheets, this feature is called Freeze Panes.
+
+If you're trying to build this in CSS:
+Nowadays, this is almost always implemented using the position: sticky; CSS property. You apply it to the specific table cells (<th> or <td>) you want to lock in place, along with a directional property like left: 0;.
+
+For example:
+
+CSS
+.fixed-column {
+  position: sticky;
+  left: 0; /* Locks the column to the left edge of the scrolling container */
+  background-color: white; /* Needed so scrolling columns don't show through */
+  z-index: 1; /* Keeps it above the scrolling content */
+}
+
+
 * TODO Implement column movement
+
 
 * TODO Configuration dialog redesign
 ** DONE initial
@@ -65321,7 +65345,15 @@ for "Series-Events" make "Artists" a "multi-row" cell columns
 
 also rethink sub-pageType definitions so which columsn
 
+
 * TODO add/fix missing/doubled - JSDoc definitions
+
+Please check the following JSDoc definitions which have multiple entries after each other
+and either
+
+- remove the obsolete ones
+- move them to the right function definition
+- or merge them if it makes sense
 
 #+begin_example
     /**
