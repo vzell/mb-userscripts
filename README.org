@@ -66042,7 +66042,7 @@ also rethink sub-pageType definitions so which columsn
 #+end_example
 
 
-* TODO read the unicode chars from a configuration table definition 
+* DONE read the unicode chars from a configuration table definition 
 
 Add a new functionality:
 
