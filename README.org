@@ -65231,6 +65231,7 @@ should be like in all other "unique value drop down" lists for other columns, so
 * TODO Implement column movement
 
 * TODO Configuration dialog redesign
+** DONE initial
 
 add some new functionality in the uploaded library "VZ_MBLibrary.user.js" to the current "Settings" dialog UI:
 
@@ -65301,6 +65302,10 @@ and bump the versions in
 const LIBRARY_VERSION = '3.16.0+2026-03-27';
 #+end_example
 
+4.)
+
+also add a changelog entry to "ShowAllEntityData_CHANGELOG.json"
+
 
 * TODO In the case of "Series" the "Relationships" column should ONLY be present on "Series-Releases"
 
@@ -65315,8 +65320,6 @@ for "Series-Events" make "Artists" a "multi-row" cell columns
 3.)
 
 also rethink sub-pageType definitions so which columsn
-
-
 
 * TODO add/fix missing/doubled - JSDoc definitions
 
