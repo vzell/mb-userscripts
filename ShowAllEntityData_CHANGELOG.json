@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.361",
+    "date": "2026-03-30",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+            "Added 'Relationships' column to 'Artist-Relationships', 'Recording-Releases', 'Series-Releases' and 'Area-Releases' columns",
+            "Added 'addCAA' column to 'Area-Releases' columns"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.360",
     "date": "2026-03-30",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.360+2026-03-30
+// @version      9.99.361+2026-03-30
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -934,7 +934,7 @@
                          + 'Applies to: artist-releasegroups, artist-releases, label-releases, '
                          + 'releasegroup-releases. Disable to suppress the column entirely. '
                          + 'Adapted from "Display shortcut for relationships on MusicBrainz" '
-	                 + 'by Aurelien Mino <aurelien.mino@gmail.com>'
+                         + 'by Aurelien Mino <aurelien.mino@gmail.com>'
         },
 
         sa_rels_idb_enable: {
@@ -1578,7 +1578,7 @@
                          + 'a synthetic "Release events" column is injected and populated '
                          + 'with country flags and dates from the MusicBrainz Web Service. '
                          + 'One WS2 call per page entity (not per row). '
-	                 + 'Adapted from jesus2099 SUPERMIND CONTROL II X TURBO.'
+                         + 'Adapted from jesus2099 SUPERMIND CONTROL II X TURBO.'
         },
 
         sa_enable_release_events_debug: {
@@ -1738,7 +1738,6 @@
     //   2. Reference it by that name string in the `columnExtractors` array inside
     //      the relevant pageDefinitions `features` object.
     //   3. Declare the synthetic column header names in `syntheticColumns`.
-
     const ColumnDataExtractor = {
 
         /**
@@ -2461,7 +2460,6 @@
     //   2. Reference it by that name string in the `syntheticColumnExtractors` array inside
     //      the relevant pageDefinitions `features` object.
     //   3. Declare the synthetic column header names in `syntheticColumns`.
-
     const SyntheticColumnDataExtractor = {
 
         /**
@@ -3408,7 +3406,11 @@
                     targetHeader: 'Relationships',
                     tableMode: 'single',
                     non_paginated: false,
-                    extractMainColumn: 'Title'
+                    features: {
+                        injectedColumns: [ 'Relationships' ],
+                        addCAA: 'Title',
+                        extractMainColumn: 'Title'
+                    }
                 }
             ]
         },
@@ -3418,9 +3420,10 @@
             buttons: [
                 {
                     label: 'Show all Releases for Area',
+                    // "Area-Relases" pages have a paginated "Releases" and multi-table "Relationships" section
+                    // The 'targetHeader' parameter is used to distinguish them
                     targetHeader: 'Releases',
                     tableMode: 'single',
-                    extractMainColumn: 'Release',
                     features: {
                         columnExtractors: [
                             { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
@@ -3433,17 +3436,26 @@
                         syntheticColumnExtractors: [
                             { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                         ],
+                        injectedColumns: [ 'Relationships' ],
                         integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                         renderMultiRowCell: [ 'Label', 'Catalog#' ],
                         collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                        addCAA: 'Release',
+                        extractMainColumn: 'Release'
                     }
                 },
                 {
                     label: 'Show all Release Relationships for Area',
+                    // "Area-Relases" pages have a paginated "Releases" and multi-table "Relationships" section
+                    // The 'targetHeader' parameter is used to distinguish them
                     targetHeader: 'Relationships',
                     tableMode: 'multi',
                     non_paginated: true,
-                    extractMainColumn: 'Title'
+                    features: {
+                        injectedColumns: [ 'Relationships' ],
+                        addCAA: 'Title',
+                        extractMainColumn: 'Title'
+                    }
                 }
             ]
         },
@@ -3592,6 +3604,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
+                injectedColumns: [ 'Relationships' ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
@@ -3734,6 +3747,7 @@
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
+                injectedColumns: [ 'Relationships' ],
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'CAA' ],
                 tooltipColumns: [ 'Title', 'Artist', '---', 'Credited as', 'Attributes' ],
@@ -3936,6 +3950,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
+                injectedColumns: [ 'Relationships' ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'}, {sourceColumn: '#', align: '.'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
                 tooltipColumns: [ 'Release title', 'italic:Comment', 'Release Artist', 'Release group type', '---', ['#', 'Title', '(', 'Length', ')'], 'Track artist', 'Country/Date', ['Label', '-', 'Catalog#'] ],
