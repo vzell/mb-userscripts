@@ -4,6 +4,14 @@
     "date": "2026-03-31",
     "sections": [
       {
+        "label": "✨ Feature",
+        "items": [
+          "Relationship icons dropdown: entries are now sorted by display URL (name) ascending as primary key, count descending as secondary key — e.g. all amazon.com / amazon.de / amazon.it variants appear together in alphabetical order instead of being interleaved by count.",
+          "Relationship icons dropdown: springsteenlyrics.com URLs are now grouped by virtual path (without query string or fragment), producing separate entries for e.g. 'https://springsteenlyrics.com/bootlegs.php', 'https://springsteenlyrics.com/collection.php', 'https://springsteenlyrics.com/forum/viewtopic.php'. All other domains continue to group by hostname only.",
+          "Introduced PATH_SENSITIVE_HOSTS Set (currently containing 'springsteenlyrics.com') as a clean extension point for any future domains that require path-level grouping in the Relationship icons section."
+        ]
+      },
+      {
         "label": "🐛 Fix",
         "items": [
           "Relationship icons dropdown — springsteenlyrics.com path grouping was not working: URLs were read from <a href> attributes (subject to browser normalisation) instead of the raw .mb-rel-filter-key span text, and the hostname check was an exact match that silently failed for www.-prefixed variants (e.g. www.springsteenlyrics.com). Now reads from .mb-rel-filter-key spans and uses _isPathSensitive() which also matches subdomains via endsWith('.<host>') so both bare and www. variants are handled correctly.",
@@ -16,28 +24,14 @@
     ]
   },
   {
-    "version": "9.99.362",
-    "date": "2026-03-31",
-    "sections": [
-      {
-        "label": "✨ Feature",
-        "items": [
-          "Relationship icons dropdown: entries are now sorted by display URL (name) ascending as primary key, count descending as secondary key — e.g. all amazon.com / amazon.de / amazon.it variants appear together in alphabetical order instead of being interleaved by count.",
-          "Relationship icons dropdown: springsteenlyrics.com URLs are now grouped by virtual path (without query string or fragment), producing separate entries for e.g. 'https://springsteenlyrics.com/bootlegs.php', 'https://springsteenlyrics.com/collection.php', 'https://springsteenlyrics.com/forum/viewtopic.php'. All other domains continue to group by hostname only.",
-          "Introduced PATH_SENSITIVE_HOSTS Set (currently containing 'springsteenlyrics.com') as a clean extension point for any future domains that require path-level grouping in the Relationship icons section."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.361",
     "date": "2026-03-30",
     "sections": [
       {
         "label": "🐛 Fix",
         "items": [
-            "Added 'Relationships' column to 'Artist-Relationships', 'Recording-Releases', 'Series-Releases' and 'Area-Releases' columns",
-            "Added 'addCAA' column to 'Area-Releases' columns"
+          "Added 'Relationships' column to 'Artist-Relationships', 'Recording-Releases', 'Series-Releases' and 'Area-Releases' columns",
+          "Added 'addCAA' column to 'Area-Releases' columns"
         ]
       }
     ]

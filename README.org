@@ -62912,76 +62912,6 @@ STF highlight: bg #90ee90 (hardcoded light green), color #000
 #+end_example
 
 
-* TODO add/fix missing/doubled - JSDoc
-
-#+begin_example
-    /**
-     * Recalculates and updates the h2 row-count badge from current DOM state of all
-     * subtables after global + subtable filters have been applied.
-     *
-     * Mirrors the 3-tier format used by updateSubTableRowCount():
-     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
-     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
-     *
-     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
-     */
-    /**
-     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
-     * reflecting the current combination of global filter, column filters, and
-     * sub-table filter active on this specific table.
-     *
-     * Called from:
-     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
-     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
-     *
-     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
-     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
-     *
-     * @param {HTMLTableElement} tbl  The live sub-table element.
-     */
-#+end_example
-
-#+begin_example
-    /**
-     * initTreleasesObserver — installs a MutationObserver on every `table.tbl tbody`
-     * in the document that removes `[class="treleases"]` elements the instant they
-     * are inserted into the rendered table.
-     *
-     * Background: the jesus2099 "mb. SUPER MIND CONTROL Ⅱ X TURBO" userscript
-     * injects a node such as:
-     *   <… class="treleases" title="SUPER MIND CONTROL Ⅱ X TURBO">
-     * into Length cells of the *live* rendered table — AFTER our render pipeline
-     * has already finished.  Because our pass-1 (applyIntegerColumnStyling) runs
-     * during row import (before the rows hit the DOM) and our pass-2
-     * (finalizeColonAlignedColumns) runs just before render, neither pass can see
-     * the annotation; the only reliable interception point is a MutationObserver
-     * that fires synchronously as each node is added.
-     *
-     * The observer:
-     *   - watches `childList` and `subtree` on each `table.tbl tbody`
-     *   - for every added node, checks whether it or any of its descendants
-     *     carries `class="treleases"` (exact match) — the attribute value used by
-     *     the jesus2099 script
-     *   - removes the offending element immediately, before the browser paints
-     *
-     * Called once after each `renderFinalTable` / `renderGroupedTable` completes.
-     * A module-level `WeakSet` prevents double-observing the same tbody across
-     * repeated re-renders.
-     *
-     * @returns {void}
-     */
-#+end_example
-
-#+begin_example
-    /**
-     * High-performance batch renderer for large datasets
-     * Uses DocumentFragment, chunked rendering, and progress updates
-     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
-     */
-    async function renderFinalTable(rows) {
-#+end_example
-
-
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
 
 * TODO fix Artist-Releasegroup pages
@@ -65200,7 +65130,7 @@ etc
 When clicking on one of the unique favicons + base URL, ALL rows where this favicon and base URL is part of should be
 displayed
 
-* TODO add Synthetic entries for each different relationship icon
+* DONE add Synthetic entries for each different relationship icon
 ** DONE initial
 
 In the following code section
@@ -65235,7 +65165,8 @@ https://musicbrainz.org/recording/ceb2711e-cbd9-44a5-9782-611a35d35468
 https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
 #+end_example
 
-** TODO sort the Relationships icons
+** DONE sort the Relationships icons
+*** DONE initial
 
 In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.361+2026-03-30') and
 changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.361"') add some more functionality:
@@ -65271,12 +65202,35 @@ list in the "Relationships" column for e.g
 (2) [springsteenlyrics.com] https://springsteenlyrics.com/forum/viewtopic.php
 #+end_example
 
+3.)
+
+add a new changelog entry at the beginning of the chagelog file
+
+*** DONE bugs
+
+some bugs:
+
+1.)
+
+the PATH_SENSITIVE_HOSTS fix for springsteenlyrics.com isn't working. Everything is still just displayed under the entry
+"https://springsteenlyrics.com"
+
+2.)
+
+the alignment inide the ""Relationship icons" section of the unique value drop down list in the "Relationships" column"
+should be like in all other "unique value drop down" lists for other columns, so
+
+- the unique counts '(<count number>)' should be right aligned inside the "Relationships" column related to each other
+  to account for single or multidigit counts
+- the rest of the data cell, starting with the "[relationship icon]" should be left aligned inside the "Relationships"
+  column related to each other, so the "[relationship icon]"s in each data cell should be exactly below each other
+
+
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
 * TODO Implement column movement
 
-
-* Configuration dialog redesign
+* TODO Configuration dialog redesign
 
 add some new functionality in the uploaded library "VZ_MBLibrary.user.js" to the current "Settings" dialog UI:
 
@@ -65364,7 +65318,7 @@ also rethink sub-pageType definitions so which columsn
 
 
 
-* doc
+* TODO add/fix missing/doubled - JSDoc definitions
 
 #+begin_example
     /**
@@ -66086,4 +66040,64 @@ also rethink sub-pageType definitions so which columsn
      *                                  same snapshot of the context.
      */
 #+end_example
+
+
+* TODO read the unicode chars from a configuration table definition 
+
+Add a new functionality:
+
+1.)
+
+in the variable "const configSchema" add a new section
+
+#+begin_example
+        // ============================================================
+        // UNICODE CHARACTER PICKER SECTION
+        // ============================================================
+        divider_unicode_char_picker: {
+            type: 'divider',
+            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
+        },
+
+        sa_unicode_char_picker: {
+            label: "Enable Unicode Character Picker",
+            type: "checkbox",
+            default: true,
+            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
+                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
+        },
+
+        // Configurable lookup table for the Unicode Character Picker.
+        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
+        sa_unicode_char_picker_mappings: {
+            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
+            type: 'table',
+            table_name: 'Unicode Code Symbols',
+            columns: ['Unicode Code Symbol', 'Name', 'Default'],
+            description: '<add appropriate description here>'
+        },
+#+end_example
+
+2.)
+
+Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
+There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
+
+3.)
+
+read the unicode chars definitions, currently hardcoded in
+
+#+begin_example
+const SA_UNICODE_CHARS
+#+end_example
+
+from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
+extend the mappings
+
+4.)
+
+also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
+session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
+
+
 

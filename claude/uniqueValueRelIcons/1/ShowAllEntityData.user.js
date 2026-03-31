@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.363+2026-03-31
+// @version      9.99.362+2026-03-31
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -23986,70 +23986,54 @@ a { color: #1565c0; }`;
         })();
 
         const relIconCounts = isRelCellCol ? (() => {
-            // Hosts for which the URL pathname (stripped of query string and
-            // fragment) is used as an additional grouping dimension so that e.g.
-            //   https://springsteenlyrics.com/bootlegs.php
-            //   https://springsteenlyrics.com/collection.php
-            // appear as separate dropdown entries instead of collapsing to a
-            // single hostname entry.  Add more base domains here as needed.
-            const PATH_SENSITIVE_HOSTS = new Set(['springsteenlyrics.com']);
-
-            /**
-             * Returns true when `hostname` equals or is a subdomain of any
-             * PATH_SENSITIVE_HOSTS entry, handling bare and www.-prefixed variants.
-             * @param {string} hostname - Parsed URL hostname (lower-case per spec)
-             * @returns {boolean}
-             */
-            function _isPathSensitive(hostname) {
-                for (const h of PATH_SENSITIVE_HOSTS) {
-                    if (hostname === h || hostname.endsWith('.' + h)) return true;
-                }
-                return false;
-            }
-
-            const counts  = new Map(); // domainKey → row count
-            const iconFor = new Map(); // domainKey → display URL (for label + favicon)
+            const counts  = new Map(); // domain → row count
+            const iconFor = new Map(); // domain → base URL (origin) for label + favicon lookup
             if (!tbody) return counts;
             for (const row of tbody.rows) {
                 if (row.style.display === 'none') continue;
                 const cell = row.cells[colIndex];
                 if (!cell) continue;
-                const seenKeysInRow = new Set();
-                // Read URLs from the hidden .mb-rel-filter-key spans — these
-                // always carry the raw target URL exactly as stored in
-                // MusicBrainz, without any browser href normalisation.
-                for (const keySpan of cell.querySelectorAll('.mb-rel-filter-key')) {
-                    const href = keySpan.textContent;
+                // Domains for which the virtual path component (without query string or
+                // fragment) is used as an additional grouping dimension in the
+                // "Relationship icons" dropdown section.  For all other domains only the
+                // hostname is used as the grouping key so that e.g. all amazon.de URLs
+                // collapse to a single entry regardless of their path.
+                const PATH_SENSITIVE_HOSTS = new Set(['springsteenlyrics.com']);
+
+                const seenDomainsInRow = new Set();
+                for (const a of cell.querySelectorAll('a[href]')) {
+                    const href = a.getAttribute('href');
                     if (!href) continue;
-                    let domainKey;
-                    let baseUrl; // display label: origin+pathname for path-sensitive
-                                 // hosts, origin+"/" for all others
+                    let domain;
+                    let baseUrl; // display URL: origin+path for path-sensitive hosts,
+                                 // origin+"/" for all others
                     if (href.startsWith('http')) {
                         try {
                             const u = new URL(href);
-                            if (_isPathSensitive(u.hostname)) {
-                                // Normalise: treat root path "/" the same as no
-                                // path so that bare-domain URLs still collapse to
-                                // one entry (e.g. https://springsteenlyrics.com/).
-                                const path = (u.pathname && u.pathname !== '/') ? u.pathname : '';
-                                domainKey = u.hostname + path;
-                                baseUrl   = path ? u.origin + path : u.origin + '/';
+                            if (PATH_SENSITIVE_HOSTS.has(u.hostname)) {
+                                // Group by hostname + pathname so that e.g.
+                                // springsteenlyrics.com/bootlegs.php and
+                                // springsteenlyrics.com/collection.php are separate entries.
+                                // Query string and fragment are intentionally stripped.
+                                domain  = u.hostname + u.pathname;
+                                baseUrl = u.origin + u.pathname;
                             } else {
-                                // Default: group by hostname only.
-                                domainKey = u.hostname;
-                                baseUrl   = u.origin + '/';
+                                // Default: group by hostname only, show clean origin URL.
+                                domain  = u.hostname;
+                                baseUrl = u.origin + '/';
                             }
-                        } catch(_) { domainKey = href; baseUrl = href; }
+                        } catch(_) { domain = href; baseUrl = href; }
                     } else {
                         const m = href.match(/^\/([^/]+)/);
-                        domainKey = m ? m[1] : href;
-                        baseUrl   = domainKey;
+                        domain  = m ? m[1] : href;
+                        baseUrl = domain;
                     }
-                    if (seenKeysInRow.has(domainKey)) continue;
-                    seenKeysInRow.add(domainKey);
-                    counts.set(domainKey, (counts.get(domainKey) || 0) + 1);
-                    // Store display URL for the first occurrence of each key.
-                    if (!iconFor.has(domainKey)) iconFor.set(domainKey, baseUrl);
+                    if (seenDomainsInRow.has(domain)) continue;
+                    seenDomainsInRow.add(domain);
+                    counts.set(domain, (counts.get(domain) || 0) + 1);
+                    // Store the display URL so the dropdown label shows the correct base URL,
+                    // e.g. "https://www.amazon.de/" or "https://springsteenlyrics.com/bootlegs.php".
+                    if (!iconFor.has(domain)) iconFor.set(domain, baseUrl);
                 }
             }
             counts._iconFor = iconFor;
@@ -24340,44 +24324,23 @@ a { color: #1565c0; }`;
                     const nameB = _iconFor.get(ub) || ub;
                     return nameA.localeCompare(nameB) || cb - ca;
                 });
-            // Pre-compute badge width so all count badges in this section
-            // have the same fixed width and the numbers right-align,
-            // identical to the regular unique-values list behaviour.
-            const relMaxCount = sortedRels.reduce((m, [, c]) => Math.max(m, c), 0);
-            const relBadgeChWidth = String(relMaxCount).length + 2; // "(" + digits + ")"
-            for (const [domainKey, count] of sortedRels) {
-                // baseUrl is the stored display URL, e.g. "https://www.amazon.de/"
-                // or "https://springsteenlyrics.com/bootlegs.php"
-                const baseUrl = _iconFor.get(domainKey) || domainKey;
-                // ── item row: flex container so badge, icon, and label align ──
+            for (const [domain, count] of sortedRels) {
+                // baseUrl is the stored origin, e.g. "https://www.amazon.de/"
+                const baseUrl = _iconFor.get(domain) || domain;
                 const item = document.createElement('div');
                 item.className = 'mb-col-uniq-item mb-col-uniq-multirow-item';
                 item.setAttribute('role', 'option');
                 // tooltip shows the base URL so the user sees the full origin on hover
                 item.title = baseUrl;
-                item.style.display    = 'flex';
-                item.style.alignItems = 'center';
-                // ── count badge: right-aligned, fixed width ────────────────
                 const badge = document.createElement('span');
                 badge.className = 'mb-uniq-count-badge';
                 badge.textContent = `(${count})`;
                 badge.setAttribute('aria-hidden', 'true');
-                badge.style.color           = cntColor;
-                badge.style.backgroundColor = cntBg;
-                badge.style.fontWeight      = 'bold';
-                badge.style.fontFamily      = 'monospace';
-                badge.style.borderRadius    = '3px';
-                badge.style.padding         = '0 3px';
-                badge.style.marginRight     = '5px';
-                badge.style.fontSize        = '0.85em';
-                badge.style.display         = 'inline-block';
-                badge.style.flexShrink      = '0';
-                // Fixed width + right-align so all count numbers line up
-                // regardless of their digit count (matches regular list behaviour).
-                badge.style.minWidth        = `${relBadgeChWidth}ch`;
-                badge.style.textAlign       = 'right';
+                badge.style.cssText = `color:${cntColor};background:${cntBg};font-weight:bold;`
+                    + 'font-family:monospace;border-radius:3px;padding:0 3px;'
+                    + 'margin-right:5px;font-size:0.85em;display:inline-block;';
                 item.appendChild(badge);
-                // ── favicon icon ───────────────────────────────────────────
+                // favicon: derive hostname from the stored base URL (origin)
                 const ico = document.createElement('img');
                 if (baseUrl.startsWith('http')) {
                     let _dom = ''; try { _dom = new URL(baseUrl).hostname; } catch(_) {}
@@ -24385,28 +24348,21 @@ a { color: #1565c0; }`;
                         ? `https://www.google.com/s2/favicons?sz=16&domain=${_dom}`
                         : '/favicon.ico';
                 } else { ico.src = '/favicon.ico'; }
-                ico.style.width       = '14px';
-                ico.style.height      = '14px';
-                ico.style.flexShrink  = '0';
-                ico.style.marginRight = '4px';
+                ico.style.cssText = 'width:14px;height:14px;vertical-align:middle;margin-right:4px;';
                 ico.setAttribute('aria-hidden', 'true');
                 item.appendChild(ico);
-                // ── base URL label ─────────────────────────────────────────
+                // base URL label shown after the favicon, e.g. "https://www.amazon.de/"
                 const lbl = document.createElement('span');
                 lbl.textContent = baseUrl;
-                lbl.style.fontSize   = '0.85em';
-                lbl.style.fontFamily = 'monospace';
-                lbl.style.color      = 'inherit';
-                lbl.style.overflow   = 'hidden';
-                lbl.style.textOverflow = 'ellipsis';
-                lbl.style.whiteSpace = 'nowrap';
+                lbl.style.cssText = 'font-size:0.85em;vertical-align:middle;'
+                    + 'font-family:monospace;color:inherit;';
                 item.appendChild(lbl);
                 item.addEventListener('mousedown', ev => ev.preventDefault());
-                // applyUniqVal uses domainKey (hostname, or hostname+pathname for
-                // path-sensitive hosts) as the filter string; testRowMatch() finds
-                // it as a substring of the full URL text in .mb-rel-filter-key spans.
+                // Filter by hostname so all rows containing any URL from this domain match.
+                // The hidden .mb-rel-filter-key spans carry the full URLs; testRowMatch()
+                // uses includes(domain) which matches any URL containing this hostname.
                 item.addEventListener('click', () => {
-                    applyUniqVal(domainKey, table, colIndex); closeUniqDrop();
+                    applyUniqVal(domain, table, colIndex); closeUniqDrop();
                 });
                 synBox.appendChild(item);
             }

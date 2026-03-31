@@ -1,21 +1,5 @@
 [
   {
-    "version": "9.99.363",
-    "date": "2026-03-31",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Relationship icons dropdown — springsteenlyrics.com path grouping was not working: URLs were read from <a href> attributes (subject to browser normalisation) instead of the raw .mb-rel-filter-key span text, and the hostname check was an exact match that silently failed for www.-prefixed variants (e.g. www.springsteenlyrics.com). Now reads from .mb-rel-filter-key spans and uses _isPathSensitive() which also matches subdomains via endsWith('.<host>') so both bare and www. variants are handled correctly.",
-          "Relationship icons dropdown — PATH_SENSITIVE_HOSTS Set and _isPathSensitive() helper are now defined once before the row loop instead of being recreated on every row iteration.",
-          "Relationship icons dropdown — root-path '/' is normalised to the bare origin, so 'https://springsteenlyrics.com/' no longer generates a spurious extra entry alongside path-specific ones.",
-          "Relationship icons dropdown — count badges are now right-aligned with a fixed monospace minWidth (matching the regular unique-values list) so single- and multi-digit counts line up cleanly.",
-          "Relationship icons dropdown — item rows now use display:flex + align-items:center so the favicon icon column is perfectly aligned below each other across all entries, independent of badge digit count."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.362",
     "date": "2026-03-31",
     "sections": [
@@ -36,8 +20,8 @@
       {
         "label": "🐛 Fix",
         "items": [
-            "Added 'Relationships' column to 'Artist-Relationships', 'Recording-Releases', 'Series-Releases' and 'Area-Releases' columns",
-            "Added 'addCAA' column to 'Area-Releases' columns"
+          "Added 'Relationships' column to 'Artist-Relationships', 'Recording-Releases', 'Series-Releases' and 'Area-Releases' columns",
+          "Added 'addCAA' column to 'Area-Releases' columns"
         ]
       }
     ]
