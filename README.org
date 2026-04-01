@@ -65333,46 +65333,45 @@ also add a changelog entry to "ShowAllEntityData_CHANGELOG.json"
 
 * TODO In the case of "Series" the "Relationships" column should ONLY be present on "Series-Releases"
 
-1.)
-
-In the case of "Series" the "Relationships" column should ONLY be present on "Series-Releases"
-
-2.)
-
-for "Series-Events" make "Artists" a "multi-row" cell columns
-
-3.)
-
-also rethink sub-pageType definitions so which columsn
-
-pageTypes 'series-releases' needs to be special cased of which columns are actually present on a specific page. We
+The pageType 'series-releases' needs to be special cased which columns are actually present on a specific page. We
 already have the 'labelFromH2: true' parameter which dynamically extracts the <EntityType> for each 'series-releases'
 page.
 
+The pageType
+
 #+begin_example
-        {
-            type: 'series-releases',
-            match: (path) => path.includes('/series'),
-            // labelFromH2: true instructs the button-creation code to read the <h2>
-            // header text that precedes the table and substitute it into the label so
-            // the button reads "Show all <EntityType> for Series" dynamically.
-            // Series pages can contain Releases, Events, Works, Recordings, etc.
-            buttons: [ { label: 'Show all Releases for Series', labelFromH2: true } ],
-            features: {
+type: 'series-releases'
+#+end_example
+
+needs to be replaced with a structure like the following, where each "entityType" has it's own "column features"
+definition (feel free to change the structure below, if there is a better representation, but leave the definitions like
+e.g. "columnErasers", "columnExtractors", etc. intact)
+
+#+begin_example
+    {
+        type: 'series-releases',
+        match: (path) => path.includes('/series'),
+        // labelFromH2: true instructs the button-creation code to read the <h2>
+        // header text that precedes the table and substitute it into the label so
+        // the button reads "Show all <EntityType> for Series" dynamically.
+        // Series pages can contain Releases, Events, Works, Recordings, etc.
+        buttons: [ { label: 'Show all Releases for Series', labelFromH2: true } ],
+        features: {
+	    entityType: 'Releases' , features: {
                 columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+		    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
                 ],
                 columnExtractors: [
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
-                    {
+		    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+		    {
                         sourceColumn:    'Tracks',
                         extractor:       'sumTracks',
                         syntheticColumns: ['Total Tracks']
-                    },
-                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+		    },
+		    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                 ],
                 syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+		    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 injectedColumns: [ 'Relationships' ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
@@ -65380,9 +65379,43 @@ page.
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
                 addCAA: 'Release',
                 extractMainColumn: 'Release'
-            },
-            tableMode: 'single'
-        },
+	    },
+	    entityType: 'Events' , features: {
+                columnExtractors: [
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                ],
+                syntheticColumnExtractors: [
+		    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                collapsableColumns: [ 'Artists' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event'
+	    },
+	    entityType: 'Release groups' , features: {
+                columnErasers: [
+		    { sourceColumn: 'Title', erasers: ['▶'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+	    },
+	    entityType: 'Recordings' , features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Name'
+	    },
+	}
+	tableMode: 'single'
+    },
+#+end_example
+
+** fixes
+
+#+begin_example
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
 #+end_example
 
 
