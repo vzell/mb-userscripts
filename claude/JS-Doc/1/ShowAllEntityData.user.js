@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.370+2026-04-01
+// @version      9.99.371+2026-04-01
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -19379,6 +19379,35 @@ a { color: #1565c0; }`;
         return '';
     }
 
+    /**
+     * Prepares the table header row for the final rendered view.
+     *
+     * Three sequential passes are performed:
+     *
+     *   1. **Column removal** — removes columns whose header text prefix matches
+     *      an entry in `removalMap` and whose corresponding setting is enabled
+     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
+     *
+     *   2. **Column origin stamping** — stamps each surviving original <th> with
+     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
+     *      from a re-render pass are skipped.
+     *
+     *   3. **Synthetic column injection** — injects new <th> elements for each
+     *      configured extractor, assigning:
+     *        - `mb-extracted-column`         for activeColumnExtractors entries
+     *                                        and extractMainColumn (MB-Name/Comment)
+     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
+     *                                        entries (second-pass derivations)
+     *      Each injected <th> also receives `dataset.colName`, the appropriate
+     *      background color from settings, and is appended to the header row if
+     *      not already present (idempotent across re-renders).
+     *
+     * The three CSS classes are the authoritative source for the Statistics panel
+     * column-origin breakdown (original / extracted / derived counts).
+     *
+     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
+     *   The `<thead>` element or its first `<tr>` row to process.
+     */
     function cleanupHeaders(headerElement) {
         if (!headerElement) return;
         const theadRow = (headerElement.tagName === 'THEAD') ? headerElement.querySelector('tr') : headerElement;
@@ -28592,16 +28621,12 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Standard download fallback using an anchor element with user notification
-     * @param {string} url - The blob URL to download from
-     * @param {string} filename - The filename to save as
-     */
-    /**
-     * Trigger a browser file download for a Blob object-URL and show a notification popup.
+     * Triggers a browser file download for a Blob object-URL via an anchor
+     * element and shows a notification popup with optional row-count info.
      *
-     * @param {string} url       - Object URL created via URL.createObjectURL().
-     * @param {string} filename  - Suggested save filename.
-     * @param {number} rowCount  - Number of rows saved (0 = unknown / not shown).
+     * @param {string} url          - Object URL created via URL.createObjectURL().
+     * @param {string} filename     - Suggested save filename.
+     * @param {number} [rowCount=0] - Number of rows saved (0 = unknown / not shown).
      */
     function triggerStandardDownload(url, filename, rowCount = 0) {
         const a = document.createElement('a');
@@ -30815,6 +30840,61 @@ a { color: #1565c0; }`;
         return { status: hint.status, label: cacheStatusLabel(hint.status, hint.duration) };
     }
 
+    /**
+     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
+     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
+     * network fetch, or "timing unavailable" (no entry / API absent).
+     *
+     * Classification rules (in priority order):
+     *
+     *   1. transferSize === 0 AND encodedBodySize > 0
+     *        → Memory cache (🟢).  Browser served from RAM; size is known even
+     *          for cross-origin resources when served from memory.
+     *
+     *   2. transferSize > 0
+     *        → Network fetch (🔵).  Actual bytes received over the wire.
+     *
+     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
+     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
+     *          the response arrived in under 5 ms — consistent with a disk-cached
+     *          redirect chain where BOTH the redirect and the final resource are
+     *          served from cache.
+     *          NOTE: this path is NEVER triggered for coverartarchive.org /
+     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
+     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
+     *          always adds 2–4 s of network latency and duration never drops below
+     *          5 ms on a page reload.  🟡 is therefore only observable for image
+     *          URLs that are served directly (no redirect) or whose redirect chain
+     *          is genuinely disk-cached.
+     *
+     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
+     *        → Network / redirect chain (🔵).  This is the only outcome ever
+     *          produced for CAA/EAA archive URLs on any repeated page load, because
+     *          the non-cacheable redirect to archive.org always requires a fresh
+     *          network round-trip.  Even if the final image bytes are already in
+     *          the disk cache, the redirect latency keeps duration > 5 ms.
+     *
+     *   5. No matching entry, or Performance API absent
+     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
+     *          'unavailable'; every case where an entry exists resolves to one of
+     *          the three statuses above.
+     *
+     * Returned object shape:
+     * ```
+     * {
+     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
+     *   transferSize:    number | null,
+     *   encodedBodySize: number | null,
+     *   duration:        number | null,
+     *   redirectStart:   number | null,   // 0 for opaque cross-origin
+     *   responseStart:   number | null,   // 0 for opaque cross-origin
+     * }
+     * ```
+     *
+     * @param  {string} url  The exact URL to look up (matched against entry.name).
+     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
+     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
+     */
     function getResourceTimingHint(url) {
         if (typeof performance === 'undefined' || typeof performance.getEntriesByName !== 'function') {
             return {

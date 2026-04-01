@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.99.371",
+    "date": "2026-04-01",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "JSDoc cleanup — cleanupHeaders(): the JSDoc describing the three-pass header preparation (column removal, origin stamping, synthetic column injection) was missing from before function cleanupHeaders() after the previous session's fix moved it away; restored.",
+          "JSDoc cleanup — triggerStandardDownload(): the two stacked docs ('Standard download fallback…' and 'Trigger a browser file download…') merged into one definitive JSDoc.",
+          "JSDoc cleanup — getResourceTimingHint(): the detailed JSDoc describing the RT API classification rules (memory/disk/network/unavailable) was lost in the previous session and left the function undocumented; restored before function getResourceTimingHint()."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.370",
     "date": "2026-04-01",
     "sections": [

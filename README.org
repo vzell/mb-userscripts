@@ -65225,113 +65225,7 @@ should be like in all other "unique value drop down" lists for other columns, so
 - the rest of the data cell, starting with the "[relationship icon]" should be left aligned inside the "Relationships"
   column related to each other, so the "[relationship icon]"s in each data cell should be exactly below each other
 
-
-* TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
-
-
-In web development and UI/UX design, this feature is most commonly called Sticky Columns or Fixed Columns.
-
-Depending on the context or the specific software you are using, you might also hear it referred to as:
-
-Pinned Columns: Common in data grid libraries and UI frameworks (like AG Grid or Material-UI).
-
-Frozen Columns: Often used in enterprise software or spreadsheet applications. For example, in Microsoft Excel or Google Sheets, this feature is called Freeze Panes.
-
-If you're trying to build this in CSS:
-Nowadays, this is almost always implemented using the position: sticky; CSS property. You apply it to the specific table cells (<th> or <td>) you want to lock in place, along with a directional property like left: 0;.
-
-For example:
-
-CSS
-.fixed-column {
-  position: sticky;
-  left: 0; /* Locks the column to the left edge of the scrolling container */
-  background-color: white; /* Needed so scrolling columns don't show through */
-  z-index: 1; /* Keeps it above the scrolling content */
-}
-
-
-* TODO Implement column movement
-
-
-* TODO Configuration dialog redesign
-** DONE initial
-
-add some new functionality in the uploaded library "VZ_MBLibrary.user.js" to the current "Settings" dialog UI:
-
-1.)
-
-All color configurations parameters in "const configSchema"
-
-#+begin_example
-        sa_ui_show_all_subtable_btn_bg: {
-            label: '"Show all N rows" button initial background color',
-            type: 'text',
-            default: '#FFE0B2',
-            description: 'Background color of the "Show all N rows" overflow sub-table button before it has been clicked. ' +
-                         'After clicking the button the background changes to sa_ui_show_all_subtable_btn_bg_clicked.'
-        },
-
-        sa_ui_show_all_subtable_btn_bg_clicked: {
-            label: '"Show all N rows" button clicked background color',
-            type: 'text',
-            default: '#CCFFCC',
-            description: 'Background color of the "Show all N rows" overflow sub-table button after it has been clicked ' +
-                         '(opening the full listing in a new tab). Provides visual confirmation that the button was activated.'
-        },
-#+end_example
-
-should use the 'color_picker' type
-
-#+begin_example
-type: 'color_picker',
-#+end_example
-
-2.)
-
-all configurations of type
-
-#+begin_example
-type: 'popup_dialog',
-#+end_example
-
-which have color definitions, e.g. the parameter 'bg' in the 'fields:' section
-
-#+begin_example
-        sa_ui_filter_bar_btn_style: {
-            label: 'Filter bar utility button style',
-            type: 'popup_dialog',
-            fields: ['fontSize', 'padding', 'borderRadius', 'bg', 'border'],
-            default: '0.8em|2px 6px|4px|#f0f0f0|1px solid #ccc',
-            description: 'Filter-bar utility buttons (prefilter toggle, highlight toggle, clear buttons): fontSize|padding|borderRadius|bg|border'
-        },
-#+end_example
-
-should also use the 'color_picker' type
-
-3.)
-
-add a changelog entry to the commented variable
-
-#+begin_example
-
-// CHANGELOG
-// let changelog_library = [
-#+end_example
-
-and bump the versions in
-
-#+begin_example
-// @version      3.16.0+2026-03-27
-const LIBRARY_VERSION = '3.16.0+2026-03-27';
-#+end_example
-
-4.)
-
-also add a changelog entry to "ShowAllEntityData_CHANGELOG.json"
-
-
-* TODO In the case of "Series" the "Relationships" column should ONLY be present on "Series-Releases"
+* DONE In the case of "Series" the "Relationships" column should ONLY be present on "Series-Releases"
 
 The pageType 'series-releases' needs to be special cased which columns are actually present on a specific page. We
 already have the 'labelFromH2: true' parameter which dynamically extracts the <EntityType> for each 'series-releases'
@@ -65500,8 +65394,246 @@ to
                     ],
 #+end_example
 
+** fix
 
-* TODO add/fix missing/doubled - JSDoc definitions
+In the newly introduced "entityFeatures map" for the pageType "type: 'series-releases'" make the following changes:
+
+In the 'Release groups' section add the "columnErasers", "collapsableColumns" and "addCAA" so that it changes from
+
+#+begin_example
+                'Release groups': {
+                    columnErasers: [
+                        { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                    ],
+                    tooltipColumns: [ 'Title', 'Artist', '---', ['Type', 'Year', '(', 'Releases', ')'] ],
+                    injectedColumns: [ 'Relationships' ],
+                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
+                    addCAA: 'Title',
+                    extractMainColumn: 'Title'
+                },
+#+end_example
+
+to
+
+#+begin_example
+                'Release groups': {
+                    columnErasers: [
+                        { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                    ],
+                    columnExtractors: [
+                        { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                    ],
+                    tooltipColumns: [ 'Title', 'Artist', '---', ['Type', 'Year', '(', 'Releases', ')'] ],
+                    injectedColumns: [ 'Relationships' ],
+                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
+                    collapsableColumns: [ 'CAA' ],
+                    addCAA: 'Title',
+                    extractMainColumn: 'Title'
+                },
+#+end_example
+
+* DONE bug with uncollapsing "Release groups" in columns which are flagged as "addCAA"
+
+There is a bug in "tableMode: 'multi'" with toggeling 
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▼</span>
+#+end_example
+
+columns which are configured as "addCAA" e.g.
+
+#+begin_example
+                addCAA: 'Title',
+#+end_example
+
+in the pageType definition for example in the pageType
+
+#+begin_example
+            type: 'artist-releases',
+#+end_example
+
+Here is the reproducible bug description:
+
+When uncollapsing in the column "Title" a "release-group" data-cell the uncollapsed "releases" are rendered in a new
+artificial column to the rigth of the original column (instead of inline), so pushing all other column cells in the same row to the right
+
+It works in "single"-table pages like e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+When uncollapsing there a data cell in the "Release groups" column, the underlying "releases" are uncollapsed inline.
+
+please fix
+
+
+* TODO read the unicode chars from a configuration table definition 
+** DONE initial
+
+Add a new functionality:
+
+1.)
+
+in the variable "const configSchema" add a new section
+
+#+begin_example
+        // ============================================================
+        // UNICODE CHARACTER PICKER SECTION
+        // ============================================================
+        divider_unicode_char_picker: {
+            type: 'divider',
+            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
+        },
+
+        sa_unicode_char_picker: {
+            label: "Enable Unicode Character Picker",
+            type: "checkbox",
+            default: true,
+            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
+                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
+        },
+
+        // Configurable lookup table for the Unicode Character Picker.
+        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
+        sa_unicode_char_picker_mappings: {
+            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
+            type: 'table',
+            table_name: 'Unicode Code Symbols',
+            columns: ['Unicode Code Symbol', 'Name', 'Default'],
+            description: '<add appropriate description here>'
+        },
+#+end_example
+
+2.)
+
+Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
+There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
+
+3.)
+
+read the unicode chars definitions, currently hardcoded in
+
+#+begin_example
+const SA_UNICODE_CHARS
+#+end_example
+
+from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
+extend the mappings
+
+4.)
+
+also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
+session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
+
+** TODO Add © ℗ in the default code
+
+** TODO add a quickfilter with search string highlighning to 
+
+
+* TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
+
+
+In web development and UI/UX design, this feature is most commonly called Sticky Columns or Fixed Columns.
+
+Depending on the context or the specific software you are using, you might also hear it referred to as:
+
+Pinned Columns: Common in data grid libraries and UI frameworks (like AG Grid or Material-UI).
+
+Frozen Columns: Often used in enterprise software or spreadsheet applications. For example, in Microsoft Excel or Google Sheets, this feature is called Freeze Panes.
+
+If you're trying to build this in CSS:
+Nowadays, this is almost always implemented using the position: sticky; CSS property. You apply it to the specific table cells (<th> or <td>) you want to lock in place, along with a directional property like left: 0;.
+
+For example:
+
+CSS
+.fixed-column {
+  position: sticky;
+  left: 0; /* Locks the column to the left edge of the scrolling container */
+  background-color: white; /* Needed so scrolling columns don't show through */
+  z-index: 1; /* Keeps it above the scrolling content */
+}
+
+
+* TODO Implement column movement
+
+
+* TODO Configuration dialog redesign
+** DONE initial
+
+add some new functionality in the uploaded library "VZ_MBLibrary.user.js" to the current "Settings" dialog UI:
+
+1.)
+
+All color configurations parameters in "const configSchema"
+
+#+begin_example
+        sa_ui_show_all_subtable_btn_bg: {
+            label: '"Show all N rows" button initial background color',
+            type: 'text',
+            default: '#FFE0B2',
+            description: 'Background color of the "Show all N rows" overflow sub-table button before it has been clicked. ' +
+                         'After clicking the button the background changes to sa_ui_show_all_subtable_btn_bg_clicked.'
+        },
+
+        sa_ui_show_all_subtable_btn_bg_clicked: {
+            label: '"Show all N rows" button clicked background color',
+            type: 'text',
+            default: '#CCFFCC',
+            description: 'Background color of the "Show all N rows" overflow sub-table button after it has been clicked ' +
+                         '(opening the full listing in a new tab). Provides visual confirmation that the button was activated.'
+        },
+#+end_example
+
+should use the 'color_picker' type
+
+#+begin_example
+type: 'color_picker',
+#+end_example
+
+2.)
+
+all configurations of type
+
+#+begin_example
+type: 'popup_dialog',
+#+end_example
+
+which have color definitions, e.g. the parameter 'bg' in the 'fields:' section
+
+#+begin_example
+        sa_ui_filter_bar_btn_style: {
+            label: 'Filter bar utility button style',
+            type: 'popup_dialog',
+            fields: ['fontSize', 'padding', 'borderRadius', 'bg', 'border'],
+            default: '0.8em|2px 6px|4px|#f0f0f0|1px solid #ccc',
+            description: 'Filter-bar utility buttons (prefilter toggle, highlight toggle, clear buttons): fontSize|padding|borderRadius|bg|border'
+        },
+#+end_example
+
+should also use the 'color_picker' type
+
+3.)
+
+add a changelog entry to the commented variable
+
+#+begin_example
+
+// CHANGELOG
+// let changelog_library = [
+#+end_example
+
+and bump the versions in
+
+#+begin_example
+// @version      3.16.0+2026-03-27
+const LIBRARY_VERSION = '3.16.0+2026-03-27';
+#+end_example
+
+4.)
+
+also add a changelog entry to "ShowAllEntityData_CHANGELOG.json"
+
+
+
+* DONE add/fix missing/doubled - JSDoc definitions
+** initial
 
 Please check the following JSDoc definitions which have multiple entries after each other
 and either
@@ -65738,82 +65870,6 @@ and either
      */
 #+end_example
 
-** TODO 8
-
-#+begin_example
-    /**
-     * Prepares the table header row for the final rendered view.
-     *
-     * Three sequential passes are performed:
-     *
-     *   1. **Column removal** — removes columns whose header text prefix matches
-     *      an entry in `removalMap` and whose corresponding setting is enabled
-     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
-     *
-     *   2. **Column origin stamping** — stamps each surviving original <th> with
-     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
-     *      from a re-render pass are skipped.
-     *
-     *   3. **Synthetic column injection** — injects new <th> elements for each
-     *      configured extractor, assigning:
-     *        - `mb-extracted-column`         for activeColumnExtractors entries
-     *                                        and extractMainColumn (MB-Name/Comment)
-     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
-     *                                        entries (second-pass derivations)
-     *      Each injected <th> also receives `dataset.colName`, the appropriate
-     *      background color from settings, and is appended to the header row if
-     *      not already present (idempotent across re-renders).
-     *
-     * The three CSS classes are the authoritative source for the Statistics panel
-     * column-origin breakdown (original / extracted / derived counts).
-     *
-     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
-     *   The `<thead>` element or its first `<tr>` row to process.
-     */
-
-    /**
-     * Returns a human-readable tooltip describing a synthetic column header.
-     *
-     * The tooltip is stamped onto the <th> element injected by cleanupHeaders()
-     * so users can hover over any synthetic column name and instantly see which
-     * source column it was extracted from and what the column contains.
-     *
-     * @param {string} extractor     - The extractor key (e.g. 'splitCountryDate').
-     * @param {string} sourceColumn  - The originating column name (e.g. 'Country/Date').
-     * @param {string} colName       - The synthetic column name (e.g. 'Country').
-     * @returns {string} Tooltip text, or '' when no description is available.
-     */
-#+end_example
-
-** TODO 9
-
-#+begin_example
-    /**
-     * Recalculates and updates the h2 row-count badge from current DOM state of all
-     * subtables after global + subtable filters have been applied.
-     *
-     * Mirrors the 3-tier format used by updateSubTableRowCount():
-     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
-     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
-     *
-     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
-     */
-    /**
-     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
-     * reflecting the current combination of global filter, column filters, and
-     * sub-table filter active on this specific table.
-     *
-     * Called from:
-     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
-     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
-     *
-     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
-     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
-     *
-     * @param {HTMLTableElement} tbl  The live sub-table element.
-     */
-#+end_example
-
 ** DONE 10
 
 #+begin_example
@@ -65862,109 +65918,6 @@ and either
      *
      * @param {HTMLTableElement|null} table  Pass the single table in single-table
      *   mode, or `null` in multi-table mode to scan all `table.tbl` elements.
-     */
-#+end_example
-
-** TODO 11 - Wires the single global ▶/◀ toggle button for multi-table mode. - REMOVE BY HAND
-*** initial
-
-#+begin_example
-    /**
-     * Wires the single global ▶/◀ toggle button for multi-table mode.
-     *
-     * In multi-table mode `initCollapsableColumns` is called once per sub-table
-     * (because each rendered `<table>` is independent), so it cannot accumulate
-     * all column-header buttons into one `collapseHdrBtns` array.  This helper
-     * fills that role: it is called once after ALL sub-tables have been
-     * processed by `initCollapsableColumns`, scans the live DOM for every
-     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
-     *
-     *   • Hides the global button when no such buttons exist (none of the
-     *     filtered-in sub-tables has a multi-row column).
-     *   • Shows the global button and re-wires its `onclick` to drive every
-     *     found header button (and therefore every cell toggle across every
-     *     sub-table) to the target expanded/collapsed state.
-     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
-     *     the highlight tint on the global button based on the current filter
-     *     match state across all sub-tables.
-     *
-     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
-     * loop completes — both on initial render and on every filter re-run.
-     */
-    /**
-     * _applyCollapseState — expand or collapse a single multi-row cell toggle
-     * WITHOUT dispatching a synthetic click event.
-     *
-     * Calling `toggle.click()` from within another click handler is suppressed
-     * by some browsers / userscript managers because the dispatched MouseEvent
-     * has `isTrusted = false`.  This helper replicates the delegation-handler
-     * logic from `ensureCollapseDelegate` directly so that mass-expand /
-     * mass-collapse from column-header, sub-table, and global collapse buttons
-     * works in all environments.
-     *
-     * @param {HTMLSpanElement} toggle  - The `.mb-cell-collapse-toggle` span.
-     * @param {boolean}         expand  - true → expand; false → collapse.
-     */
-#+end_example
-*
-*** TODO remove
-
-#+begin_example
-    /**
-     * Wires the single global ▶/◀ toggle button for multi-table mode.
-     *
-     * In multi-table mode `initCollapsableColumns` is called once per sub-table
-     * (because each rendered `<table>` is independent), so it cannot accumulate
-     * all column-header buttons into one `collapseHdrBtns` array.  This helper
-     * fills that role: it is called once after ALL sub-tables have been
-     * processed by `initCollapsableColumns`, scans the live DOM for every
-     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
-     *
-     *   • Hides the global button when no such buttons exist (none of the
-     *     filtered-in sub-tables has a multi-row column).
-     *   • Shows the global button and re-wires its `onclick` to drive every
-     *     found header button (and therefore every cell toggle across every
-     *     sub-table) to the target expanded/collapsed state.
-     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
-     *     the highlight tint on the global button based on the current filter
-     *     match state across all sub-tables.
-     *
-     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
-     * loop completes — both on initial render and on every filter re-run.
-     */
-#+end_example
-
-** TODO 12 - Removes all consecutive <br> tags found in the document : MISSING
-*** initial
-
-#+begin_example
-    /**
-     * Removes all consecutive <br> tags found in the document,
-     * leaving only a single <br> if multiple were found together.
-     * Logs the occurrences and count of tags removed.
-     */
-    /**
-     * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
-     * data-table h2 to immediately before it, preserving their original order.
-     *
-     * Idempotent: sections that are already before the data h2 are skipped.
-     * Must be called AFTER the .mb-row-count-stat span has been inserted into
-     * the h2 by updateH2Count() — that span is the anchor used to identify the
-     * data h2.  During a live fetch finalCleanup() runs after the render which
-     * already created the stat; during a disk load this function must be called
-     * explicitly after updateH2Count().
-     *
-     * Controlled by sa_enable_h2_section_relocation_on_final_page (default: true).
-     */
-#+end_example
-
-*** TODO MISSING
-
-#+begin_example
-    /**
-     * Removes all consecutive <br> tags found in the document,
-     * leaving only a single <br> if multiple were found together.
-     * Logs the occurrences and count of tags removed.
      */
 #+end_example
 
@@ -66077,7 +66030,199 @@ and either
      */
 #+end_example
 
-** TODO 16
+** DONE 18
+
+#+begin_example
+    /**
+     * Deletes a single record from an IDB object store.
+     *
+     * NOTE: Currently unused — no call site exists in this script.  Retained
+     * for potential future use (e.g. manual cache eviction or a purge-entry UI).
+     * If a call site is never added this function should be removed.
+     *
+     * @param   {string} storeName  'images' | 'metadata'
+     * @param   {string} key        Record key to delete.
+     * @returns {Promise<void>}
+     */
+    /**
+     * Deletes one record from an IDB object store.
+     * Used by _relRetryMbids to purge cached WS2 relationship data.
+     * @param {string} storeName  Object store name (e.g. 'rel-ws2')
+     * @param {string} key        Record key to delete
+     * @returns {Promise<void>}
+     */
+#+end_example
+
+** DONE 20
+
+#+begin_example
+    /**
+     * Builds one `<li class="mb-caa-art-li mb-caa-art-li-image">` element for a
+     * single image entry from the CAA/EAA JSON API response.
+     *
+     * Layout per row (all optional pieces degrade gracefully if data absent):
+     *   [18×18 thumb]  [type badge]  [ — comment ]  [⏳ if pending]
+     *
+     * When `sa_caa_hover_preview` is enabled, hovering the thumbnail triggers the
+     * shared singleton popup showing a larger version of that specific image
+     * (derived from `imgData.thumbnails` at `sa_caa_big_img_size`).  Unlike the
+     * icon-column hover, which always fetches `/front-{size}`, each li uses its
+     * own archive URL so Back, Booklet, etc. images preview correctly.
+     *
+     * The <li> starts with `style="display:none"` so the parent collapse
+     * toggle controls its visibility.  Protocol-relative URLs (`//`) are used
+     * so the element works on both http and https pages.
+     *
+     * @param   {Object} imgData  One image entry from the archive `images[]` array.
+     *   Expected fields: id, types[], front, back, comment, approved, image,
+     *   thumbnails.{250,500,1200,small,large}
+     * @returns {HTMLLIElement}
+     */
+    /**
+     * Re-applies active filter highlights to a single image <li> element.
+     *
+     * Low-level building block used by both _artHighlightArtCell() (post-build,
+     * on the live DOM) and _artBuildMultiRowArtCell() (during build, on detached
+     * nodes).  The two call sites together guarantee highlights are present
+     * regardless of whether the async art-cell rebuild fires before or after
+     * _activeFilterHighlightCtx is updated.
+     *
+     * Covers both .mb-caa-type-badge and .mb-caa-art-comment text nodes.
+     * Is a no-op when _activeFilterHighlightCtx is null (no active filter).
+     *
+     * @param {HTMLLIElement} li      - The image <li> produced by _artBuildImageLi().
+     * @param {number}        colIdx  - cellIndex of the art <td> in its parent row;
+     *                                  used to match column-scoped filters.
+     * @param {object|null}   [ctxOverride] - Optional explicit highlight context to
+     *                                  use instead of the module-level
+     *                                  _activeFilterHighlightCtx.  Used by
+     *                                  _artHighlightArtCell() so each li reads the
+     *                                  same snapshot of the context.
+     */
+#+end_example
+
+
+
+* TODO JSDoc
+
+Please check the following JSDoc definitions which have multiple entries after each other
+and either
+
+- remove the obsolete ones
+- move them to the right function definition
+- or merge them if it makes sense
+
+** TODO 1 - REMOVE by hand
+*** DONE initial
+
+#+begin_example
+    /**
+     * Prepares the table header row for the final rendered view.
+     *
+     * Three sequential passes are performed:
+     *
+     *   1. **Column removal** — removes columns whose header text prefix matches
+     *      an entry in `removalMap` and whose corresponding setting is enabled
+     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
+     *
+     *   2. **Column origin stamping** — stamps each surviving original <th> with
+     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
+     *      from a re-render pass are skipped.
+     *
+     *   3. **Synthetic column injection** — injects new <th> elements for each
+     *      configured extractor, assigning:
+     *        - `mb-extracted-column`         for activeColumnExtractors entries
+     *                                        and extractMainColumn (MB-Name/Comment)
+     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
+     *                                        entries (second-pass derivations)
+     *      Each injected <th> also receives `dataset.colName`, the appropriate
+     *      background color from settings, and is appended to the header row if
+     *      not already present (idempotent across re-renders).
+     *
+     * The three CSS classes are the authoritative source for the Statistics panel
+     * column-origin breakdown (original / extracted / derived counts).
+     *
+     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
+     *   The `<thead>` element or its first `<tr>` row to process.
+     */
+
+    /**
+     * Returns a human-readable tooltip describing a synthetic column header.
+     *
+     * The tooltip is stamped onto the <th> element injected by cleanupHeaders()
+     * so users can hover over any synthetic column name and instantly see which
+     * source column it was extracted from and what the column contains.
+     *
+     * @param {string} extractor     - The extractor key (e.g. 'splitCountryDate').
+     * @param {string} sourceColumn  - The originating column name (e.g. 'Country/Date').
+     * @param {string} colName       - The synthetic column name (e.g. 'Country').
+     * @returns {string} Tooltip text, or '' when no description is available.
+     */
+#+end_example
+*** TODO REMOVE by hand (1st occurence)
+
+#+begin_example
+    /**
+     * Prepares the table header row for the final rendered view.
+     *
+     * Three sequential passes are performed:
+     *
+     *   1. **Column removal** — removes columns whose header text prefix matches
+     *      an entry in `removalMap` and whose corresponding setting is enabled
+     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
+     *
+     *   2. **Column origin stamping** — stamps each surviving original <th> with
+     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
+     *      from a re-render pass are skipped.
+     *
+     *   3. **Synthetic column injection** — injects new <th> elements for each
+     *      configured extractor, assigning:
+     *        - `mb-extracted-column`         for activeColumnExtractors entries
+     *                                        and extractMainColumn (MB-Name/Comment)
+     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
+     *                                        entries (second-pass derivations)
+     *      Each injected <th> also receives `dataset.colName`, the appropriate
+     *      background color from settings, and is appended to the header row if
+     *      not already present (idempotent across re-renders).
+     *
+     * The three CSS classes are the authoritative source for the Statistics panel
+     * column-origin breakdown (original / extracted / derived counts).
+     *
+     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
+     *   The `<thead>` element or its first `<tr>` row to process.
+     */
+#+end_example
+
+** TODO 2
+
+#+begin_example
+    /**
+     * Recalculates and updates the h2 row-count badge from current DOM state of all
+     * subtables after global + subtable filters have been applied.
+     *
+     * Mirrors the 3-tier format used by updateSubTableRowCount():
+     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
+     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
+     *
+     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
+     */
+    /**
+     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
+     * reflecting the current combination of global filter, column filters, and
+     * sub-table filter active on this specific table.
+     *
+     * Called from:
+     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
+     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
+     *
+     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
+     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
+     *
+     * @param {HTMLTableElement} tbl  The live sub-table element.
+     */
+#+end_example
+
+** DONE 3
 
 #+begin_example
     /**
@@ -66094,7 +66239,8 @@ and either
      */
 #+end_example
 
-** TODO 17
+** TODO 4 - REMOVE by hand
+*** DONE initial
 
 #+begin_example
     /**
@@ -66179,31 +66325,171 @@ and either
      */
 #+end_example
 
-** DONE 18
+*** TODO REMOVE by hand (1st occurence)
 
 #+begin_example
     /**
-     * Deletes a single record from an IDB object store.
+     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
+     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
+     * network fetch, or "timing unavailable" (no entry / API absent).
      *
-     * NOTE: Currently unused — no call site exists in this script.  Retained
-     * for potential future use (e.g. manual cache eviction or a purge-entry UI).
-     * If a call site is never added this function should be removed.
+     * Classification rules (in priority order):
      *
-     * @param   {string} storeName  'images' | 'metadata'
-     * @param   {string} key        Record key to delete.
-     * @returns {Promise<void>}
+     *   1. transferSize === 0 AND encodedBodySize > 0
+     *        → Memory cache (🟢).  Browser served from RAM; size is known even
+     *          for cross-origin resources when served from memory.
+     *
+     *   2. transferSize > 0
+     *        → Network fetch (🔵).  Actual bytes received over the wire.
+     *
+     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
+     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
+     *          the response arrived in under 5 ms — consistent with a disk-cached
+     *          redirect chain where BOTH the redirect and the final resource are
+     *          served from cache.
+     *          NOTE: this path is NEVER triggered for coverartarchive.org /
+     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
+     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
+     *          always adds 2–4 s of network latency and duration never drops below
+     *          5 ms on a page reload.  🟡 is therefore only observable for image
+     *          URLs that are served directly (no redirect) or whose redirect chain
+     *          is genuinely disk-cached.
+     *
+     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
+     *        → Network / redirect chain (🔵).  This is the only outcome ever
+     *          produced for CAA/EAA archive URLs on any repeated page load, because
+     *          the non-cacheable redirect to archive.org always requires a fresh
+     *          network round-trip.  Even if the final image bytes are already in
+     *          the disk cache, the redirect latency keeps duration > 5 ms.
+     *
+     *   5. No matching entry, or Performance API absent
+     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
+     *          'unavailable'; every case where an entry exists resolves to one of
+     *          the three statuses above.
+     *
+     * Returned object shape:
+     * ```
+     * {
+     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
+     *   transferSize:    number | null,
+     *   encodedBodySize: number | null,
+     *   duration:        number | null,
+     *   redirectStart:   number | null,   // 0 for opaque cross-origin
+     *   responseStart:   number | null,   // 0 for opaque cross-origin
+     * }
+     * ```
+     *
+     * @param  {string} url  The exact URL to look up (matched against entry.name).
+     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
+     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
+     */
+#+end_example
+
+** TODO 11 - Wires the single global ▶/◀ toggle button for multi-table mode. - REMOVE BY HAND
+*** DONE initial
+
+#+begin_example
+    /**
+     * Wires the single global ▶/◀ toggle button for multi-table mode.
+     *
+     * In multi-table mode `initCollapsableColumns` is called once per sub-table
+     * (because each rendered `<table>` is independent), so it cannot accumulate
+     * all column-header buttons into one `collapseHdrBtns` array.  This helper
+     * fills that role: it is called once after ALL sub-tables have been
+     * processed by `initCollapsableColumns`, scans the live DOM for every
+     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
+     *
+     *   • Hides the global button when no such buttons exist (none of the
+     *     filtered-in sub-tables has a multi-row column).
+     *   • Shows the global button and re-wires its `onclick` to drive every
+     *     found header button (and therefore every cell toggle across every
+     *     sub-table) to the target expanded/collapsed state.
+     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
+     *     the highlight tint on the global button based on the current filter
+     *     match state across all sub-tables.
+     *
+     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
+     * loop completes — both on initial render and on every filter re-run.
      */
     /**
-     * Deletes one record from an IDB object store.
-     * Used by _relRetryMbids to purge cached WS2 relationship data.
-     * @param {string} storeName  Object store name (e.g. 'rel-ws2')
-     * @param {string} key        Record key to delete
-     * @returns {Promise<void>}
+     * _applyCollapseState — expand or collapse a single multi-row cell toggle
+     * WITHOUT dispatching a synthetic click event.
+     *
+     * Calling `toggle.click()` from within another click handler is suppressed
+     * by some browsers / userscript managers because the dispatched MouseEvent
+     * has `isTrusted = false`.  This helper replicates the delegation-handler
+     * logic from `ensureCollapseDelegate` directly so that mass-expand /
+     * mass-collapse from column-header, sub-table, and global collapse buttons
+     * works in all environments.
+     *
+     * @param {HTMLSpanElement} toggle  - The `.mb-cell-collapse-toggle` span.
+     * @param {boolean}         expand  - true → expand; false → collapse.
+     */
+#+end_example
+*
+*** TODO remove
+
+#+begin_example
+    /**
+     * Wires the single global ▶/◀ toggle button for multi-table mode.
+     *
+     * In multi-table mode `initCollapsableColumns` is called once per sub-table
+     * (because each rendered `<table>` is independent), so it cannot accumulate
+     * all column-header buttons into one `collapseHdrBtns` array.  This helper
+     * fills that role: it is called once after ALL sub-tables have been
+     * processed by `initCollapsableColumns`, scans the live DOM for every
+     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
+     *
+     *   • Hides the global button when no such buttons exist (none of the
+     *     filtered-in sub-tables has a multi-row column).
+     *   • Shows the global button and re-wires its `onclick` to drive every
+     *     found header button (and therefore every cell toggle across every
+     *     sub-table) to the target expanded/collapsed state.
+     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
+     *     the highlight tint on the global button based on the current filter
+     *     match state across all sub-tables.
+     *
+     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
+     * loop completes — both on initial render and on every filter re-run.
+     */
+#+end_example
+
+** TODO 12 - Removes all consecutive <br> tags found in the document : MISSING
+*** DONE initial
+
+#+begin_example
+    /**
+     * Removes all consecutive <br> tags found in the document,
+     * leaving only a single <br> if multiple were found together.
+     * Logs the occurrences and count of tags removed.
+     */
+    /**
+     * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
+     * data-table h2 to immediately before it, preserving their original order.
+     *
+     * Idempotent: sections that are already before the data h2 are skipped.
+     * Must be called AFTER the .mb-row-count-stat span has been inserted into
+     * the h2 by updateH2Count() — that span is the anchor used to identify the
+     * data h2.  During a live fetch finalCleanup() runs after the render which
+     * already created the stat; during a disk load this function must be called
+     * explicitly after updateH2Count().
+     *
+     * Controlled by sa_enable_h2_section_relocation_on_final_page (default: true).
+     */
+#+end_example
+
+*** TODO MISSING
+
+#+begin_example
+    /**
+     * Removes all consecutive <br> tags found in the document,
+     * leaving only a single <br> if multiple were found together.
+     * Logs the occurrences and count of tags removed.
      */
 #+end_example
 
 ** TODO 19 - * Populates the shared bigbox tooltip `tip` (already cleared by the caller) : MISSING
-*** initial
+*** DONE initial
 
 #+begin_example
     /**
@@ -66295,143 +66581,7 @@ and either
      */
 #+end_example
 
-** DONE 20
-
-#+begin_example
-    /**
-     * Builds one `<li class="mb-caa-art-li mb-caa-art-li-image">` element for a
-     * single image entry from the CAA/EAA JSON API response.
-     *
-     * Layout per row (all optional pieces degrade gracefully if data absent):
-     *   [18×18 thumb]  [type badge]  [ — comment ]  [⏳ if pending]
-     *
-     * When `sa_caa_hover_preview` is enabled, hovering the thumbnail triggers the
-     * shared singleton popup showing a larger version of that specific image
-     * (derived from `imgData.thumbnails` at `sa_caa_big_img_size`).  Unlike the
-     * icon-column hover, which always fetches `/front-{size}`, each li uses its
-     * own archive URL so Back, Booklet, etc. images preview correctly.
-     *
-     * The <li> starts with `style="display:none"` so the parent collapse
-     * toggle controls its visibility.  Protocol-relative URLs (`//`) are used
-     * so the element works on both http and https pages.
-     *
-     * @param   {Object} imgData  One image entry from the archive `images[]` array.
-     *   Expected fields: id, types[], front, back, comment, approved, image,
-     *   thumbnails.{250,500,1200,small,large}
-     * @returns {HTMLLIElement}
-     */
-    /**
-     * Re-applies active filter highlights to a single image <li> element.
-     *
-     * Low-level building block used by both _artHighlightArtCell() (post-build,
-     * on the live DOM) and _artBuildMultiRowArtCell() (during build, on detached
-     * nodes).  The two call sites together guarantee highlights are present
-     * regardless of whether the async art-cell rebuild fires before or after
-     * _activeFilterHighlightCtx is updated.
-     *
-     * Covers both .mb-caa-type-badge and .mb-caa-art-comment text nodes.
-     * Is a no-op when _activeFilterHighlightCtx is null (no active filter).
-     *
-     * @param {HTMLLIElement} li      - The image <li> produced by _artBuildImageLi().
-     * @param {number}        colIdx  - cellIndex of the art <td> in its parent row;
-     *                                  used to match column-scoped filters.
-     * @param {object|null}   [ctxOverride] - Optional explicit highlight context to
-     *                                  use instead of the module-level
-     *                                  _activeFilterHighlightCtx.  Used by
-     *                                  _artHighlightArtCell() so each li reads the
-     *                                  same snapshot of the context.
-     */
-#+end_example
-
-
-* DONE read the unicode chars from a configuration table definition 
-
-Add a new functionality:
-
-1.)
-
-in the variable "const configSchema" add a new section
-
-#+begin_example
-        // ============================================================
-        // UNICODE CHARACTER PICKER SECTION
-        // ============================================================
-        divider_unicode_char_picker: {
-            type: 'divider',
-            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
-        },
-
-        sa_unicode_char_picker: {
-            label: "Enable Unicode Character Picker",
-            type: "checkbox",
-            default: true,
-            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
-                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
-        },
-
-        // Configurable lookup table for the Unicode Character Picker.
-        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
-        sa_unicode_char_picker_mappings: {
-            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
-            type: 'table',
-            table_name: 'Unicode Code Symbols',
-            columns: ['Unicode Code Symbol', 'Name', 'Default'],
-            description: '<add appropriate description here>'
-        },
-#+end_example
-
-2.)
-
-Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
-There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
-
-3.)
-
-read the unicode chars definitions, currently hardcoded in
-
-#+begin_example
-const SA_UNICODE_CHARS
-#+end_example
-
-from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
-extend the mappings
-
-4.)
-
-also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
-session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
-
-* TODO Add © ℗ in the default code
 
 * TODO colorize "main" and "guest" performer in the EAA tooltips
 
-* bug with uncollapsing "Release groups" in columns which are flagged as "addCAA"
-
-There is a bug in "tableMode: 'multi'" with toggeling 
-
-#+begin_example
-<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▼</span>
-#+end_example
-
-columns which are configured as "addCAA" e.g.
-
-#+begin_example
-                addCAA: 'Title',
-#+end_example
-
-in the pageType definition for example in the pageType
-
-#+begin_example
-            type: 'artist-releases',
-#+end_example
-
-Here is the reproducible bug description:
-
-When uncollapsing in the column "Title" a "release-group" data-cell the uncollapsed "releases" are rendered in a new
-artificial column to the rigth of the original column (instead of inline), so pushing all other column cells in the same row to the right
-
-It works in "single"-table pages like e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
-When uncollapsing there a data cell in the "Release groups" column, the underlying "releases" are uncollapsed inline.
-
-please fix
 
