@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.366+2026-04-01
+// @version      9.99.365+2026-03-31
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2741,43 +2741,6 @@
     }
 
     /**
-     * Builds the activeReleaseEventColumns list from the page definition.
-     * Returns a non-empty array when the definition declares 'Release events'
-     * in its injectedColumns feature and the setting is enabled.
-     * @param {Object} def  activeDefinition
-     * @returns {{ colName: string }[]}
-     */
-    function buildActiveReleaseEventColumns(def) {
-        if (!Lib.settings.sa_enable_release_events_column) return [];
-        const cols = def?.features?.injectedColumns;
-        if (!Array.isArray(cols)) return [];
-        return cols
-            .filter(c => c === 'Release events')
-            .map(colName => ({ colName }));
-    }
-
-    /**
-     * Derives the runtime injected-column descriptor list from activeDefinition.
-     * Reads features.injectedColumns (array of column name strings) and resolves
-     * entityType + WS2 inc options from pageType.
-     * Returns [] when sa_enable_relationships_column is false.
-     * @param {Object} def
-     * @returns {Array<{colName:string,entityType:string,incOptions:string[]}>}
-     */
-    function buildActiveInjectedColumns(def) {
-        const cols = def?.features?.injectedColumns;
-        if (!Array.isArray(cols) || cols.length === 0) return [];
-        if (!Lib.settings.sa_enable_relationships_column) return [];
-        const _pType = def.type || '';
-        const _et = (_pType === 'artist-releasegroups') ? 'release-group' : 'release';
-        const _inc = (_et === 'release-group')
-            ? ['url-rels', 'release-group-rels'] : ['url-rels'];
-        return cols
-            .filter(colName => colName === 'Relationships')
-            .map(colName => ({ colName, entityType: _et, incOptions: _inc }));
-    }
-
-    /**
      * Derives the runtime eraser descriptor list from a merged activeDefinition object.
      *
      * Each descriptor in features.columnErasers has the shape:
@@ -2797,6 +2760,43 @@
      * @param {object} def - Merged activeDefinition (the resolved page definition object)
      * @returns {Array<{sourceColumn: string, erasers: string[], colIdx: number}>}
      */
+    /**
+     * Derives the runtime injected-column descriptor list from activeDefinition.
+     * Reads features.injectedColumns (array of column name strings) and resolves
+     * entityType + WS2 inc options from pageType.
+     * Returns [] when sa_enable_relationships_column is false.
+     * @param {Object} def
+     * @returns {Array<{colName:string,entityType:string,incOptions:string[]}>}
+     */
+    /**
+     * Builds the activeReleaseEventColumns list from the page definition.
+     * Returns a non-empty array when the definition declares 'Release events'
+     * in its injectedColumns feature and the setting is enabled.
+     * @param {Object} def  activeDefinition
+     * @returns {{ colName: string }[]}
+     */
+    function buildActiveReleaseEventColumns(def) {
+        if (!Lib.settings.sa_enable_release_events_column) return [];
+        const cols = def?.features?.injectedColumns;
+        if (!Array.isArray(cols)) return [];
+        return cols
+            .filter(c => c === 'Release events')
+            .map(colName => ({ colName }));
+    }
+
+    function buildActiveInjectedColumns(def) {
+        const cols = def?.features?.injectedColumns;
+        if (!Array.isArray(cols) || cols.length === 0) return [];
+        if (!Lib.settings.sa_enable_relationships_column) return [];
+        const _pType = def.type || '';
+        const _et = (_pType === 'artist-releasegroups') ? 'release-group' : 'release';
+        const _inc = (_et === 'release-group')
+            ? ['url-rels', 'release-group-rels'] : ['url-rels'];
+        return cols
+            .filter(colName => colName === 'Relationships')
+            .map(colName => ({ colName, entityType: _et, incOptions: _inc }));
+    }
+
     function buildActiveColumnErasers(def) {
         const features = def?.features || {};
         if (!Array.isArray(features.columnErasers)) return [];
@@ -2964,40 +2964,68 @@
     /**
      * Applies the centered inline-block + content-alignment technique to every
      * cell in a data row whose column index matches an integerColumns descriptor.
-     * Must be called AFTER all synthetic cells have been appended to the row.
      *
      * Technique — "centered inline-block + R/L/C content":
      *   • The <td> itself gets `text-align:center` so the inner <span> is
-     *     horizontally centred inside the column.
+     *     horizontally centred inside the column, giving all values a common
+     *     visual anchor regardless of their width.
      *   • A `<span style="display:inline-block; text-align:{contentAlign}; …">`
-     *     wraps the cell's original content and carries the per-column alignment.
-     *   • `font-variant-numeric:tabular-nums` ensures digit columns align on
-     *     decimal points when right-aligned.
-     *   • `min-width` is set via `--mb-int-col-min-width` (default 2ch) so
-     *     callers can override per-column widths via CSS.
+     *     wraps the cell's original content and carries the per-column content
+     *     alignment (left / right / centre).
+     *   • `font-variant-numeric:tabular-nums` ensures digit columns (DD, MM,
+     *     YYYY, #, Length, …) align on decimal points when right-aligned.
+     *   • `min-width` is set via a CSS custom property `--mb-int-col-min-width`
+     *     (default 2ch) so callers can override per-column widths via CSS without
+     *     touching this function.
      *
-     * For align ':' (colon-split / decimal-separator alignment):
-     *   Splits the cell's text content at the FIRST ':' and produces three child
-     *   spans inside a `display:inline-block` wrapper:
-     *
-     *     <td style="text-align:center">
-     *       <span class="mb-ic-wrap">
-     *         <span class="mb-ic-left" > left part </span>  ← text-align:right
-     *         <span class="mb-ic-sep"  > :         </span>  ← visual center
-     *         <span class="mb-ic-right"> right part</span>  ← text-align:left
-     *       </span>
-     *     </td>
-     *
-     *   `mb-ic-left` min-width is initially ''. A second pass —
-     *   `finalizeColonAlignedColumns` — sets `min-width:Nch` so colons line
-     *   up across all rows.  Values with no ':' are treated as pure right parts.
-     *
-     * Idempotency: `cell.dataset.mbIntColStyled = '1'` prevents double-wrapping.
+     * Must be called AFTER all synthetic cells have been appended to the row so
+     * that the cell count matches the final header count and colIdx is valid.
      *
      * @param {HTMLTableRowElement}                                       row
      *   - The fully assembled data row (original + synthetic cells appended).
      * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
-     *   - Runtime list built by buildActiveIntegerColumns(), with colIdx resolved.
+     *   - Runtime list built by buildActiveIntegerColumns(), with colIdx resolved
+     *     against the final column list (including synthetic column headers).
+     */
+    /**
+     * applyIntegerColumnStyling — pass 1 (per-row, called during import).
+     *
+     * For align 'L' | 'R' | 'C':
+     *   Wraps the cell content in a single centered inline-block <span> with the
+     *   declared text-align.  See the JSDoc on buildActiveIntegerColumns for the
+     *   full technique description.
+     *
+     * For align ':' (colon-split / decimal-separator alignment):
+     *   Splits the cell's text content at the FIRST ':' character and produces
+     *   three child spans wrapped in a single `display:inline-block` container:
+     *
+     *     <td style="text-align:center">                    ← centers the wrapper
+     *       <span class="mb-ic-wrap">                       ← display:inline-block anchor
+     *         <span class="mb-ic-left" > left part </span>  ← display:inline-block, text-align:right
+     *         <span class="mb-ic-sep"  > :         </span>  ← literal separator, the visual center
+     *         <span class="mb-ic-right"> right part</span>  ← display:inline-block, text-align:left
+     *       </span>
+     *     </td>
+     *
+     *   The ':' separator sits exactly at the horizontal center of the column
+     *   because the wrapper is centered by the <td>'s `text-align:center`.
+     *   `mb-ic-left` grows rightward (right-aligned) to meet the colon;
+     *   `mb-ic-right` grows leftward (left-aligned) away from it.
+     *
+     *   The LEFT span carries only the text node; its `min-width` is set to '' at
+     *   this stage.  A second pass — `finalizeColonAlignedColumns` — scans all
+     *   collected rows, determines the maximum left-part character count for each
+     *   colon-align column, and sets `min-width:Nch` on every `.mb-ic-left` span
+     *   so that colons line up perfectly across all rows.
+     *
+     *   Values that contain no ':' are treated as pure right parts (the left span
+     *   is empty); this handles empty cells and non-time values gracefully.
+     *
+     * Idempotency: `cell.dataset.mbIntColStyled = '1'` prevents double-wrapping
+     * across re-render cycles.
+     *
+     * @param {HTMLTableRowElement}                                       row
+     * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
      */
     function applyIntegerColumnStyling(row, descriptors) {
         if (!descriptors.length) return;
@@ -4631,6 +4659,12 @@
     }
 
     /**
+     * Toggle visibility of a column across all tables
+     * @param {HTMLTableElement} table - Reference table (not used, kept for compatibility)
+     * @param {number} columnIndex - Index of the column to toggle
+     * @param {boolean} show - True to show, false to hide
+     */
+    /**
      * Registry of per-sub-table column-visibility widgets (multi-table mode).
      * Maps `safeId` → `{ applyGlobalConfig(state) }` so the global "Visible"
      * button's "Choose current configuration" action can push the global column
@@ -4639,12 +4673,6 @@
      */
     const subTableColVisRegistry = new Map();
 
-    /**
-     * Toggle visibility of a column across all tables
-     * @param {HTMLTableElement} table - Reference table (not used, kept for compatibility)
-     * @param {number} columnIndex - Index of the column to toggle
-     * @param {boolean} show - True to show, false to hide
-     */
     function toggleColumn(table, columnIndex, show) {
         const display = show ? '' : 'none';
 
@@ -5040,6 +5068,28 @@
     }
 
     /**
+     * Creates the per-sub-table ▶/◀ column-collapse toggle button.
+     *
+     * The button is inserted into the h3 bar immediately BEFORE
+     * `.mb-subtable-controls` so it is visually grouped with the other
+     * sub-table controls without being swallowed inside that flex span.
+     *
+     * Behaviour:
+     *   • Reads its own state from textContent (▶ = all collapsed,
+     *     ◀ = expanded) — no hidden property, consistent with the global and
+     *     column-header toggle philosophy.
+     *   • On click: collects every `.mb-col-collapse-hdr-btn` inside `table`,
+     *     drives each one that is not already in the target state by calling
+     *     `.click()` (which in turn drives the delegation listener).
+     *   • Initially `display:none` — shown by `updateSubTableCollapseButton()`
+     *     once `initCollapsableColumns()` confirms the table has multi-row cells.
+     *
+     * @param {HTMLTableElement} table        - The sub-table this button controls.
+     * @param {string}           categoryName - Human-readable group name (used for
+     *                                          the id and accessibility attributes).
+     * @returns {HTMLButtonElement}
+     */
+    /**
      * Returns the innerHTML for global/sub-table collapse-toggle buttons.
      *
      * Renders as two stacked flex-column groups (▶/▼ glyph + "Expand/Collapse ALL"
@@ -5074,28 +5124,6 @@
             `<span>cells</span></span>`;
     }
 
-    /**
-     * Creates the per-sub-table ▶/◀ column-collapse toggle button.
-     *
-     * The button is inserted into the h3 bar immediately BEFORE
-     * `.mb-subtable-controls` so it is visually grouped with the other
-     * sub-table controls without being swallowed inside that flex span.
-     *
-     * Behaviour:
-     *   • Reads its own state from textContent (▶ = all collapsed,
-     *     ◀ = expanded) — no hidden property, consistent with the global and
-     *     column-header toggle philosophy.
-     *   • On click: collects every `.mb-col-collapse-hdr-btn` inside `table`,
-     *     drives each one that is not already in the target state by calling
-     *     `.click()` (which in turn drives the delegation listener).
-     *   • Initially `display:none` — shown by `updateSubTableCollapseButton()`
-     *     once `initCollapsableColumns()` confirms the table has multi-row cells.
-     *
-     * @param {HTMLTableElement} table        - The sub-table this button controls.
-     * @param {string}           categoryName - Human-readable group name (used for
-     *                                          the id and accessibility attributes).
-     * @returns {HTMLButtonElement}
-     */
     function createSubTableCollapseButton(table, categoryName) {
         const safeId = categoryName.replace(/[^a-zA-Z0-9_-]/g, '_');
         const btn = document.createElement('button');
@@ -5497,6 +5525,11 @@
         const colvisStorageKey  = COLVIS_KEY_PREFIX + pageType;
 
         /**
+         * Persist the current checkbox state for this pageType.
+         * Called on every path that closes the menu so the stored value always
+         * reflects the last intentional configuration the user left behind.
+         */
+        /**
          * Reads the current checkbox state as a plain `{ colName: bool }` object.
          * Shared by `saveColVisState()` and the global-override propagation path.
          */
@@ -5509,11 +5542,6 @@
             return state;
         };
 
-        /**
-         * Persists the current checkbox state for this pageType.
-         * Called on every path that closes the menu so the stored value always
-         * reflects the last intentional configuration the user left behind.
-         */
         const saveColVisState = () => {
             const state = getCurrentColVisState();
             try {
@@ -12306,10 +12334,15 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Toggles auto-resize mode for table columns.
-     * First click: auto-resizes all columns to fit their content optimally.
-     * Second click: restores original column widths.
-     * Manual column resizing also resets the auto-resize state.
+     * Auto-resize table columns to optimal width (with toggle)
+     * First click: Resize columns to optimal width
+     * Second click: Restore original column widths
+     * Also handles manual resizing - restores to original state
+     */
+    /**
+     * Toggles auto-resize mode for table columns
+     * First click: auto-resizes columns to fit content
+     * Second click: restores original column widths
      */
     function toggleAutoResizeColumns() {
         const tables = document.querySelectorAll('table.tbl');
@@ -18039,6 +18072,15 @@ a { color: #1565c0; }`;
         }
     }
 
+    /**
+     * Highlights matching text in table rows based on filter query
+     * @param {HTMLTableRowElement} row - The table row to highlight text in
+     * @param {string} query - The search query to highlight
+     * @param {boolean} isCaseSensitive - Whether the search should be case-sensitive
+     * @param {number} targetColIndex - Specific column index to highlight (-1 for all columns)
+     * @param {boolean} isRegExp - Whether to treat the query as a regular expression
+     * @param {string} highlightType - Type of highlight: 'auto', 'prefilter', 'global', or 'column'
+     */
     /**
      * Highlights all regex matches of `query` within every relevant `<td>` of `row`,
      * including matches that span across multiple inline child elements (cross-tag matches).
@@ -24722,6 +24764,27 @@ a { color: #1565c0; }`;
     // =========================================================================
 
     /**
+     * Installs a single event-delegation listener on the table's `<tbody>` to
+     * handle all clicks on `.mb-cell-collapse-toggle` spans, regardless of when
+     * or how the containing rows were inserted into the DOM.
+     *
+     * Using delegation instead of per-element `addEventListener` calls means
+     * the handler survives:
+     *   - Sort re-renders:  `renderFinalTable` moves the same TR elements but
+     *     `<tbody>` itself (and its listener) is never recreated.
+     *   - Disk-load re-renders: `tbody.innerHTML = ''` removes child rows but
+     *     NOT event listeners attached to the `<tbody>` element itself.
+     *   - Filter re-renders: same as sort — rows are hidden/shown, not replaced.
+     *
+     * The handler resolves the `<ul>/<li>` structure dynamically from the
+     * clicked cell at event time, so no closures capture stale DOM references.
+     *
+     * Idempotent: a second call on the same table is a no-op (guarded by
+     * `table.dataset.mbCollapseDelegate`).
+     *
+     * @param {HTMLTableElement} table
+     */
+    /**
      * Refreshes the global ▶/◀ collapse button's background and text colour
      * based on whether any multi-row data cell — collapsed OR expanded — in
      * the given table (single-table mode) or across ALL `table.tbl` elements
@@ -24867,20 +24930,6 @@ a { color: #1565c0; }`;
         updateGlobalCollapseButtonHighlight(tbl || null);
     }
 
-    /**
-     * Wires the single global ▶/◀ toggle button for multi-table mode.
-     *
-     * In multi-table mode `initCollapsableColumns` is called once per sub-table,
-     * so it cannot accumulate all column-header buttons into one array. This
-     * helper fills that role: called once after ALL sub-tables have been processed,
-     * it scans the live DOM for every `.mb-col-collapse-hdr-btn` across every
-     * `table.tbl` and re-wires the global button's onclick to drive them all.
-     * Hides the global button when no such buttons exist.
-     * Calls `updateGlobalCollapseButtonHighlight(null)` to apply/clear highlight tint.
-     *
-     * Must be called from `renderGroupedTable` after the `dataArray.forEach` loop —
-     * both on initial render and on every filter re-run.
-     */
     function rewireGlobalCollapseButtonMulti() {
         const globalBtn = document.getElementById('mb-col-collapse-all-btn');
         if (!globalBtn) return;
@@ -24943,27 +24992,6 @@ a { color: #1565c0; }`;
             `rewireGlobalCollapseButtonMulti: wired ${allHdrBtns.length} column-header button(s).`);
     }
 
-    /**
-     * Installs a single event-delegation listener on the table's `<tbody>` to
-     * handle all clicks on `.mb-cell-collapse-toggle` spans, regardless of when
-     * or how the containing rows were inserted into the DOM.
-     *
-     * Using delegation instead of per-element `addEventListener` calls means
-     * the handler survives:
-     *   - Sort re-renders:  `renderFinalTable` moves the same TR elements but
-     *     `<tbody>` itself (and its listener) is never recreated.
-     *   - Disk-load re-renders: `tbody.innerHTML = ''` removes child rows but
-     *     NOT event listeners attached to the `<tbody>` element itself.
-     *   - Filter re-renders: same as sort — rows are hidden/shown, not replaced.
-     *
-     * The handler resolves the `<ul>/<li>` structure dynamically from the
-     * clicked cell at event time, so no closures capture stale DOM references.
-     *
-     * Idempotent: a second call on the same table is a no-op (guarded by
-     * `table.dataset.mbCollapseDelegate`).
-     *
-     * @param {HTMLTableElement} table
-     */
     function ensureCollapseDelegate(table) {
         if (table.dataset.mbCollapseDelegate) return;
         table.dataset.mbCollapseDelegate = '1';
@@ -26313,6 +26341,11 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Removes all consecutive <br> tags found in the document,
+     * leaving only a single <br> if multiple were found together.
+     * Logs the occurrences and count of tags removed.
+     */
+    /**
      * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
      * data-table h2 to immediately before it, preserving their original order.
      *
@@ -27609,14 +27642,47 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Appends a favicon icon anchor to a .mb-rel-cell <td>.
+     * When iconClass is provided a <span class='favicon {cls}-favicon'> is used;
+     * otherwise an <img src=iconUrl>. Ended rels get .mb-rel-ended (opacity 35%).
+     * @param {HTMLTableCellElement} cell
+     * @param {string} url
+     * @param {string|null} iconClass
+     * @param {string|null} iconUrl
+     * @param {boolean} ended
+     */
+    /**
      * Appends a favicon icon link to a .mb-rel-cell <td>.
-     * Always renders as <img> (never as a CSS-sprite <span>) so the icon is
-     * visible regardless of the surrounding CSS context.
-     * When iconUrl is provided directly (discography entry, non-URL rels) it is
-     * used as-is; for known services the caller passes a Google favicon URL.
-     * Ended relationships get opacity:0.25 on the wrapping <a>.
-     * A hidden .mb-rel-filter-key span carries the raw URL for column filtering.
+     * Generates HTML identical to the reference script:
+     *   span: <a href=URL><span class="favicon cls-favicon"></span></a>
+     *   img:  <a href=URL><img src=URL class="favicon" style="..."></a>
+     * No extra classes, no target/rel, no title on span — matches MBS exactly.
+     * Ended relationships get opacity:0.25 on the <a> (matches reference script).
      *
+     * @param {HTMLTableCellElement} cell
+     * @param {string}  url        Target URL
+     * @param {string|null} iconClass  CSS class suffix (e.g. 'allmusic'), or null
+     * @param {string|null} iconUrl    Direct favicon img src, used when iconClass is null
+     * @param {boolean} ended      Whether the relationship has ended
+     */
+    /**
+     * Appends a favicon icon link to a .mb-rel-cell <td>.
+     * Always renders as <img> — never as <span class='favicon'>.
+     * CSS sprites require the MBS td.relationships CSS context which our
+     * consolidated table cannot reliably inherit. Using <img> avoids all
+     * ghost-icon issues regardless of the surrounding CSS context.
+     *
+     * When iconUrl is provided directly (discography entry, non-URL rels),
+     * it is used as-is. When only a domain hint is needed (known services),
+     * the caller passes a Google favicon URL derived from the target URL.
+     *
+     * @param {HTMLTableCellElement} cell
+     * @param {string}  url      Target href
+     * @param {string}  iconUrl  Favicon img src
+     * @param {boolean} ended
+     */
+    /**
+     * Appends a favicon icon link to a .mb-rel-cell <td>.
      * @param {HTMLTableCellElement} cell
      * @param {string}  url       Target href
      * @param {string}  iconUrl   Favicon img src
@@ -27708,15 +27774,28 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Fetches WS2 relationship data for one entity using same-origin fetch().
-     * /ws/2/... is on the same domain as MusicBrainz, so no @connect or
-     * GM_xmlhttpRequest is needed.  Uses a two-level cache: L1 in-memory Map
-     * (keyed "entityType:mbid") and L2 IndexedDB (rel-ws2 store).
-     * forceNetwork=true (or the _relRetryActive flag) bypasses both caches.
-     *
+     * Fetches /ws/2/{entityType}/{mbid}?inc=...&fmt=json with in-memory caching.
+     * @param {string} mbid
+     * @param {string} entityType  'release-group' or 'release'
+     * @param {string[]} incOptions
+     * @returns {Promise<Object|null>}
+     */
+    /**
+     * Fetches WS2 url-rels for one entity using same-origin fetch().
+     * /ws/2/... is on the same domain as the page, so fetch() works without
+     * any @connect declaration and avoids GM_xmlhttpRequest permission issues.
+     * Caches the Promise (not the result) so parallel calls share one request.
      * @param {string}   mbid
      * @param {string}   entityType  'release-group' or 'release'
      * @param {string[]} incOptions  WS2 inc= values, e.g. ['url-rels']
+     * @returns {Promise<Object|null>}
+     */
+    /**
+     * Fetches WS2 relationship data with two-level cache: L1 memory + L2 IDB.
+     * forceNetwork=true (or _relRetryActive flag) bypasses both caches.
+     * @param {string}   mbid
+     * @param {string}   entityType
+     * @param {string[]} incOptions
      * @param {boolean}  [forceNetwork=false]
      * @returns {Promise<Object|null>}
      */
@@ -27826,6 +27905,21 @@ a { color: #1565c0; }`;
         });
         Lib.debug('relationships', '_initRelMappings: REL_* tables refreshed');
     }
+
+    /**
+     * Populates all .mb-rel-cell elements in the DOM with relationship favicon
+     * icon links fetched sequentially from the MusicBrainz Web Service.
+     *
+     * Algorithm:
+     *   1. Collect unpopulated .mb-rel-cell[data-mbid] elements.
+     *   2. Deduplicate MBIDs; fetch WS2 url-rels at <=1 req/s (MB policy).
+     *   3. Resolve each URL relationship to an icon CSS class or a fetched favicon.
+     *   4. Append icon anchors to all cells sharing the matching MBID.
+     *
+     * Idempotent: cells with data-rel-done='1' are skipped.
+     * Only runs when sa_enable_relationships_column is true and
+     * activeInjectedColumns is non-empty.
+     */
 
     /**
      * Extracts a release-MBID → release-events map from a WS2 relations array.
@@ -27964,20 +28058,6 @@ a { color: #1565c0; }`;
         }
     }
 
-    /**
-     * Populates all .mb-rel-cell elements in the DOM with relationship favicon
-     * icon links fetched sequentially from the MusicBrainz Web Service.
-     *
-     * Algorithm:
-     *   1. Collect unpopulated .mb-rel-cell[data-mbid] elements.
-     *   2. Deduplicate MBIDs; fetch WS2 url-rels at <=1 req/s (MB policy).
-     *   3. Resolve each URL relationship to an icon CSS class or a fetched favicon.
-     *   4. Append icon anchors to all cells sharing the matching MBID.
-     *
-     * Idempotent: cells with data-rel-done='1' are skipped.
-     * Only runs when sa_enable_relationships_column is true and
-     * activeInjectedColumns is non-empty.
-     */
     async function initRelationshipsColumn() {
         if (!Lib.settings.sa_enable_relationships_column) return;
         if (!activeInjectedColumns.length) return;
@@ -30980,11 +31060,20 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Deletes one record from an IDB object store.
-     * Used by _relRetryMbids to purge cached WS2 relationship data (store 'rel-ws2')
-     * and available for future manual cache eviction (stores 'images', 'metadata').
+     * Deletes a single record from an IDB object store.
      *
-     * @param {string} storeName  Object store name (e.g. 'rel-ws2', 'images', 'metadata')
+     * NOTE: Currently unused — no call site exists in this script.  Retained
+     * for potential future use (e.g. manual cache eviction or a purge-entry UI).
+     * If a call site is never added this function should be removed.
+     *
+     * @param   {string} storeName  'images' | 'metadata'
+     * @param   {string} key        Record key to delete.
+     * @returns {Promise<void>}
+     */
+    /**
+     * Deletes one record from an IDB object store.
+     * Used by _relRetryMbids to purge cached WS2 relationship data.
+     * @param {string} storeName  Object store name (e.g. 'rel-ws2')
      * @param {string} key        Record key to delete
      * @returns {Promise<void>}
      */
@@ -31799,6 +31888,34 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Populates the shared bigbox tooltip `tip` (already cleared by the caller)
+     * according to the active page definition's `tooltipColumns` and
+     * `extractMainColumn` features.
+     *
+     * tooltipColumns element forms:
+     *   \'---'             → horizontal divider rule
+     *   plain string      → one text row from the matching column.
+     *                        When the column name equals `extractMainColumn`,
+     *                        the title is rendered bold and any disambiguation
+     *                        comment (from `<span class="comment">`) appears in
+     *                        italic below it.
+     *   JS array of tokens → single inline row.  Each token is either a column
+     *                        name (resolved to cell text) or a literal punctuation
+     *                        string \'(\', \')\', \'-\', etc. (rendered as-is).
+     *                        The whole line is omitted when every column token
+     *                        resolves to an empty string.  Adjacent literals are
+     *                        suppressed when their neighbouring column value is
+     *                        absent.
+     *
+     * @param {HTMLDivElement}      tip      Cleared tooltip div to populate.
+     * @param {HTMLTableRowElement} row      The hovered data row.
+     * @param {object|null}         pageDef  Active page definition (may be null).
+     * @param {HTMLTableElement}    table    Owning table (for header lookups).
+     * @returns {boolean}  true when tooltipColumns was applied;
+     *                     false when the feature is absent (caller must fall back).
+     */
+
+    /**
      * Renders the artist-roles list from an Artists column cell into the tooltip.
      *
      * MusicBrainz event "Artists" cells contain a `.artist-roles-container` div
@@ -32371,6 +32488,135 @@ a { color: #1565c0; }`;
      *   thumbnails.{250,500,1200,small,large}
      * @returns {HTMLLIElement}
      */
+    /**
+     * Re-applies active filter highlights to a single image <li> element.
+     *
+     * Low-level building block used by both _artHighlightArtCell() (post-build,
+     * on the live DOM) and _artBuildMultiRowArtCell() (during build, on detached
+     * nodes).  The two call sites together guarantee highlights are present
+     * regardless of whether the async art-cell rebuild fires before or after
+     * _activeFilterHighlightCtx is updated.
+     *
+     * Covers both .mb-caa-type-badge and .mb-caa-art-comment text nodes.
+     * Is a no-op when _activeFilterHighlightCtx is null (no active filter).
+     *
+     * @param {HTMLLIElement} li      - The image <li> produced by _artBuildImageLi().
+     * @param {number}        colIdx  - cellIndex of the art <td> in its parent row;
+     *                                  used to match column-scoped filters.
+     * @param {object|null}   [ctxOverride] - Optional explicit highlight context to
+     *                                  use instead of the module-level
+     *                                  _activeFilterHighlightCtx.  Used by
+     *                                  _artHighlightArtCell() so each li reads the
+     *                                  same snapshot of the context.
+     */
+    function _artHighlightImageLi(li, colIdx, ctxOverride) {
+        const ctx = (ctxOverride !== undefined) ? ctxOverride : _activeFilterHighlightCtx;
+        if (!ctx) return;
+
+        const flags = ctx.isCaseSensitive ? 'g' : 'gi';
+
+        /**
+         * Compile a raw query string into a global RegExp.
+         * Falls back to a literal-escaped pattern when the raw string is an
+         * invalid regexp so callers never receive null from a non-empty query.
+         *
+         * @param {string}  raw       - The raw filter string.
+         * @param {boolean} isRegExp  - Whether to treat raw as a regexp pattern.
+         * @returns {RegExp|null}     - Null only when raw is empty/falsy.
+         */
+        const makeRegex = (raw, isRegExp) => {
+            if (!raw) return null;
+            try {
+                return isRegExp
+                    ? new RegExp(raw, flags)
+                    : new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+            } catch (e) {
+                return new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+            }
+        };
+
+        // Global query applies to every column — no colIdx check needed.
+        const globalRegex = makeRegex(ctx.globalQueryRaw, ctx.isRegExp);
+        if (globalRegex) {
+            highlightCrossTag(li, globalRegex, 'mb-global-filter-highlight');
+        }
+
+        // Column-scoped filters — only apply when the filter targets this art column.
+        for (const f of ctx.colFilters) {
+            if (f.isMultiRowFilter) continue;  // state filters carry no highlight text
+            if (f.idx !== colIdx)   continue;  // different column — skip
+            const colRegex = makeRegex(f.val, ctx.isRegExp);
+            if (colRegex) {
+                highlightCrossTag(li, colRegex, 'mb-column-filter-highlight');
+            }
+        }
+    }
+
+    /**
+     * Re-applies active filter highlights to all image <li> elements inside a
+     * live CAA/EAA art cell (`<td>`) immediately after _artBuildMultiRowArtCell()
+     * has completed.
+     *
+     * This is the authoritative highlight call site.  It is fully self-sufficient:
+     * it reads ALL filter state directly from the live DOM at the moment it runs,
+     * so it is immune to the multi-table timing race where _activeFilterHighlightCtx
+     * holds the colFilters of the last-processed group rather than the group that
+     * owns this particular artCell.
+     *
+     * State sourced from live DOM:
+     *   - Global filter query: #mb-global-filter-input value (stripped of prefix)
+     *   - isCaseSensitive / isRegExp: the checkboxes in the filter bar
+     *   - colFilters: getColFilters() on the <table> that contains artCell — this
+     *     always returns the correct per-sub-table column filters regardless of
+     *     which group was last processed by runFilter()'s groupedRows.forEach loop
+     *
+     * Called from _artEnrichIcon immediately after each _artBuildMultiRowArtCell()
+     * call (both the IDB Tier-2 early-return path and the main Tier-1/network path).
+     *
+     * @param {HTMLTableCellElement} artCell  - The `<td>` that was just rebuilt.
+     * @param {number}               colIdx   - artCell.cellIndex.
+     */
+    function _artHighlightArtCell(artCell, colIdx) {
+        // ── 1. Read global filter state directly from the live DOM ───────────────
+        const _gfInput = document.getElementById('mb-global-filter-input');
+        const globalQueryRaw = _gfInput ? stripFilterPrefix(_gfInput.value) : '';
+
+        const isCaseSensitive = caseCheckbox ? caseCheckbox.checked : false;
+
+        // isRegExp for the global filter comes from the global Rx checkbox.
+        // isRegExp for column filters comes from the per-sub-table Rx checkbox
+        // (resolved below via getColFilters on the owning table).
+        const isRegExp = regexpCheckbox ? regexpCheckbox.checked : false;
+
+        // ── 2. Read column filters from the table that owns this artCell ─────────
+        // This is the key fix for multi-table pages: rather than relying on the
+        // module-level _activeFilterHighlightCtx (which holds the last-processed
+        // group's colFilters), we call getColFilters() directly on the sub-table
+        // that contains artCell.  For single-table pages this is equivalent.
+        const _owningTable = artCell.closest('table');
+
+        // Resolve the per-sub-table Rx checkbox (multi-table pages only).
+        const _subH3   = _owningTable ? findH3ForTable(_owningTable) : null;
+        const _subRxCb = _subH3
+            ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-rx-checkbox"]')
+            : null;
+        const colIsRegExp = _subRxCb ? _subRxCb.checked : isRegExp;
+
+        const colFilters = _owningTable
+            ? getColFilters(_owningTable, isCaseSensitive, colIsRegExp)
+            : [];
+
+        // ── 3. Bail out early if nothing is active ───────────────────────────────
+        const hasGlobal = globalQueryRaw !== '';
+        const hasCol    = colFilters.some(f => !f.isMultiRowFilter);
+        if (!hasGlobal && !hasCol) return;
+
+        // ── 4. Build a single context snapshot and highlight every image li ──────
+        const ctxSnap = { globalQueryRaw, colFilters, isCaseSensitive, isRegExp: colIsRegExp };
+        artCell.querySelectorAll(':scope > ul.mb-caa-art-ul > li.mb-caa-art-li-image')
+            .forEach(li => _artHighlightImageLi(li, colIdx, ctxSnap));
+    }
+
     function _artBuildImageLi(imgData) {
         const li = document.createElement('li');
         li.className = 'mb-caa-art-li mb-caa-art-li-image';
@@ -32565,136 +32811,6 @@ a { color: #1565c0; }`;
 
         return li;
     }
-
-    /**
-     * Re-applies active filter highlights to a single image <li> element.
-     *
-     * Low-level building block used by both _artHighlightArtCell() (post-build,
-     * on the live DOM) and _artBuildMultiRowArtCell() (during build, on detached
-     * nodes).  The two call sites together guarantee highlights are present
-     * regardless of whether the async art-cell rebuild fires before or after
-     * _activeFilterHighlightCtx is updated.
-     *
-     * Covers both .mb-caa-type-badge and .mb-caa-art-comment text nodes.
-     * Is a no-op when _activeFilterHighlightCtx is null (no active filter).
-     *
-     * @param {HTMLLIElement} li      - The image <li> produced by _artBuildImageLi().
-     * @param {number}        colIdx  - cellIndex of the art <td> in its parent row;
-     *                                  used to match column-scoped filters.
-     * @param {object|null}   [ctxOverride] - Optional explicit highlight context to
-     *                                  use instead of the module-level
-     *                                  _activeFilterHighlightCtx.  Used by
-     *                                  _artHighlightArtCell() so each li reads the
-     *                                  same snapshot of the context.
-     */
-    function _artHighlightImageLi(li, colIdx, ctxOverride) {
-        const ctx = (ctxOverride !== undefined) ? ctxOverride : _activeFilterHighlightCtx;
-        if (!ctx) return;
-
-        const flags = ctx.isCaseSensitive ? 'g' : 'gi';
-
-        /**
-         * Compile a raw query string into a global RegExp.
-         * Falls back to a literal-escaped pattern when the raw string is an
-         * invalid regexp so callers never receive null from a non-empty query.
-         *
-         * @param {string}  raw       - The raw filter string.
-         * @param {boolean} isRegExp  - Whether to treat raw as a regexp pattern.
-         * @returns {RegExp|null}     - Null only when raw is empty/falsy.
-         */
-        const makeRegex = (raw, isRegExp) => {
-            if (!raw) return null;
-            try {
-                return isRegExp
-                    ? new RegExp(raw, flags)
-                    : new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-            } catch (e) {
-                return new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-            }
-        };
-
-        // Global query applies to every column — no colIdx check needed.
-        const globalRegex = makeRegex(ctx.globalQueryRaw, ctx.isRegExp);
-        if (globalRegex) {
-            highlightCrossTag(li, globalRegex, 'mb-global-filter-highlight');
-        }
-
-        // Column-scoped filters — only apply when the filter targets this art column.
-        for (const f of ctx.colFilters) {
-            if (f.isMultiRowFilter) continue;  // state filters carry no highlight text
-            if (f.idx !== colIdx)   continue;  // different column — skip
-            const colRegex = makeRegex(f.val, ctx.isRegExp);
-            if (colRegex) {
-                highlightCrossTag(li, colRegex, 'mb-column-filter-highlight');
-            }
-        }
-    }
-
-    /**
-     * Re-applies active filter highlights to all image <li> elements inside a
-     * live CAA/EAA art cell (`<td>`) immediately after _artBuildMultiRowArtCell()
-     * has completed.
-     *
-     * This is the authoritative highlight call site.  It is fully self-sufficient:
-     * it reads ALL filter state directly from the live DOM at the moment it runs,
-     * so it is immune to the multi-table timing race where _activeFilterHighlightCtx
-     * holds the colFilters of the last-processed group rather than the group that
-     * owns this particular artCell.
-     *
-     * State sourced from live DOM:
-     *   - Global filter query: #mb-global-filter-input value (stripped of prefix)
-     *   - isCaseSensitive / isRegExp: the checkboxes in the filter bar
-     *   - colFilters: getColFilters() on the <table> that contains artCell — this
-     *     always returns the correct per-sub-table column filters regardless of
-     *     which group was last processed by runFilter()'s groupedRows.forEach loop
-     *
-     * Called from _artEnrichIcon immediately after each _artBuildMultiRowArtCell()
-     * call (both the IDB Tier-2 early-return path and the main Tier-1/network path).
-     *
-     * @param {HTMLTableCellElement} artCell  - The `<td>` that was just rebuilt.
-     * @param {number}               colIdx   - artCell.cellIndex.
-     */
-    function _artHighlightArtCell(artCell, colIdx) {
-        // ── 1. Read global filter state directly from the live DOM ───────────────
-        const _gfInput = document.getElementById('mb-global-filter-input');
-        const globalQueryRaw = _gfInput ? stripFilterPrefix(_gfInput.value) : '';
-
-        const isCaseSensitive = caseCheckbox ? caseCheckbox.checked : false;
-
-        // isRegExp for the global filter comes from the global Rx checkbox.
-        // isRegExp for column filters comes from the per-sub-table Rx checkbox
-        // (resolved below via getColFilters on the owning table).
-        const isRegExp = regexpCheckbox ? regexpCheckbox.checked : false;
-
-        // ── 2. Read column filters from the table that owns this artCell ─────────
-        // This is the key fix for multi-table pages: rather than relying on the
-        // module-level _activeFilterHighlightCtx (which holds the last-processed
-        // group's colFilters), we call getColFilters() directly on the sub-table
-        // that contains artCell.  For single-table pages this is equivalent.
-        const _owningTable = artCell.closest('table');
-
-        // Resolve the per-sub-table Rx checkbox (multi-table pages only).
-        const _subH3   = _owningTable ? findH3ForTable(_owningTable) : null;
-        const _subRxCb = _subH3
-            ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-rx-checkbox"]')
-            : null;
-        const colIsRegExp = _subRxCb ? _subRxCb.checked : isRegExp;
-
-        const colFilters = _owningTable
-            ? getColFilters(_owningTable, isCaseSensitive, colIsRegExp)
-            : [];
-
-        // ── 3. Bail out early if nothing is active ───────────────────────────────
-        const hasGlobal = globalQueryRaw !== '';
-        const hasCol    = colFilters.some(f => !f.isMultiRowFilter);
-        if (!hasGlobal && !hasCol) return;
-
-        // ── 4. Build a single context snapshot and highlight every image li ──────
-        const ctxSnap = { globalQueryRaw, colFilters, isCaseSensitive, isRegExp: colIsRegExp };
-        artCell.querySelectorAll(':scope > ul.mb-caa-art-ul > li.mb-caa-art-li-image')
-            .forEach(li => _artHighlightImageLi(li, colIdx, ctxSnap));
-    }
-
 
     /**
      * Builds or rebuilds the multi-row `<ul>` art-image list inside a CAA/EAA

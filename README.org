@@ -65345,6 +65345,46 @@ for "Series-Events" make "Artists" a "multi-row" cell columns
 
 also rethink sub-pageType definitions so which columsn
 
+pageTypes 'series-releases' needs to be special cased of which columns are actually present on a specific page. We
+already have the 'labelFromH2: true' parameter which dynamically extracts the <EntityType> for each 'series-releases'
+page.
+
+#+begin_example
+        {
+            type: 'series-releases',
+            match: (path) => path.includes('/series'),
+            // labelFromH2: true instructs the button-creation code to read the <h2>
+            // header text that precedes the table and substitute it into the label so
+            // the button reads "Show all <EntityType> for Series" dynamically.
+            // Series pages can contain Releases, Events, Works, Recordings, etc.
+            buttons: [ { label: 'Show all Releases for Series', labelFromH2: true } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                        sourceColumn:    'Tracks',
+                        extractor:       'sumTracks',
+                        syntheticColumns: ['Total Tracks']
+                    },
+                    { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+                addCAA: 'Release',
+                extractMainColumn: 'Release'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
 
 * TODO add/fix missing/doubled - JSDoc definitions
 
@@ -65354,6 +65394,8 @@ and either
 - remove the obsolete ones
 - move them to the right function definition
 - or merge them if it makes sense
+
+** DONE 1
 
 #+begin_example
     /**
@@ -65392,6 +65434,8 @@ and either
      * @returns {{ colName: string }[]}
      */
 #+end_example
+
+** DONE 2
 
 #+begin_example
     /**
@@ -65462,6 +65506,8 @@ and either
      */
 #+end_example
 
+** DONE 3
+
 #+begin_example
     /**
      * Toggle visibility of a column across all tables
@@ -65477,6 +65523,8 @@ and either
      * @type {Map<string, {applyGlobalConfig: function(Object): void}>}
      */
 #+end_example
+
+** DONE 4
 
 #+begin_example
     /**
@@ -65516,6 +65564,8 @@ and either
      */
 #+end_example
 
+** DONE 5
+
 #+begin_example
         /**
          * Persist the current checkbox state for this pageType.
@@ -65527,6 +65577,8 @@ and either
          * Shared by `saveColVisState()` and the global-override propagation path.
          */
 #+end_example
+
+** DONE 6
 
 #+begin_example
     /**
@@ -65541,6 +65593,8 @@ and either
      * Second click: restores original column widths
      */
 #+end_example
+
+** DONE 7
 
 #+begin_example
     /**
@@ -65568,6 +65622,8 @@ and either
      *                                                        'column', or 'auto'.
      */
 #+end_example
+
+** TODO 8
 
 #+begin_example
     /**
@@ -65614,6 +65670,8 @@ and either
      */
 #+end_example
 
+** TODO 9
+
 #+begin_example
     /**
      * Recalculates and updates the h2 row-count badge from current DOM state of all
@@ -65640,6 +65698,8 @@ and either
      * @param {HTMLTableElement} tbl  The live sub-table element.
      */
 #+end_example
+
+** DONE 10
 
 #+begin_example
     /**
@@ -65690,6 +65750,9 @@ and either
      */
 #+end_example
 
+** TODO 11 - Wires the single global ▶/◀ toggle button for multi-table mode. - REMOVE BY HAND
+*** initial
+
 #+begin_example
     /**
      * Wires the single global ▶/◀ toggle button for multi-table mode.
@@ -65728,6 +65791,36 @@ and either
      * @param {boolean}         expand  - true → expand; false → collapse.
      */
 #+end_example
+*
+*** TODO remove
+
+#+begin_example
+    /**
+     * Wires the single global ▶/◀ toggle button for multi-table mode.
+     *
+     * In multi-table mode `initCollapsableColumns` is called once per sub-table
+     * (because each rendered `<table>` is independent), so it cannot accumulate
+     * all column-header buttons into one `collapseHdrBtns` array.  This helper
+     * fills that role: it is called once after ALL sub-tables have been
+     * processed by `initCollapsableColumns`, scans the live DOM for every
+     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
+     *
+     *   • Hides the global button when no such buttons exist (none of the
+     *     filtered-in sub-tables has a multi-row column).
+     *   • Shows the global button and re-wires its `onclick` to drive every
+     *     found header button (and therefore every cell toggle across every
+     *     sub-table) to the target expanded/collapsed state.
+     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
+     *     the highlight tint on the global button based on the current filter
+     *     match state across all sub-tables.
+     *
+     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
+     * loop completes — both on initial render and on every filter re-run.
+     */
+#+end_example
+
+** TODO 12 - Removes all consecutive <br> tags found in the document : MISSING
+*** initial
 
 #+begin_example
     /**
@@ -65749,6 +65842,18 @@ and either
      * Controlled by sa_enable_h2_section_relocation_on_final_page (default: true).
      */
 #+end_example
+
+*** TODO MISSING
+
+#+begin_example
+    /**
+     * Removes all consecutive <br> tags found in the document,
+     * leaving only a single <br> if multiple were found together.
+     * Logs the occurrences and count of tags removed.
+     */
+#+end_example
+
+** DONE 13
 
 #+begin_example
     /**
@@ -65801,6 +65906,8 @@ and either
      */
 #+end_example
 
+** DONE 14
+
 #+begin_example
     /**
      * Fetches /ws/2/{entityType}/{mbid}?inc=...&fmt=json with in-memory caching.
@@ -65830,6 +65937,8 @@ and either
      */
 #+end_example
 
+** DONE 15
+
 #+begin_example
     /**
      * Populates all .mb-rel-cell elements in the DOM with relationship favicon
@@ -65853,6 +65962,8 @@ and either
      */
 #+end_example
 
+** TODO 16
+
 #+begin_example
     /**
      * Standard download fallback using an anchor element with user notification
@@ -65867,6 +65978,8 @@ and either
      * @param {number} rowCount  - Number of rows saved (0 = unknown / not shown).
      */
 #+end_example
+
+** TODO 17
 
 #+begin_example
     /**
@@ -65951,6 +66064,8 @@ and either
      */
 #+end_example
 
+** DONE 18
+
 #+begin_example
     /**
      * Deletes a single record from an IDB object store.
@@ -65971,6 +66086,9 @@ and either
      * @returns {Promise<void>}
      */
 #+end_example
+
+** TODO 19 - * Populates the shared bigbox tooltip `tip` (already cleared by the caller) : MISSING
+*** initial
 
 #+begin_example
     /**
@@ -66029,6 +66147,40 @@ and either
      * @returns {boolean}  true when at least one artist entry was appended.
      */
 #+end_example
+
+*** TODO MISSING
+
+#+begin_example
+    /**
+     * Populates the shared bigbox tooltip `tip` (already cleared by the caller)
+     * according to the active page definition's `tooltipColumns` and
+     * `extractMainColumn` features.
+     *
+     * tooltipColumns element forms:
+     *   \'---'             → horizontal divider rule
+     *   plain string      → one text row from the matching column.
+     *                        When the column name equals `extractMainColumn`,
+     *                        the title is rendered bold and any disambiguation
+     *                        comment (from `<span class="comment">`) appears in
+     *                        italic below it.
+     *   JS array of tokens → single inline row.  Each token is either a column
+     *                        name (resolved to cell text) or a literal punctuation
+     *                        string \'(\', \')\', \'-\', etc. (rendered as-is).
+     *                        The whole line is omitted when every column token
+     *                        resolves to an empty string.  Adjacent literals are
+     *                        suppressed when their neighbouring column value is
+     *                        absent.
+     *
+     * @param {HTMLDivElement}      tip      Cleared tooltip div to populate.
+     * @param {HTMLTableRowElement} row      The hovered data row.
+     * @param {object|null}         pageDef  Active page definition (may be null).
+     * @param {HTMLTableElement}    table    Owning table (for header lookups).
+     * @returns {boolean}  true when tooltipColumns was applied;
+     *                     false when the feature is absent (caller must fall back).
+     */
+#+end_example
+
+** DONE 20
 
 #+begin_example
     /**
@@ -66134,5 +66286,6 @@ extend the mappings
 also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
 session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
 
+* TODO Add © ℗ in the default code
 
 
