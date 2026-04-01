@@ -65414,8 +65414,90 @@ e.g. "columnErasers", "columnExtractors", etc. intact)
 
 ** fixes
 
+In the newly introduced "entityFeatures map" make the following changes:
+
+1.)
+
+In 'Events' add a new "columnExtractors" and "tooltipColumns" from
+
 #+begin_example
-                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] }
+                    ],
+                },
+#+end_example
+
+to
+
+#+begin_example
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+#+end_example
+
+2.)
+
+In 'Recordings' change the "columnExtractors" from
+
+#+begin_example
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+#+end_example
+
+to
+
+#+begin_example
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+#+end_example
+
+3.)
+
+In 'Release groups' change the "columnErasers" and add "tooltipColumns" from
+
+#+begin_example
+                'Release groups': {
+                    columnErasers: [
+                        { sourceColumn: 'Title', erasers: ['▶'] }
+                    ],
+#+end_example
+
+to
+
+#+begin_example
+                'Release groups': {
+                    columnErasers: [
+                        { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                    ],
+                    tooltipColumns: [ 'Title', 'Artist', '---', ['Type', 'Year', '(', 'Releases', ')'] ],
+#+end_example
+
+** bug
+
+In 'Release groups' change the "columnErasers" from
+
+#+begin_example
+                'Release groups': {
+                    columnErasers: [
+                        { sourceColumn: 'Title', erasers: ['▶'] }
+                    ],
+#+end_example
+
+to
+
+#+begin_example
+                'Release groups': {
+                    columnErasers: [
+                        { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                    ],
 #+end_example
 
 
@@ -66321,4 +66403,4 @@ session where you produced a new entry for "version": "9.99.363" but skipped the
 
 * TODO Add © ℗ in the default code
 
-
+* TODO colorize "main" and "guest" performer in the EAA tooltips
