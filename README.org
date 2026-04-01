@@ -66404,3 +66404,34 @@ session where you produced a new entry for "version": "9.99.363" but skipped the
 * TODO Add © ℗ in the default code
 
 * TODO colorize "main" and "guest" performer in the EAA tooltips
+
+* bug with uncollapsing "Release groups" in columns which are flagged as "addCAA"
+
+There is a bug in "tableMode: 'multi'" with toggeling 
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▼</span>
+#+end_example
+
+columns which are configured as "addCAA" e.g.
+
+#+begin_example
+                addCAA: 'Title',
+#+end_example
+
+in the pageType definition for example in the pageType
+
+#+begin_example
+            type: 'artist-releases',
+#+end_example
+
+Here is the reproducible bug description:
+
+When uncollapsing in the column "Title" a "release-group" data-cell the uncollapsed "releases" are rendered in a new
+artificial column to the rigth of the original column (instead of inline), so pushing all other column cells in the same row to the right
+
+It works in "single"-table pages like e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+When uncollapsing there a data cell in the "Release groups" column, the underlying "releases" are uncollapsed inline.
+
+please fix
+
