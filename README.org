@@ -62902,7 +62902,7 @@ clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and A
 inform the user that the CSV exporter exports the first table in "multi"-table mode
 
 
-* change hardcoded hightlight for column filter
+* change hardcoded hightlightning column filter
 
 #+begin_example
 Global filter highlight: bg sa_global_filter_highlight_bg (default #FFD700), color sa_global_filter_highlight_color (default red)
@@ -65463,6 +65463,122 @@ When uncollapsing there a data cell in the "Release groups" column, the underlyi
 
 please fix
 
+* DONE check JSDoc comment
+
+which of the following two JSDoc comments
+
+#+begin_example
+    /**
+     * Recalculates and updates the h2 row-count badge from current DOM state of all
+     * subtables after global + subtable filters have been applied.
+     *
+     * Mirrors the 3-tier format used by updateSubTableRowCount():
+     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
+     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
+     *
+     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
+     */
+    /**
+     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
+     * reflecting the current combination of global filter, column filters, and
+     * sub-table filter active on this specific table.
+     *
+     * Called from:
+     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
+     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
+     *
+     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
+     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
+     *
+     * @param {HTMLTableElement} tbl  The live sub-table element.
+     */
+#+end_example
+
+in front of the following function
+
+#+begin_example
+    function _updateSubTableH3Tooltip(tbl) {
+#+end_example
+
+belongs to it. Please fix and optionally move the wrong comment to the right place, or remove it completely if not used
+anymore
+
+* DONE unconditionally remove special columns
+
+some fixes:
+
+1.)
+
+unconditionally remove special columns coming from other userscripts for preparation of the the table header row for the
+final rendered view as we include this functionality now in our own script and can optionally add them back on the final
+rendered page as injected columns
+
+So the following three variables ARE NOT needed anymore and should be removed
+
+#+begin_example
+        sa_remove_release_events: {
+            label: 'Remove "Release events" column from "Place-Performances" pages',
+            type: "checkbox",
+            default: true,
+            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
+        },
+
+        sa_remove_rel: {
+            label: "Remove Relationships column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Relationships column from the final rendered tables (comes from another userscript) "
+        },
+
+        sa_remove_perf: {
+            label: "Remove Performance column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
+        },
+#+end_example
+
+Make sure to adjust the code accordingly, as their internal functionality should still always be "true"
+
+2.)
+
+remove the double JSDoc comment in front of the function "_synthColTooltip(extractor, sourceColumn, colName)"
+
+#+begin_example
+    /**
+     * Prepares the table header row for the final rendered view.
+     *
+     * Three sequential passes are performed:
+     *
+     *   1. **Column removal** — removes columns whose header text prefix matches
+     *      an entry in `removalMap` and whose corresponding setting is enabled
+     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
+     *
+     *   2. **Column origin stamping** — stamps each surviving original <th> with
+     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
+     *      from a re-render pass are skipped.
+     *
+     *   3. **Synthetic column injection** — injects new <th> elements for each
+     *      configured extractor, assigning:
+     *        - `mb-extracted-column`         for activeColumnExtractors entries
+     *                                        and extractMainColumn (MB-Name/Comment)
+     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
+     *                                        entries (second-pass derivations)
+     *      Each injected <th> also receives `dataset.colName`, the appropriate
+     *      background color from settings, and is appended to the header row if
+     *      not already present (idempotent across re-renders).
+     *
+     * The three CSS classes are the authoritative source for the Statistics panel
+     * column-origin breakdown (original / extracted / derived counts).
+     *
+     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
+     *   The `<thead>` element or its first `<tr>` row to process.
+     */
+
+#+end_example
+
+as it exists already on the right function "cleanupHeaders(headerElement)"
+
 
 * TODO read the unicode chars from a configuration table definition 
 ** DONE initial
@@ -65629,479 +65745,37 @@ const LIBRARY_VERSION = '3.16.0+2026-03-27';
 4.)
 
 also add a changelog entry to "ShowAllEntityData_CHANGELOG.json"
+** The "SETTING" column in the configuration dialog should be bigger
 
-
-
-* DONE add/fix missing/doubled - JSDoc definitions
-** initial
-
-Please check the following JSDoc definitions which have multiple entries after each other
-and either
-
-- remove the obsolete ones
-- move them to the right function definition
-- or merge them if it makes sense
-
-** DONE 1
+The "SETTING" column in the configuration dialog
 
 #+begin_example
-    /**
-     * Derives the runtime eraser descriptor list from a merged activeDefinition object.
-     *
-     * Each descriptor in features.columnErasers has the shape:
-     *   { sourceColumn: string, erasers: string[] }
-     *
-     * Supported eraser symbols:
-     *   '▶'        — removes <span style="cursor:pointer; margin-right:4px; color:rgb(119,119,119);">▶\n</span>
-     *   '➕'       — removes <span style="cursor:pointer; color:rgb(119,119,119); float:right;">➕\n</span>
-     *   'jesus2099' — removes the wrapping <a href="…/cover-art"> anchor that contains a
-     *                 <span class="caa-icon jesus2099userjs154481"> (cover-art icon injected
-     *                 by the jesus2099 "mb. SUPER MIND CONTROL" userscript); detection is
-     *                 class-based and independent of the span's style attribute or href value
-     *
-     * Each returned descriptor gains a `colIdx` property initialised to -1; the actual
-     * column index is filled in per-page during the header-scanning pass inside the fetch loop.
-     *
-     * @param {object} def - Merged activeDefinition (the resolved page definition object)
-     * @returns {Array<{sourceColumn: string, erasers: string[], colIdx: number}>}
-     */
-    /**
-     * Derives the runtime injected-column descriptor list from activeDefinition.
-     * Reads features.injectedColumns (array of column name strings) and resolves
-     * entityType + WS2 inc options from pageType.
-     * Returns [] when sa_enable_relationships_column is false.
-     * @param {Object} def
-     * @returns {Array<{colName:string,entityType:string,incOptions:string[]}>}
-     */
-    /**
-     * Builds the activeReleaseEventColumns list from the page definition.
-     * Returns a non-empty array when the definition declares 'Release events'
-     * in its injectedColumns feature and the setting is enabled.
-     * @param {Object} def  activeDefinition
-     * @returns {{ colName: string }[]}
-     */
+<div id="vz-mb-show-all-entity-data-config-container" style="position: relative; background-color: rgb(244, 246, 249); border-radius: 14px; color: rgb(34, 34, 34); font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Roboto, sans-serif; width: 942px; height: 840px; min-width: 740px; min-height: 450px; max-width: 95vw; max-height: 92vh; display: flex; flex-direction: column; box-shadow: rgba(0, 0, 0, 0.35) 0px 30px 70px; border: 1px solid rgb(208, 213, 221); transform: scale(1); opacity: 1; transition: 0.18s; overflow: hidden;">
 #+end_example
 
-** DONE 2
+should be made wider. Right now e.g. in the following two "Setting" entries a wrapping occurs  
+
+In
 
 #+begin_example
-    /**
-     * Applies the centered inline-block + content-alignment technique to every
-     * cell in a data row whose column index matches an integerColumns descriptor.
-     *
-     * Technique — "centered inline-block + R/L/C content":
-     *   • The <td> itself gets `text-align:center` so the inner <span> is
-     *     horizontally centred inside the column, giving all values a common
-     *     visual anchor regardless of their width.
-     *   • A `<span style="display:inline-block; text-align:{contentAlign}; …">`
-     *     wraps the cell's original content and carries the per-column content
-     *     alignment (left / right / centre).
-     *   • `font-variant-numeric:tabular-nums` ensures digit columns (DD, MM,
-     *     YYYY, #, Length, …) align on decimal points when right-aligned.
-     *   • `min-width` is set via a CSS custom property `--mb-int-col-min-width`
-     *     (default 2ch) so callers can override per-column widths via CSS without
-     *     touching this function.
-     *
-     * Must be called AFTER all synthetic cells have been appended to the row so
-     * that the cell count matches the final header count and colIdx is valid.
-     *
-     * @param {HTMLTableRowElement}                                       row
-     *   - The fully assembled data row (original + synthetic cells appended).
-     * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
-     *   - Runtime list built by buildActiveIntegerColumns(), with colIdx resolved
-     *     against the final column list (including synthetic column headers).
-     */
-    /**
-     * applyIntegerColumnStyling — pass 1 (per-row, called during import).
-     *
-     * For align 'L' | 'R' | 'C':
-     *   Wraps the cell content in a single centered inline-block <span> with the
-     *   declared text-align.  See the JSDoc on buildActiveIntegerColumns for the
-     *   full technique description.
-     *
-     * For align ':' (colon-split / decimal-separator alignment):
-     *   Splits the cell's text content at the FIRST ':' character and produces
-     *   three child spans wrapped in a single `display:inline-block` container:
-     *
-     *     <td style="text-align:center">                    ← centers the wrapper
-     *       <span class="mb-ic-wrap">                       ← display:inline-block anchor
-     *         <span class="mb-ic-left" > left part </span>  ← display:inline-block, text-align:right
-     *         <span class="mb-ic-sep"  > :         </span>  ← literal separator, the visual center
-     *         <span class="mb-ic-right"> right part</span>  ← display:inline-block, text-align:left
-     *       </span>
-     *     </td>
-     *
-     *   The ':' separator sits exactly at the horizontal center of the column
-     *   because the wrapper is centered by the <td>'s `text-align:center`.
-     *   `mb-ic-left` grows rightward (right-aligned) to meet the colon;
-     *   `mb-ic-right` grows leftward (left-aligned) away from it.
-     *
-     *   The LEFT span carries only the text node; its `min-width` is set to '' at
-     *   this stage.  A second pass — `finalizeColonAlignedColumns` — scans all
-     *   collected rows, determines the maximum left-part character count for each
-     *   colon-align column, and sets `min-width:Nch` on every `.mb-ic-left` span
-     *   so that colons line up perfectly across all rows.
-     *
-     *   Values that contain no ':' are treated as pure right parts (the left span
-     *   is empty); this handles empty cells and non-time values gracefully.
-     *
-     * Idempotency: `cell.dataset.mbIntColStyled = '1'` prevents double-wrapping
-     * across re-render cycles.
-     *
-     * @param {HTMLTableRowElement}                                       row
-     * @param {Array<{sourceColumn: string, align: string, colIdx: number}>} descriptors
-     */
+<div style="flex: 0 0 450px; width: 450px; min-width: 0px; padding: 10px 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; border-right: 1px solid rgb(228, 232, 239); box-sizing: border-box;"><label for="vz-mb-show-all-entity-data-input-sa_count_stat_tooltip_color" class="vz-setting-label" style="font-size:0.85em;font-weight:500;color:#334;cursor:pointer;white-space:nowrap;margin-right:4px;">Row-count tooltip — foreground (text) color:</label><input type="text" id="vz-mb-show-all-entity-data-input-sa_count_stat_tooltip_color" value="#cdd6f4" style="width: 170px; padding: 4px 7px; border: 1px solid rgb(200, 205, 213); border-radius: 5px; font-size: 0.9em; background: rgb(205, 214, 244); color: black;"><button id="vz-mb-show-all-entity-data-input-sa_count_stat_tooltip_color-picker-btn" type="button" style="margin-left: 6px; width: 26px; height: 26px; border-radius: 4px; cursor: pointer; border: 1px solid rgb(170, 170, 170); vertical-align: middle; background-color: rgb(205, 214, 244);">🎨</button></div>
 #+end_example
 
-** DONE 3
+the "🎨"-button, and in 
 
 #+begin_example
-    /**
-     * Toggle visibility of a column across all tables
-     * @param {HTMLTableElement} table - Reference table (not used, kept for compatibility)
-     * @param {number} columnIndex - Index of the column to toggle
-     * @param {boolean} show - True to show, false to hide
-     */
-    /**
-     * Registry of per-sub-table column-visibility widgets (multi-table mode).
-     * Maps `safeId` → `{ applyGlobalConfig(state) }` so the global "Visible"
-     * button's "Choose current configuration" action can push the global column
-     * state to every sub-table.
-     * @type {Map<string, {applyGlobalConfig: function(Object): void}>}
-     */
+<div style="flex: 0 0 450px; width: 450px; min-width: 0px; padding: 10px 14px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; border-right: 1px solid rgb(228, 232, 239); box-sizing: border-box;"><label for="vz-mb-show-all-entity-data-input-sa_shortcut_col_sort_asc" class="vz-setting-label" style="font-size:0.85em;font-weight:500;color:#334;cursor:pointer;white-space:nowrap;margin-right:4px;">Shortcut: Sort Ascending (column filter focused):</label><input type="text" id="vz-mb-show-all-entity-data-input-sa_shortcut_col_sort_asc" value="Ctrl+ArrowUp" readonly="" style="width:130px;padding:4px 7px;border:1px solid #c8cdd5;border-radius:5px;font-family:monospace;cursor:default;background:#fff;"><button type="button" id="vz-mb-show-all-entity-data-input-sa_shortcut_col_sort_asc-capture-btn" data-capturing="false" style="margin-left:5px;font-size:0.8em;padding:3px 9px;cursor:pointer;border:1px solid #aaa;border-radius:4px;background:#eff1f5;vertical-align:middle;">🎹 Capture</button></div>
 #+end_example
 
-** DONE 4
+the "🎹 Capture"-button
 
-#+begin_example
-    /**
-     * Creates the per-sub-table ▶/◀ column-collapse toggle button.
-     *
-     * The button is inserted into the h3 bar immediately BEFORE
-     * `.mb-subtable-controls` so it is visually grouped with the other
-     * sub-table controls without being swallowed inside that flex span.
-     *
-     * Behaviour:
-     *   • Reads its own state from textContent (▶ = all collapsed,
-     *     ◀ = expanded) — no hidden property, consistent with the global and
-     *     column-header toggle philosophy.
-     *   • On click: collects every `.mb-col-collapse-hdr-btn` inside `table`,
-     *     drives each one that is not already in the target state by calling
-     *     `.click()` (which in turn drives the delegation listener).
-     *   • Initially `display:none` — shown by `updateSubTableCollapseButton()`
-     *     once `initCollapsableColumns()` confirms the table has multi-row cells.
-     *
-     * @param {HTMLTableElement} table        - The sub-table this button controls.
-     * @param {string}           categoryName - Human-readable group name (used for
-     *                                          the id and accessibility attributes).
-     * @returns {HTMLButtonElement}
-     */
-    /**
-     * Returns the innerHTML for global/sub-table collapse-toggle buttons.
-     *
-     * Renders as two stacked flex-column groups (▶/▼ glyph + "Expand/Collapse ALL"
-     * + "multi-row cells") laid out with the outer button carrying
-     * display:inline-flex; align-items:center; gap:4px.
-     *
-     * State detection (used by all click handlers) relies on
-     * `btn.textContent.startsWith('▶')`.
-     *
-     * @param {boolean} expand - true → ▶ Expand state; false → ▼ Collapse state
-     * @returns {string} HTML string to assign to btn.innerHTML
-     */
-#+end_example
+are both wrapped to a new row.
 
-** DONE 5
+When resizing ONLY the "DESCRIPTION" column gets resized, but not the other ones.
 
-#+begin_example
-        /**
-         * Persist the current checkbox state for this pageType.
-         * Called on every path that closes the menu so the stored value always
-         * reflects the last intentional configuration the user left behind.
-         */
-        /**
-         * Reads the current checkbox state as a plain `{ colName: bool }` object.
-         * Shared by `saveColVisState()` and the global-override propagation path.
-         */
-#+end_example
+When possible BOTH the "SETTING" and the "DESCRIPTION" column should be resized to make more space for the content.
 
-** DONE 6
-
-#+begin_example
-    /**
-     * Auto-resize table columns to optimal width (with toggle)
-     * First click: Resize columns to optimal width
-     * Second click: Restore original column widths
-     * Also handles manual resizing - restores to original state
-     */
-    /**
-     * Toggles auto-resize mode for table columns
-     * First click: auto-resizes columns to fit content
-     * Second click: restores original column widths
-     */
-#+end_example
-
-** DONE 7
-
-#+begin_example
-    /**
-     * Highlights matching text in table rows based on filter query
-     * @param {HTMLTableRowElement} row - The table row to highlight text in
-     * @param {string} query - The search query to highlight
-     * @param {boolean} isCaseSensitive - Whether the search should be case-sensitive
-     * @param {number} targetColIndex - Specific column index to highlight (-1 for all columns)
-     * @param {boolean} isRegExp - Whether to treat the query as a regular expression
-     * @param {string} highlightType - Type of highlight: 'auto', 'prefilter', 'global', or 'column'
-     */
-    /**
-     * Highlights all regex matches of `query` within every relevant `<td>` of `row`,
-     * including matches that span across multiple inline child elements (cross-tag matches).
-     *
-     * Delegates per-cell work to {@link highlightCrossTag}.
-     *
-     * @param {HTMLTableRowElement} row             - The table row to highlight.
-     * @param {string}              query           - The filter string or regex source.
-     * @param {boolean}             isCaseSensitive - Whether matching is case-sensitive.
-     * @param {number}              [targetColIndex=-1] - Column index to restrict highlighting
-     *                                                    to; -1 means all columns.
-     * @param {boolean}             [isRegExp=false]    - Treat `query` as a regular expression.
-     * @param {string}              [highlightType='auto'] - One of 'prefilter', 'global',
-     *                                                        'column', or 'auto'.
-     */
-#+end_example
-
-** DONE 10
-
-#+begin_example
-    /**
-     * Installs a single event-delegation listener on the table's `<tbody>` to
-     * handle all clicks on `.mb-cell-collapse-toggle` spans, regardless of when
-     * or how the containing rows were inserted into the DOM.
-     *
-     * Using delegation instead of per-element `addEventListener` calls means
-     * the handler survives:
-     *   - Sort re-renders:  `renderFinalTable` moves the same TR elements but
-     *     `<tbody>` itself (and its listener) is never recreated.
-     *   - Disk-load re-renders: `tbody.innerHTML = ''` removes child rows but
-     *     NOT event listeners attached to the `<tbody>` element itself.
-     *   - Filter re-renders: same as sort — rows are hidden/shown, not replaced.
-     *
-     * The handler resolves the `<ul>/<li>` structure dynamically from the
-     * clicked cell at event time, so no closures capture stale DOM references.
-     *
-     * Idempotent: a second call on the same table is a no-op (guarded by
-     * `table.dataset.mbCollapseDelegate`).
-     *
-     * @param {HTMLTableElement} table
-     */
-    /**
-     * Refreshes the global ▶/◀ collapse button's background and text colour
-     * based on whether any multi-row data cell — collapsed OR expanded — in
-     * the given table (single-table mode) or across ALL `table.tbl` elements
-     * (multi-table mode, pass `null`) currently contains a filter-highlight mark.
-     *
-     * This gives the end user a visual clue that at least one highlighted match
-     * exists among the multi-row cells, regardless of which cells are currently
-     * expanded.
-     *
-     * Colour values are taken from the user's "Global Filter Highlight" settings
-     * so they always match the in-cell highlight colours.  When no highlights are
-     * present the button's inline style overrides are cleared so it reverts to
-     * its default appearance.
-     *
-     * Called from:
-     *   • initCollapsableColumns()            — after every (re-)init / filter cycle
-     *   • rewireGlobalCollapseButtonMulti()   — after all sub-tables are wired in
-     *                                           multi-table mode
-     *   • ensureCollapseDelegate click        — after every individual cell expand /
-     *                                           collapse so the tint stays in sync
-     *
-     * @param {HTMLTableElement|null} table  Pass the single table in single-table
-     *   mode, or `null` in multi-table mode to scan all `table.tbl` elements.
-     */
-#+end_example
-
-** DONE 13
-
-#+begin_example
-    /**
-     * Appends a favicon icon anchor to a .mb-rel-cell <td>.
-     * When iconClass is provided a <span class='favicon {cls}-favicon'> is used;
-     * otherwise an <img src=iconUrl>. Ended rels get .mb-rel-ended (opacity 35%).
-     * @param {HTMLTableCellElement} cell
-     * @param {string} url
-     * @param {string|null} iconClass
-     * @param {string|null} iconUrl
-     * @param {boolean} ended
-     */
-    /**
-     * Appends a favicon icon link to a .mb-rel-cell <td>.
-     * Generates HTML identical to the reference script:
-     *   span: <a href=URL><span class="favicon cls-favicon"></span></a>
-     *   img:  <a href=URL><img src=URL class="favicon" style="..."></a>
-     * No extra classes, no target/rel, no title on span — matches MBS exactly.
-     * Ended relationships get opacity:0.25 on the <a> (matches reference script).
-     *
-     * @param {HTMLTableCellElement} cell
-     * @param {string}  url        Target URL
-     * @param {string|null} iconClass  CSS class suffix (e.g. 'allmusic'), or null
-     * @param {string|null} iconUrl    Direct favicon img src, used when iconClass is null
-     * @param {boolean} ended      Whether the relationship has ended
-     */
-    /**
-     * Appends a favicon icon link to a .mb-rel-cell <td>.
-     * Always renders as <img> — never as <span class='favicon'>.
-     * CSS sprites require the MBS td.relationships CSS context which our
-     * consolidated table cannot reliably inherit. Using <img> avoids all
-     * ghost-icon issues regardless of the surrounding CSS context.
-     *
-     * When iconUrl is provided directly (discography entry, non-URL rels),
-     * it is used as-is. When only a domain hint is needed (known services),
-     * the caller passes a Google favicon URL derived from the target URL.
-     *
-     * @param {HTMLTableCellElement} cell
-     * @param {string}  url      Target href
-     * @param {string}  iconUrl  Favicon img src
-     * @param {boolean} ended
-     */
-    /**
-     * Appends a favicon icon link to a .mb-rel-cell <td>.
-     * @param {HTMLTableCellElement} cell
-     * @param {string}  url       Target href
-     * @param {string}  iconUrl   Favicon img src
-     * @param {boolean} ended     Whether the relationship has ended
-     * @param {string}  [tooltip] Override tooltip text (defaults to url)
-     */
-#+end_example
-
-** DONE 14
-
-#+begin_example
-    /**
-     * Fetches /ws/2/{entityType}/{mbid}?inc=...&fmt=json with in-memory caching.
-     * @param {string} mbid
-     * @param {string} entityType  'release-group' or 'release'
-     * @param {string[]} incOptions
-     * @returns {Promise<Object|null>}
-     */
-    /**
-     * Fetches WS2 url-rels for one entity using same-origin fetch().
-     * /ws/2/... is on the same domain as the page, so fetch() works without
-     * any @connect declaration and avoids GM_xmlhttpRequest permission issues.
-     * Caches the Promise (not the result) so parallel calls share one request.
-     * @param {string}   mbid
-     * @param {string}   entityType  'release-group' or 'release'
-     * @param {string[]} incOptions  WS2 inc= values, e.g. ['url-rels']
-     * @returns {Promise<Object|null>}
-     */
-    /**
-     * Fetches WS2 relationship data with two-level cache: L1 memory + L2 IDB.
-     * forceNetwork=true (or _relRetryActive flag) bypasses both caches.
-     * @param {string}   mbid
-     * @param {string}   entityType
-     * @param {string[]} incOptions
-     * @param {boolean}  [forceNetwork=false]
-     * @returns {Promise<Object|null>}
-     */
-#+end_example
-
-** DONE 15
-
-#+begin_example
-    /**
-     * Populates all .mb-rel-cell elements in the DOM with relationship favicon
-     * icon links fetched sequentially from the MusicBrainz Web Service.
-     *
-     * Algorithm:
-     *   1. Collect unpopulated .mb-rel-cell[data-mbid] elements.
-     *   2. Deduplicate MBIDs; fetch WS2 url-rels at <=1 req/s (MB policy).
-     *   3. Resolve each URL relationship to an icon CSS class or a fetched favicon.
-     *   4. Append icon anchors to all cells sharing the matching MBID.
-     *
-     * Idempotent: cells with data-rel-done='1' are skipped.
-     * Only runs when sa_enable_relationships_column is true and
-     * activeInjectedColumns is non-empty.
-     */
-
-    /**
-     * Extracts a release-MBID → release-events map from a WS2 relations array.
-     * @param {Object[]} relations  Parsed WS2 .relations array
-     * @returns {Map<string, Array>}  release MBID → release-events[]
-     */
-#+end_example
-
-** DONE 18
-
-#+begin_example
-    /**
-     * Deletes a single record from an IDB object store.
-     *
-     * NOTE: Currently unused — no call site exists in this script.  Retained
-     * for potential future use (e.g. manual cache eviction or a purge-entry UI).
-     * If a call site is never added this function should be removed.
-     *
-     * @param   {string} storeName  'images' | 'metadata'
-     * @param   {string} key        Record key to delete.
-     * @returns {Promise<void>}
-     */
-    /**
-     * Deletes one record from an IDB object store.
-     * Used by _relRetryMbids to purge cached WS2 relationship data.
-     * @param {string} storeName  Object store name (e.g. 'rel-ws2')
-     * @param {string} key        Record key to delete
-     * @returns {Promise<void>}
-     */
-#+end_example
-
-** DONE 20
-
-#+begin_example
-    /**
-     * Builds one `<li class="mb-caa-art-li mb-caa-art-li-image">` element for a
-     * single image entry from the CAA/EAA JSON API response.
-     *
-     * Layout per row (all optional pieces degrade gracefully if data absent):
-     *   [18×18 thumb]  [type badge]  [ — comment ]  [⏳ if pending]
-     *
-     * When `sa_caa_hover_preview` is enabled, hovering the thumbnail triggers the
-     * shared singleton popup showing a larger version of that specific image
-     * (derived from `imgData.thumbnails` at `sa_caa_big_img_size`).  Unlike the
-     * icon-column hover, which always fetches `/front-{size}`, each li uses its
-     * own archive URL so Back, Booklet, etc. images preview correctly.
-     *
-     * The <li> starts with `style="display:none"` so the parent collapse
-     * toggle controls its visibility.  Protocol-relative URLs (`//`) are used
-     * so the element works on both http and https pages.
-     *
-     * @param   {Object} imgData  One image entry from the archive `images[]` array.
-     *   Expected fields: id, types[], front, back, comment, approved, image,
-     *   thumbnails.{250,500,1200,small,large}
-     * @returns {HTMLLIElement}
-     */
-    /**
-     * Re-applies active filter highlights to a single image <li> element.
-     *
-     * Low-level building block used by both _artHighlightArtCell() (post-build,
-     * on the live DOM) and _artBuildMultiRowArtCell() (during build, on detached
-     * nodes).  The two call sites together guarantee highlights are present
-     * regardless of whether the async art-cell rebuild fires before or after
-     * _activeFilterHighlightCtx is updated.
-     *
-     * Covers both .mb-caa-type-badge and .mb-caa-art-comment text nodes.
-     * Is a no-op when _activeFilterHighlightCtx is null (no active filter).
-     *
-     * @param {HTMLLIElement} li      - The image <li> produced by _artBuildImageLi().
-     * @param {number}        colIdx  - cellIndex of the art <td> in its parent row;
-     *                                  used to match column-scoped filters.
-     * @param {object|null}   [ctxOverride] - Optional explicit highlight context to
-     *                                  use instead of the module-level
-     *                                  _activeFilterHighlightCtx.  Used by
-     *                                  _artHighlightArtCell() so each li reads the
-     *                                  same snapshot of the context.
-     */
-#+end_example
-
-
+Or even better, when possible, make the three columns "SETTING", "DEFAULT" and "DESCRIPTION" resizable in itself
 
 * TODO JSDoc
 
@@ -66585,83 +66259,6 @@ and either
 * TODO colorize "main" and "guest" performer in the EAA tooltips
 
 
-* DONE unconditionally remove special columns
-
-some fixes:
-
-1.)
-
-unconditionally remove special columns coming from other userscripts for preparation of the the table header row for the
-final rendered view as we include this functionality now in our own script and can optionally add them back on the final
-rendered page as injected columns
-
-So the following three variables ARE NOT needed anymore and should be removed
-
-#+begin_example
-        sa_remove_release_events: {
-            label: 'Remove "Release events" column from "Place-Performances" pages',
-            type: "checkbox",
-            default: true,
-            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
-        },
-
-        sa_remove_rel: {
-            label: "Remove Relationships column",
-            type: "checkbox",
-            default: true,
-            description: "Remove the Relationships column from the final rendered tables (comes from another userscript) "
-        },
-
-        sa_remove_perf: {
-            label: "Remove Performance column",
-            type: "checkbox",
-            default: true,
-            description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
-        },
-#+end_example
-
-Make sure to adjust the code accordingly, as their internal functionality should still always be "true"
-
-2.)
-
-remove the double JSDoc comment in front of the function "_synthColTooltip(extractor, sourceColumn, colName)"
-
-#+begin_example
-    /**
-     * Prepares the table header row for the final rendered view.
-     *
-     * Three sequential passes are performed:
-     *
-     *   1. **Column removal** — removes columns whose header text prefix matches
-     *      an entry in `removalMap` and whose corresponding setting is enabled
-     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
-     *
-     *   2. **Column origin stamping** — stamps each surviving original <th> with
-     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
-     *      from a re-render pass are skipped.
-     *
-     *   3. **Synthetic column injection** — injects new <th> elements for each
-     *      configured extractor, assigning:
-     *        - `mb-extracted-column`         for activeColumnExtractors entries
-     *                                        and extractMainColumn (MB-Name/Comment)
-     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
-     *                                        entries (second-pass derivations)
-     *      Each injected <th> also receives `dataset.colName`, the appropriate
-     *      background color from settings, and is appended to the header row if
-     *      not already present (idempotent across re-renders).
-     *
-     * The three CSS classes are the authoritative source for the Statistics panel
-     * column-origin breakdown (original / extracted / derived counts).
-     *
-     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
-     *   The `<thead>` element or its first `<tr>` row to process.
-     */
-
-#+end_example
-
-as it exists already on the right function "cleanupHeaders(headerElement)"
-
-
 * TODO Either implement the "Tagger" userscript in our script or make the a href call need leave the curretn page
 
 
@@ -66965,42 +66562,157 @@ https://musicbrainz.org/user/vzell/tags
 
 change the <li> structure into a proper table first
 
-* DONE check JSDoc comment
 
-which of the following two JSDoc comments
+* DONE escape key should close the "vz-tbl-editor-" window instead of the parent one
+** initial
 
-#+begin_example
-    /**
-     * Recalculates and updates the h2 row-count badge from current DOM state of all
-     * subtables after global + subtable filters have been applied.
-     *
-     * Mirrors the 3-tier format used by updateSubTableRowCount():
-     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
-     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
-     *
-     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
-     */
-    /**
-     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
-     * reflecting the current combination of global filter, column filters, and
-     * sub-table filter active on this specific table.
-     *
-     * Called from:
-     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
-     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
-     *
-     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
-     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
-     *
-     * @param {HTMLTableElement} tbl  The live sub-table element.
-     */
-#+end_example
+In the library "VZ_MBLibrary.user.js"
 
-in front of the following function
+1.)
+
+when the table editor UI is opened from the configuration dialog with
 
 #+begin_example
-    function _updateSubTableH3Tooltip(tbl) {
+        function _openTableEditor(key, cfg) {
+            const _pid = 'vz-tbl-editor-' + key;
 #+end_example
 
-belongs to it. Please fix and optionally move the wrong comment to the right place, or remove it completely if not used
-anymore
+make sure that the "Escape" key should close the "vz-tbl-editor-" window instead of the parent one
+
+2.)
+
+add a changelog entry to the commented variable
+
+#+begin_example
+
+// CHANGELOG
+// let changelog_library = [
+#+end_example
+
+and bump the versions in
+
+#+begin_example
+// @version
+const LIBRARY_VERSION = 
+#+end_example
+
+** bug
+
+now both the "vz-tbl-editor-" window AND the configuration UI are closed. the "Escape" key should close the
+"vz-tbl-editor-" window only when pressed inside the "vz-tbl-editor-" window
+
+** bug
+
+
+Still buggy. What I want is when opening an arbitrary table editor window from the configuration dialog e.g.
+
+#+begin_example
+<button type="button" id="vz-mb-show-all-entity-data-input-sa_unicode_char_picker_mappings-tbl-btn" style="font-size:0.8em;padding:3px 10px;cursor:pointer;
+                            border:1px solid #7090c0;border-radius:4px;
+                            background:#e8f0fc;vertical-align:middle;">
+                            📋 Edit Unicode Code Symbols</button>
+#+end_example
+
+in the resulting table editor window
+
+#+begin_example
+<div id="vz-tbl-editor-sa_unicode_char_picker_mappings" ...
+#+end_example
+
+I want that the "Escape" key behaves the following ways
+
+1.)
+
+when inside an input text field e.g.
+
+#+begin_example
+<td style="padding: 3px 4px; border: 1px solid rgb(216, 221, 232);"><input type="text" style="width: 100%; padding: 3px 5px; border: 1px solid rgb(187, 187, 187); border-radius: 3px; box-sizing: border-box; font-family: monospace; font-size: 0.95em;"></td>
+#+end_example
+
+it should get blurred and the whole dialog should have the focus
+
+2.)
+
+when the dialog has the focus it should behave like pressing the "Close"-button
+
+#+begin_example
+<button style="padding: 5px 12px; border: 1px solid rgb(170, 170, 170); border-radius: 4px; background: rgb(239, 241, 245); cursor: pointer; font-size: 0.88em;">Close</button>
+#+end_example
+
+and not like the current behaviour
+
+a.)
+
+that when an input field has the focus, BOTH the table editor window AND the enclosing configuration dialog window are closed
+
+b.)
+
+when the dialog itself has the focus, the enclosing configuration dialog window is closed, and the table editor window stays open
+
+** bugs
+
+Still bugs:
+
+1.)
+
+when an input field has the focus, pressing the "Escape" key closes the enclosing configuration dialog window but the
+table editor window stays open. When pressing "Escape" alone, it correctly closes the table editor window, but the
+configuration dialog window is already closed
+
+2.)
+
+when the table editor dialog itself has the focus (but not any of the input fields), BOTH the table editor window AND
+the enclosing configuration dialog window are closed
+
+please fix
+
+** still bugs
+
+OK, the last session fixed the behaviour for the table editor windows, but there are still bugs remaining directly in
+the configuration UI dialog itself:
+
+1.)
+
+When inside an input field of type number, e.g.
+
+#+begin_example
+<input type="number" id="vz-mb-show-all-entity-data-input-sa_stats_panel_max_height" value="82" min="30" max="98" style="width:90px;height:26px;padding:0 6px;box-sizing:border-box;border:1px solid #c8cdd5;border-radius:5px;font-size:0.9em;background:#fff;">
+#+end_example
+
+or
+
+an input field of type text, e.g.
+
+#+begin_example
+<input type="text" id="vz-mb-show-all-entity-data-input-sa_filename_prefix" value="MB-" style="width:170px;padding:4px 7px;border:1px solid #c8cdd5;border-radius:5px;font-size:0.9em;background:#fff;">
+#+end_example
+
+pressing the "Escape"-key should onyl blurr the input field, but it closes the complete configuration dialog right now
+
+2.)
+
+After pressing a button e.g.
+
+#+begin_example
+<button type="button" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-toggle" style="font-size:0.8em;padding:3px 9px;cursor:pointer;border:1px solid #aaa;border-radius:4px;background:#eff1f5;vertical-align:middle;">✏️ Edit fields</button>
+#+end_example
+
+which opens a "mb-pd-subgrid" sbgrid, e.g.
+
+#+begin_example
+<div id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-subgrid" class="mb-pd-subgrid" data-section="divider_ui_appearance" data-pd-open="true" style="padding: 10px 16px 12px 32px; background: rgb(232, 237, 245); border-top: 1px solid rgb(208, 216, 232);"><div style="display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;"><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">fontSize:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-0" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="0" value="0.8em" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">padding:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-1" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="1" value="2px 8px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">height:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-2" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="2" value="24px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">borderRadius:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-3" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="3" value="6px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label></div></div>
+#+end_example
+
+and then when inside an input field of type text, e.g.
+
+#+begin_example
+<input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-1" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="1" value="2px 8px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;">
+#+end_example
+
+pressing the "Escape"-key should onyl blurr the input field, but it closes the complete configuration dialog right now
+
+please fix
+
+
+* config dialog
+

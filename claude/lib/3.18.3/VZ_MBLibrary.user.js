@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Unified Library
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      3.18.4+2026-04-01
+// @version      3.18.3+2026-04-01
 // @description  Unified library for Logging, Settings, Changelog management, and remote content fetching
 // @author       vzell
 // @tag          AI generated
@@ -22,11 +22,10 @@
  * 4. Menu Integration (Tampermonkey & MB Editing menu).
  */
 
-const LIBRARY_VERSION = '3.18.4+2026-04-01';
+const LIBRARY_VERSION = '3.18.3+2026-04-01';
 
 // CHANGELOG
 // let changelog_library = [
-//     {version: '3.18.4+2026-04-01', description: 'settingsEscHandler: added a second case before the tryCloseDialog() fallback. When the active element is any INPUT or TEXTAREA inside the settings container (type=number, type=text in setting rows, sub-grid mb-pd-sub inputs, color-picker text inputs, keyboard-shortcut capture inputs) and is NOT the search field, Escape now only blurs the field (stopImmediatePropagation + preventDefault + blur) instead of closing the whole dialog. The dialog closes only when focus is on a non-input element such as a button, a section header, or the dialog container itself. The table-editor guard and search-field clear/blur logic are unchanged.'},
 //     {version: '3.18.3+2026-04-01', description: '_openTableEditor Escape — root-cause fix. settingsEscHandler is a capture-phase listener on document and therefore always fires before any panel-level listener, making panel-side stopPropagation useless. Fix: added an early-return guard at the top of settingsEscHandler that checks document.querySelector("[id^=vz-tbl-editor-]") and returns immediately when that panel contains the active element (including when the panel itself is focused via tabIndex=0). With settingsEscHandler yielding, the panel keydown listener handles the two-step behaviour (Step 1: blur input → focus panel; Step 2: remove panel) using stopImmediatePropagation for safety.'},
 //     {version: '3.18.2+2026-04-01', description: '_openTableEditor Escape — redesigned as a two-step panel-level handler. panel.tabIndex=0 makes the panel itself focusable; panel.focus() is called after appending to DOM so Escape works immediately. The keydown listener is on the panel element, not document, so it only fires when focus is inside the panel and settingsEscHandler is never involved. Step 1: if focus is on a text input inside the panel, blur it and move focus to the panel (second Escape will then close). Step 2: if focus is on the panel itself, remove the panel (equivalent to Close button). e.stopPropagation() in both steps prevents the event from bubbling to any parent handler.'},
 //     {version: '3.18.1+2026-04-01', description: '_openTableEditor Escape fix: the handler now checks panel.contains(document.activeElement) before intercepting. Escape is only captured when focus is inside the vz-tbl-editor panel; if focus is elsewhere (e.g. in the parent settings dialog search field) the event is left to propagate so settingsEscHandler can act on it normally. Fixes: pressing Escape outside the table editor closed both dialogs instead of only the settings one.'},
@@ -1528,7 +1527,6 @@ const VZ_MBLibrary = (function() {
                 // bubble-phase listener and before the browser's own native Escape handling.
                 // stopImmediatePropagation() in cases 1+2 ensures no other handler reacts.
                 const settingsSearchEl = document.getElementById(`${scriptId}-search`);
-                const settingsContainer = document.getElementById(`${scriptId}-config-container`);
                 settingsEscHandler = (e) => {
                     if (e.key !== 'Escape') return;
                     // If a table-editor panel is open and contains the active element
@@ -1536,9 +1534,7 @@ const VZ_MBLibrary = (function() {
                     // own keydown handler deal with Escape — do not touch the settings dialog.
                     const _activeTblPanel = document.querySelector('[id^="vz-tbl-editor-"]');
                     if (_activeTblPanel && _activeTblPanel.contains(document.activeElement)) return;
-                    const ae = document.activeElement;
-                    if (ae === settingsSearchEl) {
-                        // Search field: clear text or blur, do not close the dialog.
+                    if (document.activeElement === settingsSearchEl) {
                         e.stopImmediatePropagation();
                         e.preventDefault();
                         if (settingsSearchEl.value !== '') {
@@ -1548,15 +1544,6 @@ const VZ_MBLibrary = (function() {
                         } else {
                             settingsSearchEl.blur();
                         }
-                    } else if (ae &&
-                               (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA') &&
-                               settingsContainer && settingsContainer.contains(ae)) {
-                        // Any other input/textarea inside the settings dialog (number,
-                        // text, sub-grid text, color-picker text, keyboard-shortcut
-                        // capture input, …): blur only — do NOT close the dialog.
-                        e.stopImmediatePropagation();
-                        e.preventDefault();
-                        ae.blur();
                     } else {
                         tryCloseDialog();
                     }
