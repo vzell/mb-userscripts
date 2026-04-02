@@ -66120,7 +66120,25 @@ injectedColumns: [ 'Release events', 'Relationships' ]
 
 ** bugs
 
+The last fix didn't work.
 
+Actually please instead of trying to fix this, just implement the following:
+
+Always after rerendering the table(s) (should work for both "single" and "multi" table pageTypes) just reapply the zebra
+striping for better user readabilty unconditionally to all rows in a table. There already was a bug when sorting rows by
+one or more columns, that after sorting some adjacent rows had the same zebra striping applied (because they used the
+zebra striping from the initial rendering on the final page). But hat already looked odd.
+
+So in essence, always apply a clean zebra striping effect after rendering a table
+
+** fix
+
+there is still a discrepancy between the background colors in the "even" case and ours.
+
+While the MusicBrainz CSS stylesheet probably injects the background color because of the 'class="even"' and
+'calls="odd"' inside each "<tr>", our code injects some hardcoded color values. We probably should also use the
+MusicBrain default instead of hardcoding our own. Also they are similar, it looks a little bit strange from the enduser
+side
 
 * TODO Implement column movement
 
@@ -66909,6 +66927,13 @@ https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
 https://musicbrainz.org/user/vzell/tags
 
 change the <li> structure into a proper table first
+
+* make zebra striping configurable
+
+#+begin_example
+        const oddBg  = '#ffffff';
+        const evenBg = '#f2f2f2';
+#+end_example
 
 
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.382+2026-04-02
+// @version      9.99.381+2026-04-02
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4838,21 +4838,19 @@
                 cell.classList.add('mb-sticky-col');
             });
 
-            // Body rows — the even/odd CSS classes (set by applyZebraStriping) target
-            // <td> elements (e.g. tr.even > td { background: #e4e4e4 }), not <tr>.
-            // So we read getComputedStyle on the CELL (not the row), but first clear
-            // any previous inline background so the CSS class rule wins the cascade.
+            // Body rows — read the actual computed background colour so the sticky
+            // cell matches the row's even/odd CSS class set by applyZebraStriping().
+            // getComputedStyle is called per-row (one column only) after CSS is applied,
+            // so it reliably returns the MB theme colour without any hardcoded values.
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const cell = tr.cells[stickyIdx];
                 if (!cell) return;
                 cell.style.position  = 'sticky';
                 cell.style.left      = leftPx;
                 cell.style.zIndex    = '1';
-                // Clear inline background so CSS class applies, then snapshot the result.
-                cell.style.background = '';
-                const cellBg = getComputedStyle(cell).backgroundColor;
-                cell.style.background = (cellBg === 'rgba(0, 0, 0, 0)' || cellBg === 'transparent')
-                    ? '#ffffff' : cellBg;
+                const rowBg = getComputedStyle(tr).backgroundColor;
+                cell.style.background = (rowBg === 'rgba(0, 0, 0, 0)' || rowBg === 'transparent')
+                    ? '#ffffff' : rowBg;
                 cell.classList.add('mb-sticky-col');
             });
 

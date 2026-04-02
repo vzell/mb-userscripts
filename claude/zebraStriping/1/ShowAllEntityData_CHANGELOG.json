@@ -1,17 +1,5 @@
 [
   {
-    "version": "9.99.382",
-    "date": "2026-04-02",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "applyStickyColumn body cells: fixed zero-background regression. MusicBrainz's zebra-stripe CSS targets <td> elements directly (e.g. 'tr.even > td { background: #e4e4e4 }'), not the <tr> itself. Reading getComputedStyle(tr) therefore always returns transparent. Fix: clear cell.style.background first so the CSS class rule wins the cascade, then read getComputedStyle(cell).backgroundColor to get the actual rendered colour, then set it as an explicit inline background so the sticky cell is opaque over scrolling content. Injected column cells (td.style.backgroundColor = '') already benefit from the CSS class rules without any inline override."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.381",
     "date": "2026-04-02",
     "sections": [

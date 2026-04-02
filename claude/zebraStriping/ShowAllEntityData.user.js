@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.382+2026-04-02
+// @version      9.99.380+2026-04-02
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4743,34 +4743,31 @@
      * @param {HTMLTableElement} table
      */
     /**
-     * Resets the MusicBrainz `even`/`odd` CSS class on every visible `<tbody>` row
-     * in `table` according to the row's current visual position.
+     * Applies clean alternating (zebra-stripe) background colours to all VISIBLE
+     * `<tbody>` rows in `table`, unconditionally overwriting any previously set
+     * inline row background.
      *
-     * MusicBrainz's own stylesheet drives the actual colours via those classes, so
-     * we never hard-code any colour values — the page theme always stays in sync.
+     * Calling this function after every render and filter operation ensures:
+     *   - Sorting never leaves adjacent rows with the same colour (rows are
+     *     re-ordered but had their old colour baked in as an inline style).
+     *   - Sticky column cells (`tr.style.backgroundColor` is always set, so
+     *     `applyStickyColumn` reads the correct alternating value).
+     *   - Injected column cells (`<td>` with no explicit background) show the
+     *     row's alternating colour via normal table background inheritance.
      *
-     * Calling this after every render and filter/sort operation ensures:
-     *   - Sorting never leaves adjacent rows with the same stripe (rows are
-     *     re-ordered but keep their old class if not corrected).
-     *   - Sticky column cells read `getComputedStyle(tr).backgroundColor` (the
-     *     actual rendered colour) and therefore get the right opaque background.
-     *   - Injected column cells (`<td>` with no explicit background) inherit the
-     *     row background automatically via normal table-cell inheritance.
-     *
-     * Rows with `display:none` are skipped so the visible sequence always starts
-     * with the `odd` class (index 0).
+     * Rows with `display:none` (hidden by filter) are skipped so the visible
+     * sequence always starts with the odd colour.
      *
      * @param {HTMLTableElement} table
      */
     function applyZebraStriping(table) {
         if (!table) return;
+        const oddBg  = '#ffffff';
+        const evenBg = '#f8f9fc';
         let visIdx = 0;
         table.querySelectorAll('tbody tr').forEach(tr => {
             if (tr.style.display === 'none') return;
-            // Re-assign the native MusicBrainz even/odd class based on the current
-            // visual position, which may have changed after a sort or filter.
-            tr.classList.remove('even', 'odd');
-            tr.classList.add(visIdx % 2 === 0 ? 'odd' : 'even');
+            tr.style.backgroundColor = (visIdx % 2 === 0) ? oddBg : evenBg;
             visIdx++;
         });
     }
@@ -4838,21 +4835,15 @@
                 cell.classList.add('mb-sticky-col');
             });
 
-            // Body rows — the even/odd CSS classes (set by applyZebraStriping) target
-            // <td> elements (e.g. tr.even > td { background: #e4e4e4 }), not <tr>.
-            // So we read getComputedStyle on the CELL (not the row), but first clear
-            // any previous inline background so the CSS class rule wins the cascade.
+            // Body rows — read tr.style.backgroundColor which applyZebraStriping()
+            // always sets on every visible row, ensuring correct alternating colours.
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const cell = tr.cells[stickyIdx];
                 if (!cell) return;
                 cell.style.position  = 'sticky';
                 cell.style.left      = leftPx;
                 cell.style.zIndex    = '1';
-                // Clear inline background so CSS class applies, then snapshot the result.
-                cell.style.background = '';
-                const cellBg = getComputedStyle(cell).backgroundColor;
-                cell.style.background = (cellBg === 'rgba(0, 0, 0, 0)' || cellBg === 'transparent')
-                    ? '#ffffff' : cellBg;
+                cell.style.background = tr.style.backgroundColor || '#ffffff';
                 cell.classList.add('mb-sticky-col');
             });
 
