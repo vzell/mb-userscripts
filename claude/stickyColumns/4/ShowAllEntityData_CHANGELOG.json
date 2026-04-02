@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.379",
+    "date": "2026-04-02",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Sticky column: body cells no longer all show the same white background. Root cause: applyStickyColumn._apply() used tr.style.backgroundColor to set the cell background, but MusicBrainz alternating row colours come from CSS :nth-child rules (not inline styles), so tr.style.backgroundColor was always empty and the fallback #ffffff applied to every row. Fix: new _rowEffectiveBg(tr) helper checks inline style first, then getComputedStyle (captures CSS :nth-child), then falls back to white. Used in _apply() for all body cells.",
+          "Injected columns (Release events, Relationships): after the loading tint is cleared, cells now receive the row's effective alternating background instead of being left transparent. Applied at all three td.style.backgroundColor='' clearing sites in _populateCells (live rows and source rows) and the release-events population loop, using the same inline-style → getComputedStyle → '' priority chain."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.378",
     "date": "2026-04-02",
     "sections": [

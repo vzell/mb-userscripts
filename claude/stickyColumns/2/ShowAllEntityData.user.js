@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.378+2026-04-02
+// @version      9.99.377+2026-04-02
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -638,10 +638,10 @@
             label: 'Enable Sticky Columns',
             type: 'checkbox',
             default: true,
-            description: "Keep the first table column (or the column named in the page " +
-                         "definition's stickyColumn feature) visible when scrolling horizontally. " +
-                         "Works independently of 'Enable Sticky Headers'; both features are " +
-                         "compatible and active simultaneously when both are enabled."
+            description: 'Keep the first table column (or the column named in the page ' +
+                         'definition's stickyColumn feature) visible when scrolling horizontally. ' +
+                         'Works independently of "Enable Sticky Headers"; both features are ' +
+                         'compatible and active simultaneously when both are enabled.'
         },
 
         // ============================================================
@@ -3313,7 +3313,7 @@
             buttons: [ { label: 'Show all Subscription results' } ],
             tableMode: 'single',
             features: {
-                extractMainColumn: 'Name',
+                extractMainColumn: 'Name'
                 stickyColumn: 'Name'
             }
         },
@@ -3325,7 +3325,7 @@
             tableMode: 'single',
             features: {
                 extractMainColumn: 'Name', // Specific header
-                stickyColumn: 'Name',
+                stickyColumn: 'Name'
                 transformToH2: true        // New flag to trigger <h2> transformation
             },
             rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
@@ -3339,7 +3339,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
                 ],
-                extractMainColumn: 'Artist', // Specific header
+                extractMainColumn: 'Artist' // Specific header
                 stickyColumn: 'Artist'
             },
             tableMode: 'single'
@@ -3357,7 +3357,7 @@
                 ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
-                extractMainColumn: 'Release', // Specific header
+                extractMainColumn: 'Release' // Specific header
                 stickyColumn: 'Release'
             },
             tableMode: 'single'
@@ -3367,7 +3367,7 @@
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
             buttons: [ { label: 'Show all Recordings for Instrument' } ],
             features: {
-                extractMainColumn: 'Name', // Specific header
+                extractMainColumn: 'Name' // Specific header
                 stickyColumn: 'Name'
             },
             tableMode: 'single'
@@ -3395,7 +3395,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
                 ],
-                extractMainColumn: 'Artist', // Specific header
+                extractMainColumn: 'Artist' // Specific header
                 stickyColumn: 'Artist'
             },
             tableMode: 'single'
@@ -3411,7 +3411,7 @@
                 ],
                 collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
                 addEAA: 'Event',
-                extractMainColumn: 'Event',
+                extractMainColumn: 'Event'
                 stickyColumn: 'Event'
             },
             tableMode: 'single'
@@ -3424,7 +3424,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
                 ],
-                extractMainColumn: 'Label', // Specific header
+                extractMainColumn: 'Label' // Specific header
                 stickyColumn: 'Label'
             },
             tableMode: 'single'
@@ -3441,7 +3441,7 @@
                     features: {
                         injectedColumns: [ 'Relationships' ],
                         addCAA: 'Title',
-                        extractMainColumn: 'Title',
+                        extractMainColumn: 'Title'
                         stickyColumn: 'Title'
                     }
                 }
@@ -3474,7 +3474,7 @@
                         renderMultiRowCell: [ 'Label', 'Catalog#' ],
                         collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
                         addCAA: 'Release',
-                        extractMainColumn: 'Release',
+                        extractMainColumn: 'Release'
                         stickyColumn: 'Release'
                     }
                 },
@@ -3488,7 +3488,7 @@
                     features: {
                         injectedColumns: [ 'Relationships' ],
                         addCAA: 'Title',
-                        extractMainColumn: 'Title',
+                        extractMainColumn: 'Title'
                         stickyColumn: 'Title'
                     }
                 }
@@ -3502,7 +3502,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
                 ],
-                extractMainColumn: 'Place',
+                extractMainColumn: 'Place'
                 stickyColumn: 'Place'
             },
             tableMode: 'single'
@@ -3518,7 +3518,7 @@
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Area (specialized)' } ],
             features: {
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -3529,7 +3529,7 @@
             buttons: [ { label: 'Show all Recordings for Area' } ],
             features: {
                 extractMainColumn: 'Title',
-                stickyColumn: 'Title',
+                stickyColumn: 'Title'
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
@@ -3542,7 +3542,7 @@
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Works for Area (specialized)' } ],
             features: {
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -3553,7 +3553,7 @@
             buttons: [ { label: 'Show all Works for Area' } ],
             tableMode: 'multi',
             features: {
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             non_paginated: true
@@ -3578,7 +3578,7 @@
                 collapsableColumns: [ 'Artists', 'EAA' ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Artists', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                 addEAA: 'Event',
-                extractMainColumn: 'Event',
+                extractMainColumn: 'Event'
                 stickyColumn: 'Event'
             },
             tableMode: 'single'
@@ -3594,7 +3594,7 @@
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -3610,7 +3610,7 @@
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'multi',
@@ -3658,7 +3658,7 @@
                     collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'CAA' ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
                     addCAA: 'Release',
-                    extractMainColumn: 'Release',
+                    extractMainColumn: 'Release'
                     stickyColumn: 'Release'
                 },
                 'Events': {
@@ -3672,7 +3672,7 @@
                     ],
                     collapsableColumns: [ 'Artists' ],
                     addEAA: 'Event',
-                    extractMainColumn: 'Event',
+                    extractMainColumn: 'Event'
                     stickyColumn: 'Event'
                 },
                 'Release groups': {
@@ -3687,7 +3687,7 @@
                     integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
                     collapsableColumns: [ 'CAA' ],
                     addCAA: 'Title',
-                    extractMainColumn: 'Title',
+                    extractMainColumn: 'Title'
                     stickyColumn: 'Title'
                 },
                 'Recordings': {
@@ -3695,11 +3695,11 @@
                         { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
                     ],
                     integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                    extractMainColumn: 'Name',
+                    extractMainColumn: 'Name'
                     stickyColumn: 'Name'
                 },
                 'Works': {
-                    extractMainColumn: 'Title',
+                    extractMainColumn: 'Title'
                     stickyColumn: 'Title'
                 }
             },
@@ -3720,7 +3720,7 @@
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title', // Specific header
+                extractMainColumn: 'Title' // Specific header
                 stickyColumn: 'Title'
             },
             tableMode: 'multi',
@@ -3734,7 +3734,7 @@
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title', // Specific header
+                extractMainColumn: 'Title' // Specific header
                 stickyColumn: 'Title'
             },
             tableMode: 'multi',
@@ -3766,7 +3766,7 @@
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', 'Catalog#', 'Barcode' ],
                 addCAA: 'Release',
-                extractMainColumn: 'Release',
+                extractMainColumn: 'Release'
                 stickyColumn: 'Release'
             },
             tableMode: 'single'
@@ -3790,7 +3790,7 @@
                     { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
                 ],
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -3804,7 +3804,7 @@
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'multi',
@@ -3827,7 +3827,7 @@
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'CAA' ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'single' // Paginated single list
@@ -3850,7 +3850,7 @@
                 collapsableColumns: [ 'CAA' ],
                 tooltipColumns: [ 'Title', 'Artist', '---', 'Credited as', 'Attributes' ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'multi',
@@ -3895,7 +3895,7 @@
                 collapsableColumns: [ 'CAA' ],
                 tooltipColumns: [ 'Title', 'Artist', '---', ['Year', '(', 'Releases', ')'] ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title',
+                extractMainColumn: 'Title'
                 stickyColumn: 'Title'
             },
             tableMode: 'multi' // native tables, h3 headers
@@ -3935,7 +3935,7 @@
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
                 addCAA: 'Release',
-                extractMainColumn: 'Release',
+                extractMainColumn: 'Release'
                 stickyColumn: 'Release'
             },
             tableMode: 'single'
@@ -3956,7 +3956,7 @@
                 collapsableColumns: [ 'Release groups', 'CAA' ],
                 tooltipColumns: [ 'Release groups', 'Name', 'italic:Comment', 'Artist', '---', ['Length', '-', 'Video'], 'ISRCs' ],
                 addCAA: 'Release groups',
-                extractMainColumn: 'Name',
+                extractMainColumn: 'Name'
                 stickyColumn: 'Name'
             },
             tableMode: 'single'
@@ -3967,7 +3967,7 @@
             buttons: [ { label: 'Show all Works for Artist' } ],
             features: {
                 collapsableColumns: [ 'Authors', 'Recording artists', 'ISWC', 'Attributes' ],
-                extractMainColumn: 'Work',
+                extractMainColumn: 'Work'
                 stickyColumn: 'Work'
             },
             tableMode: 'single'
@@ -4006,7 +4006,7 @@
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
                 addCAA: 'Release',
-                extractMainColumn: 'Release',
+                extractMainColumn: 'Release'
                 stickyColumn: 'Release'
             },
             tableMode: 'multi',
@@ -4086,7 +4086,7 @@
                 collapsableColumns: [ 'Location', 'EAA', 'Place', 'Area', 'Country' ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Role', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                 addEAA: 'Event',
-                extractMainColumn: 'Event',
+                extractMainColumn: 'Event'
                 stickyColumn: 'Event'
             },
             tableMode: 'single'

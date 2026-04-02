@@ -1,18 +1,5 @@
 [
   {
-    "version": "9.99.378",
-    "date": "2026-04-02",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "sa_enable_sticky_columns description: unescaped apostrophe in 'definition's' caused a SyntaxError at runtime. Fixed by switching the string delimiters to double-quotes for that concatenation segment.",
-          "stickyColumn pairs: the bulk-insertion script in the previous session inserted stickyColumn lines without adding a trailing comma to the preceding extractMainColumn line, and without adding the required comma to stickyColumn itself when further properties follow. All 37 pairs now have correct comma placement. Two edge cases (search features.transformToH2 and area-recordings features.columnExtractors) required a manual second pass."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.377",
     "date": "2026-04-02",
     "sections": [

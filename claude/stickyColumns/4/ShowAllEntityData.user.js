@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.378+2026-04-02
+// @version      9.99.379+2026-04-02
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4785,6 +4785,28 @@
         }
 
         /**
+         * Returns the effective opaque background colour for a `<tr>`, preserving the
+         * table's alternating (zebra-stripe) pattern.
+         *
+         * Priority:
+         *   1. Explicit inline `tr.style.backgroundColor` (set by the script on some rows).
+         *   2. CSS computed value (covers `:nth-child(even)` and other class-based rules).
+         *   3. Configured body base colour (fallback when the row is CSS-transparent).
+         *
+         * @param {HTMLTableRowElement} tr
+         * @returns {string}
+         */
+        function _rowEffectiveBg(tr) {
+            const bgBody = '#ffffff';
+            if (tr.style.backgroundColor && tr.style.backgroundColor !== 'transparent') {
+                return tr.style.backgroundColor;
+            }
+            const computed = getComputedStyle(tr).backgroundColor;
+            const isTransparent = computed === 'rgba(0, 0, 0, 0)' || computed === 'transparent';
+            return isTransparent ? bgBody : computed;
+        }
+
+        /**
          * Applies (or updates) the sticky CSS on every cell in column stickyIdx.
          */
         function _apply() {
@@ -4792,7 +4814,6 @@
             const leftPx = `${left}px`;
             const bgHeader = Lib.settings.sa_ui_thead_th_bg    || '#e8e8e8';
             const bgFilter = Lib.settings.sa_ui_thead_filter_row_bg || '#f4f4f4';
-            const bgBody   = Lib.settings.sa_ui_table_row_bg   || '#ffffff';
 
             // Header rows
             table.querySelectorAll('thead tr').forEach(tr => {
@@ -4806,16 +4827,15 @@
                 cell.classList.add('mb-sticky-col');
             });
 
-            // Body rows
+            // Body rows — use the row's ACTUAL computed background so the alternating
+            // (zebra-stripe) pattern is preserved on the sticky cell.
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const cell = tr.cells[stickyIdx];
                 if (!cell) return;
                 cell.style.position  = 'sticky';
                 cell.style.left      = leftPx;
                 cell.style.zIndex    = '1';
-                // Use the row's own background so zebra-stripe and hover colours show through.
-                // If the row has no explicit background, fall back to the base body colour.
-                cell.style.background = tr.style.backgroundColor || bgBody;
+                cell.style.background = _rowEffectiveBg(tr);
                 cell.classList.add('mb-sticky-col');
             });
 
@@ -28217,7 +28237,16 @@ a { color: #1565c0; }`;
             const events = eventsMap.get(mbid) || [];
             cells.forEach(td => {
                 td.dataset.reDone = '1';
-                td.style.backgroundColor = '';
+                // Restore the row's alternating background instead of leaving the cell
+                // transparent (the loading tint was cleared; injected cells need an explicit
+                // background so they appear opaque when the column is sticky).
+                const _reTr = td.closest('tr');
+                if (_reTr) {
+                    const _reBg = _reTr.style.backgroundColor ||
+                        (getComputedStyle(_reTr).backgroundColor !== 'rgba(0, 0, 0, 0)'
+                            ? getComputedStyle(_reTr).backgroundColor : '');
+                    td.style.backgroundColor = _reBg;
+                }
                 _rePopulateCell(td, events);
             });
         });
@@ -28314,7 +28343,16 @@ a { color: #1565c0; }`;
         async function _populateCells(mbid, data) {
             const cells = cellsByMbid.get(mbid) || [];
             // Clear loading tint and mark done regardless of data availability
-            cells.forEach(td => { td.style.backgroundColor = ''; td.dataset.relDone = '1'; });
+            cells.forEach(td => {
+                td.dataset.relDone = '1';
+                // Restore the row's alternating background; injected cells must be opaque
+                // when the column is sticky so content does not bleed through.
+                const _relTr = td.closest('tr');
+                const _relBg = _relTr ? (_relTr.style.backgroundColor ||
+                    (getComputedStyle(_relTr).backgroundColor !== 'rgba(0, 0, 0, 0)'
+                        ? getComputedStyle(_relTr).backgroundColor : '')) : '';
+                td.style.backgroundColor = _relBg;
+            });
             // Track source-row cells (not in DOM) so icons sync back later
             const _srcCells = [];
             if (typeof groupedRows !== 'undefined') {
@@ -28329,7 +28367,14 @@ a { color: #1565c0; }`;
                     if (td && !cells.includes(td)) _srcCells.push(td);
                 });
             }
-            _srcCells.forEach(td => { td.style.backgroundColor = ''; td.dataset.relDone = '1'; });
+            _srcCells.forEach(td => {
+                td.dataset.relDone = '1';
+                const _srcTr = td.closest('tr');
+                const _srcBg = _srcTr ? (_srcTr.style.backgroundColor ||
+                    (getComputedStyle(_srcTr).backgroundColor !== 'rgba(0, 0, 0, 0)'
+                        ? getComputedStyle(_srcTr).backgroundColor : '')) : '';
+                td.style.backgroundColor = _srcBg;
+            });
             if (!data) {
                 _relDbg(`_populateCells: no data for ${mbid}`);
                 return;

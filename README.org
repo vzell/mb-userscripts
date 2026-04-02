@@ -65579,98 +65579,7 @@ remove the double JSDoc comment in front of the function "_synthColTooltip(extra
 
 as it exists already on the right function "cleanupHeaders(headerElement)"
 
-
-* TODO read the unicode chars from a configuration table definition 
-** DONE initial
-
-Add a new functionality:
-
-1.)
-
-in the variable "const configSchema" add a new section
-
-#+begin_example
-        // ============================================================
-        // UNICODE CHARACTER PICKER SECTION
-        // ============================================================
-        divider_unicode_char_picker: {
-            type: 'divider',
-            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
-        },
-
-        sa_unicode_char_picker: {
-            label: "Enable Unicode Character Picker",
-            type: "checkbox",
-            default: true,
-            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
-                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
-        },
-
-        // Configurable lookup table for the Unicode Character Picker.
-        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
-        sa_unicode_char_picker_mappings: {
-            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
-            type: 'table',
-            table_name: 'Unicode Code Symbols',
-            columns: ['Unicode Code Symbol', 'Name', 'Default'],
-            description: '<add appropriate description here>'
-        },
-#+end_example
-
-2.)
-
-Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
-There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
-
-3.)
-
-read the unicode chars definitions, currently hardcoded in
-
-#+begin_example
-const SA_UNICODE_CHARS
-#+end_example
-
-from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
-extend the mappings
-
-4.)
-
-also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
-session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
-
-** TODO Add © ℗ in the default code
-
-** TODO add a quickfilter with search string highlighning to 
-
-
-* TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
-
-In web development and UI/UX design, this feature is most commonly called Sticky Columns or Fixed Columns.
-
-Depending on the context or the specific software you are using, you might also hear it referred to as:
-
-Pinned Columns: Common in data grid libraries and UI frameworks (like AG Grid or Material-UI).
-
-Frozen Columns: Often used in enterprise software or spreadsheet applications. For example, in Microsoft Excel or Google Sheets, this feature is called Freeze Panes.
-
-If you're trying to build this in CSS:
-Nowadays, this is almost always implemented using the position: sticky; CSS property. You apply it to the specific table cells (<th> or <td>) you want to lock in place, along with a directional property like left: 0;.
-
-For example:
-
-CSS
-.fixed-column {
-  position: sticky;
-  left: 0; /* Locks the column to the left edge of the scrolling container */
-  background-color: white; /* Needed so scrolling columns don't show through */
-  z-index: 1; /* Keeps it above the scrolling content */
-}
-
-
-* TODO Implement column movement
-
-
-* TODO Configuration dialog redesign
+* DONE Configuration dialog redesign
 ** DONE initial
 
 add some new functionality in the uploaded library "VZ_MBLibrary.user.js" to the current "Settings" dialog UI:
@@ -65745,7 +65654,7 @@ const LIBRARY_VERSION = '3.16.0+2026-03-27';
 4.)
 
 also add a changelog entry to "ShowAllEntityData_CHANGELOG.json"
-** The "SETTING" column in the configuration dialog should be bigger
+** DONE The "SETTING" column in the configuration dialog should be bigger
 
 The "SETTING" column in the configuration dialog
 
@@ -65776,6 +65685,445 @@ When resizing ONLY the "DESCRIPTION" column gets resized, but not the other ones
 When possible BOTH the "SETTING" and the "DESCRIPTION" column should be resized to make more space for the content.
 
 Or even better, when possible, make the three columns "SETTING", "DEFAULT" and "DESCRIPTION" resizable in itself
+
+* DONE escape key should close the "vz-tbl-editor-" window instead of the parent one
+** initial
+
+In the library "VZ_MBLibrary.user.js"
+
+1.)
+
+when the table editor UI is opened from the configuration dialog with
+
+#+begin_example
+        function _openTableEditor(key, cfg) {
+            const _pid = 'vz-tbl-editor-' + key;
+#+end_example
+
+make sure that the "Escape" key should close the "vz-tbl-editor-" window instead of the parent one
+
+2.)
+
+add a changelog entry to the commented variable
+
+#+begin_example
+
+// CHANGELOG
+// let changelog_library = [
+#+end_example
+
+and bump the versions in
+
+#+begin_example
+// @version
+const LIBRARY_VERSION = 
+#+end_example
+
+** bug
+
+now both the "vz-tbl-editor-" window AND the configuration UI are closed. the "Escape" key should close the
+"vz-tbl-editor-" window only when pressed inside the "vz-tbl-editor-" window
+
+** bug
+
+
+Still buggy. What I want is when opening an arbitrary table editor window from the configuration dialog e.g.
+
+#+begin_example
+<button type="button" id="vz-mb-show-all-entity-data-input-sa_unicode_char_picker_mappings-tbl-btn" style="font-size:0.8em;padding:3px 10px;cursor:pointer;
+                            border:1px solid #7090c0;border-radius:4px;
+                            background:#e8f0fc;vertical-align:middle;">
+                            📋 Edit Unicode Code Symbols</button>
+#+end_example
+
+in the resulting table editor window
+
+#+begin_example
+<div id="vz-tbl-editor-sa_unicode_char_picker_mappings" ...
+#+end_example
+
+I want that the "Escape" key behaves the following ways
+
+1.)
+
+when inside an input text field e.g.
+
+#+begin_example
+<td style="padding: 3px 4px; border: 1px solid rgb(216, 221, 232);"><input type="text" style="width: 100%; padding: 3px 5px; border: 1px solid rgb(187, 187, 187); border-radius: 3px; box-sizing: border-box; font-family: monospace; font-size: 0.95em;"></td>
+#+end_example
+
+it should get blurred and the whole dialog should have the focus
+
+2.)
+
+when the dialog has the focus it should behave like pressing the "Close"-button
+
+#+begin_example
+<button style="padding: 5px 12px; border: 1px solid rgb(170, 170, 170); border-radius: 4px; background: rgb(239, 241, 245); cursor: pointer; font-size: 0.88em;">Close</button>
+#+end_example
+
+and not like the current behaviour
+
+a.)
+
+that when an input field has the focus, BOTH the table editor window AND the enclosing configuration dialog window are closed
+
+b.)
+
+when the dialog itself has the focus, the enclosing configuration dialog window is closed, and the table editor window stays open
+
+** bugs
+
+Still bugs:
+
+1.)
+
+when an input field has the focus, pressing the "Escape" key closes the enclosing configuration dialog window but the
+table editor window stays open. When pressing "Escape" alone, it correctly closes the table editor window, but the
+configuration dialog window is already closed
+
+2.)
+
+when the table editor dialog itself has the focus (but not any of the input fields), BOTH the table editor window AND
+the enclosing configuration dialog window are closed
+
+please fix
+
+** still bugs
+
+OK, the last session fixed the behaviour for the table editor windows, but there are still bugs remaining directly in
+the configuration UI dialog itself:
+
+1.)
+
+When inside an input field of type number, e.g.
+
+#+begin_example
+<input type="number" id="vz-mb-show-all-entity-data-input-sa_stats_panel_max_height" value="82" min="30" max="98" style="width:90px;height:26px;padding:0 6px;box-sizing:border-box;border:1px solid #c8cdd5;border-radius:5px;font-size:0.9em;background:#fff;">
+#+end_example
+
+or
+
+an input field of type text, e.g.
+
+#+begin_example
+<input type="text" id="vz-mb-show-all-entity-data-input-sa_filename_prefix" value="MB-" style="width:170px;padding:4px 7px;border:1px solid #c8cdd5;border-radius:5px;font-size:0.9em;background:#fff;">
+#+end_example
+
+pressing the "Escape"-key should onyl blurr the input field, but it closes the complete configuration dialog right now
+
+2.)
+
+After pressing a button e.g.
+
+#+begin_example
+<button type="button" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-toggle" style="font-size:0.8em;padding:3px 9px;cursor:pointer;border:1px solid #aaa;border-radius:4px;background:#eff1f5;vertical-align:middle;">✏️ Edit fields</button>
+#+end_example
+
+which opens a "mb-pd-subgrid" sbgrid, e.g.
+
+#+begin_example
+<div id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-subgrid" class="mb-pd-subgrid" data-section="divider_ui_appearance" data-pd-open="true" style="padding: 10px 16px 12px 32px; background: rgb(232, 237, 245); border-top: 1px solid rgb(208, 216, 232);"><div style="display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;"><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">fontSize:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-0" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="0" value="0.8em" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">padding:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-1" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="1" value="2px 8px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">height:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-2" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="2" value="24px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">borderRadius:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-3" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="3" value="6px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label></div></div>
+#+end_example
+
+and then when inside an input field of type text, e.g.
+
+#+begin_example
+<input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-1" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="1" value="2px 8px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;">
+#+end_example
+
+pressing the "Escape"-key should onyl blurr the input field, but it closes the complete configuration dialog right now
+
+please fix
+
+
+* TODO read the unicode chars from a configuration table definition 
+** DONE initial
+
+Add a new functionality:
+
+1.)
+
+in the variable "const configSchema" add a new section
+
+#+begin_example
+        // ============================================================
+        // UNICODE CHARACTER PICKER SECTION
+        // ============================================================
+        divider_unicode_char_picker: {
+            type: 'divider',
+            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
+        },
+
+        sa_unicode_char_picker: {
+            label: "Enable Unicode Character Picker",
+            type: "checkbox",
+            default: true,
+            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
+                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
+        },
+
+        // Configurable lookup table for the Unicode Character Picker.
+        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
+        sa_unicode_char_picker_mappings: {
+            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
+            type: 'table',
+            table_name: 'Unicode Code Symbols',
+            columns: ['Unicode Code Symbol', 'Name', 'Default'],
+            description: '<add appropriate description here>'
+        },
+#+end_example
+
+2.)
+
+Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
+There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
+
+3.)
+
+read the unicode chars definitions, currently hardcoded in
+
+#+begin_example
+const SA_UNICODE_CHARS
+#+end_example
+
+from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
+extend the mappings
+
+4.)
+
+also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
+session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
+
+** TODO Add © ℗ in the default code
+
+** TODO add a quickfilter with search string highlightning to 
+** TODO add a new column with examples
+
+* TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
+
+In web development and UI/UX design, this feature is most commonly called Sticky Columns or Fixed Columns.
+
+Depending on the context or the specific software you are using, you might also hear it referred to as:
+
+Pinned Columns: Common in data grid libraries and UI frameworks (like AG Grid or Material-UI).
+
+Frozen Columns: Often used in enterprise software or spreadsheet applications. For example, in Microsoft Excel or Google Sheets, this feature is called Freeze Panes.
+
+If you're trying to build this in CSS:
+Nowadays, this is almost always implemented using the position: sticky; CSS property. You apply it to the specific table cells (<th> or <td>) you want to lock in place, along with a directional property like left: 0;.
+
+For example:
+
+CSS
+.fixed-column {
+  position: sticky;
+  left: 0; /* Locks the column to the left edge of the scrolling container */
+  background-color: white; /* Needed so scrolling columns don't show through */
+  z-index: 1; /* Keeps it above the scrolling content */
+}
+
+** initial
+
+Add a new sticky column feature for the "single" and "multi"-table pageTypes.
+
+1.)
+
+Each table should have by default it's FIRST column marked as sticky, so it should NOT move when horizontally scrolling
+the page/table.
+
+2.)
+
+In case a pageType wants a different column than the first one as sticky, this should be configured as the parameter
+"stickyColumn: '<column name>'" in the corresponding pageType definition.
+
+3.)
+
+Please add
+
+#+begin_example
+		stickyColumn: 'Title'
+#+end_example
+
+to the pageType "type: 'recording-releases'", so that it looks like
+
+#+begin_example
+        {
+            type: 'recording-releases',
+            match: (path) => path.includes('/recording'),
+            buttons: [ { label: 'Show all Releases for Recording' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'}, {sourceColumn: '#', align: '.'} ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
+                tooltipColumns: [ 'Release title', 'italic:Comment', 'Release Artist', 'Release group type', '---', ['#', 'Title', '(', 'Length', ')'], 'Track artist', 'Country/Date', ['Label', '-', 'Catalog#'] ],
+                addCAA: 'Release title',
+                extractMainColumn: 'Release title',
+		stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: false
+        },
+#+end_example
+
+4.)
+
+If the sticky column is not the first column, then left in the CSS must be the combined width of all columns to its left.
+Without this, the sticky column will probably overlap the columns before it.
+
+Also take into account that our table width (column widhts) can change dynamically.
+
+5.)
+
+Take also into account that we already have the sticky header row feature. SO both should play together.
+
+** bugs
+
+small bug:
+
+e.g in https://musicbrainz.org/recording/ceb2711e-cbd9-44a5-9782-611a35d35468
+
+1.)
+
+the sticky column feature almost works, so when horizontally scrolling to the rigth, the configured column cells AND the
+column specific filter fields behave sticky, BUT NOT the column header itself. It's probably because of the additional
+column filter field below the column header and the actual data cells.
+
+So in essence, when it comes to stickyness, the column header and the column filter field together with all column data
+cells should be sticky
+
+2.)
+
+make the whole "Sticky Columns" feature configurable inside the variable "const configSchema" by adding a new
+configuration section with a new boolean and guard the new feature.
+
+** bugs
+
+1.)
+
+you missed to add the boolean configuration feature "sa_enable_sticky_columns", it's only mentioned in the changelog
+file.
+
+While you're at it, add it together with the already present variable "sa_enable_sticky_headers"
+
+#+begin_example
+        sa_enable_sticky_headers: {
+            label: 'Enable Sticky Headers',
+            type: 'checkbox',
+            default: true,
+            description: 'Keep table headers visible when scrolling'
+        },
+#+end_example
+
+to a new section called
+
+#+begin_example
+        // ============================================================
+        // TABLE STICKYNESS CONFIGURATION SECTION
+        // ============================================================
+#+end_example
+
+2.)
+
+Add to every pageType definition which doesn't yet have a "stickyColumn" parameter ("e.g. "type: 'recording-releases'" already has one")
+a new "stickyColumn: '<column name>'" definition after the "extractMainColumn:" definition with the same value for "<column name>" as the "extractMainColumn:" has,
+e.g. for the pageType "type: 'artist-events'"
+
+#+begin_example
+                extractMainColumn: 'Event',
+                stickyColumn: 'Event'
+#+end_example
+
+** bugs
+
+some bugs
+
+1.)
+
+#+begin_example
+Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Unexpected identifier 's' (at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:3308:38)
+    at At (<anonymous>:10:89)
+    at m (<anonymous>:21:352)
+    at c (<anonymous>:24:266)
+    at <anonymous>:24:328
+    at co (<anonymous>:18:250)
+    at Object.send (<anonymous>:24:188)
+    at <anonymous>:91:328
+    at _ (<anonymous>:22:406)
+#+end_example
+
+the "'s" in the definition must be escaped somehow
+
+#+begin_example
+        sa_enable_sticky_columns: {
+            label: 'Enable Sticky Columns',
+            type: 'checkbox',
+            default: true,
+            description: 'Keep the first table column (or the column named in the page ' +
+                         'definition's stickyColumn feature) visible when scrolling horizontally. ' +
+                         'Works independently of "Enable Sticky Headers"; both features are ' +
+                         'compatible and active simultaneously when both are enabled.'
+        },
+#+end_example
+
+2.)
+
+
+When you added the feature
+
+#+begin_example
+Every definition that had extractMainColumn but lacked stickyColumn now has it on the line immediately after, with the same column name value.
+#+end_example
+
+you missed to a "," at the of the "extractMainColumn:" line
+
+e.g. for the pageType "type: 'artist-events'" it should be
+
+#+begin_example
+                extractMainColumn: 'Event',
+                stickyColumn: 'Event'
+#+end_example
+
+3.)
+
+Also recheck if after the newly added "stickyColumn:" row, if that row also need a "," appended when some other line still follows
+
+** bugs
+
+some small glitches
+
+1.)
+
+When column stickyness is configured for a specific column, that column looses the native MusicBrainz style
+functionality, that initially after rendering the final page, normally the rows in a table have alternating background
+colors between "white" and "light grey", but the sticky column lost that feature and all column cells in all rows now
+have the same white background.
+
+Could this feature be restored.
+
+2.)
+
+If the answer is yes for the above question, please also implement that feature for "injectedColumns"
+
+#+begin_example
+injectedColumns: [ 'Release events', 'Relationships' ]
+#+end_example
+
+** bugs
+
+
+
+* TODO Implement column movement
+
 
 * TODO JSDoc
 
@@ -66563,156 +66911,5 @@ https://musicbrainz.org/user/vzell/tags
 change the <li> structure into a proper table first
 
 
-* DONE escape key should close the "vz-tbl-editor-" window instead of the parent one
-** initial
 
-In the library "VZ_MBLibrary.user.js"
-
-1.)
-
-when the table editor UI is opened from the configuration dialog with
-
-#+begin_example
-        function _openTableEditor(key, cfg) {
-            const _pid = 'vz-tbl-editor-' + key;
-#+end_example
-
-make sure that the "Escape" key should close the "vz-tbl-editor-" window instead of the parent one
-
-2.)
-
-add a changelog entry to the commented variable
-
-#+begin_example
-
-// CHANGELOG
-// let changelog_library = [
-#+end_example
-
-and bump the versions in
-
-#+begin_example
-// @version
-const LIBRARY_VERSION = 
-#+end_example
-
-** bug
-
-now both the "vz-tbl-editor-" window AND the configuration UI are closed. the "Escape" key should close the
-"vz-tbl-editor-" window only when pressed inside the "vz-tbl-editor-" window
-
-** bug
-
-
-Still buggy. What I want is when opening an arbitrary table editor window from the configuration dialog e.g.
-
-#+begin_example
-<button type="button" id="vz-mb-show-all-entity-data-input-sa_unicode_char_picker_mappings-tbl-btn" style="font-size:0.8em;padding:3px 10px;cursor:pointer;
-                            border:1px solid #7090c0;border-radius:4px;
-                            background:#e8f0fc;vertical-align:middle;">
-                            📋 Edit Unicode Code Symbols</button>
-#+end_example
-
-in the resulting table editor window
-
-#+begin_example
-<div id="vz-tbl-editor-sa_unicode_char_picker_mappings" ...
-#+end_example
-
-I want that the "Escape" key behaves the following ways
-
-1.)
-
-when inside an input text field e.g.
-
-#+begin_example
-<td style="padding: 3px 4px; border: 1px solid rgb(216, 221, 232);"><input type="text" style="width: 100%; padding: 3px 5px; border: 1px solid rgb(187, 187, 187); border-radius: 3px; box-sizing: border-box; font-family: monospace; font-size: 0.95em;"></td>
-#+end_example
-
-it should get blurred and the whole dialog should have the focus
-
-2.)
-
-when the dialog has the focus it should behave like pressing the "Close"-button
-
-#+begin_example
-<button style="padding: 5px 12px; border: 1px solid rgb(170, 170, 170); border-radius: 4px; background: rgb(239, 241, 245); cursor: pointer; font-size: 0.88em;">Close</button>
-#+end_example
-
-and not like the current behaviour
-
-a.)
-
-that when an input field has the focus, BOTH the table editor window AND the enclosing configuration dialog window are closed
-
-b.)
-
-when the dialog itself has the focus, the enclosing configuration dialog window is closed, and the table editor window stays open
-
-** bugs
-
-Still bugs:
-
-1.)
-
-when an input field has the focus, pressing the "Escape" key closes the enclosing configuration dialog window but the
-table editor window stays open. When pressing "Escape" alone, it correctly closes the table editor window, but the
-configuration dialog window is already closed
-
-2.)
-
-when the table editor dialog itself has the focus (but not any of the input fields), BOTH the table editor window AND
-the enclosing configuration dialog window are closed
-
-please fix
-
-** still bugs
-
-OK, the last session fixed the behaviour for the table editor windows, but there are still bugs remaining directly in
-the configuration UI dialog itself:
-
-1.)
-
-When inside an input field of type number, e.g.
-
-#+begin_example
-<input type="number" id="vz-mb-show-all-entity-data-input-sa_stats_panel_max_height" value="82" min="30" max="98" style="width:90px;height:26px;padding:0 6px;box-sizing:border-box;border:1px solid #c8cdd5;border-radius:5px;font-size:0.9em;background:#fff;">
-#+end_example
-
-or
-
-an input field of type text, e.g.
-
-#+begin_example
-<input type="text" id="vz-mb-show-all-entity-data-input-sa_filename_prefix" value="MB-" style="width:170px;padding:4px 7px;border:1px solid #c8cdd5;border-radius:5px;font-size:0.9em;background:#fff;">
-#+end_example
-
-pressing the "Escape"-key should onyl blurr the input field, but it closes the complete configuration dialog right now
-
-2.)
-
-After pressing a button e.g.
-
-#+begin_example
-<button type="button" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-toggle" style="font-size:0.8em;padding:3px 9px;cursor:pointer;border:1px solid #aaa;border-radius:4px;background:#eff1f5;vertical-align:middle;">✏️ Edit fields</button>
-#+end_example
-
-which opens a "mb-pd-subgrid" sbgrid, e.g.
-
-#+begin_example
-<div id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-subgrid" class="mb-pd-subgrid" data-section="divider_ui_appearance" data-pd-open="true" style="padding: 10px 16px 12px 32px; background: rgb(232, 237, 245); border-top: 1px solid rgb(208, 216, 232);"><div style="display:flex;flex-wrap:wrap;gap:8px 24px;align-items:center;"><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">fontSize:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-0" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="0" value="0.8em" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">padding:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-1" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="1" value="2px 8px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">height:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-2" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="2" value="24px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label><label style="display:flex;align-items:center;gap:6px;font-size:0.82em;"><span style="min-width:110px;text-align:right;color:#555;font-weight:600;white-space:nowrap;">borderRadius:</span><input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-3" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="3" value="6px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;"></label></div></div>
-#+end_example
-
-and then when inside an input field of type text, e.g.
-
-#+begin_example
-<input type="text" id="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style-sub-1" class="mb-pd-sub" data-master="vz-mb-show-all-entity-data-input-sa_ui_action_btn_style" data-index="1" value="2px 8px" style="width:200px;padding:3px 6px;border:1px solid #bbb;border-radius:4px;font-size:0.95em;font-family:monospace;background:#fff;">
-#+end_example
-
-pressing the "Escape"-key should onyl blurr the input field, but it closes the complete configuration dialog right now
-
-please fix
-
-
-* config dialog
 

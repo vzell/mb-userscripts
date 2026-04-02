@@ -1,49 +1,5 @@
 [
   {
-    "version": "9.99.378",
-    "date": "2026-04-02",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "sa_enable_sticky_columns description: unescaped apostrophe in 'definition's' caused a SyntaxError at runtime. Fixed by switching the string delimiters to double-quotes for that concatenation segment.",
-          "stickyColumn pairs: the bulk-insertion script in the previous session inserted stickyColumn lines without adding a trailing comma to the preceding extractMainColumn line, and without adding the required comma to stickyColumn itself when further properties follow. All 37 pairs now have correct comma placement. Two edge cases (search features.transformToH2 and area-recordings features.columnExtractors) required a manual second pass."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.377",
-    "date": "2026-04-02",
-    "sections": [
-      {
-        "label": "✨ Feature / 🐛 Fix",
-        "items": [
-          "configSchema: sa_enable_sticky_headers and the new sa_enable_sticky_columns setting are now grouped together under a dedicated '📌 TABLE STICKINESS' divider section (previously sa_enable_sticky_headers was in the generic UI FEATURES section and sa_enable_sticky_columns was missing from the schema entirely).",
-          "stickyColumn property added to every pageType definition that has extractMainColumn but lacked an explicit stickyColumn override (37 definitions). Each stickyColumn value matches the corresponding extractMainColumn value so the visually most important column (entity name/title) is always kept visible during horizontal scrolling."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.376",
-    "date": "2026-04-02",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Sticky column header was not sticking during horizontal scroll. Root cause: makeColumnsResizable() runs after applyStickyColumn() and sets th.style.position = 'relative' on every header <th> in thead tr:first-child, overwriting the 'sticky' value set by applyStickyColumn(). The filter row's <th> and body <td> cells are not touched by makeColumnsResizable(), which is why they already worked correctly. Fixes: (1) makeColumnsResizable now skips setting position:'relative' when the <th> already has position:'sticky' — a sticky element already acts as a containing block for its position:absolute children (the resize handle). (2) applyStickyColumn calls are moved to AFTER makeColumnsResizable in both the single-table and multi-table render paths, so sticky is always the last writer."
-        ]
-      },
-      {
-        "label": "✨ Feature",
-        "items": [
-          "New configSchema setting sa_enable_sticky_columns (checkbox, default true) added to the UI FEATURES section alongside sa_enable_sticky_headers. When disabled, applyStickyColumn() is not called on any table. Works independently of sticky headers."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.375",
     "date": "2026-04-02",
     "sections": [
