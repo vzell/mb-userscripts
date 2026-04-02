@@ -1,17 +1,5 @@
 [
   {
-    "version": "9.99.374",
-    "date": "2026-04-01",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "JSDoc: removed stale 'Mirrors the 3-tier format…' JSDoc that was stacked before _updateSubTableH3Tooltip(). It described updateH2CountFromSubtables() at an earlier, less complete stage; that function already has a full JSDoc immediately before its own declaration. The correct _updateSubTableH3Tooltip JSDoc remains."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.373",
     "date": "2026-04-01",
     "sections": [

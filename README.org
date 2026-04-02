@@ -66193,7 +66193,7 @@ and either
      */
 #+end_example
 
-** TODO 2
+** DONE 2
 
 #+begin_example
     /**
@@ -66239,7 +66239,7 @@ and either
      */
 #+end_example
 
-** TODO 4 - REMOVE by hand
+** DONE 4 - REMOVE by hand
 *** DONE initial
 
 #+begin_example
@@ -66325,7 +66325,7 @@ and either
      */
 #+end_example
 
-*** TODO REMOVE by hand (1st occurence)
+*** DONE REMOVE by hand (1st occurence)
 
 #+begin_example
     /**
@@ -66385,7 +66385,7 @@ and either
      */
 #+end_example
 
-** TODO 11 - Wires the single global ▶/◀ toggle button for multi-table mode. - REMOVE BY HAND
+** DONE 11 - Wires the single global ▶/◀ toggle button for multi-table mode. - REMOVE BY HAND
 *** DONE initial
 
 #+begin_example
@@ -66427,7 +66427,7 @@ and either
      */
 #+end_example
 *
-*** TODO remove
+*** DONE remove
 
 #+begin_example
     /**
@@ -66965,3 +66965,42 @@ https://musicbrainz.org/user/vzell/tags
 
 change the <li> structure into a proper table first
 
+* DONE check JSDoc comment
+
+which of the following two JSDoc comments
+
+#+begin_example
+    /**
+     * Recalculates and updates the h2 row-count badge from current DOM state of all
+     * subtables after global + subtable filters have been applied.
+     *
+     * Mirrors the 3-tier format used by updateSubTableRowCount():
+     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
+     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
+     *
+     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
+     */
+    /**
+     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
+     * reflecting the current combination of global filter, column filters, and
+     * sub-table filter active on this specific table.
+     *
+     * Called from:
+     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
+     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
+     *
+     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
+     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
+     *
+     * @param {HTMLTableElement} tbl  The live sub-table element.
+     */
+#+end_example
+
+in front of the following function
+
+#+begin_example
+    function _updateSubTableH3Tooltip(tbl) {
+#+end_example
+
+belongs to it. Please fix and optionally move the wrong comment to the right place, or remove it completely if not used
+anymore

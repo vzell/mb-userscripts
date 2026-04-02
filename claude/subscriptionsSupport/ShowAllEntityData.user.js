@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.374+2026-04-01
+// @version      9.99.373+2026-04-01
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22188,6 +22188,16 @@ a { color: #1565c0; }`;
         return { toggleIcon, container, highlightBtn, clearAllStfBtn };
     }
 
+    /**
+     * Recalculates and updates the h2 row-count badge from current DOM state of all
+     * subtables after global + subtable filters have been applied.
+     *
+     * Mirrors the 3-tier format used by updateSubTableRowCount():
+     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
+     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
+     *
+     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
+     */
     /**
      * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
      * reflecting the current combination of global filter, column filters, and
