@@ -62084,6 +62084,7 @@ the final rendered pages which have columns with name "CAA"
 // @author       Michael Wiencek
 #+end_example
 
+
 * DONE Reintroduce jesus2099 "Release events"
 ** initial
 
@@ -62418,7 +62419,6 @@ should actually be changed to
 #+begin_example
                 injectedColumns: [ 'Release events', 'Relationships' ],
 #+end_example
-
 
 * DONE addCAA: 'Title' to more pageTypes
 
@@ -62859,7 +62859,6 @@ fetching of all paginated pages begins after pressing the "Show all.." action bu
 
 
 * TODO Change all the entity links to open in a new tab
-
 
 * TODO Do NOT render the CAA toggle artwork button if none of the rows in a table/sub-table have actually CAA images (count=0), but on forcefull reload from the net display it again if the count > "0"
 
@@ -63326,43 +63325,12 @@ comumn cell level accordingly)
 
 * TODO "addEAA" ("single"-table pageType) AND the "addCAA" ("multi"-table pageType) should not take the artwork into account when sorting
 
+
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell strucure" areas in the unique value pull-down menu
-
-* DONE Click/Ctrl-Click behaviour on h2/h3 header lines 
-
-1.)
-
-"Ctrl-Click" on a h2 header line in "multi"table mode should work like in "single"-table mode
-
-a.)
-
-This currently WORKS as designed for "single"-table mode:
-
-it TAKES the current toggle state of the big image stripe above the table in "single"-table mode into account:
-
-- if the big image stripe above the table is currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table UNCOLLAPSES JUST the table section below th h2 header line
-- if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table UNCOLLAPSES BOTH, the big image stripe AND the table section below th h2 header line
-
-b.)
-
-This currently has BUGS for "multi"-table mode (somehow the table data and big image stipes are shown intermignled when switching views, e.g between "Official Discography" and "NON-Official Discography":
-
-it should take the current toggle (collpase/uncollapse) state of the big image stripes above the sub-tables and the
-collapse/uncollapse state of the sub-tables itself in "multi"-table mode into account:
-
-So, "Clicking" or "Ctrl-Clicking" on the h2 header line in "multi"-table pageTypes should take the WHOLE toggle states of
-all h3 sub-sections under the h2 header line into account, where each h3 sub-section could have an individuell toggle
-state for it's big picture stripe and the sub-table data itself.
-
-So in easy words, "Clicking" or "Ctrl-Clicking" on an h2 header line should ONLY collpase/uncollapse everything "below" it, but never touches the internal state of the h3 sections at all
-
-** later
-
-- if the big image stripes above the sub-tables are currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line shoud uncollapse JUST the table section below the h2 header line
-- if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
 
 
 * TODO event pages need the primary alias below the h1 header "Bleachers"
+
 
 * TODO counting and display wrong: actually with indexedDB cache
 * TODO test with final rendered page (so all are display)
@@ -63428,6 +63396,7 @@ Configurable:
 
 e.g. when "ctrl-clicking" a h3 header row in the lower part of the page, it repositiones to the top of the page
 
+
 * TODO Add a new "Artwork Tooltips" section in the configuration section
 
 Add a new "Artwork Tooltip" section in the configuration section
@@ -63472,7 +63441,7 @@ to the commented "changelog_library" variable
 //     {version: '3.14.3+2026-03-04', description: 'Fix two regressions introduced in 3.14.0: (1) Changelog CLOSE link was made conditional (clearing the filter instead of closing when text was present) which broke the link entirely in some code paths. Reverted to unconditional closeDialog() — CLOSE always closes the dialog regardless of filter state. (2) Changelog Escape handler had a spurious third branch that intercepted Escape when the search field was not focused but had text, clearing the filter instead of closing the dialog. Removed that branch. Correct behaviour is now: Escape while search is focused + has text → clear filter; Escape while search is focused + empty → blur field; Escape while search is not focused → close the dialog unconditionally.'},
 #+end_example
 
-** TODO add a generic table input dialog for "Ctrl-U": unicode symbols + explanation
+** DONE add a generic table input dialog for "Ctrl-U": unicode symbols + explanation
 
 #+begin_example
 type: "table",
@@ -63505,6 +63474,38 @@ to
 #+end_example
 
 
+* DONE Click/Ctrl-Click behaviour on h2/h3 header lines 
+
+1.)
+
+"Ctrl-Click" on a h2 header line in "multi"table mode should work like in "single"-table mode
+
+a.)
+
+This currently WORKS as designed for "single"-table mode:
+
+it TAKES the current toggle state of the big image stripe above the table in "single"-table mode into account:
+
+- if the big image stripe above the table is currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table UNCOLLAPSES JUST the table section below th h2 header line
+- if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table UNCOLLAPSES BOTH, the big image stripe AND the table section below th h2 header line
+
+b.)
+
+This currently has BUGS for "multi"-table mode (somehow the table data and big image stipes are shown intermignled when switching views, e.g between "Official Discography" and "NON-Official Discography":
+
+it should take the current toggle (collpase/uncollapse) state of the big image stripes above the sub-tables and the
+collapse/uncollapse state of the sub-tables itself in "multi"-table mode into account:
+
+So, "Clicking" or "Ctrl-Clicking" on the h2 header line in "multi"-table pageTypes should take the WHOLE toggle states of
+all h3 sub-sections under the h2 header line into account, where each h3 sub-section could have an individuell toggle
+state for it's big picture stripe and the sub-table data itself.
+
+So in easy words, "Clicking" or "Ctrl-Clicking" on an h2 header line should ONLY collpase/uncollapse everything "below" it, but never touches the internal state of the h3 sections at all
+
+** later
+
+- if the big image stripes above the sub-tables are currently collapsed, either single clicking or "Ctrl-Clicking" the h2 header line shoud uncollapse JUST the table section below the h2 header line
+- if the big image stripe above the table is currently uncollapsed, either single clicking or "Ctrl-Clicking" the h2 header line above the table shoud uncollapse BOTH, big image stripe AND the table section below th h2 header line
 
 * DONE give credit to original author of "Display Relationships" icons
 * DONE remove the double changelog entries
@@ -65528,7 +65529,6 @@ session where you produced a new entry for "version": "9.99.363" but skipped the
 
 * TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
-
 In web development and UI/UX design, this feature is most commonly called Sticky Columns or Fixed Columns.
 
 Depending on the context or the specific software you are using, you might also hear it referred to as:
@@ -66112,7 +66112,7 @@ and either
 - move them to the right function definition
 - or merge them if it makes sense
 
-** TODO 1 - REMOVE by hand
+** DONE 1 - REMOVE by hand
 *** DONE initial
 
 #+begin_example
@@ -66159,7 +66159,7 @@ and either
      * @returns {string} Tooltip text, or '' when no description is available.
      */
 #+end_example
-*** TODO REMOVE by hand (1st occurence)
+*** DONE REMOVE by hand (1st occurence)
 
 #+begin_example
     /**
@@ -66584,4 +66584,384 @@ and either
 
 * TODO colorize "main" and "guest" performer in the EAA tooltips
 
+
+* DONE unconditionally remove special columns
+
+some fixes:
+
+1.)
+
+unconditionally remove special columns coming from other userscripts for preparation of the the table header row for the
+final rendered view as we include this functionality now in our own script and can optionally add them back on the final
+rendered page as injected columns
+
+So the following three variables ARE NOT needed anymore and should be removed
+
+#+begin_example
+        sa_remove_release_events: {
+            label: 'Remove "Release events" column from "Place-Performances" pages',
+            type: "checkbox",
+            default: true,
+            description: "Remove the 'Release events' column from the final rendered tables (coming from the jesus2099 'mb. SUPER MIND CONTROL Ⅱ X TURBO' userscript"
+        },
+
+        sa_remove_rel: {
+            label: "Remove Relationships column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Relationships column from the final rendered tables (comes from another userscript) "
+        },
+
+        sa_remove_perf: {
+            label: "Remove Performance column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Performance column from the final rendered tables (comes from another userscript) "
+        },
+#+end_example
+
+Make sure to adjust the code accordingly, as their internal functionality should still always be "true"
+
+2.)
+
+remove the double JSDoc comment in front of the function "_synthColTooltip(extractor, sourceColumn, colName)"
+
+#+begin_example
+    /**
+     * Prepares the table header row for the final rendered view.
+     *
+     * Three sequential passes are performed:
+     *
+     *   1. **Column removal** — removes columns whose header text prefix matches
+     *      an entry in `removalMap` and whose corresponding setting is enabled
+     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
+     *
+     *   2. **Column origin stamping** — stamps each surviving original <th> with
+     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
+     *      from a re-render pass are skipped.
+     *
+     *   3. **Synthetic column injection** — injects new <th> elements for each
+     *      configured extractor, assigning:
+     *        - `mb-extracted-column`         for activeColumnExtractors entries
+     *                                        and extractMainColumn (MB-Name/Comment)
+     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
+     *                                        entries (second-pass derivations)
+     *      Each injected <th> also receives `dataset.colName`, the appropriate
+     *      background color from settings, and is appended to the header row if
+     *      not already present (idempotent across re-renders).
+     *
+     * The three CSS classes are the authoritative source for the Statistics panel
+     * column-origin breakdown (original / extracted / derived counts).
+     *
+     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
+     *   The `<thead>` element or its first `<tr>` row to process.
+     */
+
+#+end_example
+
+as it exists already on the right function "cleanupHeaders(headerElement)"
+
+
+* TODO Either implement the "Tagger" userscript in our script or make the a href call need leave the curretn page
+
+
+* TODO add the current defaults (h2/h2 colors) to our code base
+
+
+* TODO add subscriptions support
+** DONE initial
+
+add subscriptions support for Muscibrainz page of type
+
+https://musicbrainz.org/user/vzell/subscriptions/<type>
+
+e.g.
+
+https://musicbrainz.org/user/vzell/subscriptions/label
+
+by implementing the following two changes:
+
+1.)
+
+add the following "@match" directive
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+to the userscript header so that it looks like
+
+#+begin_example
+// @match        *://*.musicbrainz.org/search?query=*
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+2.)
+
+add the following new pageType definition to "const pageDefinitions"
+
+#+begin_example
+        // Subscriptions pages
+        {
+            type: 'subscriptions',
+            match: (path) => path.includes('/subscriptions'),
+            buttons: [ { label: 'Show all Subscription results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name'
+            }
+        },
+#+end_example
+
+so that it looks like
+
+#+begin_example
+    const pageDefinitions = [
+        // Subscriptions pages
+        {
+            type: 'subscriptions',
+            match: (path) => path.includes('/subscriptions'),
+            buttons: [ { label: 'Show all Subscription results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name'
+            }
+        },
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name', // Specific header
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+#+end_example
+
+3.)
+
+remove the double misplaced JSDoc comment from the function "_hintFromSrc(src, fromIdb, fromMemory)"
+
+#+begin_example
+    /**
+     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
+     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
+     * network fetch, or "timing unavailable" (no entry / API absent).
+     *
+     * Classification rules (in priority order):
+     *
+     *   1. transferSize === 0 AND encodedBodySize > 0
+     *        → Memory cache (🟢).  Browser served from RAM; size is known even
+     *          for cross-origin resources when served from memory.
+     *
+     *   2. transferSize > 0
+     *        → Network fetch (🔵).  Actual bytes received over the wire.
+     *
+     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
+     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
+     *          the response arrived in under 5 ms — consistent with a disk-cached
+     *          redirect chain where BOTH the redirect and the final resource are
+     *          served from cache.
+     *          NOTE: this path is NEVER triggered for coverartarchive.org /
+     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
+     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
+     *          always adds 2–4 s of network latency and duration never drops below
+     *          5 ms on a page reload.  🟡 is therefore only observable for image
+     *          URLs that are served directly (no redirect) or whose redirect chain
+     *          is genuinely disk-cached.
+     *
+     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
+     *        → Network / redirect chain (🔵).  This is the only outcome ever
+     *          produced for CAA/EAA archive URLs on any repeated page load, because
+     *          the non-cacheable redirect to archive.org always requires a fresh
+     *          network round-trip.  Even if the final image bytes are already in
+     *          the disk cache, the redirect latency keeps duration > 5 ms.
+     *
+     *   5. No matching entry, or Performance API absent
+     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
+     *          'unavailable'; every case where an entry exists resolves to one of
+     *          the three statuses above.
+     *
+     * Returned object shape:
+     * ```
+     * {
+     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
+     *   transferSize:    number | null,
+     *   encodedBodySize: number | null,
+     *   duration:        number | null,
+     *   redirectStart:   number | null,   // 0 for opaque cross-origin
+     *   responseStart:   number | null,   // 0 for opaque cross-origin
+     * }
+     * ```
+     *
+     * @param  {string} url  The exact URL to look up (matched against entry.name).
+     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
+     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
+     */
+#+end_example
+
+4.)
+
+remove the double misplaced JSDoc comment from the function "_applyCollapseState(toggle, expand)"
+
+#+begin_example
+    /**
+     * Wires the single global ▶/◀ toggle button for multi-table mode.
+     *
+     * In multi-table mode `initCollapsableColumns` is called once per sub-table
+     * (because each rendered `<table>` is independent), so it cannot accumulate
+     * all column-header buttons into one `collapseHdrBtns` array.  This helper
+     * fills that role: it is called once after ALL sub-tables have been
+     * processed by `initCollapsableColumns`, scans the live DOM for every
+     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
+     *
+     *   • Hides the global button when no such buttons exist (none of the
+     *     filtered-in sub-tables has a multi-row column).
+     *   • Shows the global button and re-wires its `onclick` to drive every
+     *     found header button (and therefore every cell toggle across every
+     *     sub-table) to the target expanded/collapsed state.
+     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
+     *     the highlight tint on the global button based on the current filter
+     *     match state across all sub-tables.
+     *
+     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
+     * loop completes — both on initial render and on every filter re-run.
+     */
+#+end_example
+
+** TODO enhancement
+
+add n action buttons like for "Artist-ReleaseGroups" pageType for the different collection types 
+
+
+* TODO add collections support
+
+1.)
+
+remove
+
+#+begin_example
+<span style="opacity:0.4">▴/▾</span>
+#+end_example
+
+from the headers
+
+2.)
+
+https://musicbrainz.org/user/vzell/collections
+
+add the following new pageType definition to "const pageDefinitions"
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/collections
+#+end_example
+
+#+begin_example
+        // Collections pages
+        {
+            type: 'collections',
+            match: (path) => path.includes('/collections'),
+            buttons: [ { label: 'Show all Collection results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Collection'
+            }
+        },
+#+end_example
+
+https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+#+begin_example
+        // Collection pages
+        {
+            type: 'collections-releases',
+            match: (path) => path.match(/\/collection\/[a-f0-9-]{36}),
+            // labelFromH2: true instructs the button-creation code to read the <h2>
+            // header text that precedes the table and substitute it into the label so
+            // the button reads "Show all <EntityType> for Collections" dynamically.
+            // Collections pages can contain Releases, Events, Works, Recordings, etc.
+            buttons: [ { label: 'Show all Releases for Collections', labelFromH2: true } ],
+            // entityFeatures maps each possible H2 entity-type heading to its own
+            // feature set.  When the page is activated, resolveCollectionsEntityFeatures()
+            // reads the live H2 text and picks the matching entry.  If no match is
+            // found the fallback 'Releases' feature set is used so the page still
+            // works for unrecognised entity types.
+            entityFeatures: {
+                'Releases': {
+                    columnErasers: [
+                        { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                    ],
+                    columnExtractors: [
+                        { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                        {
+                            sourceColumn:     'Tracks',
+                            extractor:        'sumTracks',
+                            syntheticColumns: ['Total Tracks']
+                        },
+                        { sourceColumn: 'Format', extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    injectedColumns: [ 'Relationships' ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                    collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'CAA' ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+                    addCAA: 'Release',
+                    extractMainColumn: 'Release'
+                },
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] }
+                    ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    collapsableColumns: [ 'Artists' ],
+                    addEAA: 'Event',
+                    extractMainColumn: 'Event'
+                },
+                'Release groups': {
+                    columnErasers: [
+                        { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                    ],
+                    columnExtractors: [
+                        { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                    ],
+                    tooltipColumns: [ 'Title', 'Artist', '---', ['Type', 'Year', '(', 'Releases', ')'] ],
+                    injectedColumns: [ 'Relationships' ],
+                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
+                    collapsableColumns: [ 'CAA' ],
+                    addCAA: 'Title',
+                    extractMainColumn: 'Title'
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+                    integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                    extractMainColumn: 'Name'
+                },
+                'Works': {
+                    extractMainColumn: 'Title'
+                }
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+* TODO add tags support
+
+https://musicbrainz.org/user/vzell/tags
+
+change the <li> structure into a proper table first
 
