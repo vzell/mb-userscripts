@@ -66140,6 +66140,14 @@ While the MusicBrainz CSS stylesheet probably injects the background color becau
 MusicBrain default instead of hardcoding our own. Also they are similar, it looks a little bit strange from the enduser
 side
 
+** fix
+
+actually it's not worknig at all, now the injected and the sticky columns have no background color at all (white) like in the beginning
+
+** fix
+
+It works now, but NOT for the injected columns
+
 * TODO Implement column movement
 
 
