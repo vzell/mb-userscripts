@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.385",
+    "date": "2026-04-03",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "artist-releases pageType: the trailing MusicBrainz footer paragraph ('Showing releases by this artist.' / 'Show Various Artist releases instead' link) is now removed in finalCleanup() after the consolidated render, as it is stale and misleading once all pages are merged. Detection uses a querySelectorAll on '#content p' elements containing an anchor whose href matches '/releases?va=', making it MBID-agnostic and idempotent across re-renders.",
+          "artist-works pageType definition: added 'injectedColumns: [ Relationships ]' to the features block so that the Relationships column is injected into the consolidated works table, consistent with other artist pageTypes that expose relationship data."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.384",
     "date": "2026-04-03",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.384+2026-04-03
+// @version      9.99.385+2026-04-03
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3975,6 +3975,7 @@
             match: (path) => path.includes('/works'),
             buttons: [ { label: 'Show all Works for Artist' } ],
             features: {
+                injectedColumns: [ 'Relationships' ],
                 collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
                 extractMainColumn: 'Work',
                 stickyColumn: 'Work'
@@ -26831,6 +26832,28 @@ a { color: #1565c0; }`;
                     Lib.debug('cleanup', 'Hiding div.list-merge-buttons-row-container (sa_remove_checkbox_cell enabled).');
                 }
             });
+        }
+
+        // ── artist-releases: remove VA footer paragraph ──────────────────────
+        // On artist release pages MusicBrainz renders a trailing paragraph:
+        //   "Showing releases by this artist."
+        //   <a href="/artist/<MBID>/releases?va=1">Show Various Artist releases instead</a>
+        // After our consolidated render this paragraph is stale and misleading,
+        // so it is removed unconditionally for the artist-releases pageType.
+        if (pageType === 'artist-releases') {
+            try {
+                // The paragraph contains a link whose href matches
+                // /artist/<MBID>/releases?va=<digit>
+                const _vaFooter = Array.from(document.querySelectorAll('#content p'))
+                    .find(p => p.querySelector('a[href*="/releases?va="]'));
+                if (_vaFooter && !_vaFooter.dataset.mbVaFooterRemoved) {
+                    _vaFooter.dataset.mbVaFooterRemoved = 'true'; // idempotent guard
+                    _vaFooter.remove();
+                    Lib.debug('cleanup', 'Removed artist-releases VA footer paragraph.');
+                }
+            } catch (_vaErr) {
+                Lib.debug('cleanup', 'artist-releases VA footer removal skipped:', _vaErr);
+            }
         }
     }
 

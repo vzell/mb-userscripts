@@ -66981,7 +66981,7 @@ change the <li> structure into a proper table first
 
 
 * TODO sticky table column
-** remove the ghosting on some pages
+** TODO remove the ghosting on some pages
 *** single table mode
 
 #+begin_example
@@ -67009,8 +67009,8 @@ https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
 
 #+end_example
 
-** fix the manual resizing bug
-** make the h3 headers in "multi"-table mode sticky
+** TODO fix the manual resizing bug
+** TODO make the h3 headers in "multi"-table mode sticky
 *** initial
 
 1.)
@@ -67039,7 +67039,8 @@ sticky column). The h3 sub-section headers should stay fixed and NOT scroll
 No, it's not working. Now not only the h3 header sections still move when scrolling horizontally, but also the sticky
 column feature on the tables itself is NOT working anymore
 
-* remove the "checkbox-cell" column
+
+* DONE remove the "checkbox-cell" column
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -67089,3 +67090,80 @@ from the final rendered page (if present)
 4.)
 
 add a changelog entry to the beginning of the uploaded file "ShowAllEntityData_CHANGELOG.json"
+
+
+* TODO ghosting bug still present also checkbox column removed for date column in first column
+
+ghosting bug still present also checkbox column removed for date column in first column
+
+#+begin_example
+Year - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
+Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
+
+#, Year - https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
+#+end_example
+
+but it works force
+
+#+begin_example
+Date - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+#+end_example
+
+
+* cleanup
+
+small fixes
+
+1.)
+
+On pageTypes of https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+on the final rendered page in the cleanup stage remove the following entries at the end of the page after the rendered table
+
+#+begin_example
+Showing releases by this artist. 
+<a href="/artist/<MBID>/releases?va=1">Show Various Artist releases instead</a>
+#+end_example
+
+The MBID part could be an arbitray MusciBrain identifier like e.g.
+
+#+begin_example
+<a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1">Show Various Artist releases instead</a>
+#+end_example
+
+2.)
+
+On the "type: 'artist-works'" pageType definition 
+
+add
+
+#+begin_example
+                injectedColumns: [ 'Relationships' ],
+#+end_example
+
+so that it looks like
+
+#+begin_example
+        {
+            type: 'artist-works',
+            match: (path) => path.includes('/works'),
+            buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                injectedColumns: [ 'Relationships' ],
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
+                extractMainColumn: 'Work',
+                stickyColumn: 'Work'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+* TODO artist-works
+** add
+
+
+** "Relationships" not working on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+
