@@ -949,7 +949,7 @@
         sa_enable_relationship_debug: {
             label: 'Enable Relationships column debug logging',
             type: 'checkbox',
-            default: true,
+            default: false,
             description: 'Enable detailed console logging for the Relationships column pipeline: '
                          + 'MBID extraction per row, WS2 fetch requests and responses, icon class '
                          + 'resolution, favicon probing, and cell population. '
