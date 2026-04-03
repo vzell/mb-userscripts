@@ -831,21 +831,21 @@
         sa_ui_h2_bg: {
             label: 'H2 section-header background color',
             type: 'color_picker',
-            default: '#fff3e0',
+            default: '#ffd787',
             description: 'Background color for collapsible H2 section headers (.mb-toggle-h2) when the cursor is NOT hovering. The existing grey hover background is preserved. Default is a light orange.'
         },
 
         sa_ui_h3_bg: {
             label: 'H3 sub-table-header background color',
             type: 'color_picker',
-            default: '#f0fff4',
+            default: '#f7dfdf',
             description: 'Background color for collapsible H3 sub-table headers (.mb-toggle-h3) in multi-table mode when the cursor is NOT hovering. The existing grey hover background is preserved. Default is a light green.'
         },
 
         sa_ui_h2_hover_bg: {
             label: 'H2 section-header hover background color',
             type: 'color_picker',
-            default: '#f9f9f9',
+            default: '#f99f50',
             description: 'Background color applied to H2 section headers when the cursor hovers over them (.mb-toggle-h2:hover). Default is the original MusicBrainz light grey (#f9f9f9). Takes precedence over the non-hover H2 background (sa_ui_h2_bg).'
         },
 
@@ -859,7 +859,7 @@
         sa_ui_h3_hover_bg: {
             label: 'H3 sub-table-header hover background color',
             type: 'color_picker',
-            default: '#f9f9f9',
+            default: '#eb7231',
             description: 'Background color applied to H3 sub-table headers when the cursor hovers over them (.mb-toggle-h3:hover). Default is the original MusicBrainz light grey (#f9f9f9). Takes precedence over the non-hover H3 background (sa_ui_h3_bg).'
         },
 
@@ -867,7 +867,7 @@
         sa_ui_thead_th_bg: {
             label: 'Table header-row background color',
             type: 'color_picker',
-            default: '#e8e8e8',
+            default: '#bababa',
             description: 'Background color for all table column-header cells (table.tbl thead th). The default matches the original MusicBrainz grey used before the consolidated view is rendered.'
         },
 
@@ -881,7 +881,7 @@
         sa_ui_thead_filter_row_bg: {
             label: 'Table column-filter row background color',
             type: 'color_picker',
-            default: '#f4f4f4',
+            default: '#d1d1d1',
             description: 'Background color for the per-column filter input row (table.tbl thead tr.mb-col-filter-row th). Slightly lighter than the main header row.'
         },
 
