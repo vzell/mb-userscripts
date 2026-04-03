@@ -3324,6 +3324,8 @@
             buttons: [ { label: 'Show all Search results' } ],
             tableMode: 'single',
             features: {
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
                 extractMainColumn: 'Name', // Specific header
                 stickyColumn: 'Name',
                 transformToH2: true        // New flag to trigger <h2> transformation
@@ -3966,7 +3968,7 @@
             match: (path) => path.includes('/works'),
             buttons: [ { label: 'Show all Works for Artist' } ],
             features: {
-                collapsableColumns: [ 'Authors', 'Recording artists', 'ISWC', 'Attributes' ],
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
                 extractMainColumn: 'Work',
                 stickyColumn: 'Work'
             },
