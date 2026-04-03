@@ -29538,8 +29538,8 @@ a { color: #1565c0; }`;
      * @type {Array<{code: string, name: string, offset: number, default: boolean}>}
      */
     const SA_UNICODE_CHARS_DEFAULT = [
-        { code: '\u2018',         name: 'Left Single Quote',                    offset: 1, default: false },
-        { code: '\u2019',         name: 'Apostrophe, Right Single Quote',        offset: 1, default: true  },
+        { code: '\u2018',         name: 'Left Single Quote',                     offset: 1, default: false },
+        { code: '\u2019',         name: 'Apostrophe, Right Single Quote',        offset: 1, default: false },
         { code: '\u2018\u2019',   name: 'Left+Right Single Quotes',              offset: 1, default: false },
         { code: '\u201C',         name: 'Left Double Quotes',                    offset: 1, default: false },
         { code: '\u201D',         name: 'Right Double Quotes',                   offset: 1, default: false },
@@ -29547,7 +29547,7 @@ a { color: #1565c0; }`;
         { code: '\u300C\u300D',   name: 'Left+Right Corner Brackets',            offset: 1, default: false },
         { code: '\u300E\u300F',   name: 'Left+Right White Corner Brackets',      offset: 1, default: false },
         { code: '\u2026',         name: 'Horizontal Ellipsis',                   offset: 1, default: false },
-        { code: '\u2010',         name: 'Hyphen',                                offset: 1, default: false },
+        { code: '\u2010',         name: 'Hyphen',                                offset: 1, default: true  },
         { code: '\u2013',         name: 'En Dash',                               offset: 1, default: false },
         { code: '\u2014',         name: 'Em Dash',                               offset: 1, default: false },
         { code: '\u2012',         name: 'Figure Dash',                           offset: 1, default: false },
@@ -29556,6 +29556,8 @@ a { color: #1565c0; }`;
         { code: '\u2033',         name: 'Double Prime',                          offset: 1, default: false },
         { code: '\u2212',         name: 'Minus Sign',                            offset: 1, default: false },
         { code: '\u00D7',         name: 'Multiplication Sign',                   offset: 1, default: false },
+        { code: '\u00A9',         name: 'Copyright Symbol',                      offset: 1, default: false },
+        { code: '\u2117',         name: 'Phonographic Copyright Symbol',         offset: 1, default: false },
     ];
 
     /**
