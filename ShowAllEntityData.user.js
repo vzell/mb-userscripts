@@ -1056,7 +1056,7 @@
         sa_auto_resize_columns: {
             label: 'Auto-resize columns on load',
             type: 'checkbox',
-            default: false,
+            default: true,
             description: 'When enabled, automatically triggers the "↔️ Resize" button ' +
                          '(same as clicking it manually) immediately after the table is rendered, ' +
                          'so columns are fitted to their content on every page load without manual clicks.'
