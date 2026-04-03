@@ -65836,71 +65836,7 @@ pressing the "Escape"-key should onyl blurr the input field, but it closes the c
 
 please fix
 
-
-* TODO read the unicode chars from a configuration table definition 
-** DONE initial
-
-Add a new functionality:
-
-1.)
-
-in the variable "const configSchema" add a new section
-
-#+begin_example
-        // ============================================================
-        // UNICODE CHARACTER PICKER SECTION
-        // ============================================================
-        divider_unicode_char_picker: {
-            type: 'divider',
-            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
-        },
-
-        sa_unicode_char_picker: {
-            label: "Enable Unicode Character Picker",
-            type: "checkbox",
-            default: true,
-            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
-                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
-        },
-
-        // Configurable lookup table for the Unicode Character Picker.
-        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
-        sa_unicode_char_picker_mappings: {
-            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
-            type: 'table',
-            table_name: 'Unicode Code Symbols',
-            columns: ['Unicode Code Symbol', 'Name', 'Default'],
-            description: '<add appropriate description here>'
-        },
-#+end_example
-
-2.)
-
-Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
-There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
-
-3.)
-
-read the unicode chars definitions, currently hardcoded in
-
-#+begin_example
-const SA_UNICODE_CHARS
-#+end_example
-
-from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
-extend the mappings
-
-4.)
-
-also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
-session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
-
-** TODO Add © ℗ in the default code
-
-** TODO add a quickfilter with search string highlightning to 
-** TODO add a new column with examples
-
-* TODO Implement fixing a configurable column to not scroll when using the horizontal scrollbar
+* DONE Implement fixing a configurable column to not scroll when using the horizontal scrollbar
 
 In web development and UI/UX design, this feature is most commonly called Sticky Columns or Fixed Columns.
 
@@ -66148,8 +66084,71 @@ actually it's not worknig at all, now the injected and the sticky columns have n
 
 It works now, but NOT for the injected columns
 
-* TODO Implement column movement
 
+* TODO read the unicode chars from a configuration table definition 
+** DONE initial
+
+Add a new functionality:
+
+1.)
+
+in the variable "const configSchema" add a new section
+
+#+begin_example
+        // ============================================================
+        // UNICODE CHARACTER PICKER SECTION
+        // ============================================================
+        divider_unicode_char_picker: {
+            type: 'divider',
+            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
+        },
+
+        sa_unicode_char_picker: {
+            label: "Enable Unicode Character Picker",
+            type: "checkbox",
+            default: true,
+            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
+                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
+        },
+
+        // Configurable lookup table for the Unicode Character Picker.
+        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
+        sa_unicode_char_picker_mappings: {
+            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
+            type: 'table',
+            table_name: 'Unicode Code Symbols',
+            columns: ['Unicode Code Symbol', 'Name', 'Default'],
+            description: '<add appropriate description here>'
+        },
+#+end_example
+
+2.)
+
+Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
+There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
+
+3.)
+
+read the unicode chars definitions, currently hardcoded in
+
+#+begin_example
+const SA_UNICODE_CHARS
+#+end_example
+
+from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
+extend the mappings
+
+4.)
+
+also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
+session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
+
+** DONE Add © ℗ in the default code
+** TODO add a quickfilter with search string highlightning to 
+** TODO add a new column with examples
+
+
+* TODO Implement column movement
 
 * TODO JSDoc
 
@@ -66474,7 +66473,7 @@ and either
      * @param {boolean}         expand  - true → expand; false → collapse.
      */
 #+end_example
-*
+
 *** DONE remove
 
 #+begin_example
@@ -66633,10 +66632,9 @@ and either
 * TODO colorize "main" and "guest" performer in the EAA tooltips
 
 
-* TODO Either implement the "Tagger" userscript in our script or make the a href call need leave the curretn page
+* TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
 
-
-* TODO add the current defaults (h2/h2 colors) to our code base
+* TODO add the current defaults (h2/h3 color backgrounds) to our code base
 
 
 * TODO add subscriptions support
@@ -66936,13 +66934,158 @@ https://musicbrainz.org/user/vzell/tags
 
 change the <li> structure into a proper table first
 
-* make zebra striping configurable
+
+* TODO make zebra striping configurable
 
 #+begin_example
         const oddBg  = '#ffffff';
         const evenBg = '#f2f2f2';
 #+end_example
 
+* TODO Search pages
+** DONE add "renderMultiRowCell" and "collapsableColumns"
+
+#+begin_example
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                extractMainColumn: 'Name', // Specific header
+                stickyColumn: 'Name',
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-works',
+            match: (path) => path.includes('/works'),
+            buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
+                extractMainColumn: 'Work',
+                stickyColumn: 'Work'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+** TODO move the query dialog to the top, before the table
 
 
+* TODO sticky table column
+** remove the ghosting on some pages
+*** single table mode
 
+#+begin_example
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+https://musicbrainz.org/series/37040fc0-4687-4484-b1e3-fe93ba8677f4
+https://musicbrainz.org/series/db03e180-5b76-4fae-8ca8-52ec6ac9de1f
+https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
+
+https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+
+#+end_example
+
+*** multi
+
+#+begin_example
+https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
+
+#+end_example
+
+** fix the manual resizing bug
+** make the h3 headers in "multi"-table mode sticky
+*** initial
+
+1.)
+
+create a new boolen configuration parameter "sa_enable_sticky_h3_sub_section_headers" (default: true)
+in the configuration section
+
+#+begin_example
+        // ============================================================
+        // TABLE STICKINESS CONFIGURATION SECTION
+        // ============================================================
+#+end_example
+
+2.)
+
+when "sa_enable_sticky_h3_sub_section_headers" is true make the h3 sub-section headers in "multi"-table mode sticky, so
+when horizontally scrolling the table(s), the h3 header line itslef should not move
+
+*** bug
+
+No, it's not working. ONLY the tables under each h3 header section should scroll horizontally (except the configured
+sticky column). The h3 sub-section headers should stay fixed and NOT scroll
+
+*** bug
+
+No, it's not working. Now not only the h3 header sections still move when scrolling horizontally, but also the sticky
+column feature on the tables itself is NOT working anymore
+
+* remove the "checkbox-cell" column
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+1.)
+
+add the following definition
+
+#+begin_example
+        sa_remove_checkbox_cell: {
+            label: "Remove Checkbox-Cell column",
+            type: "checkbox",
+            default: true,
+            description: "Remove the Checkbox-Cell column from the final rendered tables"
+        },
+#+end_example
+
+to the following configuratin section
+
+#+begin_example
+        // ============================================================
+        // OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE SECTION
+        // ============================================================
+#+end_example
+
+2.)
+
+If the variable "sa_remove_checkbox_cell" is true remove the 'class="checkbox-cell"' column (if present)
+
+#+begin_example
+<th colspan="1" class="checkbox-cell">
+  <input type="checkbox">
+</th>
+#+end_example
+
+from the final rendered tables on all pageTypes
+
+3.)
+
+If the variable "sa_remove_checkbox_cell" is true, additionally hide the following container
+
+#+begin_example
+<div class="list-merge-buttons-row-container">
+#+end_example
+
+from the final rendered page (if present)
+
+4.)
+
+add a changelog entry to the beginning of the uploaded file "ShowAllEntityData_CHANGELOG.json"
