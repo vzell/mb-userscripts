@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.388+2026-04-03
+// @version      9.99.386+2026-04-03
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -26858,67 +26858,30 @@ a { color: #1565c0; }`;
             });
         }
 
-        // ── artist-releases: remove VA footer bare nodes ─────────────────────
-        // Confirmed via saved page HTML: MB renders the VA footer as three bare
-        // sibling nodes that are DIRECT children of #content — there is NO
-        // wrapper element (<p>, <div>, etc.) around them:
+        // ── artist-releases: remove VA footer paragraph ──────────────────────
+        // On artist release pages MusicBrainz renders a trailing paragraph:
+        //   "Showing releases by this artist."
+        //   <a href="/artist/<MBID>/releases?va=1">Show Various Artist releases instead</a>
+        // After our consolidated render this paragraph is stale and misleading,
+        // so it is removed unconditionally for the artist-releases pageType.
         //
-        //   [TEXT "Showing releases by this artist. "]
-        //   [A href="/artist/<MBID>/releases?va=1"]Show VA releases instead[/A]
-        //   [TEXT "."]
-        //
-        // History of failed attempts and root causes:
-        //   v1: querySelectorAll('#content p')    → no match, footer is not in <p>
-        //   v2: querySelectorAll('p')             → same: no <p> wrapper anywhere
-        //   v3: form-sibling walk via
-        //       nextElementSibling + querySelector → nextElementSibling jumps over
-        //       the leading text node and lands on <a> itself; querySelector on
-        //       an element returns nothing for the element itself (searches
-        //       descendants only), so the walk silently found nothing
-        //   v3: anchor-closest fallback:
-        //       closest('div:not(#content)…') || parentElement
-        //       → parentElement of the bare <a> is div#content (its direct
-        //       parent); the guard 'div:not(#content)' did not match it, so code
-        //       fell through to parentElement which IS div#content; removing
-        //       div#content wiped the entire page → blank-page regression.
-        //
-        // Correct fix: locate the <a> with querySelector (always works regardless
-        // of how it is nested or not nested), then surgically remove:
-        //   1. the <a> element itself
-        //   2. the immediately-preceding sibling text node (the sentence start)
-        //   3. the immediately-following sibling text node (the trailing ".")
-        // The containing #content element is never touched.
+        // NOTE: the paragraph is not guaranteed to be a descendant of #content —
+        // it may appear in .content, #page, or another wrapper depending on the
+        // MB template version.  Searching all <p> elements in document.body is
+        // therefore more robust than the narrower '#content p' selector.
         if (pageType === 'artist-releases') {
             try {
-                const _vaLink = document.body.querySelector(
-                    'a[href*="/releases?va="]');
-                if (_vaLink) {
-                    const _parentTag = _vaLink.parentElement
-                        ? _vaLink.parentElement.tagName : 'none';
-                    const _toRemove = [_vaLink];
-                    // Remove the "Showing releases by this artist. " text node
-                    if (_vaLink.previousSibling
-                            && _vaLink.previousSibling.nodeType === Node.TEXT_NODE) {
-                        _toRemove.push(_vaLink.previousSibling);
-                    }
-                    // Remove the trailing "." text node
-                    if (_vaLink.nextSibling
-                            && _vaLink.nextSibling.nodeType === Node.TEXT_NODE) {
-                        _toRemove.push(_vaLink.nextSibling);
-                    }
-                    _toRemove.forEach(n => {
-                        if (n.parentNode) n.parentNode.removeChild(n);
-                    });
-                    Lib.debug('cleanup',
-                        'Removed VA footer bare nodes (parent: ' + _parentTag
-                        + ', nodes removed: ' + _toRemove.length + ').');
-                } else {
-                    Lib.debug('cleanup',
-                        'artist-releases VA footer: no matching <a> found.');
+                // The paragraph contains a link whose href matches
+                // /artist/<MBID>/releases?va=<digit>
+                const _vaFooter = Array.from(document.body.querySelectorAll('p'))
+                    .find(p => p.querySelector('a[href*="/releases?va="]'));
+                if (_vaFooter && !_vaFooter.dataset.mbVaFooterRemoved) {
+                    _vaFooter.dataset.mbVaFooterRemoved = 'true'; // idempotent guard
+                    _vaFooter.remove();
+                    Lib.debug('cleanup', 'Removed artist-releases VA footer paragraph.');
                 }
             } catch (_vaErr) {
-                Lib.debug('cleanup',
-                    'artist-releases VA footer removal skipped:', _vaErr);
+                Lib.debug('cleanup', 'artist-releases VA footer removal skipped:', _vaErr);
             }
         }
     }

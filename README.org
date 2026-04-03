@@ -67113,7 +67113,8 @@ Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/perfor
 #+end_example
 
 
-* cleanup
+* TODO cleanup "Show Various Artist releases instead" on "artist-releases" pages
+** initial
 
 small fixes
 
@@ -67128,13 +67129,73 @@ Showing releases by this artist.
 <a href="/artist/<MBID>/releases?va=1">Show Various Artist releases instead</a>
 #+end_example
 
-The MBID part could be an arbitray MusciBrain identifier like e.g.
+The MBID part could be an arbitray MusciBrainz identifier like e.g.
 
 #+begin_example
-<a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1">Show Various Artist releases instead</a>
+Showing releases by this artist. <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=1">Show Various Artist releases instead</a>.
 #+end_example
 
-2.)
+** bugs
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" with version "9.99.385+2026-04-03"
+
+1.)
+
+in the function "finalCleanup()"
+
+the section
+
+#+begin_example
+// ── artist-releases: remove VA footer paragraph ──────────────────────
+#+end_example
+
+is NOT working.
+
+The following should be removed on the final rendered page on pageTypes of https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+#+begin_example
+Showing releases by this artist. <a href="/artist/<arbitrary MBDI>/releases?va=1">Show Various Artist releases instead</a>.
+#+end_example
+
+1.)
+
+also add a changelog entry to the beginning of the newly uploaded file "ShowAllEntityData_CHANGELOG.json"
+
+** bugs
+
+The
+
+#+begin_example
+Showing releases by this artist. <a href="/artist/<arbitrary MBDI>/releases?va=1">Show Various Artist releases instead</a>.
+#+end_example
+
+is still NOT removed.
+
+It's located right after the following "form action=..." container
+
+#+begin_example
+<form action="/release/merge_queue?returnto=%2Fartist%2F70248960-cb53-4ea4-943a-edb18f7d336f%2Freleases%3Ftport%3D8000" method="post">
+#+end_example
+
+and before the container
+
+#+begin_example
+<script src="https://static.metabrainz.org/MB/common/components/Filter-bf69dd1.js" async=""></script>
+#+end_example
+
+** now
+
+now it's completely broken an almost empty page is rendered. Please revert and fix cleanly.
+
+See the complete HTML structure in the uploaded file "Bruce Springsteen - Releases - MusicBrainz.html" 
+for the location of
+
+#+begin_example
+Showing releases by this artist. <a href="/artist/<arbitrary MBDI>/releases?va=1">Show Various Artist releases instead</a>.
+#+end_example
+
+* DONE artist-works
+** DONE add
 
 On the "type: 'artist-works'" pageType definition 
 
@@ -67161,9 +67222,7 @@ so that it looks like
         },
 #+end_example
 
-* TODO artist-works
-** add
+** DONE "Relationships" not working on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
 
-
-** "Relationships" not working on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
-
+the "async function initRelationshipsColumn()" is NOT working for the pageType "artist-works". It looks like it doesn't
+yet support "work" MBIDs.

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.388+2026-04-03
+// @version      9.99.387+2026-04-03
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -26858,63 +26858,77 @@ a { color: #1565c0; }`;
             });
         }
 
-        // ── artist-releases: remove VA footer bare nodes ─────────────────────
-        // Confirmed via saved page HTML: MB renders the VA footer as three bare
-        // sibling nodes that are DIRECT children of #content — there is NO
-        // wrapper element (<p>, <div>, etc.) around them:
+        // ── artist-releases: remove VA footer element ────────────────────────
+        // MB renders the following element on artist/releases pages once our
+        // consolidated view is done:
+        //   "Showing releases by this artist.
+        //    <a href="/artist/<MBID>/releases?va=1">Show VA releases instead</a>."
+        // It is stale and misleading after the consolidated render so it is
+        // removed unconditionally.
         //
-        //   [TEXT "Showing releases by this artist. "]
-        //   [A href="/artist/<MBID>/releases?va=1"]Show VA releases instead[/A]
-        //   [TEXT "."]
+        // The element is NOT necessarily a <p> tag — previous attempts using
+        // querySelectorAll('p') and querySelectorAll('#content p') both failed
+        // silently because the container tag is indeterminate across MB template
+        // versions.  Instead we use two independent strategies so that at least
+        // one succeeds regardless of tag name or nesting depth:
         //
-        // History of failed attempts and root causes:
-        //   v1: querySelectorAll('#content p')    → no match, footer is not in <p>
-        //   v2: querySelectorAll('p')             → same: no <p> wrapper anywhere
-        //   v3: form-sibling walk via
-        //       nextElementSibling + querySelector → nextElementSibling jumps over
-        //       the leading text node and lands on <a> itself; querySelector on
-        //       an element returns nothing for the element itself (searches
-        //       descendants only), so the walk silently found nothing
-        //   v3: anchor-closest fallback:
-        //       closest('div:not(#content)…') || parentElement
-        //       → parentElement of the bare <a> is div#content (its direct
-        //       parent); the guard 'div:not(#content)' did not match it, so code
-        //       fell through to parentElement which IS div#content; removing
-        //       div#content wiped the entire page → blank-page regression.
+        //   Strategy 1 (positional): MB places the element as the element-sibling
+        //   immediately after the release merge-queue <form> and before the async
+        //   Filter <script>.  Walk nextElementSibling from the form to the first
+        //   <script> and remove any sibling containing the VA link.  Uses
+        //   nextElementSibling (not nextSibling) to skip bare text/comment nodes.
         //
-        // Correct fix: locate the <a> with querySelector (always works regardless
-        // of how it is nested or not nested), then surgically remove:
-        //   1. the <a> element itself
-        //   2. the immediately-preceding sibling text node (the sentence start)
-        //   3. the immediately-following sibling text node (the trailing ".")
-        // The containing #content element is never touched.
+        //   Strategy 2 (anchor-based fallback): locate the <a href*="/releases?va=">
+        //   anywhere in document.body and remove its nearest block-level ancestor
+        //   (<p>, or a non-landmark <div>), guarded to never remove the body itself
+        //   or a known page-level wrapper.
         if (pageType === 'artist-releases') {
             try {
-                const _vaLink = document.body.querySelector(
-                    'a[href*="/releases?va="]');
-                if (_vaLink) {
-                    const _parentTag = _vaLink.parentElement
-                        ? _vaLink.parentElement.tagName : 'none';
-                    const _toRemove = [_vaLink];
-                    // Remove the "Showing releases by this artist. " text node
-                    if (_vaLink.previousSibling
-                            && _vaLink.previousSibling.nodeType === Node.TEXT_NODE) {
-                        _toRemove.push(_vaLink.previousSibling);
+                let _vaRemoved = false;
+
+                // ── Strategy 1: positional ────────────────────────────────
+                const _mergeForm = document.querySelector(
+                    'form[action*="/release/merge_queue"]');
+                if (_mergeForm) {
+                    let _sib = _mergeForm.nextElementSibling;
+                    while (_sib && _sib.tagName !== 'SCRIPT') {
+                        if (_sib.querySelector('a[href*="/releases?va="]')) {
+                            const _tag = _sib.tagName;
+                            _sib.remove();
+                            _vaRemoved = true;
+                            Lib.debug('cleanup',
+                                'Removed VA footer (strategy: form-sibling,'
+                                + ' tag: ' + _tag + ').');
+                            break;
+                        }
+                        _sib = _sib.nextElementSibling;
                     }
-                    // Remove the trailing "." text node
-                    if (_vaLink.nextSibling
-                            && _vaLink.nextSibling.nodeType === Node.TEXT_NODE) {
-                        _toRemove.push(_vaLink.nextSibling);
+                }
+
+                // ── Strategy 2: anchor-based fallback ────────────────────
+                if (!_vaRemoved) {
+                    const _vaLink = document.body.querySelector(
+                        'a[href*="/releases?va="]');
+                    if (_vaLink) {
+                        const _container =
+                            _vaLink.closest('p') ||
+                            _vaLink.closest(
+                                'div:not(#content):not(#page):not([id="sidebar"])') ||
+                            _vaLink.parentElement;
+                        if (_container && _container !== document.body) {
+                            const _tag = _container.tagName;
+                            _container.remove();
+                            _vaRemoved = true;
+                            Lib.debug('cleanup',
+                                'Removed VA footer (strategy: anchor-closest,'
+                                + ' tag: ' + _tag + ').');
+                        }
                     }
-                    _toRemove.forEach(n => {
-                        if (n.parentNode) n.parentNode.removeChild(n);
-                    });
+                }
+
+                if (!_vaRemoved) {
                     Lib.debug('cleanup',
-                        'Removed VA footer bare nodes (parent: ' + _parentTag
-                        + ', nodes removed: ' + _toRemove.length + ').');
-                } else {
-                    Lib.debug('cleanup',
-                        'artist-releases VA footer: no matching <a> found.');
+                        'artist-releases VA footer: no matching element found.');
                 }
             } catch (_vaErr) {
                 Lib.debug('cleanup',

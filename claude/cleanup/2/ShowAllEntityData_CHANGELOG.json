@@ -1,23 +1,5 @@
 [
   {
-    "version": "9.99.388",
-    "date": "2026-04-03",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "finalCleanup() / artist-releases VA footer removal (third and final attempt): confirmed via saved HTML that the footer is THREE BARE SIBLING NODES — a text node ('Showing releases by this artist. '), an <a> element, and a text node ('.') — that are direct children of div#content with no wrapper element whatsoever. Previous fix (9.99.387) introduced a blank-page regression: the anchor-closest fallback's parentElement path returned div#content itself (the direct parent of the bare <a>), removed it, and wiped the entire page. The form-sibling strategy also silently failed because nextElementSibling skips text nodes and landed on the <a> itself, then querySelector searched descendants of <a> (finding nothing). Correct fix: use document.body.querySelector('a[href*=\"/releases?va=\"]') to locate the link, then surgically remove (a) the <a> element, (b) its previousSibling text node (the sentence start), and (c) its nextSibling text node (the trailing period). The containing div#content is never touched."
-        ]
-      },
-      {
-        "label": "🔙 Revert",
-        "items": [
-          "Reverted the broken two-strategy VA footer approach from 9.99.387 which caused the blank-page regression."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.387",
     "date": "2026-04-03",
     "sections": [
