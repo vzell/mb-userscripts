@@ -67285,7 +67285,8 @@ See also the uploaded console debug log "debugTags" and the uploaded final rende
 Please fix.
 
 
-* add "/tag/ support
+* TODO add "/tag/ support
+** initial
 
 add support to MusicBrainz entityPages to support the "tags" tab, e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/tags
 
@@ -67307,6 +67308,178 @@ to
 
 2.)
 
+add the following pageType definition
+
+#+begin_example
+        {
+            type: 'artist-tags',
+            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Artists' } ],
+            features: {
+                renameH2ToH3: true
+		insertH2: 'Artist tags'
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+after the pageType
+
+#+begin_example
+            type: 'tags',
+#+end_example
+
+3.)
+
+implement the following two functions according to their definition in the above "features" list
+
+a.)
+
+the function "renameH2ToH3" should change all h2 header lines to h3 header lines in the initial page 
+
+b.)
+
+the function "insertH2" should accept as a parameter the h2 header text from the value of the parameter "insertH2" in
+the above pageType definition and add an h2 header line with the corresponding text right below the following container
+
+#+begin_example
+<div class="tabs">
+#+end_example
+
+in the intial page
+
+4.)
+
+before rendering the final page prepare the initial page by transforming it with the two functions we just created, in
+that specific order, first call "renameH2ToH3", then "insertH2" 
+
+** bugs
+
+there are bugs:
+
+1.)
+
+the pageType "type: 'artist-tags'" must come before "type: 'tags'" because of the narrower "match" 
+
+#+begin_example
+        // Entity tags sub-pages (e.g. /artist/<mbid>/tags)
+        {
+            type: 'artist-tags',
+            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Artist' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Artist tags'
+            }
+        },
+        // Tags pages
+        {
+            type: 'tags',
+            match: (path) => path.includes('/tags'),
+            buttons: [ { label: 'Show all Tags for User' } ],
+            tableMode: 'multi',
+            features: {
+                listToTable: [ 'genres', 'tags' ],
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+            }
+        },
+#+end_example
+
+2.)
+
+also the "listToTable" parameter was missing in the pageType definition, please add so it looks like
+
+#+begin_example
+        {
+            type: 'artist-tags',
+            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Artist' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Artist tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+#+end_example
+
+** bugs
+
+It looks like the "applyListToTable" comes before the "applyRenameH2ToH3" and "applyInsertH2" which breaks everything.
+
+Here the console log
+
+#+begin_example
+09:14:23.092 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.394+2026-04-04) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/tags 
+09:14:23.093 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/tags 
+09:14:23.093 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/tags 
+09:14:23.094 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f/tags 
+09:14:23.094 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+09:14:23.094 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+09:14:23.095 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: artist-tags 
+09:14:23.095 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+09:14:23.096 [VZ-ShowAllEntityData: artist-tags] 🚀 Initializing script for path: /artist/70248960-cb53-4ea4-943a-edb18f7d336f/tags
+09:14:23.096 [VZ-ShowAllEntityData: artist-tags] 🚀 Cached entity name at init time: "Bruce Springsteen" 
+09:14:23.104 [VZ-ShowAllEntityData: artist-tags] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+09:14:23.105 [VZ-ShowAllEntityData: artist-tags] 🚀 Blurred #headerid-query input on page entry 
+09:14:23.109 [VZ-ShowAllEntityData: artist-tags] 📝 Changelog source: remote — replaced 0 local entries with 567 remote entries (fromCache=true) 
+09:14:27.605 [VZ-ShowAllEntityData: artist-tags] 🧹 Signalling other scripts to stop... 
+09:14:27.606 [VZ-ShowAllEntityData: artist-tags] 🚀 applyListToTable: no <div id="genres"> found — skipping. 
+09:14:27.606 [VZ-ShowAllEntityData: artist-tags] 🚀 applyListToTable: no <div id="tags"> found — skipping. 
+09:14:27.607 [VZ-ShowAllEntityData: artist-tags] 🚀 applyRenameH2ToH3: renamed 9 <h2> element(s) to <h3>. 
+09:14:27.608 [VZ-ShowAllEntityData: artist-tags] 🚀 applyInsertH2: inserted <h2>"Artist tags"</h2> after <div class="tabs">. 
+09:14:27.609 [VZ-ShowAllEntityData: artist-tags] 📥 Starting fetch process... null
+09:14:27.609 [VZ-ShowAllEntityData: artist-tags] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+09:14:27.609 [VZ-ShowAllEntityData: artist-tags] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+09:14:27.609 [VZ-ShowAllEntityData: artist-tags] 📥 Total pages to fetch: 1 
+09:14:27.610 [VZ-ShowAllEntityData: artist-tags] 🧹 Starting clutter element removal. 
+09:14:27.611 [VZ-ShowAllEntityData: artist-tags] 📥 Page 1 is current page. Using existing document. 
+09:14:27.612 [VZ-ShowAllEntityData: artist-tags] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+09:14:27.612 [VZ-ShowAllEntityData: artist-tags] 📝 No targetHeader provided; returning all tables found in container. 
+09:14:27.613 [VZ-ShowAllEntityData: artist-tags] 📝 parseDocumentForTables: Found 0 total tables. Target header filter: "none" 
+09:14:27.613 [VZ-ShowAllEntityData: artist-tags] 📥 No tables found matching "null" on page 1 to parse. Skipping. 
+09:14:27.613 [VZ-ShowAllEntityData: artist-tags] 🎨 DOM rendering starting... 
+09:14:27.614 [VZ-ShowAllEntityData: artist-tags] 🎨 Starting updateH2Count: filtered=0, total=0, absoluteTotal=null 
+09:14:27.614 [VZ-ShowAllEntityData: artist-tags] 🎨 Aborting updateH2Count: No table.tbl found on page. 
+09:14:27.615 [VZ-ShowAllEntityData: artist-tags] 🎨 Starting renderGroupedTable with 0 categories. Query: "" 
+09:14:27.616 [VZ-ShowAllEntityData: artist-tags] ❌ No template table head found. 
+09:14:27.616 [VZ-ShowAllEntityData: artist-tags] 🎨 Searching for target H2. Current pageType: artist-tags 
+09:14:27.616 [VZ-ShowAllEntityData: artist-tags] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+09:14:27.617 [VZ-ShowAllEntityData: artist-tags] ❌ Critical Error during fetch: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=d2aa8046-ee29-4c5b-861f-ae2b1e87608b:25816:31)
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=d2aa8046-ee29-4c5b-861f-ae2b1e87608b:24448:23)
+    at eb.onclick (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=d2aa8046-ee29-4c5b-861f-ae2b1e87608b:16395:29)
+#+end_example
+
+** bugs
+
+Still bugs:
+
+1.)
+
+The "function applyListToTable(def)" needs to be adjusted for the case of pageType "type: 'artist-tags'"
+
+There is no '<div id="<value>">' right after the h3 header line. Instead it directly starts with the list '<ul class="<type>-list">'
+
+Also the "Column-name derivation rule" needs to be changed, instead of deriving the "First column" from the id value of
+
+#+begin_example
+<div id="<value>"> 
+#+end_example
+
+(singular and capitalized) we should derive it directly from <type> in the class parameter of the "<ul>" container. So
+from e.g.
+
+#+begin_example
+<ul class="genre-list">
+#+end_example
+
+we would derive the first column name as the capitalized substring from before "-list"
+
+#+begin_example
+Genre
+#+end_example
 
 
 * TODO make zebra striping configurable
@@ -67599,4 +67772,18 @@ Date - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relat
 Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 #+end_example
 
+* TODO add entity-tags pageType definitions
 
+#+begin_example
+        {
+            type: 'releasegroup-tags',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Relesasegroup' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Releasegroup tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+#+end_example

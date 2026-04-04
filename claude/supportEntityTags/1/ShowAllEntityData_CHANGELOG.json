@@ -1,30 +1,5 @@
 [
   {
-    "version": "9.99.396",
-    "date": "2026-04-04",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "applyListToTable(): added support for Structure B (bare-ul), used by entity tag pages (/artist/<mbid>/tags and similar). Previously the function only handled Structure A (div-wrapped), where a <div id=\"genres\"> wrapper contains the <ul>; on entity pages there is no such wrapper — the <ul class=\"genre-list\"> is a direct DOM sibling of the <h3>. The function now auto-detects the structure per sectionId: if getElementById(sectionId) succeeds, it uses the div-wrapped path (replacement target = div); otherwise it falls back to querySelector('ul.<singular>-list') and uses the bare-ul path (replacement target = ul itself). The debug log now reports the detected structure ('div-wrapped' or 'bare-ul').",
-          "applyListToTable(): column-name derivation changed from stripping the trailing 's' of the sectionId string to extracting the type substring before the '-list' suffix in the <ul> class attribute (e.g. class=\"genre-list\" → \"genre\" → \"Genre\", class=\"tag-list\" → \"tag\" → \"Tag\"). This is more robust and works correctly for both DOM structures since the <ul> class is always available."
-        ]
-      }
-    ]
-  },
-  {
-    "version": "9.99.395",
-    "date": "2026-04-04",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Pre-processing call order corrected in startFetchingProcess(): applyRenameH2ToH3 and applyInsertH2 now run BEFORE applyListToTable. Previously listToTable ran first; on entity tag pages (/artist/<mbid>/tags) the <div id=\"genres\"> containers are only reachable after the heading DOM has been restructured by renameH2ToH3/insertH2, so running listToTable first found 0 divs, produced 0 tables, and caused the entire pipeline to abort with 'Found 0 total tables'. New order: (1) applyRenameH2ToH3, (2) applyInsertH2, (3) applyListToTable — the internal renameH2ToH3-before-insertH2 constraint is preserved."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.394",
     "date": "2026-04-04",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.396+2026-04-04
+// @version      9.99.393+2026-04-04
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2958,12 +2958,11 @@
      * so the standard fetch/filter/sort pipeline can process them.
      *
      * This function is called as a DOM pre-processing step for pageTypes that
-     * carry a `features.listToTable` array (e.g. 'tags', 'artist-tags').
-     *
-     * Two DOM structures are supported, detected automatically for each
-     * `sectionId` entry in the `listToTable` array:
-     *
-     * ── Structure A: div-wrapped (user tags pages /user/<n>/tags) ────────────
+     * carry a `features.listToTable` array (e.g. the 'tags' pageType).  For
+     * each value in that array the function locates `<div id="<value>">` and
+     * its contained `<ul>`, builds a replacement `<table class="tbl">`, and
+     * substitutes the entire `<div>` with the bare `<table>` in the parent DOM
+     * so no extra wrapper element remains:
      *
      *   Before:
      *     <h3>Genres</h3>
@@ -2972,45 +2971,32 @@
      *         <li class="odd">
      *           <a href="/user/vzell/tag/rock">rock</a>
      *           <span class="tag-vote-buttons"><span class="tag-count">15</span></span>
-     *         </li>  …
+     *         </li>
+     *         …
      *       </ul>
      *     </div>
      *
      *   After:
      *     <h3>Genres</h3>
-     *     <table class="tbl">…</table>
+     *     <table class="tbl">
+     *       <thead><tr><th>Genre</th><th>Tag count</th></tr></thead>
+     *       <tbody>
+     *         <tr class="odd">
+     *           <td><a href="/user/vzell/tag/rock">rock</a></td>
+     *           <td><span class="tag-vote-buttons"><span class="tag-count">15</span></span></td>
+     *         </tr>
+     *         …
+     *       </tbody>
+     *     </table>
      *
-     *   Detection : `document.getElementById(sectionId)` succeeds.
-     *   Replacement: the entire `<div>` is replaced by the bare `<table>`.
-     *   Column name: derived from the `<ul>` class attribute (see below).
+     * Column-name derivation rules:
+     *   - First column : `id` value with trailing "s" stripped (singularised),
+     *                    then capitalised.  e.g. "genres" → "Genre",
+     *                    "tags" → "Tag".
+     *   - Second column: always "Tag count".
      *
-     * ── Structure B: bare ul (entity tags pages /entity/<mbid>/tags) ─────────
-     *
-     *   Before:
-     *     <h3>Genres</h3>
-     *     <ul class="genre-list">
-     *       <li class="odd">
-     *         <a href="/tags/rock">rock</a>
-     *         <span class="tag-vote-buttons"><span class="tag-count">15</span></span>
-     *       </li>  …
-     *     </ul>
-     *
-     *   After:
-     *     <h3>Genres</h3>
-     *     <table class="tbl">…</table>
-     *
-     *   Detection : no `<div id="sectionId">` found; fall back to scanning for
-     *               `<ul>` elements whose class contains `<singular>-list`
-     *               (e.g. sectionId "genres" → look for class "genre-list").
-     *   Replacement: the `<ul>` itself is replaced by the bare `<table>`.
-     *   Column name: derived from the `<ul>` class attribute (see below).
-     *
-     * ── Column-name derivation ────────────────────────────────────────────────
-     *   The first column name is extracted from the `<ul>` class attribute:
-     *   the substring before the literal "-list" suffix is capitalised.
-     *   e.g.  `<ul class="genre-list">` → "Genre"
-     *         `<ul class="tag-list">`   → "Tag"
-     *   The second column is always "Tag count".
+     * Only the first `<ul>` inside the `<div>` is processed; any nested `<ul>`
+     * elements inside individual `<li>` items are left untouched.
      *
      * @param {object} def - The active merged pageDefinition object.
      */
@@ -3019,68 +3005,51 @@
         if (!Array.isArray(sections) || sections.length === 0) return;
 
         sections.forEach(sectionId => {
-            // ── Locate the <ul> and its replacement target ───────────────────
-            // sectionId e.g. "genres" → singular "genre" → class "genre-list"
-            const _singular    = sectionId.replace(/s$/i, '');
-            const _ulClassName = `${_singular}-list`;
-
-            let _ul            = null;   // the <ul> to convert
-            let _replaceTarget = null;   // the node to replace in the parent DOM
-
             const _div = document.getElementById(sectionId);
-            if (_div) {
-                // Structure A: div-wrapped
-                _ul = _div.querySelector(':scope > ul');
-                if (!_ul) {
-                    Lib.debug('init', `applyListToTable: no direct <ul> inside #${sectionId} — skipping.`);
-                    return;
-                }
-                _replaceTarget = _div; // replace the entire <div>
-            } else {
-                // Structure B: bare ul — scan for <ul class="<singular>-list">
-                _ul = document.querySelector(`ul.${_ulClassName}`);
-                if (!_ul) {
-                    Lib.debug('init', `applyListToTable: no <div id="${sectionId}"> and no <ul class="${_ulClassName}"> found — skipping.`);
-                    return;
-                }
-                _replaceTarget = _ul; // replace the <ul> itself
+            if (!_div) {
+                Lib.debug('init', `applyListToTable: no <div id="${sectionId}"> found — skipping.`);
+                return;
             }
 
-            // ── Derive first-column name from the <ul> class ─────────────────
-            // Extract the type substring before "-list" and capitalise it.
-            // e.g. "genre-list" → "genre" → "Genre"; "tag-list" → "Tag".
-            const _classMatch = (_ul.className || '').match(/(\S+)-list/);
-            const _typeRaw    = _classMatch ? _classMatch[1] : _singular;
-            const _colName    = _typeRaw.charAt(0).toUpperCase() + _typeRaw.slice(1);
+            const _ul = _div.querySelector(':scope > ul');
+            if (!_ul) {
+                Lib.debug('init', `applyListToTable: no direct <ul> inside #${sectionId} — skipping.`);
+                return;
+            }
 
-            // ── Build the replacement <table class="tbl"> ────────────────────
+            // Derive singular capitalised column name from the id.
+            // "genres" → "genre" → "Genre"; "tags" → "tag" → "Tag".
+            const _singular = sectionId.replace(/s$/i, '');
+            const _colName  = _singular.charAt(0).toUpperCase() + _singular.slice(1);
+
+            // Build the replacement <table class="tbl">.
             const _table  = document.createElement('table');
             _table.className = 'tbl';
 
-            // thead
+            // ── thead ──────────────────────────────────────────────────────────
             const _thead = document.createElement('thead');
             const _hr    = document.createElement('tr');
-            [_colName, 'Tag count'].forEach(label => {
+            ['', ''].forEach((_, i) => {
                 const _th = document.createElement('th');
-                _th.textContent = label;
+                _th.textContent = i === 0 ? _colName : 'Tag count';
                 _hr.appendChild(_th);
             });
             _thead.appendChild(_hr);
             _table.appendChild(_thead);
 
-            // tbody
+            // ── tbody ──────────────────────────────────────────────────────────
             const _tbody = document.createElement('tbody');
             Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
-                const _tr = document.createElement('tr');
+                const _tr  = document.createElement('tr');
                 if (li.className) _tr.className = li.className; // preserve odd/even
 
-                // First cell: the <a> tag link
+                // First cell: the <a> link (tag name)
                 const _td1 = document.createElement('td');
                 const _a   = li.querySelector('a');
                 if (_a) _td1.appendChild(_a.cloneNode(true));
                 _tr.appendChild(_td1);
 
-                // Second cell: .tag-vote-buttons span (contains .tag-count)
+                // Second cell: the .tag-vote-buttons span (contains .tag-count)
                 const _td2   = document.createElement('td');
                 const _votes = li.querySelector('.tag-vote-buttons');
                 if (_votes) _td2.appendChild(_votes.cloneNode(true));
@@ -3090,12 +3059,12 @@
             });
             _table.appendChild(_tbody);
 
-            // ── Swap target node with the new <table> ────────────────────────
-            _replaceTarget.parentNode.replaceChild(_table, _replaceTarget);
+            // Replace the entire <div id="..."> wrapper with the bare <table>
+            // in the parent DOM, so no extra container element remains.
+            _div.parentNode.replaceChild(_table, _div);
             Lib.debug('init',
-                `applyListToTable: converted "${_ulClassName}" → table`
-                + ` (${_tbody.rows.length} rows, col="${_colName}",`
-                + ` structure="${_div ? 'div-wrapped' : 'bare-ul'}").`);
+                `applyListToTable: converted #${sectionId} → table`
+                + ` (${_tbody.rows.length} rows, col="${_colName}").`);
         });
     }
 
@@ -3578,20 +3547,7 @@
                 stickyColumn: 'Name'
             }
         },
-        // Entity tags sub-pages (e.g. /artist/<mbid>/tags) — must come before
-        // the generic 'tags' entry because its match is narrower.
-        {
-            type: 'artist-tags',
-            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Artist' } ],
-            tableMode: 'multi',
-            features: {
-                renameH2ToH3: true,
-                insertH2: 'Artist tags',
-                listToTable: [ 'genres', 'tags' ]
-            }
-        },
-        // Tags pages (user-level, e.g. /user/<name>/tags)
+        // Tags pages
         {
             type: 'tags',
             match: (path) => path.includes('/tags'),
@@ -3600,6 +3556,17 @@
             features: {
                 listToTable: [ 'genres', 'tags' ],
                 integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+            }
+        },
+        // Entity tags sub-pages (e.g. /artist/<mbid>/tags)
+        {
+            type: 'artist-tags',
+            match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Artist' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Artist tags'
             }
         },
         // Search pages
@@ -20562,6 +20529,15 @@ a { color: #1565c0; }`;
         // Stop other scripts immediately when an action button is pressed
         stopOtherScripts();
 
+        // ── listToTable pre-processing ────────────────────────────────────────
+        // For pageTypes that carry features.listToTable (e.g. 'tags'), convert
+        // the native <ul>-based lists into proper <table class="tbl"> elements
+        // so the standard fetch / filter / sort pipeline can process them.
+        // Must run before maxPage determination (which scans the DOM for tables).
+        if (Array.isArray(activeDefinition.features?.listToTable)) {
+            applyListToTable(activeDefinition);
+        }
+
         // ── renameH2ToH3 / insertH2 pre-processing ───────────────────────────
         // For pageTypes that carry features.renameH2ToH3 and/or features.insertH2
         // (e.g. 'artist-tags'), reshape the native heading hierarchy so that the
@@ -20569,27 +20545,13 @@ a { color: #1565c0; }`;
         // attaches correctly:
         //   1. Demote all existing <h2> elements to <h3> (section labels).
         //   2. Inject a fresh <h2> after <div class="tabs"> as the anchor node.
-        // Must run BEFORE listToTable so that the DOM heading structure is already
-        // in its final form when applyListToTable() walks the DOM for <div id="…">
-        // containers.  Internal order is also significant: renameH2ToH3 must run
-        // before insertH2 so the newly inserted <h2> is NOT immediately demoted.
+        // Order is significant: renameH2ToH3 must run first so the newly
+        // inserted <h2> from insertH2 is NOT immediately demoted again.
         if (activeDefinition.features?.renameH2ToH3) {
             applyRenameH2ToH3(activeDefinition);
         }
         if (activeDefinition.features?.insertH2) {
             applyInsertH2(activeDefinition);
-        }
-
-        // ── listToTable pre-processing ────────────────────────────────────────
-        // For pageTypes that carry features.listToTable (e.g. 'tags',
-        // 'artist-tags'), convert the native <ul>-based lists into proper
-        // <table class="tbl"> elements so the standard fetch / filter / sort
-        // pipeline can process them.
-        // Must run AFTER renameH2ToH3 / insertH2 (heading structure must be
-        // finalised first) and before maxPage determination (which scans the
-        // DOM for tables).
-        if (Array.isArray(activeDefinition.features?.listToTable)) {
-            applyListToTable(activeDefinition);
         }
 
         // Clear existing highlights immediately from DOM for visual feedback
