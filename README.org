@@ -66637,176 +66637,8 @@ and either
 * TODO add the current defaults (h2/h3 color backgrounds) to our code base
 
 
-* TODO add subscriptions support
-** DONE initial
-
-add subscriptions support for Muscibrainz page of type
-
-https://musicbrainz.org/user/vzell/subscriptions/<type>
-
-e.g.
-
-https://musicbrainz.org/user/vzell/subscriptions/label
-
-by implementing the following two changes:
-
-1.)
-
-add the following "@match" directive
-
-#+begin_example
-// @match        *://*.musicbrainz.org/user/*/subscriptions/*
-#+end_example
-
-to the userscript header so that it looks like
-
-#+begin_example
-// @match        *://*.musicbrainz.org/search?query=*
-// @match        *://*.musicbrainz.org/user/*/subscriptions/*
-#+end_example
-
-2.)
-
-add the following new pageType definition to "const pageDefinitions"
-
-#+begin_example
-        // Subscriptions pages
-        {
-            type: 'subscriptions',
-            match: (path) => path.includes('/subscriptions'),
-            buttons: [ { label: 'Show all Subscription results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name'
-            }
-        },
-#+end_example
-
-so that it looks like
-
-#+begin_example
-    const pageDefinitions = [
-        // Subscriptions pages
-        {
-            type: 'subscriptions',
-            match: (path) => path.includes('/subscriptions'),
-            buttons: [ { label: 'Show all Subscription results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name'
-            }
-        },
-        // Search pages
-        {
-            type: 'search',
-            match: (path) => path.includes('/search'),
-            buttons: [ { label: 'Show all Search results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name', // Specific header
-                transformToH2: true        // New flag to trigger <h2> transformation
-            },
-            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
-        },
-#+end_example
-
-3.)
-
-remove the double misplaced JSDoc comment from the function "_hintFromSrc(src, fromIdb, fromMemory)"
-
-#+begin_example
-    /**
-     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
-     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
-     * network fetch, or "timing unavailable" (no entry / API absent).
-     *
-     * Classification rules (in priority order):
-     *
-     *   1. transferSize === 0 AND encodedBodySize > 0
-     *        → Memory cache (🟢).  Browser served from RAM; size is known even
-     *          for cross-origin resources when served from memory.
-     *
-     *   2. transferSize > 0
-     *        → Network fetch (🔵).  Actual bytes received over the wire.
-     *
-     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
-     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
-     *          the response arrived in under 5 ms — consistent with a disk-cached
-     *          redirect chain where BOTH the redirect and the final resource are
-     *          served from cache.
-     *          NOTE: this path is NEVER triggered for coverartarchive.org /
-     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
-     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
-     *          always adds 2–4 s of network latency and duration never drops below
-     *          5 ms on a page reload.  🟡 is therefore only observable for image
-     *          URLs that are served directly (no redirect) or whose redirect chain
-     *          is genuinely disk-cached.
-     *
-     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
-     *        → Network / redirect chain (🔵).  This is the only outcome ever
-     *          produced for CAA/EAA archive URLs on any repeated page load, because
-     *          the non-cacheable redirect to archive.org always requires a fresh
-     *          network round-trip.  Even if the final image bytes are already in
-     *          the disk cache, the redirect latency keeps duration > 5 ms.
-     *
-     *   5. No matching entry, or Performance API absent
-     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
-     *          'unavailable'; every case where an entry exists resolves to one of
-     *          the three statuses above.
-     *
-     * Returned object shape:
-     * ```
-     * {
-     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
-     *   transferSize:    number | null,
-     *   encodedBodySize: number | null,
-     *   duration:        number | null,
-     *   redirectStart:   number | null,   // 0 for opaque cross-origin
-     *   responseStart:   number | null,   // 0 for opaque cross-origin
-     * }
-     * ```
-     *
-     * @param  {string} url  The exact URL to look up (matched against entry.name).
-     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
-     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
-     */
-#+end_example
-
-4.)
-
-remove the double misplaced JSDoc comment from the function "_applyCollapseState(toggle, expand)"
-
-#+begin_example
-    /**
-     * Wires the single global ▶/◀ toggle button for multi-table mode.
-     *
-     * In multi-table mode `initCollapsableColumns` is called once per sub-table
-     * (because each rendered `<table>` is independent), so it cannot accumulate
-     * all column-header buttons into one `collapseHdrBtns` array.  This helper
-     * fills that role: it is called once after ALL sub-tables have been
-     * processed by `initCollapsableColumns`, scans the live DOM for every
-     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
-     *
-     *   • Hides the global button when no such buttons exist (none of the
-     *     filtered-in sub-tables has a multi-row column).
-     *   • Shows the global button and re-wires its `onclick` to drive every
-     *     found header button (and therefore every cell toggle across every
-     *     sub-table) to the target expanded/collapsed state.
-     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
-     *     the highlight tint on the global button based on the current filter
-     *     match state across all sub-tables.
-     *
-     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
-     * loop completes — both on initial render and on every filter re-run.
-     */
-#+end_example
-
-** TODO enhancement
-
-add n action buttons like for "Artist-ReleaseGroups" pageType for the different collection types 
-
-
-* TODO add "/collections" support
+* DONE add "/collections" support
+** initial
 
 Add support for collections in our userscript, e.g. for URLs like
 
@@ -66848,7 +66680,7 @@ to
 
 3.)
 
-add the following new pageType definition to "const pageDefinitions"
+add the following new pageType definitions to "const pageDefinitions" before the pageType "type: 'search'"
 
 #+begin_example
         // Collections pages
@@ -66858,14 +66690,9 @@ add the following new pageType definition to "const pageDefinitions"
             buttons: [ { label: 'Show all Collections for User' } ],
             tableMode: 'multi'
         },
-#+end_example
-
-
-#+begin_example
-        // Collection pages
         {
             type: 'collections-releases',
-            match: (path) => path.match(/\/collection\/[a-f0-9-]{36}),
+	    match: (path) => path.match(/\/collection\/[a-f0-9-]{36}/),
             // labelFromH2: true instructs the button-creation code to read the <h2>
             // header text that precedes the table and substitute it into the label so
             // the button reads "Show all <EntityType> for Collections" dynamically.
@@ -66876,11 +66703,9 @@ add the following new pageType definition to "const pageDefinitions"
             // reads the live H2 text and picks the matching entry.  If no match is
             // found the fallback 'Releases' feature set is used so the page still
             // works for unrecognised entity types.
+            columnHeaderErasers: ['▴/▾']
             entityFeatures: {
                 'Releases': {
-                    columnHeaderErasers: [
-                        { sourceColumns: [ 'Release', 'Artist', 'Format', 'Tracks', 'Country/Date', 'Label', 'Catalog#', 'Barcode' ], erasers: ['▴/▾'] }
-                    ],
                     columnExtractors: [
                         { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
                         {
@@ -66901,10 +66726,8 @@ add the following new pageType definition to "const pageDefinitions"
                     extractMainColumn: 'Release'
                 },
                 'Events': {
-                    columnHeaderErasers: [
-                        { sourceColumns: [ 'Event', 'Type', 'Date' ], erasers: ['▴/▾'] }
-                    ],
                     columnExtractors: [
+                        { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
                         { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
                         { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] }
                     ],
@@ -66917,9 +66740,6 @@ add the following new pageType definition to "const pageDefinitions"
                     extractMainColumn: 'Event'
                 },
                 'Release groups': {
-                    columnHeaderErasers: [
-                        { sourceColumns: [ 'Year', 'Title', 'Artist' ], erasers: ['▴/▾'] }
-                    ],
                     columnExtractors: [
                         { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                     ],
@@ -66931,9 +66751,6 @@ add the following new pageType definition to "const pageDefinitions"
                     extractMainColumn: 'Title'
                 },
                 'Recordings': {
-                    columnHeaderErasers: [
-                        { sourceColumns: [ 'Name', 'Artist' ], erasers: ['▴/▾'] }
-                    ],
                     columnExtractors: [
                         { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
                     ],
@@ -66941,9 +66758,6 @@ add the following new pageType definition to "const pageDefinitions"
                     extractMainColumn: 'Name'
                 },
                 'Works': {
-                    columnHeaderErasers: [
-                        { sourceColumns: [ 'Work' ], erasers: ['▴/▾'] }
-                    ],
                     extractMainColumn: 'Title'
                 }
             },
@@ -66951,27 +66765,19 @@ add the following new pageType definition to "const pageDefinitions"
         },
 #+end_example
 
-5.)
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+
+4.)
 
 mirror the functionality from the "function buildActiveColumnErasers(def)" to
 build an equivalent list for the "columnHeaderErasers".
 
-The implementation for the "erasers: ['▴/▾']" should be to extract just the text from the "<a href=" container
-and remove everything else from the header
+The implementation for the eraser "['▴/▾']" should be to iterate over each column header and extract just the text from
+the "<a href=" container (if present) and remove everything else.
 
-So for example for the URL https://musicbrainz.org/collection/f90a1473-da79-4daf-b5c2-419023b147dd
-the following configuration block would apply
-
-#+begin_example
-            entityFeatures: {
-                'Releases': {
-                    columnHeaderErasers: [
-                        { sourceColumns: [ 'Release', 'Artist', 'Format', 'Tracks', 'Country/Date', 'Label', 'Catalog#', 'Barcode' ], erasers: ['▴/▾'] }
-                    ],
-...
-#+end_example
-
-and the following "<th>" header definition
+E.g. given the following "<th>" header definition
 
 #+begin_example
 <th colspan="1">
@@ -66983,7 +66789,7 @@ and the following "<th>" header definition
 </th>
 #+end_example
 
-should be transformed to just
+it should be transformed to just
 
 #+begin_example
 <th colspan="1">
@@ -67016,8 +66822,139 @@ Country/Date
 </th>
 #+end_example
 
+so basically all the "a href" text elements ("Country" and "Date") should be extracted and concatenated together with the text elemets between them e.g. in the above example "/"
 
-* TODO add "/tags" support
+** bugs
+
+still bugs:
+
+1.)
+
+for pageTypes of "type: 'collections-releases'" the entity type detection because of the "labelFromH2: true"
+in the parameter definition
+
+#+begin_example
+buttons: [ { label: 'Show all Releases for Collections', labelFromH2: true } ],
+#+end_example
+
+doesn't work as for the pageType defintion for "type: 'series-releases'"
+because for the latter case there is support in the functions
+
+#+begin_example
+function resolveSeriesEntityFeatures(def)
+function _seriesH2EntityType()
+#+end_example
+
+please fix
+
+2.)
+
+for the pageType "type: 'collections'", there are three h3 header lines each with it's own sibbling table but still on
+the final rendered page there is just one table rendered under the h3 header line of "Unknown"
+
+Here is the debug console log
+
+#+begin_example
+12:36:18.781 [VZ-ShowAllEntityData: collections] 📝 initCAAPics: processed 0 table(s) with CAA column 
+12:36:18.782 [VZ-ShowAllEntityData: collections] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+12:36:18.783 [VZ-ShowAllEntityData: collections] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
+12:36:18.784 [VZ-ShowAllEntityData: collections] 📝 initEAAPics: processed 0 table(s) with EAA column 
+12:36:18.784 [VZ-ShowAllEntityData: collections] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+12:36:18.785 [VZ-ShowAllEntityData: collections] 📝 initCAAInlinePics: no addCAA column configured for this page type — skipping 
+12:36:18.785 [VZ-ShowAllEntityData: collections] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+12:36:18.790 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+12:36:18.791 [VZ-ShowAllEntityData: collections] 🎨 Finished renderGroupedTable. 
+12:36:18.792 [VZ-ShowAllEntityData: collections] 📝 Stats snapshot: 3 rows, 0 CAA links, 7 original + 0 extracted + 0 derived + 0 injected cols 
+12:36:18.793 [VZ-ShowAllEntityData: collections] 🎨 initTreleasesObserver: watching tbody (childList+attributes) 
+12:36:18.795 [VZ-ShowAllEntityData: collections] 🧹 Running final cleanup... 
+12:36:18.796 [VZ-ShowAllEntityData: collections] 🧹 No Sanojjonas elements found during final cleanup. 
+12:36:18.796 [VZ-ShowAllEntityData: collections] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+12:36:18.796 [VZ-ShowAllEntityData: collections] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+12:36:18.797 [VZ-ShowAllEntityData: collections] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+12:36:18.797 [VZ-ShowAllEntityData: collections] 🎨 Initializing collapsible H2 headers... 
+12:36:18.799 [VZ-ShowAllEntityData: collections] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+12:36:18.800 [VZ-ShowAllEntityData: collections] 🖥️ Auto-resize button added to controls 
+12:36:18.801 [VZ-ShowAllEntityData: collections] 📝 Made 7 columns resizable 
+12:36:18.806 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+12:36:18.809 [VZ-ShowAllEntityData: collections] 🖥️ Column visibility toggle added to controls 
+12:36:18.810 [VZ-ShowAllEntityData: collections] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+12:36:18.812 [VZ-ShowAllEntityData: collections] 🖥️ Density control button added to controls 
+12:36:18.812 [VZ-ShowAllEntityData: collections] 🖥️ Statistics button added to controls 
+12:36:18.814 [VZ-ShowAllEntityData: collections] 📝 Keyboard shortcuts initialized 
+12:36:18.814 [VZ-ShowAllEntityData: collections] 🖥️ Shortcuts help button already exists, skipping 
+12:36:18.816 [VZ-ShowAllEntityData: collections] 🖥️ Export button with dropdown menu added to controls 
+12:36:18.817 [VZ-ShowAllEntityData: collections] 📝 initBarcodeHighlight: processed table 0 
+12:36:18.818 [VZ-ShowAllEntityData: collections] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
+12:36:18.819 [VZ-ShowAllEntityData: collections] 📝 Unicode character picker initialised 
+12:36:18.822 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+12:36:18.823 [VZ-ShowAllEntityData: collections] 🎨 DOM rendering finished in 78.10ms 
+12:36:18.824 [VZ-ShowAllEntityData: collections] ✅ Process complete. Final Row Count: 3. Total Time: 0.09s 
+12:36:18.838 [VZ-ShowAllEntityData: collections] 📝 sa_auto_resize_columns: triggering auto-resize on load 
+12:36:18.839 [VZ-ShowAllEntityData: collections] 📝 Auto-resizing 1 table(s)... 
+12:36:18.844 [VZ-ShowAllEntityData: collections] 📝 Header 0: "Collection ⇅▲▼3📊" = 131px 
+12:36:18.847 [VZ-ShowAllEntityData: collections] 📝 Header 1: "Type ⇅▲▼3📊" = 101px 
+12:36:18.849 [VZ-ShowAllEntityData: collections] 📝 Header 2: "Events ⇅▲▼2📊" = 112px 
+12:36:18.850 [VZ-ShowAllEntityData: collections] 📝 Header 3: "Collaborators ⇅▲▼1📊" = 153px 
+12:36:18.852 [VZ-ShowAllEntityData: collections] 📝 Header 4: "Subscribed ⇅▲▼1📊" = 138px 
+12:36:18.854 [VZ-ShowAllEntityData: collections] 📝 Header 5: "Privacy ⇅▲▼2📊" = 116px 
+12:36:18.857 [VZ-ShowAllEntityData: collections] 📝 Header 6: "Actions ⇅▲▼1📊" = 116px 
+12:36:18.868 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 0: 151px min-width (visible) 
+12:36:18.871 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 1: 130px min-width (visible) 
+12:36:18.872 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 2: 132px min-width (visible) 
+12:36:18.872 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 3: 173px min-width (visible) 
+12:36:18.873 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 4: 158px min-width (visible) 
+12:36:18.874 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 5: 136px min-width (visible) 
+12:36:18.875 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 6: 136px min-width (visible) 
+12:36:18.876 [VZ-ShowAllEntityData: collections] 📝 Made 7 columns resizable 
+12:36:18.877 [VZ-ShowAllEntityData: collections] 📝 Table 0: Resized 7 columns, total width: 1016px 
+12:36:18.879 [VZ-ShowAllEntityData: collections] 📝 Auto-resize complete: 7 visible columns across 1 table(s) in 38ms 
+12:36:18.897 [VZ-ShowAllEntityData: collections] 📝 _artOpenIdb: database opened successfully 
+12:36:18.969 [VZ-ShowAllEntityData: collections] 🖥️ Auto-focused global filter input after final render 
+12:36:19.073 [VZ-ShowAllEntityData: collections] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
+#+end_example
+
+** bugs
+
+still bugs
+
+1.)
+
+for pageTypes of "type: 'collections-releases'" the entity type detection still doesn't work. It always parses the
+entity type from the first h2 header (which is "Description") 
+
+#+begin_example
+<div class="description"><h2>Description</h2><p><bdi>Release groups synchronized with Discogs.<br></bdi></p></div>
+#+end_example
+
+This can already be seen on the intial page as the action button text is always "🧮¹ Show all Description for Collections"
+
+#+begin_example
+<button type="button" title="Fetch all the table data from the MusicBrainz backend database (Ctrl+M, then 1)" data-label="Show all Description for Collections" style="font-size: 0.8em; padding: 2px 8px; height: 24px; border-radius: 6px; cursor: pointer; transition: transform 0.1s, box-shadow 0.1s; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center;">🧮¹ Show all Description for Collections</button>
+#+end_example
+
+Here the debug log
+
+#+begin_example
+13:00:20.206 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.398+2026-04-04) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8?tport=8000 
+13:00:20.276 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8?tport=8000 
+13:00:20.276 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8 
+13:00:20.276 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8 
+13:00:20.276 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters: tport=8000 
+13:00:20.276 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+13:00:20.277 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: collections-releases 
+13:00:20.278 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
+13:00:20.278 [VZ-ShowAllEntityData: collections-releases] 🚀 Initializing script for path: /collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
+13:00:20.278 [VZ-ShowAllEntityData: collections-releases] 🚀 Cached entity name at init time: "Synchronized with Discogs" 
+13:00:20.286 [VZ-ShowAllEntityData: collections-releases] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+13:00:20.289 [VZ-ShowAllEntityData: collections-releases] 🚀 Blurred #headerid-query input on page entry 
+13:00:20.291 [VZ-ShowAllEntityData: collections-releases] 📝 Changelog source: remote — replaced 0 local entries with 571 remote entries (fromCache=true) 
+#+end_example
+
+I also uploaded the complete web page as "Collection “Synchronized with Discogs” - MusicBrainz.html"
+to check what's wrong
+
+
+* DONE add "/tags" support
 ** initial
 
 Add support for tags in our userscript, e.g. for URLs like
@@ -67284,8 +67221,7 @@ See also the uploaded console debug log "debugTags" and the uploaded final rende
 
 Please fix.
 
-
-* TODO add "/tag/ support
+* DONE add "/tag/ support
 ** initial
 
 add support to MusicBrainz entityPages to support the "tags" tab, e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/tags
@@ -67752,6 +67688,7 @@ so that it looks like
 the "async function initRelationshipsColumn()" is NOT working for the pageType "artist-works". It looks like it doesn't
 yet support "work" MBIDs.
 
+
 * TODO ghosting bug still present also checkbox column removed for date column in first column
 
 ghosting bug still present also checkbox column removed for date column in first column
@@ -67772,7 +67709,8 @@ Date - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relat
 Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
 #+end_example
 
-* TODO add entity-tags pageType definitions
+
+* TODO add other <entity>-tags pageType definitions
 
 #+begin_example
         {
@@ -67787,3 +67725,250 @@ Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/perfor
             }
         },
 #+end_example
+
+
+* TODO change /tags
+
+does not work yet
+
+#+begin_example
+        {
+            type: 'tags',
+            match: (path, params) => path.includes('/tags'),
+            buttons: [
+                { label: 'Show all Upvoted Tags for User',    params: { show_downvoted: '0' } },
+                { label: 'Show all Downvoted Tags for User',  params: { show_downvoted: '1' } }
+            ],
+            tableMode: 'multi',
+            features: {
+                listToTable: [ 'genres', 'tags' ],
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+            }
+        },
+#+end_example
+
+
+* TODO add subscriptions support
+** DONE initial
+
+add subscriptions support for Muscibrainz page of type
+
+https://musicbrainz.org/user/vzell/subscriptions/<type>
+
+e.g.
+
+https://musicbrainz.org/user/vzell/subscriptions/label
+
+by implementing the following two changes:
+
+1.)
+
+add the following "@match" directive
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+to the userscript header so that it looks like
+
+#+begin_example
+// @match        *://*.musicbrainz.org/search?query=*
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+2.)
+
+add the following new pageType definition to "const pageDefinitions"
+
+#+begin_example
+        // Subscriptions pages
+        {
+            type: 'subscriptions',
+            match: (path) => path.includes('/subscriptions'),
+            buttons: [ { label: 'Show all Subscription results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name'
+            }
+        },
+#+end_example
+
+so that it looks like
+
+#+begin_example
+    const pageDefinitions = [
+        // Subscriptions pages
+        {
+            type: 'subscriptions',
+            match: (path) => path.includes('/subscriptions'),
+            buttons: [ { label: 'Show all Subscription results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name'
+            }
+        },
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name', // Specific header
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+#+end_example
+
+3.)
+
+remove the double misplaced JSDoc comment from the function "_hintFromSrc(src, fromIdb, fromMemory)"
+
+#+begin_example
+    /**
+     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
+     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
+     * network fetch, or "timing unavailable" (no entry / API absent).
+     *
+     * Classification rules (in priority order):
+     *
+     *   1. transferSize === 0 AND encodedBodySize > 0
+     *        → Memory cache (🟢).  Browser served from RAM; size is known even
+     *          for cross-origin resources when served from memory.
+     *
+     *   2. transferSize > 0
+     *        → Network fetch (🔵).  Actual bytes received over the wire.
+     *
+     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
+     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
+     *          the response arrived in under 5 ms — consistent with a disk-cached
+     *          redirect chain where BOTH the redirect and the final resource are
+     *          served from cache.
+     *          NOTE: this path is NEVER triggered for coverartarchive.org /
+     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
+     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
+     *          always adds 2–4 s of network latency and duration never drops below
+     *          5 ms on a page reload.  🟡 is therefore only observable for image
+     *          URLs that are served directly (no redirect) or whose redirect chain
+     *          is genuinely disk-cached.
+     *
+     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
+     *        → Network / redirect chain (🔵).  This is the only outcome ever
+     *          produced for CAA/EAA archive URLs on any repeated page load, because
+     *          the non-cacheable redirect to archive.org always requires a fresh
+     *          network round-trip.  Even if the final image bytes are already in
+     *          the disk cache, the redirect latency keeps duration > 5 ms.
+     *
+     *   5. No matching entry, or Performance API absent
+     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
+     *          'unavailable'; every case where an entry exists resolves to one of
+     *          the three statuses above.
+     *
+     * Returned object shape:
+     * ```
+     * {
+     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
+     *   transferSize:    number | null,
+     *   encodedBodySize: number | null,
+     *   duration:        number | null,
+     *   redirectStart:   number | null,   // 0 for opaque cross-origin
+     *   responseStart:   number | null,   // 0 for opaque cross-origin
+     * }
+     * ```
+     *
+     * @param  {string} url  The exact URL to look up (matched against entry.name).
+     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
+     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
+     */
+#+end_example
+
+4.)
+
+remove the double misplaced JSDoc comment from the function "_applyCollapseState(toggle, expand)"
+
+#+begin_example
+    /**
+     * Wires the single global ▶/◀ toggle button for multi-table mode.
+     *
+     * In multi-table mode `initCollapsableColumns` is called once per sub-table
+     * (because each rendered `<table>` is independent), so it cannot accumulate
+     * all column-header buttons into one `collapseHdrBtns` array.  This helper
+     * fills that role: it is called once after ALL sub-tables have been
+     * processed by `initCollapsableColumns`, scans the live DOM for every
+     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
+     *
+     *   • Hides the global button when no such buttons exist (none of the
+     *     filtered-in sub-tables has a multi-row column).
+     *   • Shows the global button and re-wires its `onclick` to drive every
+     *     found header button (and therefore every cell toggle across every
+     *     sub-table) to the target expanded/collapsed state.
+     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
+     *     the highlight tint on the global button based on the current filter
+     *     match state across all sub-tables.
+     *
+     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
+     * loop completes — both on initial render and on every filter re-run.
+     */
+#+end_example
+
+** TODO enhancement
+
+add n action buttons like for "Artist-ReleaseGroups" pageType for the different collection types 
+
+* TODO subscriptions
+
+#+begin_example
+        // Subscriptions pages
+        {
+            type: 'artist-subscriptions',
+            match: (path) => path.includes('/subscriptions/artist'),
+            buttons: [ { label: 'Show all Artist Subscriptions for User' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+        {
+            type: 'collection-subscriptions',
+            match: (path) => path.includes('/subscriptions/collection'),
+            buttons: [ { label: 'Show all Collection Subscriptions for User' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+        {
+            type: 'label-subscriptions',
+            match: (path) => path.includes('/subscriptions/label'),
+            buttons: [ { label: 'Show all Label Subscriptions for User' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+        {
+            type: 'series-subscriptions',
+            match: (path) => path.includes('/subscriptions/series'),
+            buttons: [ { label: 'Show all Series Subscriptions for User' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+        {
+            type: 'editor-subscriptions',
+            match: (path) => path.includes('/subscriptions/editor'),
+            buttons: [ { label: 'Show all Editor Subscriptions for User' } ],
+            tableMode: 'single'
+        },
+#+end_example
+
+
+* TODO retry "Relationships" buttons double on "single"-table pageTypes
+
+* fix synching synthics columns in all event relatin pageTypes: series, collections, artist

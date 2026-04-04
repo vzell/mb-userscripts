@@ -1,5 +1,49 @@
 [
   {
+    "version": "9.99.399",
+    "date": "2026-04-04",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Root cause identified via uploaded DOM: on collection pages the entity-type <h2> (e.g. 'Release groups') is a direct sibling of the <form> that wraps the table, NOT a sibling of the table itself. The flat previousElementSibling walk in both _getH2EntityType() and the labelFromH2 button code was scoped to the table's own sibling list (h3, nav — all inside the form), so it never escaped the form boundary. It fell through to document.querySelector('h2') which returned the first <h2>Description</h2> inside <div class=\"description\"> — hence the button read 'Show all Description for Collections'.",
+          "New _findPrecedingH2(startNode, maxAncestorSteps=5, maxSiblingSteps=10) helper: walks previous siblings at the start node's DOM level; if no H2 is found, climbs to the parent element and repeats, up to maxAncestorSteps levels. Stops at document.body. This correctly handles collection pages (table nested inside form, H2 is a sibling of the form) as well as all existing page types where table and H2 are direct siblings.",
+          "Both _getH2EntityType() and the labelFromH2 button-label substitution code now use _findPrecedingH2() instead of the flat sibling walk. The 'Description' false-positive is eliminated: the ancestor walk finds 'Release groups' (sibling of the form) before ever reaching the description div."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.398",
+    "date": "2026-04-04",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 — entity feature resolution for collections-releases: renamed _seriesH2EntityType() to _getH2EntityType() and resolveSeriesEntityFeatures() to resolveEntityFeaturesFromH2() so both functions are clearly generic and not series-specific. Both old names are preserved as backward-compatibility aliases (const resolveSeriesEntityFeatures = resolveEntityFeaturesFromH2). Updated startFetchingProcess() to call resolveEntityFeaturesFromH2() and updated its comment to list both 'series-releases' and 'collections-releases' as supported pageTypes. The underlying H2-detection and entityFeatures-lookup logic was already generic; the rename ensures no ambiguity about scope.",
+          "Bug 2 — collections multi-table rendering (all 3 h3-groups collapsed to 1 'Unknown' table): added features.groupByH3: true to the 'collections' pageType. Extended the fetch-loop branch condition from 'else if (features.listToTable)' to 'else if (features.listToTable || features.groupByH3)' so the h3-backward-walk multi-table path also activates for pages with native table.tbl elements already under <h3> headers (no list conversion needed). The 'collections' user-collections page has multiple <h3>-headed table.tbl siblings ('Own collections', 'Subscribed collections', etc.) that were previously all merged into a single 'Unknown' group by the generic else-branch."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.397",
+    "date": "2026-04-04",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "@match *://*.musicbrainz.org/user/*/collections added so the script activates on user collection-list pages.",
+          "@include extended: added 'collection' to the entity-type alternation so the script activates on individual collection URLs like /collection/<mbid>.",
+          "New 'collections' pageType: matches /collections paths (user collection lists), tableMode 'multi', button 'Show all Collections for User'.",
+          "New 'collections-releases' pageType: matches /collection/<mbid> paths, tableMode 'single', button 'Show all Releases for Collections' (with labelFromH2:true for dynamic entity-type substitution). Carries columnHeaderErasers:['▴/▾'] and an entityFeatures map with feature sets for Releases, Events, Release groups, Recordings, and Works — mirroring the series-releases pattern so the correct extractors, syntheticColumnExtractors, injectedColumns, integerColumns, collapsableColumns, tooltip and CAA/EAA features are activated per entity type.",
+          "New buildActiveColumnHeaderErasers(def): reads the top-level columnHeaderErasers array from the page definition (not inside features) and returns a copy. Token list is built in startFetchingProcess() alongside the other active-* lists.",
+          "New applyColumnHeaderErasers(referenceTable, eraserTokens): when the '▴/▾' token is present, walks every <th> in the referenceTable <thead> and replaces its content with plain text extracted from the <a> link(s) inside it. Single-link <th>: uses the first text node inside the <a>. Multi-link <th> (e.g. Country/Date): walks all child nodes of the <th>, collecting the first text node from each <a> and any literal TEXT_NODE children between them, then concatenates without spaces. Headers with no <a> children are left untouched. applyColumnHeaderErasers() is called immediately before the referenceTable.querySelectorAll('thead th') scanning loop so that headerNames[] stores the cleaned names and all feature lookups (extractors, erasers, integerColumns, etc.) match correctly."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.396",
     "date": "2026-04-04",
     "sections": [

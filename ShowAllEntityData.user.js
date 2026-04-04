@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.396+2026-04-04
+// @version      9.99.399+2026-04-04
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -13,10 +13,11 @@
 // @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
 // @require      https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js
 // @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZ_MBLibrary.user.js
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags)(?:\?.*)?$/
 // @match        *://*.musicbrainz.org/search?query=*
 // @match        *://*.musicbrainz.org/user/*/subscriptions/*
+// @match        *://*.musicbrainz.org/user/*/collections
 // @match        *://*.musicbrainz.org/user/*/tags
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
@@ -2835,6 +2836,105 @@
     }
 
     /**
+     * Derives the runtime column-header-eraser token list from a merged
+     * activeDefinition object.
+     *
+     * `columnHeaderErasers` is a top-level (not inside `features`) array of
+     * eraser tokens on the page definition, e.g. `['▴/▾']`.  It is placed at
+     * the definition root rather than inside `features` because it describes a
+     * structural DOM transformation that runs before any column-feature logic,
+     * not a per-column data transformation.
+     *
+     * Currently supported token:
+     *   '▴/▾'  — Strip sort-link wrappers from every `<th>` in the reference
+     *            table's `<thead>` before the header-scanning pass.  See
+     *            `applyColumnHeaderErasers()` for the exact transformation.
+     *
+     * @param {object} def - Merged activeDefinition object.
+     * @returns {string[]}  Array of eraser tokens (may be empty).
+     */
+    function buildActiveColumnHeaderErasers(def) {
+        if (!Array.isArray(def?.columnHeaderErasers)) return [];
+        return [...def.columnHeaderErasers];
+    }
+
+    /**
+     * Cleans sort-link wrappers from every `<th>` in the reference table's
+     * `<thead>` so that the subsequent header-scanning pass reads plain column
+     * names instead of link+arrow markup.
+     *
+     * Called only when the active page definition carries the `'▴/▾'` eraser
+     * token in `columnHeaderErasers` (e.g. the 'collections-releases' pageType).
+     *
+     * Transformation rules applied to each `<th>`:
+     *
+     *   Single-link header — one `<a>` child:
+     *     Before:  <th><a href="…">Release <!-- --> <span>▴/▾</span></a></th>
+     *     After:   <th>Release</th>
+     *     Rule:    Set th.textContent to the trimmed text of the first text node
+     *              inside the `<a>` (stripping the arrow `<span>`).
+     *
+     *   Multi-link header — several `<a>` children interleaved with text nodes:
+     *     Before:  <th><a href="…">Country <!-- --> <span>▴/▾</span></a>/
+     *                  <a href="…">Date    <!-- --> <span>▴/▾</span></a></th>
+     *     After:   <th>Country/Date</th>
+     *     Rule:    Walk all child nodes of the `<th>`.  For each `<a>` child,
+     *              collect the first text node inside it (trimmed).  For each
+     *              TEXT_NODE child of the `<th>` itself, collect its trimmed
+     *              content.  Concatenate all collected parts without extra spaces.
+     *
+     *   Header with no `<a>` children — left untouched.
+     *
+     * The mutation is performed on the live `referenceTable` DOM so that the
+     * immediately following `referenceTable.querySelectorAll('thead th')` loop
+     * reads the cleaned text via `th.textContent`.
+     *
+     * @param {HTMLTableElement} referenceTable - The first `table.tbl` on the page.
+     * @param {string[]}         eraserTokens   - Active token list from
+     *                                           `buildActiveColumnHeaderErasers()`.
+     */
+    function applyColumnHeaderErasers(referenceTable, eraserTokens) {
+        if (!eraserTokens.includes('▴/▾')) return;
+
+        referenceTable.querySelectorAll('thead th').forEach(th => {
+            const _links = Array.from(th.querySelectorAll(':scope > a'));
+            if (_links.length === 0) return; // no link — leave as-is
+
+            if (_links.length === 1) {
+                // Single-link: extract first text node inside the <a>
+                const _a    = _links[0];
+                let _text   = '';
+                for (const _child of _a.childNodes) {
+                    if (_child.nodeType === Node.TEXT_NODE) {
+                        const _t = _child.textContent.trim();
+                        if (_t) { _text = _t; break; }
+                    }
+                }
+                th.textContent = _text;
+            } else {
+                // Multi-link: interleave link-text with literal text nodes in <th>
+                const _parts = [];
+                for (const _child of th.childNodes) {
+                    if (_child.nodeType === Node.ELEMENT_NODE && _child.tagName === 'A') {
+                        // Extract first text node inside this <a>
+                        for (const _inner of _child.childNodes) {
+                            if (_inner.nodeType === Node.TEXT_NODE) {
+                                const _t = _inner.textContent.trim();
+                                if (_t) { _parts.push(_t); break; }
+                            }
+                        }
+                    } else if (_child.nodeType === Node.TEXT_NODE) {
+                        const _t = _child.textContent.trim();
+                        if (_t) _parts.push(_t);
+                    }
+                }
+                th.textContent = _parts.join('');
+            }
+            Lib.debug('parse', `applyColumnHeaderErasers: cleaned <th> → "${th.textContent}"`);
+        });
+    }
+
+    /**
      * Removes configured marker elements from a data row's cells in-place.
      *
      * For each eraser descriptor whose column index has been resolved (`colIdx !== -1`),
@@ -3601,6 +3701,94 @@
                 listToTable: [ 'genres', 'tags' ],
                 integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
             }
+        },
+        // Collections pages
+        {
+            type: 'collections',
+            match: (path) => path.includes('/collections'),
+            buttons: [ { label: 'Show all Collections for User' } ],
+            tableMode: 'multi',
+            features: {
+                // The user-collections page has multiple <h3>-headed <table.tbl> siblings
+                // (one per collection category, e.g. "Own collections", "Subscribed
+                // collections").  groupByH3 tells the fetch loop to iterate all tables
+                // in tablesToProcess and walk backwards for each table's <h3> label
+                // instead of using the single-table generic else-branch.
+                groupByH3: true
+            }
+        },
+        {
+            type: 'collections-releases',
+            match: (path) => path.match(/\/collection\/[a-f0-9-]{36}/),
+            // labelFromH2: true instructs the button-creation code to read the <h2>
+            // header text that precedes the table and substitute it into the label so
+            // the button reads "Show all <EntityType> for Collections" dynamically.
+            // Collections pages can contain Releases, Events, Works, Recordings, etc.
+            buttons: [ { label: 'Show all Releases for Collections', labelFromH2: true } ],
+            // columnHeaderErasers: list of eraser tokens applied to <thead> cells before
+            // the header-scanning pass reads column names.  Currently supports '▴/▾'
+            // which extracts only the text from <a> link(s) inside a <th>, concatenating
+            // them with any literal text nodes between them (e.g. produces "Country/Date"
+            // from two links separated by a "/" text node).
+            columnHeaderErasers: [ '▴/▾' ],
+            // entityFeatures maps each possible H2 entity-type heading to its own
+            // feature set.  When the page is activated, resolveSeriesEntityFeatures()
+            // reads the live H2 text and picks the matching entry.  If no match is
+            // found the fallback first-key feature set is used so the page still works
+            // for unrecognised entity types.
+            entityFeatures: {
+                'Releases': {
+                    columnExtractors: [
+                        { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                        { sourceColumn: 'Tracks',       extractor: 'sumTracks',        syntheticColumns: ['Total Tracks'] },
+                        { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    injectedColumns: [ 'Relationships' ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                    collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'CAA' ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+                    addCAA: 'Release',
+                    extractMainColumn: 'Release'
+                },
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                    collapsableColumns: [ 'Artists' ],
+                    addEAA: 'Event',
+                    extractMainColumn: 'Event'
+                },
+                'Release groups': {
+                    columnExtractors: [
+                        { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                    ],
+                    tooltipColumns: [ 'Title', 'Artist', '---', ['Type', 'Year', '(', 'Releases', ')'] ],
+                    injectedColumns: [ 'Relationships' ],
+                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
+                    collapsableColumns: [ 'CAA' ],
+                    addCAA: 'Title',
+                    extractMainColumn: 'Title'
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+                    integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                    extractMainColumn: 'Name'
+                },
+                'Works': {
+                    extractMainColumn: 'Title'
+                }
+            },
+            tableMode: 'single'
         },
         // Search pages
         {
@@ -13613,6 +13801,12 @@ a { color: #1565c0; }`;
     // colIdx is resolved per-page during header scanning and reset to -1 between pages.
     let activeColumnErasers = [];
 
+    // Runtime header-eraser flag populated by buildActiveColumnHeaderErasers() in startFetchingProcess.
+    // When non-empty, applyColumnHeaderErasers() is called on the referenceTable <thead> BEFORE the
+    // header-scanning pass so that cleaned header text is what gets stored in headerNames[].
+    // Currently the only supported token is '▴/▾', which strips sort-link wrappers from <th> cells.
+    let activeColumnHeaderErasers = [];
+
     // Runtime render-multi-row list populated by buildActiveRenderMultiRowCols() in startFetchingProcess.
     // Each entry: { columnName, colIdx }
     // colIdx is resolved per-page during header scanning and reset to -1 between pages.
@@ -13668,22 +13862,14 @@ a { color: #1565c0; }`;
                 return clone.textContent.replace(/\s+/g, ' ').trim();
             };
 
-            // Prefer the H2 that immediately precedes the first table.tbl so that
-            // multi-section series pages (e.g. Releases + Events) use the correct
-            // section heading rather than the first H2 in the document.
+            // Prefer the H2 that immediately precedes the first table.tbl in
+            // document order, climbing the ancestor chain when the table is
+            // nested inside a container (e.g. a <form> on collection pages).
             let _sectionName = '';
             const _firstTable = document.querySelector('table.tbl');
             if (_firstTable) {
-                let _prev = _firstTable.previousElementSibling;
-                let _steps = 0;
-                while (_prev && _steps < 10) {
-                    if (_prev.tagName === 'H2') {
-                        _sectionName = _h2Text(_prev);
-                        break;
-                    }
-                    _prev = _prev.previousElementSibling;
-                    _steps++;
-                }
+                const _h2 = _findPrecedingH2(_firstTable);
+                if (_h2) _sectionName = _h2Text(_h2);
             }
             // Fallback: first H2 with a row-count stat (the main data H2)
             if (!_sectionName) {
@@ -20232,14 +20418,57 @@ a { color: #1565c0; }`;
      * @param {Object} baseDef - Base page definition from PAGE_DEFINITIONS
      */
     /**
+     * Finds the nearest `<h2>` element that precedes `startNode` in document
+     * order, climbing the ancestor chain when necessary.
+     *
+     * The plain `previousElementSibling` walk fails when the target node is
+     * nested inside a container (e.g. a `<form>`) whose own preceding sibling
+     * — not a child — is the H2 we want.  This function walks previous siblings
+     * at the current DOM level; if none is an H2, it climbs to the parent and
+     * repeats, up to `maxAncestorSteps` levels.  At each level it also searches
+     * up to `maxSiblingSteps` siblings backwards.
+     *
+     * Deliberately stops at the document body to avoid returning completely
+     * unrelated page-level H2s (e.g. sidebar headings).
+     *
+     * @param {Element} startNode         - Node to start the backwards search from.
+     * @param {number}  [maxAncestorSteps=5]  - Max ancestor levels to climb.
+     * @param {number}  [maxSiblingSteps=10]  - Max siblings to scan per level.
+     * @returns {HTMLHeadingElement|null}  Nearest preceding H2, or null.
+     */
+    function _findPrecedingH2(startNode, maxAncestorSteps = 5, maxSiblingSteps = 10) {
+        let _node = startNode;
+        for (let _a = 0; _a <= maxAncestorSteps; _a++) {
+            let _sib = _node.previousElementSibling;
+            let _s   = 0;
+            while (_sib && _s < maxSiblingSteps) {
+                if (_sib.tagName === 'H2') return _sib;
+                _sib = _sib.previousElementSibling;
+                _s++;
+            }
+            // Climb one level; stop at body
+            if (!_node.parentElement || _node.parentElement === document.body) break;
+            _node = _node.parentElement;
+        }
+        return null;
+    }
+
+    /**
      * Reads the live H2 heading that precedes the first table.tbl and returns
      * the bare entity-type name (e.g. "Releases", "Events", "Recordings").
      * Strips toggle icons and count badges using the same technique as the
      * labelFromH2 button-label substitution.
      *
+     * Uses _findPrecedingH2() which climbs the ancestor chain when the table is
+     * nested inside a container (e.g. a <form>) whose own preceding sibling —
+     * not a descendant — holds the entity-type H2.
+     *
+     * Used by resolveEntityFeaturesFromH2() for any pageType that carries an
+     * `entityFeatures` map (e.g. 'series-releases', 'collections-releases').
+     *
      * @returns {string}  Entity-type string, or '' when no suitable H2 is found.
      */
-    function _seriesH2EntityType() {
+    function _getH2EntityType() {
         const _clean = (h2) => {
             const clone = h2.cloneNode(true);
             clone.querySelectorAll('.mb-toggle-icon, .mb-row-count-stat').forEach(el => el.remove());
@@ -20247,13 +20476,8 @@ a { color: #1565c0; }`;
         };
         const firstTable = document.querySelector('table.tbl');
         if (firstTable) {
-            let el = firstTable.previousElementSibling;
-            let steps = 0;
-            while (el && steps < 10) {
-                if (el.tagName === 'H2') return _clean(el);
-                el = el.previousElementSibling;
-                steps++;
-            }
+            const h2 = _findPrecedingH2(firstTable);
+            if (h2) return _clean(h2);
         }
         const statH2 = document.querySelector('h2 .mb-row-count-stat');
         if (statH2) return _clean(statH2.closest('h2'));
@@ -20262,11 +20486,15 @@ a { color: #1565c0; }`;
         return '';
     }
 
+    // Backward-compatibility alias so any external call sites still resolve.
+    const _seriesH2EntityType = _getH2EntityType;
+
     /**
-     * For a 'series-releases' page definition that carries an `entityFeatures`
-     * map, resolves the correct per-entity feature set by matching the live H2
-     * text against the map keys.  Falls back to the 'Releases' feature set when
-     * no key matches (preserving backward-compatible behaviour).
+     * For page definitions that carry an `entityFeatures` map (e.g.
+     * 'series-releases', 'collections-releases'), resolves the correct
+     * per-entity feature set by matching the live H2 text against the map
+     * keys.  Falls back to the first key in the map when no exact match is
+     * found, preserving backward-compatible behaviour.
      *
      * The resolved features object is returned directly and must be merged into
      * the definition's `features` property by the caller.
@@ -20275,30 +20503,34 @@ a { color: #1565c0; }`;
      * @returns {object}    Resolved feature set (may be an empty object when the
      *                      definition has no `entityFeatures` map).
      */
-    function resolveSeriesEntityFeatures(def) {
+    function resolveEntityFeaturesFromH2(def) {
         if (!def.entityFeatures) return {};
-        const h2Type = _seriesH2EntityType();
-        Lib.debug('init', `resolveSeriesEntityFeatures: H2 entity type = "${h2Type}"`);
+        const h2Type = _getH2EntityType();
+        Lib.debug('init', `resolveEntityFeaturesFromH2: H2 entity type = "${h2Type}"`);
         if (h2Type && def.entityFeatures[h2Type]) {
-            Lib.debug('init', `resolveSeriesEntityFeatures: matched key "${h2Type}"`);
+            Lib.debug('init', `resolveEntityFeaturesFromH2: matched key "${h2Type}"`);
             return def.entityFeatures[h2Type];
         }
-        // Fallback: use 'Releases' features so existing behaviour is preserved.
+        // Fallback: use the first declared entity feature set.
         const fallbackKey = Object.keys(def.entityFeatures)[0] || '';
         if (fallbackKey) {
-            Lib.debug('init', `resolveSeriesEntityFeatures: no match for "${h2Type}", falling back to "${fallbackKey}"`);
+            Lib.debug('init', `resolveEntityFeaturesFromH2: no match for "${h2Type}", falling back to "${fallbackKey}"`);
             return def.entityFeatures[fallbackKey];
         }
         return {};
     }
 
+    // Backward-compatibility alias for code that still calls the old series-specific name.
+    const resolveSeriesEntityFeatures = resolveEntityFeaturesFromH2;
+
     async function startFetchingProcess(e, buttonConfig, baseDef) {
         // MERGE LOGIC: Combine base definition with button-specific overrides.
-        // For page types that carry an `entityFeatures` map (currently
-        // 'series-releases'), resolve the per-entity feature set from the live
-        // H2 heading FIRST, so the merged features reflect the actual entity type
-        // shown on the current page (Releases, Events, Recordings, etc.).
-        const entitySpecificFeatures = resolveSeriesEntityFeatures(baseDef);
+        // For page types that carry an `entityFeatures` map (e.g.
+        // 'series-releases', 'collections-releases'), resolve the per-entity
+        // feature set from the live H2 heading FIRST, so the merged features
+        // reflect the actual entity type shown on the current page
+        // (Releases, Events, Recordings, etc.).
+        const entitySpecificFeatures = resolveEntityFeaturesFromH2(baseDef);
 
         const mergedFeatures = {
             ...(entitySpecificFeatures),       // entity-specific overrides (e.g. series-releases)
@@ -20349,6 +20581,15 @@ a { color: #1565c0; }`;
         activeColumnErasers = buildActiveColumnErasers(activeDefinition);
         if (activeColumnErasers.length) {
             Lib.debug('init', `columnErasers configured: ${activeColumnErasers.map(e => `"${e.sourceColumn}" → [${e.erasers.join(', ')}]`).join('; ')}`);
+        }
+
+        // Build the column-header-eraser token list from the (root-level) definition property.
+        // Tokens are applied to <thead> cells of the referenceTable BEFORE the header-scanning
+        // pass, so cleaned names are what get stored in headerNames[] and matched against all
+        // feature configs (extractors, erasers, integerColumns, etc.).
+        activeColumnHeaderErasers = buildActiveColumnHeaderErasers(activeDefinition);
+        if (activeColumnHeaderErasers.length) {
+            Lib.debug('init', `columnHeaderErasers configured: [${activeColumnHeaderErasers.map(t => `"${t}"`).join(', ')}]`);
         }
 
         // Build the render-multi-row-cell list from the merged activeDefinition.
@@ -20849,6 +21090,15 @@ a { color: #1565c0; }`;
                     // (after the header loop), not here — this reset just clears stale values.
                     activeIntegerColumns.forEach(entry => { entry.colIdx = -1; });
 
+                    // ── Column-header erasure ─────────────────────────────────────────────
+                    // Strip sort-link wrappers (e.g. the ▴/▾ anchor markup on collection
+                    // pages) from every <th> BEFORE the scanning loop reads th.textContent.
+                    // This ensures headerNames[] and all subsequent feature lookups see the
+                    // plain column name (e.g. "Release") rather than the link+arrow markup.
+                    if (activeColumnHeaderErasers.length) {
+                        applyColumnHeaderErasers(referenceTable, activeColumnHeaderErasers);
+                    }
+
                     referenceTable.querySelectorAll('thead th').forEach((th, idx) => {
                         const txt = th.textContent.trim();
                         headerNames[idx] = txt; // Store the name
@@ -21166,23 +21416,25 @@ a { color: #1565c0; }`;
                             }
                         });
                     });
-                } else if (activeDefinition.features?.listToTable) {
-                    // ── listToTable multi-table mode ─────────────────────────────────────
-                    // Pages using features.listToTable (e.g. 'tags') have their <ul> lists
-                    // pre-converted to <table class="tbl"> by applyListToTable().  Each
-                    // converted table is a direct DOM sibling of the <h3> that labels its
-                    // section (e.g. "Genres", "Other tags").
+                } else if (activeDefinition.features?.listToTable || activeDefinition.features?.groupByH3) {
+                    // ── listToTable / groupByH3 multi-table mode ──────────────────────────
+                    // Two pageType variants share this branch:
                     //
-                    // The generic else-branch below only processes the FIRST table
-                    // (doc.querySelector) and derives group names from in-table <subh> rows,
-                    // neither of which works here.  This branch instead:
-                    //   1. Iterates ALL tables in tablesToProcess.
-                    //   2. For each table, walks backwards through DOM siblings (up to 5
-                    //      steps) to find the preceding <h3> whose text becomes the group
-                    //      name.  Falls back to 'Other' when no <h3> is found.
-                    //   3. Runs the full shared row-processing pipeline (erasers, extractors,
-                    //      MB-Name/Comment, synthetic columns, injected columns, integer
-                    //      column styling) so that all existing features remain available.
+                    // A) listToTable (e.g. 'tags', 'artist-tags'):
+                    //    <ul> lists were pre-converted to <table class="tbl"> by
+                    //    applyListToTable(); each table is a direct sibling of the
+                    //    <h3> that labels its section.
+                    //
+                    // B) groupByH3 (e.g. 'collections'):
+                    //    The page already contains native <table class="tbl"> elements
+                    //    each preceded by an <h3> category header (e.g. "Own
+                    //    collections", "Subscribed collections").  No list conversion
+                    //    is needed; the h3 backward-walk assigns group names directly.
+                    //
+                    // Both variants: iterate ALL tables in tablesToProcess, walk
+                    // backwards up to 5 siblings to find the preceding <h3>, use its
+                    // text as the group/category name (fallback: 'Other'), then run
+                    // the full shared row-processing pipeline.
                     tablesToProcess.forEach(table => {
                         // Walk backwards to find the h3 that labels this table section.
                         let _prev = table.previousElementSibling;

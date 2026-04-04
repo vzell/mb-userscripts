@@ -1,109 +1,107 @@
-﻿08:06:13.021 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.392+2026-04-04) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/user/vzell/collections 
-08:06:13.085 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/user/vzell/collections 
-08:06:13.086 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/user/vzell/collections 
-08:06:13.086 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /user/vzell/collections 
-08:06:13.086 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
-08:06:13.086 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
-08:06:13.086 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: collections 
-08:06:13.086 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
-08:06:13.087 [VZ-ShowAllEntityData: collections] 🚀 Initializing script for path: /user/vzell/collections
-08:06:13.087 [VZ-ShowAllEntityData: collections] 🚀 Cached entity name at init time: "vzell" 
-08:06:13.094 [VZ-ShowAllEntityData: collections] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
-08:06:13.094 [VZ-ShowAllEntityData: collections] 🚀 Blurred #headerid-query input on page entry 
-08:06:13.097 [VZ-ShowAllEntityData: collections] 📝 Changelog source: remote — replaced 0 local entries with 563 remote entries (fromCache=true) 
-08:06:14.361 [VZ-ShowAllEntityData: collections] 🧹 Signalling other scripts to stop... 
-08:06:14.364 [VZ-ShowAllEntityData: collections] 📥 Starting fetch process... null
-08:06:14.365 [VZ-ShowAllEntityData: collections] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
-08:06:14.365 [VZ-ShowAllEntityData: collections] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
-08:06:14.365 [VZ-ShowAllEntityData: collections] 📥 Total pages to fetch: 1 
-08:06:14.366 [VZ-ShowAllEntityData: collections] 🧹 Starting clutter element removal. 
-08:06:14.368 [VZ-ShowAllEntityData: collections] 📥 Page 1 is current page. Using existing document. 
-08:06:14.368 [VZ-ShowAllEntityData: collections] 📝 Page 1: No li.show-all elements found — nothing to expand. 
-08:06:14.368 [VZ-ShowAllEntityData: collections] 📝 No targetHeader provided; returning all tables found in container. 
-08:06:14.369 [VZ-ShowAllEntityData: collections] 📝 parseDocumentForTables: Found 3 total tables. Target header filter: "none" 
-08:06:14.369 [VZ-ShowAllEntityData: collections] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
-08:06:14.369 [VZ-ShowAllEntityData: collections] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: collections 
-08:06:14.370 [VZ-ShowAllEntityData: collections] 📝 Table body found. Processing child nodes. Total nodes: 3 
-08:06:14.372 [VZ-ShowAllEntityData: collections] 📥 Page 1/1 processed in 0.00s. Rows on page: 3. Total: 3 
-08:06:14.373 [VZ-ShowAllEntityData: collections] 📥   Summary: Unknown: +3 (Total: 3) 
-08:06:14.373 [VZ-ShowAllEntityData: collections] 🎨 DOM rendering starting... 
-08:06:14.373 [VZ-ShowAllEntityData: collections] 🎨 Starting updateH2Count: filtered=3, total=3, absoluteTotal=null 
-08:06:14.374 [VZ-ShowAllEntityData: collections] 🎨 Searching for target H2. Current pageType: collections 
-08:06:14.374 [VZ-ShowAllEntityData: collections] 🎨 Target H2 not found by specific type, falling back to document position logic. 
-08:06:14.374 [VZ-ShowAllEntityData: collections] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
-08:06:14.374 [VZ-ShowAllEntityData: collections] 🎨 Target element identified: "My collections..." 
-08:06:14.375 [VZ-ShowAllEntityData: collections] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
-08:06:14.375 [VZ-ShowAllEntityData: collections] 🎨 Updated header/target My collections count: (3) 
-08:06:14.376 [VZ-ShowAllEntityData: collections] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
-08:06:14.377 [VZ-ShowAllEntityData: collections] 🎨 Cloning table head for template. 
-08:06:14.378 [VZ-ShowAllEntityData: collections] 🧹 cleanupHeaders() called → existing headers=[Collection | Type | Events | Collaborators | Subscribed | Privacy | Actions] 
-08:06:14.378 [VZ-ShowAllEntityData: collections] 🧹 No columns were matched for removal based on current settings. 
-08:06:14.379 [VZ-ShowAllEntityData: collections] 🎨 Searching for target H2. Current pageType: collections 
-08:06:14.379 [VZ-ShowAllEntityData: collections] 🎨 Target H2 not found by specific type, falling back to document position logic. 
-08:06:14.379 [VZ-ShowAllEntityData: collections] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
-08:06:14.379 [VZ-ShowAllEntityData: collections] 🎨 No query provided; performing initial cleanup of existing elements. 
-08:06:14.379 [VZ-ShowAllEntityData: collections] 🎨  Injecting master toggle button and filter container after target header My collections(3). 
-08:06:14.380 [VZ-ShowAllEntityData: collections] 🎨 Processing group: "Unknown" with 3 rows. 
-08:06:14.381 [VZ-ShowAllEntityData: collections] 🎨 Creating new table and H3 for group "Unknown". 
-08:06:14.381 [VZ-ShowAllEntityData: collections] 🎨 Group "Unknown" auto-expand status: true (singleSubTable=true) 
-08:06:14.389 [VZ-ShowAllEntityData: collections] 📝 initBarcodeHighlight: processed table 0 
-08:06:14.390 [VZ-ShowAllEntityData: collections] 📝 initCaaPics: request queue created (concurrency=4) 
-08:06:14.390 [VZ-ShowAllEntityData: collections] 📝 initCAAPics: table 0 has no CAA column and no addCAA feature — skipping 
-08:06:14.390 [VZ-ShowAllEntityData: collections] 📝 initCAAPics: processed 0 table(s) with CAA column 
-08:06:14.391 [VZ-ShowAllEntityData: collections] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
-08:06:14.392 [VZ-ShowAllEntityData: collections] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
-08:06:14.392 [VZ-ShowAllEntityData: collections] 📝 initEAAPics: processed 0 table(s) with EAA column 
-08:06:14.392 [VZ-ShowAllEntityData: collections] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
-08:06:14.393 [VZ-ShowAllEntityData: collections] 📝 initCAAInlinePics: no addCAA column configured for this page type — skipping 
-08:06:14.394 [VZ-ShowAllEntityData: collections] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
-08:06:14.397 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
-08:06:14.398 [VZ-ShowAllEntityData: collections] 🎨 Finished renderGroupedTable. 
-08:06:14.399 [VZ-ShowAllEntityData: collections] 📝 Stats snapshot: 3 rows, 0 CAA links, 7 original + 0 extracted + 0 derived + 0 injected cols 
-08:06:14.400 [VZ-ShowAllEntityData: collections] 🎨 initTreleasesObserver: watching tbody (childList+attributes) 
-08:06:14.401 [VZ-ShowAllEntityData: collections] 🧹 Running final cleanup... 
-08:06:14.401 [VZ-ShowAllEntityData: collections] 🧹 No Sanojjonas elements found during final cleanup. 
-08:06:14.401 [VZ-ShowAllEntityData: collections] 🧹 Final cleanup complete: No consecutive <br> tags found. 
-08:06:14.402 [VZ-ShowAllEntityData: collections] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
-08:06:14.402 [VZ-ShowAllEntityData: collections] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
-08:06:14.402 [VZ-ShowAllEntityData: collections] 🎨 Initializing collapsible H2 headers... 
-08:06:14.403 [VZ-ShowAllEntityData: collections] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
-08:06:14.403 [VZ-ShowAllEntityData: collections] 🖥️ Auto-resize button added to controls 
-08:06:14.404 [VZ-ShowAllEntityData: collections] 📝 Made 7 columns resizable 
-08:06:14.406 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
-08:06:14.409 [VZ-ShowAllEntityData: collections] 🖥️ Column visibility toggle added to controls 
-08:06:14.410 [VZ-ShowAllEntityData: collections] 🖥️ No Barcode column detected — barcode highlight button suppressed 
-08:06:14.411 [VZ-ShowAllEntityData: collections] 🖥️ Density control button added to controls 
-08:06:14.411 [VZ-ShowAllEntityData: collections] 🖥️ Statistics button added to controls 
-08:06:14.412 [VZ-ShowAllEntityData: collections] 📝 Keyboard shortcuts initialized 
-08:06:14.413 [VZ-ShowAllEntityData: collections] 🖥️ Shortcuts help button already exists, skipping 
-08:06:14.414 [VZ-ShowAllEntityData: collections] 🖥️ Export button with dropdown menu added to controls 
-08:06:14.415 [VZ-ShowAllEntityData: collections] 📝 initBarcodeHighlight: processed table 0 
-08:06:14.415 [VZ-ShowAllEntityData: collections] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
-08:06:14.416 [VZ-ShowAllEntityData: collections] 📝 Unicode character picker initialised 
-08:06:14.417 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
-08:06:14.417 [VZ-ShowAllEntityData: collections] 🎨 DOM rendering finished in 43.20ms 
-08:06:14.417 [VZ-ShowAllEntityData: collections] ✅ Process complete. Final Row Count: 3. Total Time: 0.05s 
-08:06:14.425 [VZ-ShowAllEntityData: collections] 📝 sa_auto_resize_columns: triggering auto-resize on load 
-08:06:14.426 [VZ-ShowAllEntityData: collections] 📝 Auto-resizing 1 table(s)... 
-08:06:14.432 [VZ-ShowAllEntityData: collections] 📝 Header 0: "Collection ⇅▲▼3📊" = 131px 
-08:06:14.434 [VZ-ShowAllEntityData: collections] 📝 Header 1: "Type ⇅▲▼3📊" = 101px 
-08:06:14.435 [VZ-ShowAllEntityData: collections] 📝 Header 2: "Events ⇅▲▼2📊" = 112px 
-08:06:14.436 [VZ-ShowAllEntityData: collections] 📝 Header 3: "Collaborators ⇅▲▼1📊" = 153px 
-08:06:14.437 [VZ-ShowAllEntityData: collections] 📝 Header 4: "Subscribed ⇅▲▼1📊" = 138px 
-08:06:14.439 [VZ-ShowAllEntityData: collections] 📝 Header 5: "Privacy ⇅▲▼2📊" = 116px 
-08:06:14.440 [VZ-ShowAllEntityData: collections] 📝 Header 6: "Actions ⇅▲▼1📊" = 116px 
-08:06:14.451 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 0: 151px min-width (visible) 
-08:06:14.452 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 1: 130px min-width (visible) 
-08:06:14.452 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 2: 132px min-width (visible) 
-08:06:14.452 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 3: 173px min-width (visible) 
-08:06:14.452 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 4: 158px min-width (visible) 
-08:06:14.452 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 5: 136px min-width (visible) 
-08:06:14.453 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 6: 136px min-width (visible) 
-08:06:14.453 [VZ-ShowAllEntityData: collections] 📝 Made 7 columns resizable 
-08:06:14.453 [VZ-ShowAllEntityData: collections] 📝 Table 0: Resized 7 columns, total width: 1016px 
-08:06:14.453 [VZ-ShowAllEntityData: collections] 📝 Auto-resize complete: 7 visible columns across 1 table(s) in 27ms 
-08:06:14.464 [VZ-ShowAllEntityData: collections] 📝 _artOpenIdb: database opened successfully 
-08:06:14.566 [VZ-ShowAllEntityData: collections] 🖥️ Auto-focused global filter input after final render 
-08:06:14.575 [VZ-ShowAllEntityData: collections] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
-08:06:18.879 [VZ-ShowAllEntityData: collections] 🎨 Toggling table for "Unknown". New state: hidden 
-08:06:19.503 [VZ-ShowAllEntityData: collections] 🎨 Toggling table for "Unknown". New state: visible 
+﻿12:36:13.804 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.397+2026-04-04) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/user/vzell/collections 
+12:36:13.804 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/user/vzell/collections 
+12:36:13.805 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/user/vzell/collections 
+12:36:13.805 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /user/vzell/collections 
+12:36:13.806 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+12:36:13.806 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+12:36:13.807 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: collections 
+12:36:13.808 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+12:36:13.808 [VZ-ShowAllEntityData: collections] 🚀 Initializing script for path: /user/vzell/collections
+12:36:13.809 [VZ-ShowAllEntityData: collections] 🚀 Cached entity name at init time: "vzell" 
+12:36:13.815 [VZ-ShowAllEntityData: collections] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+12:36:13.816 [VZ-ShowAllEntityData: collections] 🚀 Blurred #headerid-query input on page entry 
+12:36:13.819 [VZ-ShowAllEntityData: collections] 📝 Changelog source: remote — replaced 0 local entries with 571 remote entries (fromCache=true) 
+12:36:18.729 [VZ-ShowAllEntityData: collections] 🧹 Signalling other scripts to stop... 
+12:36:18.730 [VZ-ShowAllEntityData: collections] 📥 Starting fetch process... null
+12:36:18.730 [VZ-ShowAllEntityData: collections] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+12:36:18.730 [VZ-ShowAllEntityData: collections] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+12:36:18.731 [VZ-ShowAllEntityData: collections] 📥 Total pages to fetch: 1 
+12:36:18.731 [VZ-ShowAllEntityData: collections] 🧹 Starting clutter element removal. 
+12:36:18.733 [VZ-ShowAllEntityData: collections] 📥 Page 1 is current page. Using existing document. 
+12:36:18.735 [VZ-ShowAllEntityData: collections] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+12:36:18.735 [VZ-ShowAllEntityData: collections] 📝 No targetHeader provided; returning all tables found in container. 
+12:36:18.736 [VZ-ShowAllEntityData: collections] 📝 parseDocumentForTables: Found 3 total tables. Target header filter: "none" 
+12:36:18.736 [VZ-ShowAllEntityData: collections] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+12:36:18.739 [VZ-ShowAllEntityData: collections] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: collections 
+12:36:18.739 [VZ-ShowAllEntityData: collections] 📝 Table body found. Processing child nodes. Total nodes: 3 
+12:36:18.741 [VZ-ShowAllEntityData: collections] 📥 Page 1/1 processed in 0.01s. Rows on page: 3. Total: 3 
+12:36:18.741 [VZ-ShowAllEntityData: collections] 📥   Summary: Unknown: +3 (Total: 3) 
+12:36:18.741 [VZ-ShowAllEntityData: collections] 🎨 DOM rendering starting... 
+12:36:18.742 [VZ-ShowAllEntityData: collections] 🎨 Starting updateH2Count: filtered=3, total=3, absoluteTotal=null 
+12:36:18.742 [VZ-ShowAllEntityData: collections] 🎨 Searching for target H2. Current pageType: collections 
+12:36:18.743 [VZ-ShowAllEntityData: collections] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+12:36:18.743 [VZ-ShowAllEntityData: collections] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+12:36:18.743 [VZ-ShowAllEntityData: collections] 🎨 Target element identified: "My collections..." 
+12:36:18.744 [VZ-ShowAllEntityData: collections] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+12:36:18.744 [VZ-ShowAllEntityData: collections] 🎨 Updated header/target My collections count: (3) 
+12:36:18.746 [VZ-ShowAllEntityData: collections] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
+12:36:18.747 [VZ-ShowAllEntityData: collections] 🎨 Cloning table head for template. 
+12:36:18.748 [VZ-ShowAllEntityData: collections] 🧹 cleanupHeaders() called → existing headers=[Collection | Type | Events | Collaborators | Subscribed | Privacy | Actions] 
+12:36:18.749 [VZ-ShowAllEntityData: collections] 🧹 No columns were matched for removal based on current settings. 
+12:36:18.750 [VZ-ShowAllEntityData: collections] 🎨 Searching for target H2. Current pageType: collections 
+12:36:18.750 [VZ-ShowAllEntityData: collections] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+12:36:18.751 [VZ-ShowAllEntityData: collections] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+12:36:18.752 [VZ-ShowAllEntityData: collections] 🎨 No query provided; performing initial cleanup of existing elements. 
+12:36:18.753 [VZ-ShowAllEntityData: collections] 🎨  Injecting master toggle button and filter container after target header My collections(3). 
+12:36:18.759 [VZ-ShowAllEntityData: collections] 🎨 Processing group: "Unknown" with 3 rows. 
+12:36:18.759 [VZ-ShowAllEntityData: collections] 🎨 Creating new table and H3 for group "Unknown". 
+12:36:18.765 [VZ-ShowAllEntityData: collections] 🎨 Group "Unknown" auto-expand status: true (singleSubTable=true) 
+12:36:18.779 [VZ-ShowAllEntityData: collections] 📝 initBarcodeHighlight: processed table 0 
+12:36:18.779 [VZ-ShowAllEntityData: collections] 📝 initCaaPics: request queue created (concurrency=4) 
+12:36:18.781 [VZ-ShowAllEntityData: collections] 📝 initCAAPics: table 0 has no CAA column and no addCAA feature — skipping 
+12:36:18.781 [VZ-ShowAllEntityData: collections] 📝 initCAAPics: processed 0 table(s) with CAA column 
+12:36:18.782 [VZ-ShowAllEntityData: collections] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+12:36:18.783 [VZ-ShowAllEntityData: collections] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
+12:36:18.784 [VZ-ShowAllEntityData: collections] 📝 initEAAPics: processed 0 table(s) with EAA column 
+12:36:18.784 [VZ-ShowAllEntityData: collections] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+12:36:18.785 [VZ-ShowAllEntityData: collections] 📝 initCAAInlinePics: no addCAA column configured for this page type — skipping 
+12:36:18.785 [VZ-ShowAllEntityData: collections] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+12:36:18.790 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+12:36:18.791 [VZ-ShowAllEntityData: collections] 🎨 Finished renderGroupedTable. 
+12:36:18.792 [VZ-ShowAllEntityData: collections] 📝 Stats snapshot: 3 rows, 0 CAA links, 7 original + 0 extracted + 0 derived + 0 injected cols 
+12:36:18.793 [VZ-ShowAllEntityData: collections] 🎨 initTreleasesObserver: watching tbody (childList+attributes) 
+12:36:18.795 [VZ-ShowAllEntityData: collections] 🧹 Running final cleanup... 
+12:36:18.796 [VZ-ShowAllEntityData: collections] 🧹 No Sanojjonas elements found during final cleanup. 
+12:36:18.796 [VZ-ShowAllEntityData: collections] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+12:36:18.796 [VZ-ShowAllEntityData: collections] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+12:36:18.797 [VZ-ShowAllEntityData: collections] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+12:36:18.797 [VZ-ShowAllEntityData: collections] 🎨 Initializing collapsible H2 headers... 
+12:36:18.799 [VZ-ShowAllEntityData: collections] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+12:36:18.800 [VZ-ShowAllEntityData: collections] 🖥️ Auto-resize button added to controls 
+12:36:18.801 [VZ-ShowAllEntityData: collections] 📝 Made 7 columns resizable 
+12:36:18.806 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+12:36:18.809 [VZ-ShowAllEntityData: collections] 🖥️ Column visibility toggle added to controls 
+12:36:18.810 [VZ-ShowAllEntityData: collections] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+12:36:18.812 [VZ-ShowAllEntityData: collections] 🖥️ Density control button added to controls 
+12:36:18.812 [VZ-ShowAllEntityData: collections] 🖥️ Statistics button added to controls 
+12:36:18.814 [VZ-ShowAllEntityData: collections] 📝 Keyboard shortcuts initialized 
+12:36:18.814 [VZ-ShowAllEntityData: collections] 🖥️ Shortcuts help button already exists, skipping 
+12:36:18.816 [VZ-ShowAllEntityData: collections] 🖥️ Export button with dropdown menu added to controls 
+12:36:18.817 [VZ-ShowAllEntityData: collections] 📝 initBarcodeHighlight: processed table 0 
+12:36:18.818 [VZ-ShowAllEntityData: collections] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
+12:36:18.819 [VZ-ShowAllEntityData: collections] 📝 Unicode character picker initialised 
+12:36:18.822 [VZ-ShowAllEntityData: collections] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+12:36:18.823 [VZ-ShowAllEntityData: collections] 🎨 DOM rendering finished in 78.10ms 
+12:36:18.824 [VZ-ShowAllEntityData: collections] ✅ Process complete. Final Row Count: 3. Total Time: 0.09s 
+12:36:18.838 [VZ-ShowAllEntityData: collections] 📝 sa_auto_resize_columns: triggering auto-resize on load 
+12:36:18.839 [VZ-ShowAllEntityData: collections] 📝 Auto-resizing 1 table(s)... 
+12:36:18.844 [VZ-ShowAllEntityData: collections] 📝 Header 0: "Collection ⇅▲▼3📊" = 131px 
+12:36:18.847 [VZ-ShowAllEntityData: collections] 📝 Header 1: "Type ⇅▲▼3📊" = 101px 
+12:36:18.849 [VZ-ShowAllEntityData: collections] 📝 Header 2: "Events ⇅▲▼2📊" = 112px 
+12:36:18.850 [VZ-ShowAllEntityData: collections] 📝 Header 3: "Collaborators ⇅▲▼1📊" = 153px 
+12:36:18.852 [VZ-ShowAllEntityData: collections] 📝 Header 4: "Subscribed ⇅▲▼1📊" = 138px 
+12:36:18.854 [VZ-ShowAllEntityData: collections] 📝 Header 5: "Privacy ⇅▲▼2📊" = 116px 
+12:36:18.857 [VZ-ShowAllEntityData: collections] 📝 Header 6: "Actions ⇅▲▼1📊" = 116px 
+12:36:18.868 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 0: 151px min-width (visible) 
+12:36:18.871 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 1: 130px min-width (visible) 
+12:36:18.872 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 2: 132px min-width (visible) 
+12:36:18.872 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 3: 173px min-width (visible) 
+12:36:18.873 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 4: 158px min-width (visible) 
+12:36:18.874 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 5: 136px min-width (visible) 
+12:36:18.875 [VZ-ShowAllEntityData: collections] 📝 Table 0, Column 6: 136px min-width (visible) 
+12:36:18.876 [VZ-ShowAllEntityData: collections] 📝 Made 7 columns resizable 
+12:36:18.877 [VZ-ShowAllEntityData: collections] 📝 Table 0: Resized 7 columns, total width: 1016px 
+12:36:18.879 [VZ-ShowAllEntityData: collections] 📝 Auto-resize complete: 7 visible columns across 1 table(s) in 38ms 
+12:36:18.897 [VZ-ShowAllEntityData: collections] 📝 _artOpenIdb: database opened successfully 
+12:36:18.969 [VZ-ShowAllEntityData: collections] 🖥️ Auto-focused global filter input after final render 
+12:36:19.073 [VZ-ShowAllEntityData: collections] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
