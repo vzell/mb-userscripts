@@ -66806,46 +66806,60 @@ remove the double misplaced JSDoc comment from the function "_applyCollapseState
 add n action buttons like for "Artist-ReleaseGroups" pageType for the different collection types 
 
 
-* TODO add collections support
+* TODO add "/collections" support
 
-1.)
-
-remove
-
-#+begin_example
-<span style="opacity:0.4">▴/▾</span>
-#+end_example
-
-from the headers
-
-2.)
+Add support for collections in our userscript, e.g. for URLs like
 
 https://musicbrainz.org/user/vzell/collections
 
-add the following new pageType definition to "const pageDefinitions"
+and e.g.
+
+https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
+
+1.)
+
+Add the userscript "match" directive
 
 #+begin_example
 // @match        *://*.musicbrainz.org/user/*/collections
 #+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+2.)
+
+change the userscript "include" directive
+
+from
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+to
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+#+end_example
+
+3.)
+
+add the following new pageType definition to "const pageDefinitions"
 
 #+begin_example
         // Collections pages
         {
             type: 'collections',
             match: (path) => path.includes('/collections'),
-            buttons: [ { label: 'Show all Collection results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Collection'
-            }
+            buttons: [ { label: 'Show all Collections for User' } ],
+            tableMode: 'multi'
         },
 #+end_example
 
-https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
-
-#+begin_example
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-#+end_example
 
 #+begin_example
         // Collection pages
@@ -66864,8 +66878,8 @@ https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
             // works for unrecognised entity types.
             entityFeatures: {
                 'Releases': {
-                    columnErasers: [
-                        { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                    columnHeaderErasers: [
+                        { sourceColumns: [ 'Release', 'Artist', 'Format', 'Tracks', 'Country/Date', 'Label', 'Catalog#', 'Barcode' ], erasers: ['▴/▾'] }
                     ],
                     columnExtractors: [
                         { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
@@ -66887,6 +66901,9 @@ https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
                     extractMainColumn: 'Release'
                 },
                 'Events': {
+                    columnHeaderErasers: [
+                        { sourceColumns: [ 'Event', 'Type', 'Date' ], erasers: ['▴/▾'] }
+                    ],
                     columnExtractors: [
                         { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
                         { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] }
@@ -66900,8 +66917,8 @@ https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
                     extractMainColumn: 'Event'
                 },
                 'Release groups': {
-                    columnErasers: [
-                        { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                    columnHeaderErasers: [
+                        { sourceColumns: [ 'Year', 'Title', 'Artist' ], erasers: ['▴/▾'] }
                     ],
                     columnExtractors: [
                         { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
@@ -66914,6 +66931,9 @@ https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
                     extractMainColumn: 'Title'
                 },
                 'Recordings': {
+                    columnHeaderErasers: [
+                        { sourceColumns: [ 'Name', 'Artist' ], erasers: ['▴/▾'] }
+                    ],
                     columnExtractors: [
                         { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
                     ],
@@ -66921,6 +66941,9 @@ https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
                     extractMainColumn: 'Name'
                 },
                 'Works': {
+                    columnHeaderErasers: [
+                        { sourceColumns: [ 'Work' ], erasers: ['▴/▾'] }
+                    ],
                     extractMainColumn: 'Title'
                 }
             },
@@ -66928,11 +66951,362 @@ https://musicbrainz.org/collection/00ad3f94-4ac2-4c6d-82a6-8838251c29d8
         },
 #+end_example
 
-* TODO add tags support
+5.)
+
+mirror the functionality from the "function buildActiveColumnErasers(def)" to
+build an equivalent list for the "columnHeaderErasers".
+
+The implementation for the "erasers: ['▴/▾']" should be to extract just the text from the "<a href=" container
+and remove everything else from the header
+
+So for example for the URL https://musicbrainz.org/collection/f90a1473-da79-4daf-b5c2-419023b147dd
+the following configuration block would apply
+
+#+begin_example
+            entityFeatures: {
+                'Releases': {
+                    columnHeaderErasers: [
+                        { sourceColumns: [ 'Release', 'Artist', 'Format', 'Tracks', 'Country/Date', 'Label', 'Catalog#', 'Barcode' ], erasers: ['▴/▾'] }
+                    ],
+...
+#+end_example
+
+and the following "<th>" header definition
+
+#+begin_example
+<th colspan="1">
+  <a href="https://musicbrainz.org/collection/f90a1473-da79-4daf-b5c2-419023b147dd?order=name">Release
+    <!-- -->
+    <span style="opacity:0.4">▴/▾
+    </span>
+  </a>
+</th>
+#+end_example
+
+should be transformed to just
+
+#+begin_example
+<th colspan="1">
+Release
+</th>
+#+end_example
+
+The exception is the structure
+
+#+begin_example
+<th colspan="1">
+  <a href="https://musicbrainz.org/collection/f90a1473-da79-4daf-b5c2-419023b147dd?order=country">Country
+    <!-- -->
+    <span style="opacity:0.4">▴/▾
+    </span>
+  </a>/
+  <a href="https://musicbrainz.org/collection/f90a1473-da79-4daf-b5c2-419023b147dd?order=date">Date
+    <!-- -->
+    <span style="opacity:0.4">▴/▾
+    </span>
+  </a>
+</th>
+#+end_example
+
+which should end up as
+
+#+begin_example
+<th colspan="1">
+Country/Date
+</th>
+#+end_example
+
+
+* TODO add "/tags" support
+** initial
+
+Add support for tags in our userscript, e.g. for URLs like
 
 https://musicbrainz.org/user/vzell/tags
 
-change the <li> structure into a proper table first
+1.)
+
+Add the userscript "match" directive
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/tags
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+2.)
+
+add the following new pageType definition to "const pageDefinitions"
+
+#+begin_example
+        // Tags pages
+        {
+            type: 'tags',
+            match: (path) => path.includes('/tags'),
+            buttons: [ { label: 'Show all Tags for User' } ],
+            tableMode: 'single',
+            features: {
+                listToTable: [ 'genres', 'tags' ],
+                extractMainColumn: 'Tags'
+            }
+        },
+#+end_example
+
+3.)
+
+To support URLs of type e.g. https://musicbrainz.org/user/vzell/tags
+
+implement for the "listToTable" feature a function that searches for all h3 header lines and checks the "<div
+id=<value>" container after it. If the "value" of the "id" matches an array element of the "listToTable" parameter
+the "<ul>" structure e.g.
+
+#+begin_example
+<div id="genres">
+  <ul class="genre-list">
+    <li class="odd">
+      <a href="/user/vzell/tag/acoustic%20rock">acoustic rock
+      </a>
+      <span class="tag-vote-buttons">
+	<span class="tag-count">2
+	</span>
+      </span>
+    </li>
+    <li class="even">
+      <a href="/user/vzell/tag/hard%20rock">hard rock
+      </a>
+      <span class="tag-vote-buttons">
+	<span class="tag-count">1
+	</span>
+      </span>
+    </li>
+    <li class="odd">
+      <a href="/user/vzell/tag/interview">interview
+      </a>
+      <span class="tag-vote-buttons">
+	<span class="tag-count">30
+	</span>
+      </span>
+    </li>
+    <li class="even">
+      <a href="/user/vzell/tag/pop">pop
+      </a>
+      <span class="tag-vote-buttons">
+	<span class="tag-count">10
+	</span>
+      </span>
+    </li>
+    <li class="odd">
+      <a href="/user/vzell/tag/rock">rock
+      </a>
+      <span class="tag-vote-buttons">
+	<span class="tag-count">15
+	</span>
+      </span>
+    </li>
+  </ul>
+</div>
+#+end_example
+
+must be changed into a proper two-column table first, so that our script can process it.
+
+a.)
+
+The name of the first column should be derived from the id value of
+
+#+begin_example
+<div id="genres">
+#+end_example
+
+but in singular and capitalized, so the result should be
+
+#+begin_example
+Genre
+#+end_example
+
+b.)
+
+the name of the second column is always "Tag count"
+
+c.)
+
+the column values should be extracted from the "<li>" elements, e.g. the list element
+
+#+begin_example
+    <li class="odd">
+      <a href="/user/vzell/tag/acoustic%20rock">acoustic rock
+      </a>
+      <span class="tag-vote-buttons">
+	<span class="tag-count">2
+	</span>
+      </span>
+    </li>
+#+end_example
+
+would become a table row like
+
+#+begin_example
+<tr class="odd">
+  <td>
+      <a href="/user/vzell/tag/acoustic%20rock">acoustic rock
+      </a>
+  </td>
+  <td>
+      <span class="tag-vote-buttons">
+	<span class="tag-count">2
+	</span>
+      </span>
+  </td>
+</tr>
+#+end_example
+
+** bugs
+
+some bugs:
+
+1.)
+
+change the definition for the pageType "type: 'tags'" from
+
+#+begin_example
+        // Tags pages
+        {
+            type: 'tags',
+            match: (path) => path.includes('/tags'),
+            buttons: [ { label: 'Show all Tags for User' } ],
+            tableMode: 'single',
+            features: {
+                listToTable: [ 'genres', 'tags' ],
+                extractMainColumn: 'Tags'
+            }
+        },
+#+end_example
+
+to
+
+#+begin_example
+        // Tags pages
+        {
+            type: 'tags',
+            match: (path) => path.includes('/tags'),
+            buttons: [ { label: 'Show all Tags for User' } ],
+            tableMode: 'multi',
+            features: {
+                listToTable: [ 'genres', 'tags' ],
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+            }
+        },
+#+end_example
+
+** bugs
+
+some bugs:
+
+1.)
+
+in the function "function applyListToTable(def)" change the current implementation from
+
+#+begin_example
+     *  Before:
+     *     <h3>Genres</h3>
+     *     <div id="genres">
+     *       <ul class="genre-list">
+     *         <li class="odd">
+     *           <a href="/user/vzell/tag/rock">rock</a>
+     *           <span class="tag-vote-buttons"><span class="tag-count">15</span></span>
+     *         </li>
+     *         …
+     *       </ul>
+     *     </div>
+     *
+     *   After:
+     *     <h3>Genres</h3>
+     *     <div id="genres">
+     *       <table class="tbl">
+     *         <thead><tr><th>Genre</th><th>Tag count</th></tr></thead>
+     *         <tbody>
+     *           <tr class="odd">
+     *             <td><a href="/user/vzell/tag/rock">rock</a></td>
+     *             <td><span class="tag-vote-buttons"><span class="tag-count">15</span></span></td>
+     *           </tr>
+     *           …
+     *         </tbody>
+     *       </table>
+     *     </div>
+#+end_example
+
+to
+
+#+begin_example
+     *  Before:
+     *     <h3>Genres</h3>
+     *     <div id="genres">
+     *       <ul class="genre-list">
+     *         <li class="odd">
+     *           <a href="/user/vzell/tag/rock">rock</a>
+     *           <span class="tag-vote-buttons"><span class="tag-count">15</span></span>
+     *         </li>
+     *         …
+     *       </ul>
+     *     </div>
+     *
+     *   After:
+     *     <h3>Genres</h3>
+     *       <table class="tbl">
+     *         <thead><tr><th>Genre</th><th>Tag count</th></tr></thead>
+     *         <tbody>
+     *           <tr class="odd">
+     *             <td><a href="/user/vzell/tag/rock">rock</a></td>
+     *             <td><span class="tag-vote-buttons"><span class="tag-count">15</span></span></td>
+     *           </tr>
+     *           …
+     *         </tbody>
+     *       </table>
+#+end_example
+
+So do not enclose the "<table>" in a "<div>"
+
+** bugs
+
+There is still a bug:
+
+After converting the "<ul>" structures to proper table definitions, we should have the case of multiple h3-grouped
+sub-tables, so basically we should be in the "tableMode: 'multi'" case and on
+e.g. https://musicbrainz.org/user/vzell/tags I would assume to have two h3 headers ("Genres" and "Other tags") each with
+a direct table sibling.
+
+Still the final rendered page shows just one rendered table (the first one) below an h2 header named "Unknown"
+
+See also the uploaded console debug log "debugTags" and the uploaded final rendered HTML page "Editor “vzell” - Tags - MusicBrainz.html"
+
+Please fix.
+
+
+* add "/tag/ support
+
+add support to MusicBrainz entityPages to support the "tags" tab, e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/tags
+
+1.)
+
+change the userscript "include" directive
+
+from
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
+#+end_example
+
+to
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags)(?:\?.*)?$/
+#+end_example
+
+2.)
+
 
 
 * TODO make zebra striping configurable
@@ -67091,29 +67465,7 @@ from the final rendered page (if present)
 
 add a changelog entry to the beginning of the uploaded file "ShowAllEntityData_CHANGELOG.json"
 
-
-* TODO ghosting bug still present also checkbox column removed for date column in first column
-
-ghosting bug still present also checkbox column removed for date column in first column
-
-#+begin_example
-Year - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
-Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
-
-#, Year - https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
-#+end_example
-
-but it works force
-
-#+begin_example
-Date - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
-#+end_example
-
-
-* TODO cleanup "Show Various Artist releases instead" on "artist-releases" pages
+* DONE cleanup "Show Various Artist releases instead" on "artist-releases" pages
 ** initial
 
 small fixes
@@ -67226,3 +67578,25 @@ so that it looks like
 
 the "async function initRelationshipsColumn()" is NOT working for the pageType "artist-works". It looks like it doesn't
 yet support "work" MBIDs.
+
+* TODO ghosting bug still present also checkbox column removed for date column in first column
+
+ghosting bug still present also checkbox column removed for date column in first column
+
+#+begin_example
+Year - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
+Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
+
+#, Year - https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
+#+end_example
+
+but it works force
+
+#+begin_example
+Date - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+#+end_example
+
+

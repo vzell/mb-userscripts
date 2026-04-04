@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.388+2026-04-03
+// @version      9.99.392+2026-04-04
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -17,6 +17,7 @@
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels)(?:\?.*)?$/
 // @match        *://*.musicbrainz.org/search?query=*
 // @match        *://*.musicbrainz.org/user/*/subscriptions/*
+// @match        *://*.musicbrainz.org/user/*/tags
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
 // @connect      eventartarchive.org
@@ -2953,6 +2954,121 @@
     }
 
     /**
+     * Converts `<ul>`-based tag/genre lists into a proper `<table class="tbl">`
+     * so the standard fetch/filter/sort pipeline can process them.
+     *
+     * This function is called as a DOM pre-processing step for pageTypes that
+     * carry a `features.listToTable` array (e.g. the 'tags' pageType).  For
+     * each value in that array the function locates `<div id="<value>">` and
+     * its contained `<ul>`, builds a replacement `<table class="tbl">`, and
+     * substitutes the entire `<div>` with the bare `<table>` in the parent DOM
+     * so no extra wrapper element remains:
+     *
+     *   Before:
+     *     <h3>Genres</h3>
+     *     <div id="genres">
+     *       <ul class="genre-list">
+     *         <li class="odd">
+     *           <a href="/user/vzell/tag/rock">rock</a>
+     *           <span class="tag-vote-buttons"><span class="tag-count">15</span></span>
+     *         </li>
+     *         …
+     *       </ul>
+     *     </div>
+     *
+     *   After:
+     *     <h3>Genres</h3>
+     *     <table class="tbl">
+     *       <thead><tr><th>Genre</th><th>Tag count</th></tr></thead>
+     *       <tbody>
+     *         <tr class="odd">
+     *           <td><a href="/user/vzell/tag/rock">rock</a></td>
+     *           <td><span class="tag-vote-buttons"><span class="tag-count">15</span></span></td>
+     *         </tr>
+     *         …
+     *       </tbody>
+     *     </table>
+     *
+     * Column-name derivation rules:
+     *   - First column : `id` value with trailing "s" stripped (singularised),
+     *                    then capitalised.  e.g. "genres" → "Genre",
+     *                    "tags" → "Tag".
+     *   - Second column: always "Tag count".
+     *
+     * Only the first `<ul>` inside the `<div>` is processed; any nested `<ul>`
+     * elements inside individual `<li>` items are left untouched.
+     *
+     * @param {object} def - The active merged pageDefinition object.
+     */
+    function applyListToTable(def) {
+        const sections = def?.features?.listToTable;
+        if (!Array.isArray(sections) || sections.length === 0) return;
+
+        sections.forEach(sectionId => {
+            const _div = document.getElementById(sectionId);
+            if (!_div) {
+                Lib.debug('init', `applyListToTable: no <div id="${sectionId}"> found — skipping.`);
+                return;
+            }
+
+            const _ul = _div.querySelector(':scope > ul');
+            if (!_ul) {
+                Lib.debug('init', `applyListToTable: no direct <ul> inside #${sectionId} — skipping.`);
+                return;
+            }
+
+            // Derive singular capitalised column name from the id.
+            // "genres" → "genre" → "Genre"; "tags" → "tag" → "Tag".
+            const _singular = sectionId.replace(/s$/i, '');
+            const _colName  = _singular.charAt(0).toUpperCase() + _singular.slice(1);
+
+            // Build the replacement <table class="tbl">.
+            const _table  = document.createElement('table');
+            _table.className = 'tbl';
+
+            // ── thead ──────────────────────────────────────────────────────────
+            const _thead = document.createElement('thead');
+            const _hr    = document.createElement('tr');
+            ['', ''].forEach((_, i) => {
+                const _th = document.createElement('th');
+                _th.textContent = i === 0 ? _colName : 'Tag count';
+                _hr.appendChild(_th);
+            });
+            _thead.appendChild(_hr);
+            _table.appendChild(_thead);
+
+            // ── tbody ──────────────────────────────────────────────────────────
+            const _tbody = document.createElement('tbody');
+            Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                const _tr  = document.createElement('tr');
+                if (li.className) _tr.className = li.className; // preserve odd/even
+
+                // First cell: the <a> link (tag name)
+                const _td1 = document.createElement('td');
+                const _a   = li.querySelector('a');
+                if (_a) _td1.appendChild(_a.cloneNode(true));
+                _tr.appendChild(_td1);
+
+                // Second cell: the .tag-vote-buttons span (contains .tag-count)
+                const _td2   = document.createElement('td');
+                const _votes = li.querySelector('.tag-vote-buttons');
+                if (_votes) _td2.appendChild(_votes.cloneNode(true));
+                _tr.appendChild(_td2);
+
+                _tbody.appendChild(_tr);
+            });
+            _table.appendChild(_tbody);
+
+            // Replace the entire <div id="..."> wrapper with the bare <table>
+            // in the parent DOM, so no extra container element remains.
+            _div.parentNode.replaceChild(_table, _div);
+            Lib.debug('init',
+                `applyListToTable: converted #${sectionId} → table`
+                + ` (${_tbody.rows.length} rows, col="${_colName}").`);
+        });
+    }
+
+    /**
      * Derives the runtime integer-column descriptor list from a merged
      * activeDefinition object.
      *
@@ -3346,6 +3462,17 @@
             features: {
                 extractMainColumn: 'Name',
                 stickyColumn: 'Name'
+            }
+        },
+        // Tags pages
+        {
+            type: 'tags',
+            match: (path) => path.includes('/tags'),
+            buttons: [ { label: 'Show all Tags for User' } ],
+            tableMode: 'multi',
+            features: {
+                listToTable: [ 'genres', 'tags' ],
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
             }
         },
         // Search pages
@@ -20308,6 +20435,15 @@ a { color: #1565c0; }`;
         // Stop other scripts immediately when an action button is pressed
         stopOtherScripts();
 
+        // ── listToTable pre-processing ────────────────────────────────────────
+        // For pageTypes that carry features.listToTable (e.g. 'tags'), convert
+        // the native <ul>-based lists into proper <table class="tbl"> elements
+        // so the standard fetch / filter / sort pipeline can process them.
+        // Must run before maxPage determination (which scans the DOM for tables).
+        if (Array.isArray(activeDefinition.features?.listToTable)) {
+            applyListToTable(activeDefinition);
+        }
+
         // Clear existing highlights immediately from DOM for visual feedback
         document.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight').forEach(n => {
             n.replaceWith(document.createTextNode(n.textContent));
@@ -20882,6 +21018,191 @@ a { color: #1565c0; }`;
                             }
                         });
                     });
+                } else if (activeDefinition.features?.listToTable) {
+                    // ── listToTable multi-table mode ─────────────────────────────────────
+                    // Pages using features.listToTable (e.g. 'tags') have their <ul> lists
+                    // pre-converted to <table class="tbl"> by applyListToTable().  Each
+                    // converted table is a direct DOM sibling of the <h3> that labels its
+                    // section (e.g. "Genres", "Other tags").
+                    //
+                    // The generic else-branch below only processes the FIRST table
+                    // (doc.querySelector) and derives group names from in-table <subh> rows,
+                    // neither of which works here.  This branch instead:
+                    //   1. Iterates ALL tables in tablesToProcess.
+                    //   2. For each table, walks backwards through DOM siblings (up to 5
+                    //      steps) to find the preceding <h3> whose text becomes the group
+                    //      name.  Falls back to 'Other' when no <h3> is found.
+                    //   3. Runs the full shared row-processing pipeline (erasers, extractors,
+                    //      MB-Name/Comment, synthetic columns, injected columns, integer
+                    //      column styling) so that all existing features remain available.
+                    tablesToProcess.forEach(table => {
+                        // Walk backwards to find the h3 that labels this table section.
+                        let _prev = table.previousElementSibling;
+                        let _steps = 0;
+                        let _h3 = null;
+                        while (_prev && _steps < 5) {
+                            if (_prev.tagName === 'H3') { _h3 = _prev; break; }
+                            _prev = _prev.previousElementSibling;
+                            _steps++;
+                        }
+                        const category = _h3 ? _h3.textContent.trim() : 'Other';
+
+                        if (category !== lastCategorySeenAcrossPages) {
+                            Lib.debug('fetch', `listToTable category: "${category}". Rows so far: ${totalRowsAccumulated}`);
+                            groupedRows.push({ category: category, rows: [] });
+                            lastCategorySeenAcrossPages = category;
+                        }
+                        const currentGroup = groupedRows[groupedRows.length - 1];
+
+                        table.querySelectorAll('tbody tr').forEach(row => {
+                            if (row.cells.length > 0 && !row.classList.contains('explanation')) {
+                                const newRow = document.importNode(row, true);
+
+                                // ── Apply column erasers ──────────────────────────────────
+                                applyColumnErasers(newRow, activeColumnErasers);
+
+                                // ── Convert comma-separated cells to multi-row cells ──────
+                                applyRenderMultiRowCells(newRow, activeRenderMultiRowCols);
+
+                                // ── Column extractor pipeline (mirrors generic else-branch) ─
+                                const tdName    = document.createElement('td');
+                                const tdComment = document.createElement('td');
+                                const extractedSyntheticCells = activeColumnExtractors.map(entry => {
+                                    if (entry.colIdx === -1) {
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    const sourceCell = newRow.cells[entry.colIdx];
+                                    if (!sourceCell) {
+                                        Lib.warn('extract', `colIdx ${entry.colIdx} out of range for extractor "${entry.extractor}" (row has ${newRow.cells.length} cells)`);
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    if (typeof ColumnDataExtractor[entry.extractor] !== 'function') {
+                                        Lib.error('extract', `Unknown extractor function: "${entry.extractor}"`);
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    const result = ColumnDataExtractor[entry.extractor](sourceCell);
+                                    while (result.length < entry.syntheticColumns.length) result.push(document.createElement('td'));
+                                    return result.slice(0, entry.syntheticColumns.length);
+                                });
+
+                                // ── MB-Name / Comment extraction ──────────────────────────
+                                if (mainColIdx !== -1) {
+                                    const targetCell = getCellByLogicalIndex(newRow, mainColIdx);
+                                    if (targetCell) {
+                                        const nameLink = targetCell.querySelector('a bdi')?.closest('a');
+                                        if (nameLink) {
+                                            tdName.appendChild(nameLink.cloneNode(true));
+                                        } else {
+                                            let foundName = false;
+                                            for (const child of targetCell.childNodes) {
+                                                if (child.nodeType === Node.ELEMENT_NODE) {
+                                                    if (child.classList.contains('comment') || child.tagName === 'SCRIPT' || child.tagName === 'STYLE') continue;
+                                                    if (child.tagName === 'A') {
+                                                        tdName.appendChild(child.cloneNode(true));
+                                                        foundName = true;
+                                                        break;
+                                                    }
+                                                } else if (child.nodeType === Node.TEXT_NODE) {
+                                                    const t = child.textContent.trim();
+                                                    if (t && t !== '(' && t !== ')' && t !== ',') {
+                                                        tdName.textContent = t;
+                                                        foundName = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            if (!foundName) {
+                                                const clone = targetCell.cloneNode(true);
+                                                clone.querySelectorAll('.comment').forEach(el => el.remove());
+                                                tdName.textContent = clone.textContent.trim();
+                                            }
+                                        }
+                                        const commentSpan = targetCell.querySelector('.comment');
+                                        if (commentSpan) {
+                                            const val = commentSpan.querySelector('bdi') || commentSpan;
+                                            tdComment.textContent = val.textContent.trim();
+                                        }
+                                    }
+                                }
+
+                                // ── Synthetic-column extractor pipeline ───────────────────
+                                const primarySyntheticCellMap = new Map();
+                                activeColumnExtractors.forEach((entry, i) => {
+                                    entry.syntheticColumns.forEach((colName, j) => {
+                                        const cell = extractedSyntheticCells[i]?.[j];
+                                        if (cell) primarySyntheticCellMap.set(colName, cell);
+                                    });
+                                });
+                                if (mainColIdx !== -1) {
+                                    primarySyntheticCellMap.set('MB-Name', tdName);
+                                    primarySyntheticCellMap.set('Comment', tdComment);
+                                }
+                                const syntheticExtractorCells = activeSyntheticColumnExtractors.map(entry => {
+                                    const sourceCell = primarySyntheticCellMap.get(entry.sourceColumn);
+                                    if (!sourceCell) {
+                                        Lib.warn('extract', `syntheticColumnExtractor: source synthetic column "${entry.sourceColumn}" not found — extractor "${entry.extractor}" skipped`);
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    if (typeof SyntheticColumnDataExtractor[entry.extractor] !== 'function') {
+                                        Lib.error('extract', `Unknown synthetic extractor function: "${entry.extractor}"`);
+                                        return entry.syntheticColumns.map(() => document.createElement('td'));
+                                    }
+                                    const result = SyntheticColumnDataExtractor[entry.extractor](sourceCell);
+                                    while (result.length < entry.syntheticColumns.length) result.push(document.createElement('td'));
+                                    return result.slice(0, entry.syntheticColumns.length);
+                                });
+
+                                // ── Assemble row ──────────────────────────────────────────
+                                // 1. Delete excluded columns (descending to preserve index stability)
+                                [...indicesToExclude].sort((a, b) => b - a).forEach(idx => {
+                                    if (newRow.cells[idx]) newRow.deleteCell(idx);
+                                });
+                                // 2. Append primary extractor synthetic cells
+                                extractedSyntheticCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                                // 3. Append synthetic-column extractor cells (second pass)
+                                syntheticExtractorCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                                // 4. Append MB-Name / Comment (when extractMainColumn is active)
+                                if (mainColIdx !== -1) {
+                                    newRow.appendChild(tdName);
+                                    newRow.appendChild(tdComment);
+                                }
+                                // 5. Append injected-column placeholder cells
+                                if (activeReleaseEventColumns.length) {
+                                    const _mbidRe = _extractMbidFromRow(newRow);
+                                    activeReleaseEventColumns.forEach(() => {
+                                        const _tdRe = document.createElement('td');
+                                        _tdRe.className = 'mb-re-cell';
+                                        if (_mbidRe) _tdRe.dataset.mbid = _mbidRe;
+                                        _tdRe.style.backgroundColor =
+                                            (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
+                                        newRow.appendChild(_tdRe);
+                                    });
+                                }
+                                if (activeInjectedColumns.length) {
+                                    const _mbidM = _extractMbidFromRow(newRow);
+                                    activeInjectedColumns.forEach(() => {
+                                        const _tdInj = document.createElement('td');
+                                        _tdInj.className = 'mb-rel-cell';
+                                        if (_mbidM) _tdInj.dataset.mbid = _mbidM;
+                                        _tdInj.style.backgroundColor =
+                                            (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
+                                        newRow.appendChild(_tdInj);
+                                    });
+                                }
+                                // 6. Integer-column styling
+                                if (Lib.settings.sa_enable_numeric_alignment !== false) {
+                                    applyIntegerColumnStyling(newRow, activeIntegerColumns);
+                                }
+
+                                currentGroup.rows.push(newRow);
+                                newRow.dataset.mbRowIdx = String(_mbRowIdxCounter++);
+                                rowsInThisPage++;
+                                totalRowsAccumulated++;
+                                pageCategoryMap.set(category, (pageCategoryMap.get(category) || 0) + 1);
+                            }
+                        });
+                    });
+
                 } else {
                     // Try to find tbody. If not found, fall back to table (useful for non-standard tables like some search results)
                     const tableBody = doc.querySelector('table.tbl tbody') || doc.querySelector('table.tbl');

@@ -1,5 +1,56 @@
 [
   {
+    "version": "9.99.392",
+    "date": "2026-04-04",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed multi-table rendering for listToTable pages (e.g. /user/*/tags): the generic else-branch in the page-fetch loop used doc.querySelector('table.tbl tbody') which always picked only the FIRST converted table (5 genre rows), silently ignoring the second table (107 tag rows). Additionally, the group name defaulted to the literal string 'Unknown' because the else-branch derives group names from in-table <subh> rows — which do not exist in tables converted from <ul> lists by applyListToTable(). Added a dedicated 'else if (activeDefinition.features?.listToTable)' branch that (1) iterates ALL tables in tablesToProcess, (2) walks backwards through DOM siblings up to 5 steps to find the preceding <h3> and uses its text as the group/category name (falling back to 'Other'), and (3) runs the full shared row-processing pipeline (column erasers, render-multi-row cells, column extractors, MB-Name/Comment extraction, synthetic-column extractors, excluded-column deletion, injected-column placeholders, integer-column styling) so all existing features remain available for future listToTable page types."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.391",
+    "date": "2026-04-03",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "applyListToTable(): changed DOM replacement from _div.replaceChild(_table, _ul) (which left the <div id=\"genres\"> wrapper in place and replaced only the <ul> inside it) to _div.parentNode.replaceChild(_table, _div) (which replaces the entire <div> wrapper with the bare <table> in the parent DOM). The resulting structure is now <h3>Genres</h3><table class=\"tbl\">…</table> with no enclosing div. JSDoc Before/After example updated accordingly."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.390",
+    "date": "2026-04-03",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "tags pageType definition: corrected tableMode from 'single' to 'multi' so each converted section (genres, tags) renders as a separate labelled sub-table consistent with the h3-headed multi-table layout on the /user/*/tags page. Replaced extractMainColumn: 'Tags' with integerColumns: [{sourceColumn: 'Tag count', align: 'R'}] so the tag-count column is right-aligned as a numeric column."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.389",
+    "date": "2026-04-03",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "Added support for MusicBrainz user tags pages (e.g. /user/vzell/tags): new '@match *://*.musicbrainz.org/user/*/tags' directive added to the userscript header so Tampermonkey/Violentmonkey activates the script on these URLs.",
+          "New 'tags' pageType definition added to pageDefinitions with features.listToTable: ['genres', 'tags'], tableMode: 'single', and extractMainColumn: 'Tags'. The listToTable feature array names the <div id=\"...\"> sections on the page that should be converted from <ul>-based lists to tables before the standard pipeline runs.",
+          "New applyListToTable(def) function: converts <ul class=\"genre-list\"> / <ul class=\"tag-list\"> structures inside named <div id=\"genres\"> / <div id=\"tags\"> containers into proper <table class=\"tbl\"> elements. Column naming derives the first column header by stripping the trailing 's' from the div id and capitalising ('genres' → 'Genre', 'tags' → 'Tag'); the second column is always 'Tag count'. Each <li> becomes a <tr> preserving the odd/even class, with the <a> tag-link in the first cell and the .tag-vote-buttons span in the second. The replacement is performed in-place inside the existing <div>, leaving all surrounding DOM structure intact.",
+          "applyListToTable() is called in startFetchingProcess() immediately after stopOtherScripts() and before maxPage determination, ensuring the converted tables are visible to determineMaxPageFromDOM() and all subsequent fetch/filter/sort infrastructure."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.388",
     "date": "2026-04-03",
     "sections": [
