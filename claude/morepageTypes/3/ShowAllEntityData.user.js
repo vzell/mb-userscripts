@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.402+2026-04-05
+// @version      9.99.401+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2485,98 +2485,6 @@
             }
 
             return [tdAlias];
-        },
-
-        /**
-         * dateParts — parses a partial or complete ISO 8601 date string from a
-         * native MusicBrainz `<td>` cell (e.g. the "Date" column on event pages)
-         * and produces separate synthetic columns for numeric day, numeric month,
-         * numeric year, weekday name, and month name.
-         *
-         * This is the `ColumnDataExtractor` counterpart to the identically-named
-         * function in `SyntheticColumnDataExtractor`.  The difference is the call
-         * site: this version is invoked for a *primary* (original DOM) column
-         * whose `colIdx` has been resolved against the live table headers, whereas
-         * the synthetic version is invoked against a secondary cell produced by a
-         * prior extractor (e.g. `splitCountryDate`).
-         *
-         * Supported input formats (partial dates handled gracefully):
-         *   'YYYY'        → YYYY filled; DD, MM, Day, Month left empty
-         *   'YYYY-MM'     → YYYY and MM filled; Month derived; DD and Day left empty
-         *   'YYYY-MM-DD'  → all five columns filled; Day computed via Date constructor
-         *
-         * Date ranges (e.g. `2108-06-14 – 2108-06-17`) are detected, logged to the
-         * debug console, and result in five empty synthetic cells — no splitting is
-         * attempted because a range cannot be meaningfully represented by a single
-         * scalar date-part tuple.
-         *
-         * Synthetic columns: ['DD', 'MM', 'YYYY', 'Day', 'Month']
-         *
-         * @param   {HTMLTableCellElement} sourceCell  Original Date <td> from the table.
-         * @returns {HTMLTableCellElement[]}            Five synthetic <td> elements.
-         */
-        dateParts(sourceCell) {
-            const tdDD    = document.createElement('td');
-            const tdMM    = document.createElement('td');
-            const tdYYYY  = document.createElement('td');
-            const tdDay   = document.createElement('td');
-            const tdMonth = document.createElement('td');
-
-            if (!sourceCell) return [tdDD, tdMM, tdYYYY, tdDay, tdMonth];
-
-            const rawText = sourceCell.textContent.trim();
-            if (!rawText) return [tdDD, tdMM, tdYYYY, tdDay, tdMonth];
-
-            // Detect date ranges: "YYYY-MM-DD – YYYY-MM-DD" (en-dash) or
-            // "YYYY-MM-DD - YYYY-MM-DD" (hyphen with surrounding spaces).
-            // When a range is found, log it and return empty cells.
-            if (/–|-{1}/.test(rawText.replace(/^\d{4}-\d{2}-\d{2}/, ''))) {
-                // More precise: check if there's a range separator after stripping
-                // the leading date token.
-                const _afterFirst = rawText.replace(/^\d{4}(?:-\d{2}(?:-\d{2})?)?/, '').trim();
-                if (_afterFirst.startsWith('–') || _afterFirst.startsWith('-')) {
-                    Lib.debug('extract', `dateParts (ColumnDataExtractor): date range detected — skipping: "${rawText}"`);
-                    return [tdDD, tdMM, tdYYYY, tdDay, tdMonth];
-                }
-            }
-
-            const MONTH_NAMES = [
-                'January', 'February', 'March',    'April',   'May',      'June',
-                'July',    'August',   'September', 'October', 'November', 'December'
-            ];
-            const DAY_NAMES = [
-                'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
-            ];
-
-            const parts = rawText.split('-');
-            const year  = parts[0] ? parseInt(parts[0], 10) : NaN;
-            const month = parts[1] ? parseInt(parts[1], 10) : NaN;
-            const day   = parts[2] ? parseInt(parts[2], 10) : NaN;
-
-            if (!isNaN(year) && year > 0) {
-                tdYYYY.textContent              = String(year);
-                tdYYYY.style.fontVariantNumeric = 'tabular-nums';
-            }
-            if (!isNaN(month) && month >= 1 && month <= 12) {
-                tdMM.textContent              = String(month);
-                tdMM.style.fontVariantNumeric = 'tabular-nums';
-                tdMonth.textContent           = MONTH_NAMES[month - 1];
-            }
-            if (!isNaN(day) && day >= 1 && day <= 31) {
-                tdDD.textContent              = String(day);
-                tdDD.style.fontVariantNumeric = 'tabular-nums';
-            }
-            if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-                const d = new Date(year, month - 1, day);
-                if (!isNaN(d.getTime()) &&
-                        d.getFullYear() === year &&
-                        d.getMonth()    === month - 1 &&
-                        d.getDate()     === day) {
-                    tdDay.textContent = DAY_NAMES[d.getDay()];
-                }
-            }
-
-            return [tdDD, tdMM, tdYYYY, tdDay, tdMonth];
         }
     };
 
@@ -2609,12 +2517,6 @@
          * dateParts — parses a partial or complete ISO 8601 date string extracted from a
          * synthetic Date cell and produces separate columns for the numeric day, numeric
          * month, numeric year, weekday name, and month name.
-         *
-         * This is the `SyntheticColumnDataExtractor` counterpart to the identically-named
-         * function in `ColumnDataExtractor`.  Use this version when the source cell is a
-         * *secondary* cell produced by a prior extractor (e.g. the 'Date' output of
-         * `splitCountryDate`).  Use the `ColumnDataExtractor` version when the source is a
-         * *primary* (original DOM) column such as the native "Date" column on event pages.
          *
          * The source cell may contain either plain text or a <ul><li> multi-row structure
          * (as produced by splitCountryDate when a release has multiple release events).
@@ -4119,7 +4021,7 @@
                     { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
                     { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
                     { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
-                    { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
+                    { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] }
                     { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
@@ -4378,11 +4280,11 @@
                 },
                 'Events': {
                     columnExtractors: [
-                        { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
-                        { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
-                        { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] },
-                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                        { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
+                        { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                     ],
                     collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],

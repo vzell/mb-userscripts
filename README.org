@@ -67916,7 +67916,6 @@ remove the double misplaced JSDoc comment from the function "_applyCollapseState
 
 add n action buttons like for "Artist-ReleaseGroups" pageType for the different collection types 
 
-
 * DONE subscriptions
 
 some enhancements:
@@ -68143,11 +68142,432 @@ ul
 
 * TODO further split "Area"
 
+
 * TODO check "Date" splitter
 
-should only split if not a date range
+some more pageType additions:
 
-* edit pageTypes
+1.)
+
+change the pageType "type: 'area-events'" from
+
+#+begin_example
+        {
+            type: 'area-events',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Area' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event',
+                stickyColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'area-events',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Area' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] }
+                    { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event',
+                stickyColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+2.)
+
+change in pageType "type: 'collections-releases'"
+
+the 'Events' parameter from
+
+#+begin_example
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                    addEAA: 'Event',
+                    extractMainColumn: 'Event'
+                },
+#+end_example
+
+to
+
+#+begin_example
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] },
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                    addEAA: 'Event',
+                    extractMainColumn: 'Event'
+                },
+#+end_example
+
+3.)
+
+change the pageType "type: 'place-events'" from
+
+#+begin_example
+        {
+            type: 'place-events',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                collapsableColumns: [ 'Artists', 'EAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Artists', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event',
+                stickyColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'place-events',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
+            buttons: [ { label: 'Show all Events for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event', extractor: 'caa',            syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Event', extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
+                    { sourceColumn: 'Date',  extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                collapsableColumns: [ 'Artists', 'EAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Artists', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event',
+                stickyColumn: 'Event'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+4.)
+
+change in pageType "type: 'series-releases'"
+
+the 'Events' parameter from
+
+#+begin_example
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                    addEAA: 'Event',
+                    extractMainColumn: 'Event',
+                    stickyColumn: 'Event'
+                },
+#+end_example
+
+to
+
+#+begin_example
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
+                        { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                    addEAA: 'Event',
+                    extractMainColumn: 'Event',
+                    stickyColumn: 'Event'
+                },
+#+end_example
+
+5.)
+
+change the pageType "label-relationships-filtered" and "label-relationships" from
+
+#+begin_example
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title', // Specific header
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title', // Specific header
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title', // Specific header
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title', // Specific header
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+6.)
+
+change the pageType "work-recordings-filtered" and "work-recordings" from
+
+#+begin_example
+        {
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'work-recordings',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'work-recordings-filtered',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] },
+                    { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'work-recordings',
+            match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Recordings for Work' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] },
+                    { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+7.)
+
+change the pageType "type: 'artist-events'" from
+
+#+begin_example
+        {
+            type: 'artist-events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                collapsableColumns: [ 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Role', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event',
+                stickyColumn: 'Event'
+            },
+            tableMode: 'single'
+        }
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'artist-events',
+            match: (path) => path.includes('/events'),
+            buttons: [ { label: 'Show all Events for Artist' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                    { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
+                    { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                collapsableColumns: [ 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Role', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                addEAA: 'Event',
+                extractMainColumn: 'Event',
+                stickyColumn: 'Event'
+            },
+            tableMode: 'single'
+        }
+#+end_example
+
+8.)
+
+make the function
+
+#+begin_example
+dateParts(sourceCell)
+#+end_example
+
+which is currently part of only the synthetic columnData extractors "const SyntheticColumnDataExtractor" also callable
+as part of the standard column extractors "const ColumnDataExtractor", as the "Date" column also exists in standard
+MusicBrainz tables.
+
+Extend the "dateParts" function so that the "sourceCell" parameter also accepts date ranges like the following
+
+#+begin_example
+<td>2108-06-14 – 2108-06-17</td>
+#+end_example
+
+When the function is called with a date range, debug log it to the console but do not try to split it as in the usual
+case.
+
+
+* DONE edit pageTypes
 
 some pageType additions:
 
@@ -68448,4 +68868,10 @@ to
             tableMode: 'single'
         }
 #+end_example
+
+
+* TODO for "Release events" columns add the abbreviated country code after the flag
+
+for "Release events" columns add the abbreviated country code after the flag and add "Country/Date" split functionality
+
 
