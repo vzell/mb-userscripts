@@ -67918,6 +67918,28 @@ add n action buttons like for "Artist-ReleaseGroups" pageType for the different 
 
 * TODO subscriptions
 
+some enhancements:
+
+1.)
+
+change the current "type: 'subscriptions'" configuration block
+
+#+begin_example
+        // Subscriptions pages
+        {
+            type: 'subscriptions',
+            match: (path) => path.includes('/subscriptions'),
+            buttons: [ { label: 'Show all Subscription results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+#+end_example
+
+to
+
 #+begin_example
         // Subscriptions pages
         {
@@ -67967,6 +67989,114 @@ add n action buttons like for "Artist-ReleaseGroups" pageType for the different 
             tableMode: 'single'
         },
 #+end_example
+
+2.)
+
+add
+
+#+begin_example
+        {
+            type: 'releasegroup-tags',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Relesasegroup' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Releasegroup tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+        {
+            type: 'release-tags',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Release' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Release tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+        {
+            type: 'recording-tags',
+            match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Recording' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Recording tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+        {
+            type: 'work-tags',
+            match: (path) => path.match(/\/work\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Work' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Work tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+        {
+            type: 'label-tags',
+            match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Label' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Label tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+        {
+            type: 'series-tags',
+            match: (path) => path.match(/\/series\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Series' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Series tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+        {
+            type: 'place-tags',
+            match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Place' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Place tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+        {
+            type: 'area-tags',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Area' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Area tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+        {
+            type: 'instrument-tags',
+            match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/tags/),
+            buttons: [ { label: 'Show all Tags for Instrument' } ],
+            tableMode: 'multi',
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Instrument tags',
+                listToTable: [ 'genres', 'tags' ]
+            }
+        },
+#+end_example
+
+after the "type: 'artist-tags'" pageType definition
 
 
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
