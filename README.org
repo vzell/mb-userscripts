@@ -67726,26 +67726,6 @@ Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/perfor
         },
 #+end_example
 
-* DONE change "/tags" with parameter support "show_downvoted"
-
-does not work yet
-
-#+begin_example
-        {
-            type: 'tags',
-            match: (path, params) => path.includes('/tags'),
-            buttons: [
-                { label: 'Show all Upvoted Tags for User',    params: { show_downvoted: '0' } },
-                { label: 'Show all Downvoted Tags for User',  params: { show_downvoted: '1' } }
-            ],
-            tableMode: 'multi',
-            features: {
-                listToTable: [ 'genres', 'tags' ],
-                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
-            }
-        },
-#+end_example
-
 
 * TODO add subscriptions support
 ** DONE initial
@@ -68100,6 +68080,95 @@ after the "type: 'artist-tags'" pageType definition
 
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
 
+
+* TODO change "/tags" with parameter support "show_downvoted"
+
+enhance user tag pages:
+
+1.)
+
+change the userscript match directive from
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/tags
+#+end_example
+
+to
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/tags*
+#+end_example
+
+2.)
+
+change the current pageType "type: 'tags'"
+
+#+begin_example
+        {
+            type: 'tags',
+            match: (path) => path.includes('/tags'),
+            buttons: [ { label: 'Show all Tags for User' } ],
+            tableMode: 'multi',
+            features: {
+                listToTable: [ 'genres', 'tags' ],
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+            }
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'user-tags',
+            match: (path, params) => path.match(/\/user\/vzell\/tags/),
+            buttons: [
+                { label: 'Upvoted',    params: { show_downvoted: '0' } },
+                { label: 'Downvoted',  params: { show_downvoted: '1' } }
+            ],
+            features: {
+                listToTable: [ 'genres', 'tags' ]
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+3.)
+
+on the final rendered page of pageType "type: 'user-tags'" remove the "from" container
+
+#+begin_example
+<form style="margin-top:1em">
+  <div class="row">
+    <label>Show votes:
+      <!-- -->
+      <select name="show_downvoted">
+	<option value="0" selected="">upvotes
+	</option>
+	<option value="1">downvotes
+	</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <label>Sort by:
+      <!-- -->
+      <select name="order">
+	<option value="name" selected="">name
+	</option>
+	<option value="count">count (more first)
+	</option>
+	<option value="countdesc">count (less first)
+	</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <button type="submit">Submit
+    </button>
+  </div>
+</form>
+#+end_example
 
 * TODO li2table for user specific tags
 ** https://musicbrainz.org/user/vzell/tag/handwritten
@@ -69310,8 +69379,7 @@ to
 So basically the 2-char abbreviated country name should be rendered WITHOUT brackets after the "country flag" icon and
 add an additional space after it before the date
 
-
-* TODO emulate pressing the link on show ALL tags
+* DONE emulate pressing the link on show ALL tags
 ** initial
 
 on pageType "type: 'area-tags'"
@@ -69464,4 +69532,15 @@ performClutterCleanup()     → other cleanup, div.all-tags left intact
 fetch loop                  → reads rows from the tables
 renderGroupedTable()        → clones thead template, builds output tables
 finalCleanup()              → removeSelector removes div.all-tags  ← here
+#+end_example
+
+* add feature to <entity>-tags
+
+#+begin_example
+                // Click "Show all tags." before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the "all-tags" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
 #+end_example

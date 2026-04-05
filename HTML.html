@@ -1,3 +1,36 @@
+<form style="margin-top:1em">
+  <div class="row">
+    <label>Show votes:
+      <!-- -->
+      <select name="show_downvoted">
+	<option value="0" selected="">upvotes
+	</option>
+	<option value="1">downvotes
+	</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <label>Sort by:
+      <!-- -->
+      <select name="order">
+	<option value="name" selected="">name
+	</option>
+	<option value="count">count (more first)
+	</option>
+	<option value="countdesc">count (less first)
+	</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <button type="submit">Submit
+    </button>
+  </div>
+</form>
+
+--
+
 <li>
   <a href="/user/__MarioMadrid">
     <img alt="" class="avatar no-avatar" height="15" src="https://static.metabrainz.org/MB/editor-b055e61.svg" width="15">
