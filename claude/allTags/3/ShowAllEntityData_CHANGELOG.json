@@ -1,5 +1,55 @@
 [
   {
+    "version": "9.99.411",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "features.removeSelector execution timing: moved from just-before-rendering (post-fetch) to finalCleanup() (post-render). Root cause: renderGroupedTable() clones the <thead> from the first live table.tbl in the DOM to build its output template. When removeSelector removed div.all-tags before renderGroupedTable ran, the converted tables were gone, causing 'No template table head found' and a TypeError in compareDocumentPosition. finalCleanup() runs after renderGroupedTable/renderFinalTable have built all output tables, so the original source tables are no longer needed at that point and the container can safely be removed."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.410",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "features.removeSelector execution timing: moved from performClutterCleanup (which runs before parseDocumentForTables in the fetch loop) to immediately before the rendering block (after all rows have been collected into allRows / groupedRows). Root cause: on area-tags the converted <table class=\"tbl\"> elements live inside <div class=\"all-tags\">, so removing that div in performClutterCleanup also removed the tables before parseDocumentForTables could find them, resulting in 'Found 0 total tables' and 0 rows rendered. At the new call site the DOM tables have already been read and are no longer needed, making the removal safe."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.409",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Syntax error introduced in 9.99.408: the str_replace that inserted the applyShowAllTags function body accidentally consumed the opening '/**' of the immediately following buildActiveIntegerColumns JSDoc comment, leaving the comment body as bare code ('* activeDefinition object.' etc.) which the JavaScript parser rejected as 'Unexpected token *'. Restored the missing '/**' opening line."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.408",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "area-tags pageType: added features.showAllTags: true and features.removeSelector: 'div.all-tags'.",
+          "New async applyShowAllTags(def): when features.showAllTags is true, finds the 'Show all tags.' anchor inside div.all-tags (by href='#' and text content) and programmatically clicks it so that MusicBrainz reveals hidden zero-score and downvoted <li> elements in the sibling tag/genre <ul> lists. Awaits Promise.resolve() after the click to yield to the microtask queue so the synchronous MusicBrainz DOM mutation completes before the caller proceeds. Called as the very first step in the pre-processing block (before renameH2ToH3, insertH2, and listToTable) so the full tag list is visible before any DOM restructuring or <ul>→<table> conversion runs.",
+          "New features.removeSelector support in performClutterCleanup(): when the active page definition carries a CSS selector string in features.removeSelector, the matching element is removed from the live DOM during the clutter-cleanup pass. Used by area-tags to remove the <div class=\"all-tags\"> container (which holds the 'Show all tags.' link, info paragraphs, and the tag-submission form) after the <ul> lists have already been converted to tables and the form is no longer needed."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.407",
     "date": "2026-04-05",
     "sections": [

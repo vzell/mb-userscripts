@@ -68101,7 +68101,7 @@ after the "type: 'artist-tags'" pageType definition
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
 
 
-* TODO li2table
+* TODO li2table for user specific tags
 ** https://musicbrainz.org/user/vzell/tag/handwritten
 
 #+begin_example
@@ -68126,6 +68126,7 @@ after the "type: 'artist-tags'" pageType definition
 #+end_example
 
 
+* DONE new area-users pageType
 ** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users
 *** initial
 
@@ -68416,6 +68417,7 @@ still not working:
 14:30:08.604 [VZ-ShowAllEntityData: area-users] 🖥️ Auto-focused global filter input after final render 
 14:30:09.434 [VZ-ShowAllEntityData: area-users] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s)
 #+end_example
+
 
 * TODO further split "Area"
 
@@ -69308,3 +69310,158 @@ to
 So basically the 2-char abbreviated country name should be rendered WITHOUT brackets after the "country flag" icon and
 add an additional space after it before the date
 
+
+* TODO emulate pressing the link on show ALL tags
+** initial
+
+on pageType "type: 'area-tags'"
+
+1.)
+
+before rendering the final page, emulate pressing the link
+
+#+begin_example
+<a href="#">Show all tags.</a>
+#+end_example
+
+on the initial page, so that ALL tags are shown first before rendering.
+
+
+2.)
+
+on the final rendered page remove the following container from the page
+
+#+begin_example
+<div class="all-tags"><div><p>Tags with a score of zero or below, and tags that you’ve downvoted are hidden.</p><p><a href="#">Show all tags.</a></p><p>You can add your own <a href="/doc/Folksonomy_Tagging">tags</a> below. Use commas to separate multiple tags.</p><form id="tag-form"><p><span role="status" aria-live="polite" class="ui-helper-hidden-accessible"></span><textarea cols="50" rows="5" class="ui-autocomplete-input" autocomplete="on"></textarea></p><button class="styled-button" type="submit">Submit tags</button></form></div></div>
+#+end_example
+
+** bug
+
+syntax error bug
+
+#+begin_example
+Uncaught SyntaxError: Failed to execute 'appendChild' on 'Node': Unexpected token '*' (at userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:6176:6)
+    at At (<anonymous>:10:89)
+    at m (<anonymous>:21:352)
+    at c (<anonymous>:24:266)
+    at <anonymous>:24:328
+    at co (<anonymous>:18:250)
+    at Object.send (<anonymous>:24:188)
+    at <anonymous>:91:328
+    at _ (<anonymous>:22:406)
+#+end_example
+
+** busg
+
+still buggy
+
+#+begin_example
+15:10:56.508 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.409+2026-04-05) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/tags 
+15:10:56.602 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/tags 
+15:10:56.602 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/tags 
+15:10:56.603 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/tags 
+15:10:56.603 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+15:10:56.603 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+15:10:56.605 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: area-tags 
+15:10:56.605 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+15:10:56.605 [VZ-ShowAllEntityData: area-tags] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/tags
+15:10:56.606 [VZ-ShowAllEntityData: area-tags] 🚀 Cached entity name at init time: "United States" 
+15:10:56.615 [VZ-ShowAllEntityData: area-tags] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+15:10:56.619 [VZ-ShowAllEntityData: area-tags] 🚀 Blurred #headerid-query input on page entry 
+15:10:56.625 [VZ-ShowAllEntityData: area-tags] 📝 Changelog source: remote — replaced 0 local entries with 581 remote entries (fromCache=true) 
+15:10:58.019 [VZ-ShowAllEntityData: area-tags] 🧹 Signalling other scripts to stop... 
+15:10:58.022 [VZ-ShowAllEntityData: area-tags] 🚀 applyShowAllTags: clicking "Show all tags." to expose hidden tags. 
+15:10:58.039 [VZ-ShowAllEntityData: area-tags] 🚀 applyShowAllTags: click processed — proceeding with DOM pre-processing. 
+15:10:58.041 [VZ-ShowAllEntityData: area-tags] 🚀 applyRenameH2ToH3: renamed 11 <h2> element(s) to <h3>. 
+15:10:58.042 [VZ-ShowAllEntityData: area-tags] 🚀 applyInsertH2: inserted <h2>"Area tags"</h2> after <div class="tabs">. 
+15:10:58.045 [VZ-ShowAllEntityData: area-tags] 🚀 applyListToTable: converted "genre-list" → table (24 rows, col="Genre", structure="bare-ul"). 
+15:10:58.047 [VZ-ShowAllEntityData: area-tags] 🚀 applyListToTable: converted "tag-list" → table (23 rows, col="Tag", structure="bare-ul"). 
+15:10:58.047 [VZ-ShowAllEntityData: area-tags] 📥 Starting fetch process... null
+15:10:58.048 [VZ-ShowAllEntityData: area-tags] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+15:10:58.048 [VZ-ShowAllEntityData: area-tags] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+15:10:58.048 [VZ-ShowAllEntityData: area-tags] 📥 Total pages to fetch: 1 
+15:10:58.049 [VZ-ShowAllEntityData: area-tags] 🧹 Starting clutter element removal. 
+15:10:58.049 [VZ-ShowAllEntityData: area-tags] 🧹 removeSelector: removed "div.all-tags". 
+15:10:58.052 [VZ-ShowAllEntityData: area-tags] 📥 Page 1 is current page. Using existing document. 
+15:10:58.053 [VZ-ShowAllEntityData: area-tags] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+15:10:58.053 [VZ-ShowAllEntityData: area-tags] 📝 No targetHeader provided; returning all tables found in container. 
+15:10:58.054 [VZ-ShowAllEntityData: area-tags] 📝 parseDocumentForTables: Found 0 total tables. Target header filter: "none" 
+15:10:58.054 [VZ-ShowAllEntityData: area-tags] 📥 No tables found matching "null" on page 1 to parse. Skipping. 
+15:10:58.054 [VZ-ShowAllEntityData: area-tags] 🎨 DOM rendering starting... 
+15:10:58.054 [VZ-ShowAllEntityData: area-tags] 🎨 Starting updateH2Count: filtered=0, total=0, absoluteTotal=null 
+15:10:58.055 [VZ-ShowAllEntityData: area-tags] 🎨 Aborting updateH2Count: No table.tbl found on page. 
+15:10:58.056 [VZ-ShowAllEntityData: area-tags] 🎨 Starting renderGroupedTable with 0 categories. Query: "" 
+15:10:58.057 [VZ-ShowAllEntityData: area-tags] ❌ No template table head found. 
+15:10:58.057 [VZ-ShowAllEntityData: area-tags] 🎨 Searching for target H2. Current pageType: area-tags 
+15:10:58.057 [VZ-ShowAllEntityData: area-tags] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+15:10:58.058 [VZ-ShowAllEntityData: area-tags] ❌ Critical Error during fetch: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:26551:31)
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:25183:23)
+#+end_example
+
+** bugs
+
+still buggy
+
+#+begin_example
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.410+2026-04-05) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/tags 
+15:16:13.640 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/tags 
+15:16:13.641 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/tags 
+15:16:13.641 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/tags 
+15:16:13.642 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+15:16:13.642 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+15:16:13.645 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: area-tags 
+15:16:13.647 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+15:16:13.648 [VZ-ShowAllEntityData: area-tags] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/tags
+15:16:13.649 [VZ-ShowAllEntityData: area-tags] 🚀 Cached entity name at init time: "United States" 
+15:16:13.663 [VZ-ShowAllEntityData: area-tags] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+15:16:13.724 [VZ-ShowAllEntityData: area-tags] 🚀 Blurred #headerid-query input on page entry 
+15:16:13.728 [VZ-ShowAllEntityData: area-tags] 📝 Changelog source: remote — replaced 0 local entries with 581 remote entries (fromCache=true) 
+15:16:17.351 [VZ-ShowAllEntityData: area-tags] 🧹 Signalling other scripts to stop... 
+15:16:17.356 [VZ-ShowAllEntityData: area-tags] 🚀 applyShowAllTags: clicking "Show all tags." to expose hidden tags. 
+15:16:17.368 [VZ-ShowAllEntityData: area-tags] 🚀 applyShowAllTags: click processed — proceeding with DOM pre-processing. 
+15:16:17.375 [VZ-ShowAllEntityData: area-tags] 🚀 applyRenameH2ToH3: renamed 11 <h2> element(s) to <h3>. 
+15:16:17.376 [VZ-ShowAllEntityData: area-tags] 🚀 applyInsertH2: inserted <h2>"Area tags"</h2> after <div class="tabs">. 
+15:16:17.380 [VZ-ShowAllEntityData: area-tags] 🚀 applyListToTable: converted "genre-list" → table (24 rows, col="Genre", structure="bare-ul"). 
+15:16:17.382 [VZ-ShowAllEntityData: area-tags] 🚀 applyListToTable: converted "tag-list" → table (23 rows, col="Tag", structure="bare-ul"). 
+15:16:17.383 [VZ-ShowAllEntityData: area-tags] 📥 Starting fetch process... null
+15:16:17.383 [VZ-ShowAllEntityData: area-tags] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+15:16:17.384 [VZ-ShowAllEntityData: area-tags] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+15:16:17.384 [VZ-ShowAllEntityData: area-tags] 📥 Total pages to fetch: 1 
+15:16:17.384 [VZ-ShowAllEntityData: area-tags] 🧹 Starting clutter element removal. 
+15:16:17.394 [VZ-ShowAllEntityData: area-tags] 📥 Page 1 is current page. Using existing document. 
+15:16:17.396 [VZ-ShowAllEntityData: area-tags] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+15:16:17.396 [VZ-ShowAllEntityData: area-tags] 📝 No targetHeader provided; returning all tables found in container. 
+15:16:17.397 [VZ-ShowAllEntityData: area-tags] 📝 parseDocumentForTables: Found 2 total tables. Target header filter: "none" 
+15:16:17.397 [VZ-ShowAllEntityData: area-tags] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+15:16:17.397 [VZ-ShowAllEntityData: area-tags] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: area-tags 
+15:16:17.398 [VZ-ShowAllEntityData: area-tags] 📥 listToTable category: "Genres". Rows so far: 0 
+15:16:17.401 [VZ-ShowAllEntityData: area-tags] 📥 listToTable category: "Other tags". Rows so far: 24 
+15:16:17.402 [VZ-ShowAllEntityData: area-tags] 📥 Page 1/1 processed in 0.01s. Rows on page: 47. Total: 47 
+15:16:17.402 [VZ-ShowAllEntityData: area-tags] 📥   Summary: Genres: +24 (Total: 24) | Other tags: +23 (Total: 23) 
+15:16:17.404 [VZ-ShowAllEntityData: area-tags] 🧹 removeSelector: removed "div.all-tags". 
+15:16:17.404 [VZ-ShowAllEntityData: area-tags] 🎨 DOM rendering starting... 
+15:16:17.405 [VZ-ShowAllEntityData: area-tags] 🎨 Starting updateH2Count: filtered=47, total=47, absoluteTotal=null 
+15:16:17.406 [VZ-ShowAllEntityData: area-tags] 🎨 Aborting updateH2Count: No table.tbl found on page. 
+15:16:17.407 [VZ-ShowAllEntityData: area-tags] 🎨 Starting renderGroupedTable with 2 categories. Query: "" 
+15:16:17.408 [VZ-ShowAllEntityData: area-tags] ❌ No template table head found. 
+15:16:17.409 [VZ-ShowAllEntityData: area-tags] 🎨 Searching for target H2. Current pageType: area-tags 
+15:16:17.410 [VZ-ShowAllEntityData: area-tags] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+15:16:17.410 [VZ-ShowAllEntityData: area-tags] ❌ Critical Error during fetch: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:26554:31)
+    at startFetchingProcess (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=2cdd8999-ded9-43e0-9c43-d68fa700a626:25186:23)
+#+end_example
+
+** solution
+
+The complete timing sequence is now:
+
+#+begin_example
+applyShowAllTags()          → exposes hidden tags
+applyRenameH2ToH3/InsertH2  → restructure headings
+applyListToTable()          → convert <ul> → <table> (inside div.all-tags)
+performClutterCleanup()     → other cleanup, div.all-tags left intact
+fetch loop                  → reads rows from the tables
+renderGroupedTable()        → clones thead template, builds output tables
+finalCleanup()              → removeSelector removes div.all-tags  ← here
+#+end_example

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.407+2026-04-05
+// @version      9.99.409+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3465,6 +3465,50 @@
     }
 
     /**
+     * Clicks the "Show all tags." anchor on entity tag pages so that hidden
+     * tags (score ≤ 0, downvoted) are exposed in the `<ul>` lists before the
+     * `applyListToTable()` conversion runs.
+     *
+     * Triggered by `features.showAllTags: true` in the page definition.
+     *
+     * MusicBrainz renders tag pages with a `<div class="all-tags">` block that
+     * contains, among other things:
+     *   <a href="#">Show all tags.</a>
+     *
+     * Clicking that anchor triggers MusicBrainz client-side JS that removes the
+     * `display:none` / filtered styling from hidden `<li>` elements in the
+     * sibling `<ul class="genre-list">` / `<ul class="tag-list">` containers.
+     * Because this DOM mutation is synchronous, a single microtask-yield
+     * (`await Promise.resolve()`) is sufficient before the caller proceeds.
+     *
+     * If the link is not found (e.g. all tags are already visible) the function
+     * returns silently without delay.
+     *
+     * @param   {object}  def - The active merged pageDefinition object.
+     * @returns {Promise<void>}
+     */
+    async function applyShowAllTags(def) {
+        if (!def?.features?.showAllTags) return;
+
+        // Find the "Show all tags." anchor — it lives inside div.all-tags.
+        const _link = Array.from(document.querySelectorAll('div.all-tags a[href="#"]'))
+            .find(a => a.textContent.trim().toLowerCase().startsWith('show all tags'));
+
+        if (!_link) {
+            Lib.debug('init', 'applyShowAllTags: "Show all tags." link not found — all tags already visible or page structure differs.');
+            return;
+        }
+
+        Lib.debug('init', 'applyShowAllTags: clicking "Show all tags." to expose hidden tags.');
+        _link.click();
+
+        // Yield to the microtask queue so MusicBrainz JS can process the click
+        // and mutate the DOM (show hidden <li> elements) before we proceed.
+        await Promise.resolve();
+        Lib.debug('init', 'applyShowAllTags: click processed — proceeding with DOM pre-processing.');
+    }
+
+    /**
      * Derives the runtime integer-column descriptor list from a merged
      * activeDefinition object.
      *
@@ -3994,6 +4038,12 @@
             buttons: [ { label: 'Show all Tags for Area' } ],
             tableMode: 'multi',
             features: {
+                // Click "Show all tags." before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the "all-tags" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Area tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -18206,6 +18256,19 @@ a { color: #1565c0; }`;
     function performClutterCleanup() {
         Lib.debug('cleanup', 'Starting clutter element removal.');
 
+        // ── features.removeSelector ───────────────────────────────────────────
+        // For pageTypes that carry features.removeSelector (a CSS selector
+        // string), remove the matching element from the live DOM.
+        // Used e.g. by 'area-tags' to remove the <div class="all-tags"> info
+        // and form container after the <ul> lists have been converted to tables.
+        if (activeDefinition?.features?.removeSelector) {
+            const _el = document.querySelector(activeDefinition.features.removeSelector);
+            if (_el) {
+                _el.remove();
+                Lib.debug('cleanup', `removeSelector: removed "${activeDefinition.features.removeSelector}".`);
+            }
+        }
+
         // Remove Jesus2099 bigbox elements
         const bigBoxCount = document.querySelectorAll('div.jesus2099userjs154481bigbox').length;
         document.querySelectorAll('div.jesus2099userjs154481bigbox').forEach(div => div.remove());
@@ -21151,6 +21214,17 @@ a { color: #1565c0; }`;
 
         // Stop other scripts immediately when an action button is pressed
         stopOtherScripts();
+
+        // ── showAllTags pre-processing ────────────────────────────────────────
+        // For pageTypes that carry features.showAllTags (e.g. 'area-tags'),
+        // programmatically click the "Show all tags." anchor so that hidden
+        // zero-score / downvoted tags become visible in the <ul> lists BEFORE
+        // any heading restructuring or listToTable conversion runs.
+        // Must be the very first pre-processing step so nothing downstream
+        // operates on an incomplete tag list.
+        if (activeDefinition.features?.showAllTags) {
+            await applyShowAllTags(activeDefinition);
+        }
 
         // ── renameH2ToH3 / insertH2 pre-processing ───────────────────────────
         // For pageTypes that carry features.renameH2ToH3 and/or features.insertH2
