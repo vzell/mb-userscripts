@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.401+2026-04-05
+// @version      9.99.400+2026-04-04
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4569,9 +4569,9 @@
             type: 'artist-recordings',
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/recordings$/),
             buttons: [
-                { label: '⊚ All recordings', params: { all: '1' } },
-                { label: '♫ Standalone',     params: { standalone: '1' } },
-                { label: '🎬 Video',         params: { video: '1' } }
+                { label: '🧮 All recordings', params: { all: '1' } },
+                { label: '🧮 Standalone',     params: { standalone: '1' } },
+                { label: '🧮 Video',          params: { video: '1' } }
             ],
             features: {
                 columnErasers: [
