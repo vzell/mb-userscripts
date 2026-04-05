@@ -67710,7 +67710,7 @@ Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/perfor
 #+end_example
 
 
-* TODO add other <entity>-tags pageType definitions
+* DONE add other <entity>-tags pageType definitions
 
 #+begin_example
         {
@@ -67726,8 +67726,7 @@ Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/perfor
         },
 #+end_example
 
-
-* TODO change /tags
+* DONE change "/tags" with parameter support "show_downvoted"
 
 does not work yet
 
@@ -68101,7 +68100,6 @@ after the "type: 'artist-tags'" pageType definition
 
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
 
-* fix synching synthetic columns in all event relatiion pageTypes: series, collections, artist
 
 * TODO li2table
 ** https://musicbrainz.org/user/vzell/tag/handwritten
@@ -68143,7 +68141,8 @@ ul
 * TODO further split "Area"
 
 
-* TODO check "Date" splitter
+* DONE fix synching synthetic columns in all event relation pageTypes: series, collections, artist
+* DONE check "Date" splitter
 
 some more pageType additions:
 
@@ -68566,7 +68565,6 @@ Extend the "dateParts" function so that the "sourceCell" parameter also accepts 
 When the function is called with a date range, debug log it to the console but do not try to split it as in the usual
 case.
 
-
 * DONE edit pageTypes
 
 some pageType additions:
@@ -68869,9 +68867,165 @@ to
         }
 #+end_example
 
+* DONE for "Release events" columns add the abbreviated country code after the flag
+** initial
 
-* TODO for "Release events" columns add the abbreviated country code after the flag
+some enhancements:
 
-for "Release events" columns add the abbreviated country code after the flag and add "Country/Date" split functionality
+1.)
 
+for "Release events" columns add the abbreviated country code after the flag icon:
+
+In the function
+
+#+begin_example
+async function initReleaseEventsColumn()
+#+end_example
+
+the current rendered "Release events" data cell, e.g.
+
+#+begin_example
+<td class="mb-re-cell" data-mbid="5897f949-48a7-47f5-b3b8-206b1e5b7d9a" style="" data-re-done="1">
+  <ul style="list-style: none; margin: 0px; padding: 0px;">
+    <li class="flag flag-CA" title="Canada (CA)">1988-11
+    </li>
+  </ul>
+</td>
+#+end_example
+
+should look like
+
+#+begin_example
+<td class="mb-re-cell" data-mbid="5897f949-48a7-47f5-b3b8-206b1e5b7d9a" style="" data-re-done="1">
+  <ul style="list-style: none; margin: 0px; padding: 0px;">
+    <li class="flag flag-CA" title="Canada (CA)">(CA) 1988-11
+    </li>
+  </ul>
+</td>
+#+end_example
+
+So basically the 2-char abbreviated country name should be rendered in brackets after the "country flag" icon
+
+2.)
+
+change the following two pageType definitions from
+
+#+begin_example
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title', // Specific header
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title', // Specific header
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title', // Specific header
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title', // Specific header
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+so that the "dateParts" extractor can also work on the 'Release events' column
+
+** revert
+
+some fixes
+
+1.)
+
+revert the "Added syntheticColumnExtractors to both definitions" in label-relationships / label-relationships-filtered
+
+2.)
+
+change the rendering of the "Release events" data cell from
+
+#+begin_example
+<td class="mb-re-cell" data-mbid="5897f949-48a7-47f5-b3b8-206b1e5b7d9a" style="" data-re-done="1">
+  <ul style="list-style: none; margin: 0px; padding: 0px;">
+    <li class="flag flag-CA" title="Canada (CA)">(CA) 1988-11
+    </li>
+  </ul>
+</td>
+#+end_example
+
+to
+
+#+begin_example
+<td class="mb-re-cell" data-mbid="5897f949-48a7-47f5-b3b8-206b1e5b7d9a" style="" data-re-done="1">
+  <ul style="list-style: none; margin: 0px; padding: 0px;">
+    <li class="flag flag-CA" title="Canada (CA)">CA  1988-11
+    </li>
+  </ul>
+</td>
+#+end_example
+
+So basically the 2-char abbreviated country name should be rendered WITHOUT brackets after the "country flag" icon and
+add an additional space after it before the date
 

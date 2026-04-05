@@ -1,18 +1,5 @@
 [
   {
-    "version": "9.99.404",
-    "date": "2026-04-05",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "Reverted syntheticColumnExtractors (dateParts on 'Release events') from label-relationships-filtered and label-relationships — added prematurely in 9.99.403.",
-          "_rePopulateCell(): changed release-event country-code prefix from bracketed '(CA) ' to bare 'CA  ' (no brackets, two spaces between code and date), e.g. 'CA  1988-11'."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.403",
     "date": "2026-04-05",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.404+2026-04-05
+// @version      9.99.403+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4437,6 +4437,9 @@
                 ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title', // Specific header
                 stickyColumn: 'Title'
@@ -4454,6 +4457,9 @@
                 ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title', // Specific header
                 stickyColumn: 'Title'
@@ -29322,8 +29328,8 @@ a { color: #1565c0; }`;
                 if (codes && codes.length > 0) {
                     li.classList.add('flag', 'flag-' + codes[0]);
                     li.title = name ? `${name} (${codes[0]})` : codes[0];
-                    // Render "XX  date" — country code without brackets, two spaces before date
-                    li.textContent = `${codes[0]}  ${ev.date || '\u00a0'}`;
+                    // Render "(XX) date" — country code in brackets after the flag icon
+                    li.textContent = `(${codes[0]}) ${ev.date || '\u00a0'}`;
                 } else {
                     if (name) li.title = name;
                     li.textContent = ev.date || '\u00a0';
