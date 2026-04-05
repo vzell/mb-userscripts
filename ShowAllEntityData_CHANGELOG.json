@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.412",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "@match *://*.musicbrainz.org/user/*/tags*: added trailing wildcard so the script activates on /user/*/tags?show_downvoted=1 and other query-string variants.",
+          "Renamed pageType 'tags' to 'user-tags'. Updated match to /\\/user\\/[^/]+\\/tags/ (explicit user-path regex instead of generic path.includes). Replaced single 'Show all Tags for User' button with two filter buttons: 'Upvoted' (params: {show_downvoted:'0'}) and 'Downvoted' (params: {show_downvoted:'1'}). Removed integerColumns (Tag count alignment). Added removeSelector: 'form:has(select[name=\"show_downvoted\"])' so the vote/sort form is removed from the final rendered page by finalCleanup() after rendering is complete."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.411",
     "date": "2026-04-05",
     "sections": [

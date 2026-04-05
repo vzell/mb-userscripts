@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.411+2026-04-05
+// @version      9.99.412+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -18,7 +18,7 @@
 // @match        *://*.musicbrainz.org/search?query=*
 // @match        *://*.musicbrainz.org/user/*/subscriptions/*
 // @match        *://*.musicbrainz.org/user/*/collections
-// @match        *://*.musicbrainz.org/user/*/tags
+// @match        *://*.musicbrainz.org/user/*/tags*
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
 // @connect      eventartarchive.org
@@ -4060,16 +4060,21 @@
                 listToTable: [ 'genres', 'tags' ]
             }
         },
-        // Tags pages (user-level, e.g. /user/<name>/tags)
+        // User tags pages (e.g. /user/vzell/tags, /user/vzell/tags?show_downvoted=1)
         {
-            type: 'tags',
-            match: (path) => path.includes('/tags'),
-            buttons: [ { label: 'Show all Tags for User' } ],
-            tableMode: 'multi',
+            type: 'user-tags',
+            match: (path, params) => path.match(/\/user\/[^/]+\/tags/),
+            buttons: [
+                { label: 'Upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Downvoted', params: { show_downvoted: '1' } }
+            ],
             features: {
                 listToTable: [ 'genres', 'tags' ],
-                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
-            }
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])'
+            },
+            tableMode: 'multi'
         },
         // Collections pages
         {
