@@ -68125,18 +68125,297 @@ after the "type: 'artist-tags'" pageType definition
 </ul>
 #+end_example
 
+
 ** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users
+*** initial
+
+1.)
+
+add the following new pageType definition
 
 #+begin_example
-<h2>Users</h2>
+        {
+            type: 'area-users',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/users/),
+            buttons: [ { label: 'Show all Users for Area' } ],
+            features: {
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
 #+end_example
+
+after the pageType "type: 'area-labels'"
+
+2.)
+
+additionally support for the pageType "area-users" in the function
 
 #+begin_example
-p
-nav
-ul
+function applyListToTable(def)
 #+end_example
 
+an additional structure "Structure C"
+
+#+begin_example
+     * ── Structure C: bare ul (entity tags pages /entity/<mbid>/tags) ─────────
+     *
+     *   Before:
+     *     <h2>Users</h2>
+     *     <p>
+     *     <nav>
+     *     <ul class="genre-list">
+     *       <li class="odd">
+     *         <a href="/tags/rock">rock</a>
+     *         <span class="tag-vote-buttons"><span class="tag-count">15</span></span>
+     *       </li>  …
+     *     </ul>
+     *
+     *   After:
+     *     <h2>Users</h2>
+     *     <table class="tbl">…</table>
+
+#+end_example
+
+where the "<li>" elements look like
+
+#+begin_example
+<li>
+  <a href="/user/__MarioMadrid">
+    <img alt="" class="avatar no-avatar" height="15" src="https://static.metabrainz.org/MB/editor-b055e61.svg" width="15">
+    <bdi>__MarioMadrid
+    </bdi>
+  </a>
+</li>
+#+end_example
+
+When the "listToTable: [ '' ]" has an empty array, take as the column name for the table the h2 header text, e.g. "Users" 
+
+*** bugs
+
+some fixes:
+
+1.)
+
+change the userscript header line
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags)(?:\?.*)?$/
+#+end_example
+
+to
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users)(?:\?.*)?$/
+#+end_example
+
+2.)
+
+Somehow the debug log shows the page fetching but the progress button text stays at "Loading page 1 of 240... (100 rows) - 2.6s left"
+
+#+begin_example
+<span id="mb-fetch-progress-outer" style="display: inline-block; position: relative; width: auto; min-width: 420px; max-width: 750px; height: 20px; background: rgb(224, 224, 224); border-radius: 4px; overflow: hidden; vertical-align: middle; border: 1px solid rgb(187, 187, 187);"><span id="mb-fetch-progress-fill" style="display: block; position: absolute; top: 0px; left: 0px; height: 100%; width: 0%; background: rgb(255, 204, 204); transition: width 0.2s, background 0.3s; border-radius: 3px 0px 0px 3px;"></span><span id="mb-fetch-progress-label" style="position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.75em; font-weight: bold; color: rgb(51, 51, 51); white-space: nowrap; pointer-events: none;">Loading page 1 of 240... (100 rows) - 2.6s left</span></span>
+#+end_example
+
+Also, when stopping the page loading with the "Stop"-button the final rendered page shows 0 rows in the rendered table
+and not the rows fetched so far.
+
+Here the debug log
+
+#+begin_example
+14:14:03.060 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.405+2026-04-05) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users 
+14:14:03.128 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users 
+14:14:03.128 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users 
+14:14:03.128 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/users 
+14:14:03.129 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+14:14:03.129 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+14:14:03.131 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: area-users 
+14:14:03.131 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
+14:14:03.132 [VZ-ShowAllEntityData: area-users] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/users
+14:14:03.132 [VZ-ShowAllEntityData: area-users] 🚀 Cached entity name at init time: "United States" 
+14:14:03.139 [VZ-ShowAllEntityData: area-users] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+14:14:03.151 [VZ-ShowAllEntityData: area-users] 🚀 Blurred #headerid-query input on page entry 
+14:14:03.156 [VZ-ShowAllEntityData: area-users] 📝 Changelog source: remote — replaced 0 local entries with 579 remote entries (fromCache=true) 
+14:14:06.398 [VZ-ShowAllEntityData: area-users] 🧹 Signalling other scripts to stop... 
+14:14:06.405 [VZ-ShowAllEntityData: area-users] 🚀 applyListToTable: converted h2="Users" ul → table (100 rows, structure="h2-ul"). 
+14:14:06.405 [VZ-ShowAllEntityData: area-users] 📥 Starting fetch process... null
+14:14:06.405 [VZ-ShowAllEntityData: area-users] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+14:14:06.406 [VZ-ShowAllEntityData: area-users] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+14:14:06.406 [VZ-ShowAllEntityData: area-users] 📥 determineMaxPageFromDOM: Found "Next" link. Extracted page: 240 
+14:14:06.406 [VZ-ShowAllEntityData: area-users] 📥 Total pages to fetch: 240 
+14:14:07.937 [VZ-ShowAllEntityData: area-users] 🧹 Starting clutter element removal. 
+14:14:07.938 [VZ-ShowAllEntityData: area-users] 📥 Page 1 is current page. Using existing document. 
+14:14:07.939 [VZ-ShowAllEntityData: area-users] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+14:14:07.939 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:14:07.940 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+14:14:07.940 [VZ-ShowAllEntityData: area-users] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+14:14:07.940 [VZ-ShowAllEntityData: area-users] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: area-users 
+14:14:07.941 [VZ-ShowAllEntityData: area-users] 📥 listToTable category: "Other". Rows so far: 0 
+14:14:07.949 [VZ-ShowAllEntityData: area-users] 📥 Page 1/240 processed in 0.01s. Rows on page: 100. Total: 100 
+14:14:07.950 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 2: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=2 
+14:14:07.950 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=2 
+14:14:09.892 [VZ-ShowAllEntityData: area-users] 📝 Page 2: No li.show-all elements found — nothing to expand. 
+14:14:09.893 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:14:09.893 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 0 total tables. Target header filter: "none" 
+14:14:09.893 [VZ-ShowAllEntityData: area-users] 📥 No tables found matching "null" on page 2 to parse. Skipping. 
+14:14:09.893 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 3: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=3 
+14:14:09.893 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=3 
+14:14:11.582 [VZ-ShowAllEntityData: area-users] 📝 Page 3: No li.show-all elements found — nothing to expand. 
+14:14:11.582 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:14:11.582 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 0 total tables. Target header filter: "none" 
+14:14:11.583 [VZ-ShowAllEntityData: area-users] 📥 No tables found matching "null" on page 3 to parse. Skipping. 
+14:14:11.583 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 4: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=4 
+14:14:11.583 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=4 
+14:14:13.088 [VZ-ShowAllEntityData: area-users] 📝 Page 4: No li.show-all elements found — nothing to expand. 
+14:14:13.088 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:14:13.089 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 0 total tables. Target header filter: "none" 
+14:14:13.089 [VZ-ShowAllEntityData: area-users] 📥 No tables found matching "null" on page 4 to parse. Skipping. 
+14:14:13.089 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 5: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=5 
+14:14:13.089 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=5 
+#+end_example
+
+** bugs
+
+still not working:
+
+#+begin_example
+14:29:57.118 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.406+2026-04-05) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users 
+14:29:57.181 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users 
+14:29:57.181 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users 
+14:29:57.181 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /area/489ce91b-6658-3307-9877-795b68554c98/users 
+14:29:57.182 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+14:29:57.182 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+14:29:57.183 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: area-users 
+14:29:57.184 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
+14:29:57.184 [VZ-ShowAllEntityData: area-users] 🚀 Initializing script for path: /area/489ce91b-6658-3307-9877-795b68554c98/users
+14:29:57.184 [VZ-ShowAllEntityData: area-users] 🚀 Cached entity name at init time: "United States" 
+14:29:57.190 [VZ-ShowAllEntityData: area-users] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+14:29:57.192 [VZ-ShowAllEntityData: area-users] 🚀 Blurred #headerid-query input on page entry 
+14:29:57.197 [VZ-ShowAllEntityData: area-users] 📝 Changelog source: remote — replaced 0 local entries with 579 remote entries (fromCache=true) 
+14:29:57.933 [VZ-ShowAllEntityData: area-users] 🧹 Signalling other scripts to stop... 
+14:29:57.946 [VZ-ShowAllEntityData: area-users] 🚀 applyListToTable: converted h2="Users" ul → table (100 rows, structure="h2-ul"). 
+14:29:57.948 [VZ-ShowAllEntityData: area-users] 📥 Starting fetch process... null
+14:29:57.948 [VZ-ShowAllEntityData: area-users] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+14:29:57.948 [VZ-ShowAllEntityData: area-users] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+14:29:57.949 [VZ-ShowAllEntityData: area-users] 📥 determineMaxPageFromDOM: Found "Next" link. Extracted page: 240 
+14:29:57.949 [VZ-ShowAllEntityData: area-users] 📥 Total pages to fetch: 240 
+14:29:59.133 [VZ-ShowAllEntityData: area-users] 🧹 Starting clutter element removal. 
+14:29:59.134 [VZ-ShowAllEntityData: area-users] 📥 Page 1 is current page. Using existing document. 
+14:29:59.134 [VZ-ShowAllEntityData: area-users] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+14:29:59.135 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:29:59.135 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+14:29:59.135 [VZ-ShowAllEntityData: area-users] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+14:29:59.135 [VZ-ShowAllEntityData: area-users] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: area-users 
+14:29:59.136 [VZ-ShowAllEntityData: area-users] 📝 Table body found. Processing child nodes. Total nodes: 100 
+14:29:59.136 [VZ-ShowAllEntityData: area-users] 📥 Page 1/240 processed in 0.00s. Rows on page: 0. Total: 0 
+14:29:59.137 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 2: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=2 
+14:29:59.137 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=2 
+14:30:01.056 [VZ-ShowAllEntityData: area-users] 📝 Page 2: No li.show-all elements found — nothing to expand. 
+14:30:01.060 [VZ-ShowAllEntityData: area-users] 🚀 applyListToTable: converted h2="Users" ul → table (100 rows, structure="h2-ul"). 
+14:30:01.060 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:30:01.060 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+14:30:01.061 [VZ-ShowAllEntityData: area-users] 📥 Found matching table "[object HTMLTableElement]" on page 2 to process. 
+14:30:01.061 [VZ-ShowAllEntityData: area-users] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: area-users 
+14:30:01.061 [VZ-ShowAllEntityData: area-users] 📝 Table body found. Processing child nodes. Total nodes: 100 
+14:30:01.062 [VZ-ShowAllEntityData: area-users] 📥 Page 2/240 processed in 1.93s. Rows on page: 0. Total: 0 
+14:30:01.062 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 3: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=3 
+14:30:01.062 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=3 
+14:30:03.261 [VZ-ShowAllEntityData: area-users] 📝 Page 3: No li.show-all elements found — nothing to expand. 
+14:30:03.267 [VZ-ShowAllEntityData: area-users] 🚀 applyListToTable: converted h2="Users" ul → table (100 rows, structure="h2-ul"). 
+14:30:03.267 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:30:03.267 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+14:30:03.267 [VZ-ShowAllEntityData: area-users] 📥 Found matching table "[object HTMLTableElement]" on page 3 to process. 
+14:30:03.267 [VZ-ShowAllEntityData: area-users] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: area-users 
+14:30:03.268 [VZ-ShowAllEntityData: area-users] 📝 Table body found. Processing child nodes. Total nodes: 100 
+14:30:03.268 [VZ-ShowAllEntityData: area-users] 📥 Page 3/240 processed in 2.21s. Rows on page: 0. Total: 0 
+14:30:03.268 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 4: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=4 
+14:30:03.269 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=4 
+14:30:04.967 [VZ-ShowAllEntityData: area-users] 📝 Page 4: No li.show-all elements found — nothing to expand. 
+14:30:04.970 [VZ-ShowAllEntityData: area-users] 🚀 applyListToTable: converted h2="Users" ul → table (100 rows, structure="h2-ul"). 
+14:30:04.970 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:30:04.970 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+14:30:04.970 [VZ-ShowAllEntityData: area-users] 📥 Found matching table "[object HTMLTableElement]" on page 4 to process. 
+14:30:04.970 [VZ-ShowAllEntityData: area-users] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: area-users 
+14:30:04.970 [VZ-ShowAllEntityData: area-users] 📝 Table body found. Processing child nodes. Total nodes: 100 
+14:30:04.971 [VZ-ShowAllEntityData: area-users] 📥 Page 4/240 processed in 1.70s. Rows on page: 0. Total: 0 
+14:30:04.971 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 5: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=5 
+14:30:04.971 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=5 
+14:30:06.668 [VZ-ShowAllEntityData: area-users] 📝 Page 5: No li.show-all elements found — nothing to expand. 
+14:30:06.671 [VZ-ShowAllEntityData: area-users] 🚀 applyListToTable: converted h2="Users" ul → table (100 rows, structure="h2-ul"). 
+14:30:06.671 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:30:06.671 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+14:30:06.671 [VZ-ShowAllEntityData: area-users] 📥 Found matching table "[object HTMLTableElement]" on page 5 to process. 
+14:30:06.672 [VZ-ShowAllEntityData: area-users] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: area-users 
+14:30:06.672 [VZ-ShowAllEntityData: area-users] 📝 Table body found. Processing child nodes. Total nodes: 100 
+14:30:06.672 [VZ-ShowAllEntityData: area-users] 📥 Page 5/240 processed in 1.70s. Rows on page: 0. Total: 0 
+14:30:06.673 [VZ-ShowAllEntityData: area-users] 📥 Fetching URL for page 6: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=6 
+14:30:06.673 [VZ-ShowAllEntityData: area-users] 📥 Initiating fetch for URL: https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users?page=6 
+14:30:06.917 [VZ-ShowAllEntityData: area-users] 🧹 Stop requested by user. 
+14:30:08.417 [VZ-ShowAllEntityData: area-users] 📝 Page 6: No li.show-all elements found — nothing to expand. 
+14:30:08.421 [VZ-ShowAllEntityData: area-users] 🚀 applyListToTable: converted h2="Users" ul → table (100 rows, structure="h2-ul"). 
+14:30:08.421 [VZ-ShowAllEntityData: area-users] 📝 No targetHeader provided; returning all tables found in container. 
+14:30:08.421 [VZ-ShowAllEntityData: area-users] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+14:30:08.421 [VZ-ShowAllEntityData: area-users] 📥 Found matching table "[object HTMLTableElement]" on page 6 to process. 
+14:30:08.422 [VZ-ShowAllEntityData: area-users] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[none], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: area-users 
+14:30:08.422 [VZ-ShowAllEntityData: area-users] 📝 Table body found. Processing child nodes. Total nodes: 100 
+14:30:08.422 [VZ-ShowAllEntityData: area-users] 📥 Page 6/240 processed in 1.75s. Rows on page: 0. Total: 0 
+14:30:08.422 [VZ-ShowAllEntityData: area-users] 🧹 Fetch loop stopped at page 7 
+14:30:08.423 [VZ-ShowAllEntityData: area-users] 🎨 DOM rendering starting... 
+14:30:08.423 [VZ-ShowAllEntityData: area-users] 🎨 Starting updateH2Count: filtered=0, total=0, absoluteTotal=null 
+14:30:08.424 [VZ-ShowAllEntityData: area-users] 🎨 Searching for target H2. Current pageType: area-users 
+14:30:08.425 [VZ-ShowAllEntityData: area-users] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+14:30:08.425 [VZ-ShowAllEntityData: area-users] 🎨 Stopping H2 search at index 1: table no longer follows this header. 
+14:30:08.425 [VZ-ShowAllEntityData: area-users] 🎨 Target element identified: "Users..." 
+14:30:08.425 [VZ-ShowAllEntityData: area-users] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+14:30:08.426 [VZ-ShowAllEntityData: area-users] 🎨 Appending filterContainer to targetH2. 
+14:30:08.426 [VZ-ShowAllEntityData: area-users] 🎨 Updated header/target Users count: (0) 
+14:30:08.427 [VZ-ShowAllEntityData: area-users] 🎨 Starting renderFinalTable with 0 rows. 
+14:30:08.428 [VZ-ShowAllEntityData: area-users] 🎨 Final table structure → headers=1, rowCells=0 
+14:30:08.428 [VZ-ShowAllEntityData: area-users] ❌ No rows provided to renderFinalTable. 
+14:30:08.430 [VZ-ShowAllEntityData: area-users] 🧹 cleanupHeaders() called → existing headers=[Users] 
+14:30:08.431 [VZ-ShowAllEntityData: area-users] 🧹 No columns were matched for removal based on current settings. 
+14:30:08.434 [VZ-ShowAllEntityData: area-users] 🧹 Running final cleanup... 
+14:30:08.434 [VZ-ShowAllEntityData: area-users] 🧹 No Sanojjonas elements found during final cleanup. 
+14:30:08.435 [VZ-ShowAllEntityData: area-users] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+14:30:08.435 [VZ-ShowAllEntityData: area-users] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+14:30:08.436 [VZ-ShowAllEntityData: area-users] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+14:30:08.436 [VZ-ShowAllEntityData: area-users] 🎨 Initializing collapsible H2 headers... 
+14:30:08.438 [VZ-ShowAllEntityData: area-users] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+14:30:08.439 [VZ-ShowAllEntityData: area-users] 🖥️ Auto-resize button added to controls 
+14:30:08.440 [VZ-ShowAllEntityData: area-users] 📝 Made 1 columns resizable 
+14:30:08.441 [VZ-ShowAllEntityData: area-users] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+14:30:08.444 [VZ-ShowAllEntityData: area-users] 🖥️ Column visibility toggle added to controls 
+14:30:08.445 [VZ-ShowAllEntityData: area-users] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+14:30:08.447 [VZ-ShowAllEntityData: area-users] 🖥️ Density control button added to controls 
+14:30:08.448 [VZ-ShowAllEntityData: area-users] 🖥️ Statistics button added to controls 
+14:30:08.448 [VZ-ShowAllEntityData: area-users] 📝 Keyboard shortcuts initialized 
+14:30:08.449 [VZ-ShowAllEntityData: area-users] 🖥️ Shortcuts help button already exists, skipping 
+14:30:08.450 [VZ-ShowAllEntityData: area-users] 🖥️ Export button with dropdown menu added to controls 
+14:30:08.451 [VZ-ShowAllEntityData: area-users] 🚀 Initializing aggressive full-width sidebar toggle. 
+14:30:08.452 [VZ-ShowAllEntityData: area-users] 🚀 Sidebar initially collapsed per sa_sidebar_collapsed setting. 
+14:30:08.453 [VZ-ShowAllEntityData: area-users] 📝 initBarcodeHighlight: processed table 0 
+14:30:08.454 [VZ-ShowAllEntityData: area-users] 📝 initCaaPics: request queue created (concurrency=4) 
+14:30:08.454 [VZ-ShowAllEntityData: area-users] 📝 initCAAPics: table 0 has no CAA column and no addCAA feature — skipping 
+14:30:08.455 [VZ-ShowAllEntityData: area-users] 📝 initCAAPics: processed 0 table(s) with CAA column 
+14:30:08.456 [VZ-ShowAllEntityData: area-users] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
+14:30:08.456 [VZ-ShowAllEntityData: area-users] 📝 initEAAPics: processed 0 table(s) with EAA column 
+14:30:08.457 [VZ-ShowAllEntityData: area-users] 📝 initCAAInlinePics: no addCAA column configured for this page type — skipping 
+14:30:08.458 [VZ-ShowAllEntityData: area-users] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+14:30:08.458 [VZ-ShowAllEntityData: area-users] 📝 Stats snapshot: 0 rows, 0 CAA links, 1 original + 0 extracted + 0 derived + 0 injected cols 
+14:30:08.459 [VZ-ShowAllEntityData: area-users] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
+14:30:08.460 [VZ-ShowAllEntityData: area-users] 📝 Unicode character picker initialised 
+14:30:08.461 [VZ-ShowAllEntityData: area-users] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+14:30:08.461 [VZ-ShowAllEntityData: area-users] 🎨 DOM rendering finished in 37.60ms 
+14:30:08.461 [VZ-ShowAllEntityData: area-users] ✅ Process complete. Final Row Count: 0. Total Time: 9.33s 
+14:30:08.477 [VZ-ShowAllEntityData: area-users] 📝 sa_auto_resize_columns: triggering auto-resize on load 
+14:30:08.478 [VZ-ShowAllEntityData: area-users] 📝 Auto-resizing 1 table(s)... 
+14:30:08.480 [VZ-ShowAllEntityData: area-users] 📝 Enabled horizontal scrolling at window level to preserve sticky headers 
+14:30:08.481 [VZ-ShowAllEntityData: area-users] 📝 Table 0 has no data rows, skipping 
+14:30:08.483 [VZ-ShowAllEntityData: area-users] 📝 Auto-resize complete: 0 visible columns across 0 table(s) in 3ms 
+14:30:08.493 [VZ-ShowAllEntityData: area-users] 📝 _artOpenIdb: database opened successfully 
+14:30:08.604 [VZ-ShowAllEntityData: area-users] 🖥️ Auto-focused global filter input after final render 
+14:30:09.434 [VZ-ShowAllEntityData: area-users] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s)
+#+end_example
 
 * TODO further split "Area"
 

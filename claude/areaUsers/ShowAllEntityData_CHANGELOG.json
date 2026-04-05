@@ -1,20 +1,5 @@
 [
   {
-    "version": "9.99.406",
-    "date": "2026-04-05",
-    "sections": [
-      {
-        "label": "🐛 Fix",
-        "items": [
-          "@include directive: added 'users' to the entity sub-page path alternation so the script activates on /area/<mbid>/users (and any other entity type that gains a /users sub-page in future).",
-          "applyListToTable(def, docContext=document): added optional docContext parameter (defaults to the live document). All internal DOM queries (getElementById, querySelector, querySelectorAll) now use docContext instead of the hardcoded global document. This allows the function to convert <ul> lists in remote DOMParser documents fetched during the pagination loop.",
-          "Fetch loop: added a call to applyListToTable(activeDefinition, doc) immediately before parseDocumentForTables for fetched pages (doc !== document) when features.listToTable is set. This fixes the 'Found 0 total tables' error on pages 2+ for area-users, where the raw fetched HTML still contains <ul> lists rather than <table class=\"tbl\"> elements.",
-          "listToTable/groupByH3 branch condition: added tableMode === 'multi' guard so single-table pageTypes that use listToTable (e.g. 'area-users', tableMode:'single') fall through to the generic else branch and deposit rows in allRows rather than groupedRows. Previously area-users went through the h3-backward-walk branch, assigned category 'Other' (no h3 precedes the table), and rendered 0 rows when the stop button was pressed."
-        ]
-      }
-    ]
-  },
-  {
     "version": "9.99.405",
     "date": "2026-04-05",
     "sections": [

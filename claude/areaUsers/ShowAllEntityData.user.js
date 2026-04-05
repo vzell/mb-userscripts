@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.406+2026-04-05
+// @version      9.99.405+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14,7 +14,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js
 // @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZ_MBLibrary.user.js
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users)(?:\?.*)?$/
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags)(?:\?.*)?$/
 // @match        *://*.musicbrainz.org/search?query=*
 // @match        *://*.musicbrainz.org/user/*/subscriptions/*
 // @match        *://*.musicbrainz.org/user/*/collections
@@ -3238,12 +3238,9 @@
      *         `<ul class="tag-list">`   → "Tag"
      *   The second column is always "Tag count".
      *
-     * @param {object}   def        - The active merged pageDefinition object.
-     * @param {Document} [docContext=document] - DOM document to operate on.
-     *                                 Pass a fetched DOMParser document to apply
-     *                                 the conversion to remote pages in the fetch loop.
+     * @param {object} def - The active merged pageDefinition object.
      */
-    function applyListToTable(def, docContext = document) {
+    function applyListToTable(def) {
         const sections = def?.features?.listToTable;
         if (!Array.isArray(sections) || sections.length === 0) return;
 
@@ -3254,7 +3251,7 @@
             // <h2>, walks its next element siblings to find a <ul>, builds a
             // single-column table using the h2 text as the column header.
             if (sectionId === '') {
-                const _root = docContext.getElementById('content') || docContext.body;
+                const _root = document.getElementById('content') || document.body;
                 Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
                     let _next  = _h2.nextElementSibling;
                     let _steps = 0;
@@ -3309,7 +3306,7 @@
             let _ul            = null;   // the <ul> to convert
             let _replaceTarget = null;   // the node to replace in the parent DOM
 
-            const _div = docContext.getElementById(sectionId);
+            const _div = document.getElementById(sectionId);
             if (_div) {
                 // Structure A: div-wrapped
                 _ul = _div.querySelector(':scope > ul');
@@ -3320,7 +3317,7 @@
                 _replaceTarget = _div; // replace the entire <div>
             } else {
                 // Structure B: bare ul — scan for <ul class="<singular>-list">
-                _ul = docContext.querySelector(`ul.${_ulClassName}`);
+                _ul = document.querySelector(`ul.${_ulClassName}`);
                 if (!_ul) {
                     Lib.debug('init', `applyListToTable: no <div id="${sectionId}"> and no <ul class="${_ulClassName}"> found — skipping.`);
                     return;
@@ -21372,18 +21369,6 @@ a { color: #1565c0; }`;
                 // Prepare candidates list if config is string or array
                 const mainColCandidates = Array.isArray(mainColConfig) ? mainColConfig : (mainColConfig ? [mainColConfig] : []);
 
-                // ── listToTable on fetched pages ─────────────────────────────
-                // For page types that carry features.listToTable (e.g. 'area-users'),
-                // fetched pages 2+ are raw HTML whose <ul> lists have NOT been
-                // pre-converted yet — applyListToTable() only ran on the live
-                // `document` earlier.  Apply it to each fetched `doc` here so that
-                // parseDocumentForTables finds the <table class="tbl"> elements.
-                // The live document (p === 1, doc === document) is intentionally
-                // skipped: it was already converted in the pre-processing block.
-                if (doc !== document && Array.isArray(activeDefinition.features?.listToTable)) {
-                    applyListToTable(activeDefinition, doc);
-                }
-
                 // Use parseDocumentForTables to filter which tables we actually process
                 const tablesToProcess = parseDocumentForTables(doc, targetHeader);
 
@@ -21777,12 +21762,8 @@ a { color: #1565c0; }`;
                             }
                         });
                     });
-                } else if ((activeDefinition.features?.listToTable || activeDefinition.features?.groupByH3) && activeDefinition.tableMode === 'multi') {
+                } else if (activeDefinition.features?.listToTable || activeDefinition.features?.groupByH3) {
                     // ── listToTable / groupByH3 multi-table mode ──────────────────────────
-                    // Only active when tableMode is 'multi'.  Single-table pageTypes that
-                    // use listToTable (e.g. 'area-users') fall through to the generic else
-                    // branch below so their rows land in allRows, not in groupedRows.
-                    //
                     // Two pageType variants share this branch:
                     //
                     // A) listToTable (e.g. 'tags', 'artist-tags'):

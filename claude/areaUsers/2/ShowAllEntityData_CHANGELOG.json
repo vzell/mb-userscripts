@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.407",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Generic else branch row guard: changed 'node.cells.length > 1' to also accept rows with exactly 1 cell when that cell's colSpan is <= 1. The old strict '> 1' guard silently skipped all 100 rows per page for area-users because the single-column Users table (produced by applyListToTable Structure C) has exactly 1 cell per row. The new condition is: (cells.length > 1) OR (cells.length === 1 AND cells[0].colSpan <= 1). A single cell with colSpan > 1 still indicates a section separator or 'no results' spanning row and continues to be skipped."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.406",
     "date": "2026-04-05",
     "sections": [

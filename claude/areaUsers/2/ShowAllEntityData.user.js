@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.406+2026-04-05
+// @version      9.99.407+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22013,7 +22013,15 @@ a { color: #1565c0; }`;
                                     if ((activeDefinition.tableMode === 'multi') && currentStatus !== lastCategorySeenAcrossPages) {
                                         Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
-                                } else if (node.cells.length > 1 && !node.classList.contains('explanation')) {
+                                } else if (
+                                    (node.cells.length > 1 ||
+                                     // Allow single-cell rows only when the cell does NOT span multiple
+                                     // columns — a colspan > 1 on the only cell indicates a section
+                                     // separator or "no results" row, not a real data row.
+                                     // This enables single-column tables (e.g. area-users) whose rows
+                                     // legitimately have cells.length === 1.
+                                     (node.cells.length === 1 && node.cells[0].colSpan <= 1)) &&
+                                    !node.classList.contains('explanation')) {
                                     // Remove artificial non-data rows on non-paginated pages which have a link "See all <number of rows> relationships" to the full dataset instead
                                     if (activeDefinition && activeDefinition.non_paginated) {
                                         const seeAllCell = node.querySelector('td[colspan]');
