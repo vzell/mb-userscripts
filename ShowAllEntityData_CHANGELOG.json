@@ -1,5 +1,21 @@
 [
   {
+    "version": "9.99.413",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "@match directives added: *://*.musicbrainz.org/user/*/tag/* (user tag value pages) and *://*.musicbrainz.org/tag/* (global tag pages).",
+          "New 'user-tag-value' pageType: matches /user/*/tag/* paths, tableMode 'multi', two buttons Entities upvoted/downvoted with show_downvoted params, listToTable:[''] (Structure D), removeSelector for vote/sort form. Must be listed before 'tag-value' due to narrower match.",
+          "New 'tag-value' pageType: matches /tag/* paths, tableMode 'multi', single button 'Show all Entities tagged', listToTable:[''] (Structure D), removeSelector for vote/sort form.",
+          "applyListToTable() Structure D (new): triggered when sectionId==='' AND window.location.pathname contains /tag/. Scans div#content for every <h3>, walks up to 5 next siblings to find a <ul>, builds a single-column table labelled with the h3 text (e.g. 'Areas', 'Artists'). Each <li>'s full inner content (including span.flag and nested <a>) is cloned into a single <td>. The <ul> is replaced by the bare <table>.",
+          "applyListToTable() Structure C restricted: now only activates when sectionId==='' AND path matches /area/<mbid>/users. All other sectionId==='' cases are routed to Structure D (tag pages) or log a skip message. All internal DOM creation calls updated from hardcoded document.createElement to docContext.createElement for correctness on fetched DOMParser documents."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.412",
     "date": "2026-04-05",
     "sections": [

@@ -68081,7 +68081,7 @@ after the "type: 'artist-tags'" pageType definition
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
 
 
-* TODO change "/tags" with parameter support "show_downvoted"
+* DONE change "/tags" with parameter support "show_downvoted"
 
 enhance user tag pages:
 
@@ -68170,7 +68170,143 @@ on the final rendered page of pageType "type: 'user-tags'" remove the "from" con
 </form>
 #+end_example
 
+
+* TODO Most popular tags in MusicBrainz
+
+add most popular tags in MusicBrainz support:
+
+1.)
+
+add a new userscript "match" directive
+
+#+begin_example
+// @match        *://*.musicbrainz.org/tags*
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/tags*
+#+end_example
+
+2.)
+
+add a new pageType definition
+
+#+begin_example
+        // Most popular tags in MusicBrainz
+        {
+            type: 'popular-tags',
+            match: (path, params) => path.match(/\/tags/),
+            buttons: [
+                { label: 'Show list',   params: { show_list: '1' } }
+            ],
+            features: {
+                listToTable: [ 'genres', 'tags' ]
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+3.)
+
+add support for
+
+https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly one table)
+
+https://musicbrainz.org/user/vzell/collections - multiple H2 (each has multiple H3 based tables)
+
+
 * TODO li2table for user specific tags
+** initial
+
+add support for tag value pages:
+
+1.)
+
+add new userscript "match" directives
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/tag/*
+// @match        *://*.musicbrainz.org/tag/*
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/tags*
+#+end_example
+
+2.)
+
+add new pageType definitions
+
+#+begin_example
+        // User tag pages (e.g. /user/vzell/tag/handwritten)
+        {
+            type: 'user-tag-value',
+            match: (path, params) => path.match(/\/user\/.*\/tag\//),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])'
+            },
+            tableMode: 'multi'
+        },
+        // Tag pages (e.g. /tag/country)
+        {
+            type: 'tag-value',
+            match: (path) => path.match(/\/tag\//),
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])'
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+before the pageType "type: 'collections'" definition
+
+3.)
+
+in the function "function applyListToTable(def, docContext = document)"
+
+add support for "Structure D"
+
+#+begin_example
+     * ── Structure D: h2+multiple h3 with ul (tag value pages (/user/vzell/tag/handwritten or /tag/album%20rock ) ─────────────
+     *
+     *   Triggered when `sectionId === ''` (empty string in the listToTable array) and on pageTypes which have "/tag/" in the virtual path.
+     *
+     *   Before:
+     *     <h2>Entities tagged as “<tag value>”</h2>
+     *     <p>…</p>
+     *     <h3>Areas</h3>
+     *     <ul>
+     *       <li><span class="flag flag-US"><a href="/area/489ce91b-6658-3307-9877-795b68554c98"><bdi>United States</bdi></a></span></li>
+     *       <li>  …
+     *     </ul>
+     *
+     *   After:
+     *     <h2>Users</h2>
+     *     <table class="tbl">…</table>
+     *
+#+end_example
+
+make sure to document (and alos guard in the code) that "Structure C" is only for area users pages "/area/<mbid>/users"
+
+#+begin_example
+Structure C: h2+ul (area users page /area/<mbid>/users)
+#+end_example
+
 ** https://musicbrainz.org/user/vzell/tag/handwritten
 
 #+begin_example
@@ -69533,6 +69669,7 @@ fetch loop                  → reads rows from the tables
 renderGroupedTable()        → clones thead template, builds output tables
 finalCleanup()              → removeSelector removes div.all-tags  ← here
 #+end_example
+
 
 * add feature to <entity>-tags
 

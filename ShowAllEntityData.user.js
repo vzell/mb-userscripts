@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.412+2026-04-05
+// @version      9.99.413+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -19,6 +19,8 @@
 // @match        *://*.musicbrainz.org/user/*/subscriptions/*
 // @match        *://*.musicbrainz.org/user/*/collections
 // @match        *://*.musicbrainz.org/user/*/tags*
+// @match        *://*.musicbrainz.org/user/*/tag/*
+// @match        *://*.musicbrainz.org/tag/*
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
 // @connect      eventartarchive.org
@@ -3203,9 +3205,11 @@
      *   Replacement: the `<ul>` itself is replaced by the bare `<table>`.
      *   Column name: derived from the `<ul>` class attribute (see below).
      *
-     * ── Structure C: h2+ul (area users page /area/<mbid>/users) ─────────────
+     * ── Structure C: h2+ul (area users page /area/<mbid>/users only) ──────────
      *
-     *   Triggered when `sectionId === ''` (empty string in the listToTable array).
+     *   Triggered when `sectionId === ''` AND the current page path contains
+     *   `/area/` and `/users` (i.e. the page type is 'area-users').
+     *   For all other pageTypes with `sectionId === ''`, Structure D is used.
      *
      *   Before:
      *     <h2>Users</h2>
@@ -3223,12 +3227,43 @@
      *     <h2>Users</h2>
      *     <table class="tbl">…</table>
      *
-     *   Detection : sectionId is ''; scan `div#content` (or body) for every
-     *               `<h2>` and walk its next element siblings (up to 5 steps)
-     *               until a `<ul>` is found.
-     *   Column name: the text content of the preceding `<h2>` (e.g. "Users").
+     *   Detection : sectionId is '' AND path matches /area/<mbid>/users.
+     *               Scans `div#content` (or body) for every `<h2>` and walks
+     *               its next element siblings (up to 5 steps) until a `<ul>`.
+     *   Column name: text content of the preceding `<h2>` (e.g. "Users").
      *   Table layout: single column (the full `<a>` link from each `<li>`);
      *               no "Tag count" second column.
+     *   Replacement: the `<ul>` itself is replaced by the bare `<table>`.
+     *
+     * ── Structure D: h2 + h3+ul sections (tag value pages) ──────────────────
+     *
+     *   Triggered when `sectionId === ''` AND the page path contains `/tag/`
+     *   (i.e. pageType is 'user-tag-value' or 'tag-value').
+     *
+     *   Before:
+     *     <h2>Entities tagged as "handwritten"</h2>
+     *     <p>…</p>
+     *     <h3>Areas</h3>
+     *     <ul>
+     *       <li><span class="flag flag-US">
+     *             <a href="/area/…"><bdi>United States</bdi></a>
+     *           </span></li>  …
+     *     </ul>
+     *     <h3>Artists</h3>
+     *     <ul>…</ul>
+     *
+     *   After:
+     *     <h2>Entities tagged as "handwritten"</h2>
+     *     <h3>Areas</h3>
+     *     <table class="tbl">…</table>
+     *     <h3>Artists</h3>
+     *     <table class="tbl">…</table>
+     *
+     *   Detection : sectionId is '' AND path contains /tag/.
+     *               Finds every `<h3>` inside `div#content` and walks its
+     *               next element siblings (up to 5 steps) until a `<ul>`.
+     *   Column name: text content of the preceding `<h3>` (e.g. "Areas").
+     *   Table layout: single column (the full `<li>` inner content).
      *   Replacement: the `<ul>` itself is replaced by the bare `<table>`.
      *
      * ── Column-name derivation (Structures A and B) ──────────────────────────
@@ -3247,14 +3282,70 @@
         const sections = def?.features?.listToTable;
         if (!Array.isArray(sections) || sections.length === 0) return;
 
+        // Derive the page path once for Structure C/D detection.
+        const _currentPath = window.location.pathname;
+
         sections.forEach(sectionId => {
 
-            // ── Structure C: empty sectionId — h2 + siblings + ul ───────────
-            // Triggered by listToTable: [''].  Scans the content area for every
-            // <h2>, walks its next element siblings to find a <ul>, builds a
-            // single-column table using the h2 text as the column header.
             if (sectionId === '') {
                 const _root = docContext.getElementById('content') || docContext.body;
+
+                // ── Structure D: h3+ul sections on tag value pages ───────────
+                // Triggered when path contains /tag/ (pageTypes 'user-tag-value'
+                // and 'tag-value').  Walks every <h3> and converts its sibling
+                // <ul> into a single-column table labelled with the h3 text.
+                if (_currentPath.includes('/tag/')) {
+                    Array.from(_root.querySelectorAll('h3')).forEach(_h3 => {
+                        let _next  = _h3.nextElementSibling;
+                        let _steps = 0;
+                        let _ul    = null;
+                        while (_next && _steps < 5) {
+                            if (_next.tagName === 'UL') { _ul = _next; break; }
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_ul) return;
+
+                        const _colName = _h3.textContent.trim();
+                        const _table   = docContext.createElement('table');
+                        _table.className = 'tbl';
+
+                        const _thead = docContext.createElement('thead');
+                        const _hr    = docContext.createElement('tr');
+                        const _th    = docContext.createElement('th');
+                        _th.textContent = _colName;
+                        _hr.appendChild(_th);
+                        _thead.appendChild(_hr);
+                        _table.appendChild(_thead);
+
+                        const _tbody = docContext.createElement('tbody');
+                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                            const _tr = docContext.createElement('tr');
+                            if (li.className) _tr.className = li.className;
+                            const _td = docContext.createElement('td');
+                            // Clone the full li content (may have span.flag + a)
+                            Array.from(li.childNodes).forEach(n => _td.appendChild(n.cloneNode(true)));
+                            _tr.appendChild(_td);
+                            _tbody.appendChild(_tr);
+                        });
+                        _table.appendChild(_tbody);
+
+                        _ul.parentNode.replaceChild(_table, _ul);
+                        Lib.debug('init',
+                            `applyListToTable: converted h3="${_colName}" ul → table`
+                            + ` (${_tbody.rows.length} rows, structure="h3-ul").`);
+                    });
+                    return; // Structure D handled all h3+ul pairs for this entry
+                }
+
+                // ── Structure C: h2+ul (area users pages only) ───────────────
+                // Only active when path matches /area/<mbid>/users.
+                // For all other pageTypes with sectionId==='' use Structure D above.
+                if (!_currentPath.match(/\/area\/[a-f0-9-]{36}\/users/)) {
+                    Lib.debug('init', `applyListToTable: sectionId='' but path "${_currentPath}" is neither a /tag/ nor /area/.../users page — skipping Structure C/D.`);
+                    return;
+                }
+
                 Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
                     let _next  = _h2.nextElementSibling;
                     let _steps = 0;
@@ -3268,24 +3359,24 @@
 
                     const _colName = _h2.textContent.trim();
 
-                    const _table = document.createElement('table');
+                    const _table = docContext.createElement('table');
                     _table.className = 'tbl';
 
                     // thead — single column named after the h2
-                    const _thead = document.createElement('thead');
-                    const _hr    = document.createElement('tr');
-                    const _th    = document.createElement('th');
+                    const _thead = docContext.createElement('thead');
+                    const _hr    = docContext.createElement('tr');
+                    const _th    = docContext.createElement('th');
                     _th.textContent = _colName;
                     _hr.appendChild(_th);
                     _thead.appendChild(_hr);
                     _table.appendChild(_thead);
 
                     // tbody — one row per <li>, single <td> with the <a> link
-                    const _tbody = document.createElement('tbody');
+                    const _tbody = docContext.createElement('tbody');
                     Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
-                        const _tr = document.createElement('tr');
+                        const _tr = docContext.createElement('tr');
                         if (li.className) _tr.className = li.className;
-                        const _td = document.createElement('td');
+                        const _td = docContext.createElement('td');
                         const _a  = li.querySelector('a');
                         if (_a) _td.appendChild(_a.cloneNode(true));
                         _tr.appendChild(_td);
@@ -4072,6 +4163,39 @@
                 listToTable: [ 'genres', 'tags' ],
                 // Remove the vote/sort form after rendering since the two buttons
                 // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])'
+            },
+            tableMode: 'multi'
+        },
+        // User tag pages (e.g. /user/vzell/tag/handwritten)
+        // Must come before the generic tag-value entry (narrower match).
+        {
+            type: 'user-tag-value',
+            match: (path, params) => path.match(/\/user\/.*\/tag\//),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                // Empty sectionId triggers Structure D in applyListToTable:
+                // the function scans for <h3>+<ul> pairs (each entity type
+                // section) and converts them to tables labelled with the h3 text.
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])'
+            },
+            tableMode: 'multi'
+        },
+        // Tag pages (e.g. /tag/country)
+        {
+            type: 'tag-value',
+            match: (path) => path.match(/\/tag\//),
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                // Empty sectionId triggers Structure D in applyListToTable.
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering.
                 removeSelector: 'form:has(select[name="show_downvoted"])'
             },
             tableMode: 'multi'
