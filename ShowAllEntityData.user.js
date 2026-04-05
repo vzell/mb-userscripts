@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.413+2026-04-05
+// @version      9.99.415+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4194,9 +4194,7 @@
             buttons: [ { label: 'Show all Entities tagged' } ],
             features: {
                 // Empty sectionId triggers Structure D in applyListToTable.
-                listToTable: [ '' ],
-                // Remove the vote/sort form after rendering.
-                removeSelector: 'form:has(select[name="show_downvoted"])'
+                listToTable: [ '' ]
             },
             tableMode: 'multi'
         },
@@ -24273,6 +24271,80 @@ a { color: #1565c0; }`;
                 }
                 // Append the filter container (initially hidden) to the h3
                 h3.appendChild(stfResult.container);
+
+                // ── "See all N" button for tag pages ─────────────────────────
+                // On tag value pages (pageType 'tag-value', 'user-tag-value') the
+                // rendered table may have a trailing "See all N <entity-type>s"
+                // row whose first cell contains an <em><a href="/tag/…"> link.
+                // When found:
+                //   • A button is inserted in the h3, after the filter-container
+                //     span (or after the filter toggle icon), that opens the full
+                //     entity list in a new tab.  It reuses the same
+                //     mb-show-all-subtable-btn class and colour settings as the
+                //     existing overflow-table button on artist-relationships pages.
+                //   • The trailing "See all" row is removed from the table because
+                //     the button makes it redundant.
+                //   • table.dataset.mbTotalRows and the h3 mb-row-count-stat span
+                //     are patched to reflect the actual (post-removal) row count so
+                //     that the "(N of M)" display does not appear.
+                if (pageType === 'tag-value' || pageType === 'user-tag-value') {
+                    const _lastRow = tbody.lastElementChild;
+                    if (_lastRow) {
+                        const _em  = _lastRow.querySelector('td em a[href*="/tag/"]');
+                        if (_em) {
+                            const _href  = _em.getAttribute('href');
+                            const _label = _em.textContent.trim(); // e.g. "See all 60 labels"
+                            const _countMatch  = _label.match(/See all ([\d,]+)/i);
+                            const _count       = _countMatch ? _countMatch[1] : '?';
+                            const _entityMatch = _label.match(/See all [\d,]+ (.+)/i);
+                            const _entityLabel = _entityMatch ? _entityMatch[1].trim() : 'rows';
+
+                            const _seeAllBtn = document.createElement('button');
+                            _seeAllBtn.type      = 'button';
+                            _seeAllBtn.className = 'mb-show-all-subtable-btn';
+                            _seeAllBtn.textContent = `Show all ${_count} rows`;
+                            _seeAllBtn.title =
+                                `Click to show all ${_count} ${_entityLabel} in a new browser tab ` +
+                                `for this sub-section (MusicBrainz Tag-Values pages have currently ` +
+                                `a limit of 10 rows rendered at most per entity type section)`;
+                            const _initBg    = Lib.settings.sa_ui_show_all_subtable_btn_bg         || '#FFE0B2';
+                            const _clickedBg = Lib.settings.sa_ui_show_all_subtable_btn_bg_clicked || '#CCFFCC';
+                            _seeAllBtn.style.background = _initBg;
+                            _seeAllBtn.onclick = (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.open(new URL(_href, window.location.origin).href, '_blank');
+                                _seeAllBtn.style.background = _clickedBg;
+                            };
+
+                            // Insert after filter container (or toggle icon if container absent)
+                            const _insertAfter = h3.querySelector('.mb-subtable-filter-container') ||
+                                                 h3.querySelector('.mb-subtable-filter-toggle-icon');
+                            if (_insertAfter) {
+                                _insertAfter.after(_seeAllBtn);
+                            } else {
+                                h3.appendChild(_seeAllBtn);
+                            }
+
+                            // Remove the trailing "See all" row — the button replaces it.
+                            _lastRow.remove();
+
+                            // Patch mbTotalRows to the real (post-removal) row count so that
+                            // updateSubTableRowCount() shows "(N)" and not "(N of N+1)".
+                            const _realCount = tbody.rows.length;
+                            table.dataset.mbTotalRows = String(_realCount);
+                            const _statSpan = h3.querySelector('.mb-row-count-stat');
+                            if (_statSpan) {
+                                _statSpan.textContent = `(${_realCount})`;
+                                _statSpan.removeAttribute('data-mbtt'); // clear stale tooltip
+                            }
+
+                            Lib.debug('render',
+                                `tag-value: added "Show all ${_count} rows" button to h3 "${categoryName}"; ` +
+                                `patched mbTotalRows to ${_realCount}.`);
+                        }
+                    }
+                }
 
                 // Add sub-table controls: Clear button and separate status displays
                 const subTableControls = document.createElement('span');

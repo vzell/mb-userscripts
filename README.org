@@ -68217,7 +68217,30 @@ https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly o
 https://musicbrainz.org/user/vzell/collections - multiple H2 (each has multiple H3 based tables)
 
 
-* TODO li2table for user specific tags
+* TODO li2table for user specific tag values and global tag values
+** https://musicbrainz.org/user/vzell/tag/handwritten
+
+#+begin_example
+<h3>Events</h3>
+#+end_example
+
+#+begin_example
+<ul>
+  <li>
+    <a href="/event/6e44285a-60a7-4e52-a67b-f1318768f190">
+      <bdi>2024‐05‐22: Stadium of Light, Sunderland, England, UK
+      </bdi>
+    </a> (2024-05-22)
+  </li>
+  <li>
+    <a href="/event/dcf8fdbd-46cc-402e-86cc-51667585cfd2">
+      <bdi>Bridge I
+      </bdi>
+    </a> (1986-10-13)
+  </li>
+</ul>
+#+end_example
+
 ** initial
 
 add support for tag value pages:
@@ -68307,28 +68330,132 @@ make sure to document (and alos guard in the code) that "Structure C" is only fo
 Structure C: h2+ul (area users page /area/<mbid>/users)
 #+end_example
 
-** https://musicbrainz.org/user/vzell/tag/handwritten
+** bugs
+
+some bugs
+
+1.)
+
+change the pageType definition for "type: 'tag-value'"
 
 #+begin_example
-<h3>Events</h3>
+        // Tag pages (e.g. /tag/country)
+        {
+            type: 'tag-value',
+            match: (path) => path.match(/\/tag\//),
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])'
+            },
+            tableMode: 'multi'
+        },
 #+end_example
 
+to
+
 #+begin_example
-<ul>
-  <li>
-    <a href="/event/6e44285a-60a7-4e52-a67b-f1318768f190">
-      <bdi>2024‐05‐22: Stadium of Light, Sunderland, England, UK
-      </bdi>
-    </a> (2024-05-22)
-  </li>
-  <li>
-    <a href="/event/dcf8fdbd-46cc-402e-86cc-51667585cfd2">
-      <bdi>Bridge I
-      </bdi>
-    </a> (1986-10-13)
-  </li>
-</ul>
+        // Tag pages (e.g. /tag/country)
+        {
+            type: 'tag-value',
+            match: (path) => path.match(/\/tag\//),
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi'
+        },
 #+end_example
+
+2.)
+
+on the final rendered page scan each sub-table if the last row contains a data cell
+
+with the following generic structure
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col">
+  <em>
+    <a href="/tag/<tag value>/<entity-type>">See all <count of entity-types> <entity-type>s
+    </a>
+  </em>
+</td>
+#+end_example
+
+e.g. for the tag value of "country" and the entity type "label"
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col">
+  <em>
+    <a href="/tag/country/label">See all 60 labels
+    </a>
+  </em>
+</td>
+#+end_example
+
+or e.g. for the entity type "release-group"
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col">
+  <em>
+    <a href="/tag/country/release-group">See all 28,888 release groups
+    </a>
+  </em>
+</td>
+#+end_example
+
+3.)
+
+If such a data cell is found, render a button in the corresponding h3 header line after
+
+#+begin_example
+<span class="mb-subtable-filter-toggle-icon"
+#+end_example
+
+or (if the subtable-filter-container is visible)
+
+#+begin_example
+<span class="mb-subtable-filter-container visible"
+#+end_example
+
+with the text "Show all <count of entity-types> rows", the tooltip title "Click to show all <count of entity-types> rows in a new browser tab for this sub-section"
+and the following action when clicked:
+
+- the '<a href="/tag/<tag value>/<entity-type>">' should open in a new tab
+
+Additionally the button should get a light green background after clicked
+
+** bugs
+
+some bugs:
+
+1.)
+
+change the tooltip title from
+
+#+begin_example
+Click to show all <count of entity-types> rows in a new browser tab for this sub-section
+#+end_example
+
+to
+
+#+begin_example
+Click to show all <count of entity-types> rows in a new browser tab for this sub-section (MusicBrainz Tag-Values pages have currently a limit of 10 rows rendered at most per entity type section)
+#+end_example
+
+2.)
+
+the number of rows renders as "(10 of 11)" for all sub-tables which have overflow table buttons, e.g.
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;10&lt;/span&gt; rows of 11 rows visible in this sub-table">(10 of 11)</span>
+#+end_example
+
+but it should be "(10)". It's probably because of the following implementation from the last session:
+
+Row removal — the trailing "See all" row is removed from the table since the button makes it redundant.
 
 
 * DONE new area-users pageType

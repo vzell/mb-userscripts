@@ -1,5 +1,31 @@
 [
   {
+    "version": "9.99.415",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "tag-value / user-tag-value 'See all' button tooltip: updated text to append '(MusicBrainz Tag-Values pages have currently a limit of 10 rows rendered at most per entity type section)'.",
+          "tag-value / user-tag-value row count bug: after removing the trailing 'See all' row, table.dataset.mbTotalRows is now patched to tbody.rows.length (the real post-removal count) and the h3 .mb-row-count-stat span is updated to '(N)' with its stale data-mbtt tooltip attribute cleared. Previously mbTotalRows was set to group.rows.length (which included the 'See all' row) before the row was removed, causing updateSubTableRowCount() to display '(10 of 11)' instead of '(10)'."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.414",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "✨ Enhancement / 🐛 Fix",
+        "items": [
+          "tag-value pageType: removed removeSelector (global tag pages have no vote/sort form to remove).",
+          "renderGroupedTable(): for pageTypes 'tag-value' and 'user-tag-value', after each group's rows are appended to tbody, the last row is inspected for a trailing 'See all N <entity-type>s' cell containing <em><a href=\"/tag/...\">.  When found: (1) a 'Show all N rows' button (class mb-show-all-subtable-btn, using the sa_ui_show_all_subtable_btn_bg and sa_ui_show_all_subtable_btn_bg_clicked colour settings) is inserted in the h3 after the filter-container span (or filter-toggle-icon as fallback); clicking opens the full listing in a new tab and sets the button background to the clicked colour; (2) the trailing 'See all' row is removed from the table. The button title reads 'Click to show all N <entity-type> in a new browser tab for this sub-section'. The implementation reuses the existing mb-show-all-subtable-btn pattern used by artist-relationships overflow tables."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.413",
     "date": "2026-04-05",
     "sections": [
