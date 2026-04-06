@@ -1,5 +1,58 @@
 [
   {
+    "version": "9.99.427",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "search finalCleanup: extended the searchform relocation to also move the injected 'Searchform' h2 alongside the div.searchform. Both elements are now inserted immediately after div#mb-status-displays-wrapper in document order: h2 first (via insertAdjacentElement('afterend') on the wrapper), then div.searchform immediately after the h2. Resulting order: div#mb-status-displays-wrapper → h2 Searchform → div.searchform."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.426",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "🐛 Fix / ♻️ Refactor",
+        "items": [
+          "search pageType: reverted the moveBeforeTableH2 / moveAfterH2 approach entirely. Removed features.moveBeforeTableH2 from the search pageType, removed the applyMoveBeforeTableH2() function, and removed its call site in the pre-processing block.",
+          "search pageType: div.searchform is now relocated in finalCleanup() via insertAdjacentElement('afterend') on div#mb-status-displays-wrapper, placing it immediately below the script's status/controls bar in the final rendered view. features.insertPrependH2:'Searchform' is retained so the section heading is still injected."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.425",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "search pageType: replaced features.moveAfterH2 with features.moveBeforeTableH2:'div.searchform'. The previous moveAfterH2 placed the search form immediately after the 'Searchform' h2 (making it a sibling of that h2), but the intent is to position it immediately before the h2 that precedes the actual results table — i.e. between the 'Searchform' h2 and the 'Search results' h2. Resulting DOM order: <h2>Searchform</h2> → <div class=\"searchform\"> → <h2>Search results</h2> → <table>.",
+          "Replaced applyMoveAfterH2() with applyMoveBeforeTableH2(): finds the first table.tbl via _findPrecedingH2(), then inserts the target element immediately before that h2 via parentNode.insertBefore()."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.424",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "search pageType: added features.insertPrependH2:'Searchform' and features.moveAfterH2:{h2Text:'Searchform',selector:'div.searchform'}. On click, a 'Searchform' <h2> is inserted before the existing search-results <h2>, then <div class=\"searchform\"> is relocated to immediately follow it — giving the search form its own collapsible section in the rendered view.",
+          "New applyInsertPrependH2(def): inserts a new <h2> with the text from features.insertPrependH2 immediately before the first existing <h2> in div#content (fallback: prepend to div#page / body).",
+          "New applyMoveAfterH2(def): finds the <h2> whose text matches features.moveAfterH2.h2Text and relocates the element matching features.moveAfterH2.selector to immediately after it via insertAdjacentElement('afterend').",
+          "Both functions are called in startFetchingProcess() in the pre-processing block, after the existing renameH2ToH3/insertH2 calls."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.423",
     "date": "2026-04-06",
     "sections": [

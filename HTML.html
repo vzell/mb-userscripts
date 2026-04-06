@@ -1,3 +1,94 @@
+<div class="searchform">
+  <form action="/search" method="get">
+    <div class="row">
+      <label class="required" for="id-query">Query:
+      </label>
+      <input id="id-query" name="query" placeholder="" required="" size="47" type="text" value="Asbury">
+    </div>
+    <div class="row">
+      <label class="" for="id-type">Type:
+      </label>
+      <select class="with-button" id="id-type" name="type">
+	<option value="artist">Artist
+	</option>
+	<option value="release_group">Release group
+	</option>
+	<option value="release">Release
+	</option>
+	<option value="recording">Recording
+	</option>
+	<option value="work">Work
+	</option>
+	<option value="label">Label
+	</option>
+	<option value="area" selected="">Area
+	</option>
+	<option value="place">Place
+	</option>
+	<option value="annotation">Annotation
+	</option>
+	<option value="cdstub">CD stub
+	</option>
+	<option value="editor">Editor
+	</option>
+	<option value="tag">Tag
+	</option>
+	<option value="instrument">Instrument
+	</option>
+	<option value="series">Series
+	</option>
+	<option value="event">Event
+	</option>
+	<option value="doc">Documentation
+	</option>
+      </select>
+    </div>
+    <div class="row">
+      <label class="" for="id-limit">Results per page:
+      </label>
+      <select class="with-button" id="id-limit" name="limit">
+	<option value="25">Up to 25
+	</option>
+	<option value="50" selected="">Up to 50
+	</option>
+	<option value="100">Up to 100
+	</option>
+      </select>
+    </div>
+    <div class="row">
+      <label class="">Search method:
+      </label>
+      <div class="no-label">
+	<label class="inline">
+	  <input name="method" type="radio" value="indexed">
+	  <!-- -->Indexed search
+	</label>
+	<br>
+	<label class="inline">
+	  <input name="method" type="radio" value="advanced">
+	  <!-- -->Indexed search with
+	  <a href="/doc/Indexed_Search_Syntax">advanced query syntax
+	  </a>
+	</label>
+	<br>
+	<label class="inline">
+	  <input name="method" type="radio" checked="" value="direct">
+	  <!-- -->Direct database search
+	</label>
+      </div>
+    </div>
+    <div class="row no-label">
+      <span class="buttons">
+	<button type="submit">Search
+	</button>
+      </span>
+    </div>
+  </form>
+</div>
+
+--
+
+
 <h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;">
   <span class="mb-toggle-icon">▼
   </span>Artist subscriptions

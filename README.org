@@ -57765,7 +57765,6 @@ columns after loading from disk right away, so emulating pressing the
 button
 
 
-
 * DONE add a generic function type to the configuration
 
 some new functionality:
@@ -59886,8 +59885,413 @@ JSON
   },
 #+end_example
 
-
 * DONE Add a toggle "Collapse all [CAA icon]"-button to h2/h3 header line
+
+* DONE Reintroduce jesus2099 "Release events"
+** initial
+
+some new features:
+
+1.)
+
+add a new "RELEASE EVENTS COLUMN SECTION" to the variable "const configSchema"
+
+#+begin_example
+        // ============================================================
+        // RELEASE EVENTS COLUMN SECTION
+        // ============================================================
+        divider_release_events_col: {
+            type: 'divider',
+            label: '<release event icon> RELEASE EVENTS COLUMN'
+        },
+
+        sa_enable_release_events_column: {
+            label: 'Enable Release events column',
+            type: 'checkbox',
+            default: true,
+        },
+
+        sa_enable_release_events_debug: {
+            label: 'Enable Release events column debug logging',
+            type: 'checkbox',
+            default: true,
+        },
+#+end_example
+
+2.)
+
+add the "injectedColumns" and "collapsableColumns" definitions 
+
+#+begin_example
+injectedColumns: [ 'Release events' ],
+collapsableColumns: [ 'Release events' ],
+#+end_example
+
+to the following pageType definitions
+
+#+begin_example
+            type: 'place-performances-filtered',
+            type: 'place-performances',
+            type: 'label-relationships-filtered',
+            type: 'label-relationships',
+#+end_example
+
+and
+
+#+begin_example
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+#+end_example
+
+to
+
+#+begin_example
+            type: 'place-performances-filtered',
+            type: 'artist-relationships',
+#+end_example
+
+so it looks like:
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                injectedColumns: [ 'Release events' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                injectedColumns: [ 'Release events' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                injectedColumns: [ 'Release events' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                injectedColumns: [ 'Release events' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'artist-relationships',
+            // Only match if NO link_type_id is present (the overview page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                collapsableColumns: [ 'CAA' ],
+                tooltipColumns: [ 'Title', 'Artist', '---', 'Credited as', 'Attributes' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+3.)
+
+extract from the following code block the functionality to query the "releaseEvents" information in a new function
+"extractReleaseEvents" and use it in our userscript
+
+#+begin_example
+	// ## RELEASE_EVENT_COLUMN ## requested by Lotheric https://github.com/jesus2099/konami-command/issues/132
+	// =========================================================================
+	if (
+		j2sets.RECORDING_LENGTH_COLUMN && (enttype == "work" && location.pathname.match(new RegExp("^/work/" + stre_GUID + "$")) || enttype == "artist" && location.pathname.match(new RegExp("^/artist/" + stre_GUID + "/relationships$")) || enttype == "place" && location.pathname.match(new RegExp("^/place/" + stre_GUID + "/performances$")))
+		||
+		j2sets.RELEASE_EVENT_COLUMN && location.pathname.match(new RegExp("^/(artist|label)/" + stre_GUID + "/relationships$"))
+	) {
+		debug("RECORDING_LENGTH_COLUMN and/or RELEASE_EVENT_COLUMN");
+		var relationshipTable = document.querySelector("div#content table.tbl");
+		if (relationshipTable) {
+			var fetchRecordingLength = j2sets.RECORDING_LENGTH_COLUMN && relationshipTable.getElementsByClassName("treleases").length == 0 && relationshipTable.querySelector("a[href*='/recording/']");
+			var fetchReleaseEvents = j2sets.RELEASE_EVENT_COLUMN && relationshipTable.getElementsByClassName(userjs.id + "releaseEvents").length == 0 && relationshipTable.querySelector("a[href*='/release/']");
+			if (fetchRecordingLength || fetchReleaseEvents) {
+				var xhr_recording_length_column = new XMLHttpRequest();
+				xhr_recording_length_column.addEventListener("load", function(event) {
+					var relations = JSON.parse(this.responseText).relations;
+					var recordingLengths = {};
+					var recordingLengthFound = false;
+					var releaseEvents = {};
+					var releaseEventFound = false;
+					// collecting recording length and release events
+					for (let r = 0; r < relations.length; r++) {
+						if (fetchRecordingLength && relations[r].recording && relations[r].recording.id && relations[r].recording.length) {
+							recordingLengthFound = true;
+							recordingLengths[relations[r].recording.id] = relations[r].recording.length;
+						}
+						if (fetchReleaseEvents && relations[r].release && relations[r].release.id && relations[r].release["release-events"]) {
+							releaseEventFound = true;
+							releaseEvents[relations[r].release.id] = relations[r].release["release-events"];
+						}
+					}
+					if (recordingLengthFound || releaseEventFound) {
+						// column headers
+						if (recordingLengthFound) {
+							var length_header = relationshipTable.querySelector("thead > tr").lastChild;
+							length_header.style.setProperty("text-shadow", "0 0 2px yellow");
+							length_header.classList.add("treleases");
+							length_header.setAttribute("title", userjs.name);
+						}
+						if (releaseEventFound) {
+							relationshipTable.querySelector("thead > tr").insertBefore(createTag("th", {a: {title: userjs.name, class: userjs.id + "releaseEvents"}, s: {textShadow: "0 0 2px yellow"}}, "Release events"), relationshipTable.querySelector("thead > tr > th:nth-child(2)"));
+						}
+						var rows = relationshipTable.querySelectorAll("tbody > tr");
+						for (let r = 0; r < rows.length; r++) {
+							if (rows[r].classList.contains("subh")) {
+								// sub title row
+								if (releaseEventFound) {
+									var secondHeader = rows[r].querySelector("tr.subh > th:nth-child(2)");
+									if (secondHeader) {
+										rows[r].insertBefore(document.createElement("th"), secondHeader);
+									}
+								}
+							} else {
+								// normal data row
+								if (recordingLengthFound) {
+									var length_cell = rows[r].lastChild;
+									length_cell.style.setProperty("text-align", "right");
+									length_cell.classList.add("treleases");
+									length_cell.setAttribute("title", userjs.name);
+									var recordingID = rows[r].querySelector("a[href*='/recording/']");
+									if (recordingID && (recordingID = recordingID.getAttribute("href").match(re_GUID)[0])) {
+										replaceChildren(document.createTextNode(recordingLengths[recordingID] ? time(recordingLengths[recordingID]) : "?:??"), length_cell);
+									}
+								}
+								if (releaseEventFound) {
+									var secondCell = rows[r].querySelector("tr:not(.subh) > td:nth-child(2)");
+									if (secondCell) {
+										let newCell = rows[r].insertBefore(document.createElement("td"), secondCell);
+										var releaseID = secondCell.querySelector("a[href*='/release/']");
+										if (releaseID && (releaseID = releaseID.getAttribute("href").match(re_GUID)[0]) && releaseEvents[releaseID]) {
+											for (let e = 0; e < releaseEvents[releaseID].length; e++) {
+												var releaseDate = releaseEvents[releaseID][e].date ? releaseEvents[releaseID][e].date : "\u00a0";
+												var releaseEvent = createTag("div", {}, releaseDate);
+												if (releaseEvents[releaseID][e].area) {
+													if (releaseEvents[releaseID][e].area.name) {
+														releaseEvent.setAttribute("title", releaseEvents[releaseID][e].area.name);
+													}
+													if (releaseEvents[releaseID][e].area["iso-3166-1-codes"] && releaseEvents[releaseID][e].area["iso-3166-1-codes"].length > 0) {
+														releaseEvent.classList.add("flag");
+														releaseEvent.classList.add("flag-" + releaseEvents[releaseID][e].area["iso-3166-1-codes"][0]);
+														releaseEvent.setAttribute("title", releaseEvent.getAttribute("title") + " (" + releaseEvents[releaseID][e].area["iso-3166-1-codes"][0] + ")");
+													}
+												}
+												newCell.appendChild(releaseEvent);
+												if (releaseEvents[releaseID].length > 4) {
+													if (e > 1 && e != releaseEvents[releaseID].length - 1) {
+														releaseEvent.classList.add(userjs.id + "hiddenEvent");
+														releaseEvent.style.setProperty("display", "none");
+													}
+													if (e == 1) {
+														newCell.appendChild(createTag("div", {s: {padding: "8px"}}, ["(", createTag("a", {e: {click: tooManyEventsToggle}}, "show " + (releaseEvents[releaseID].length - 3) + " more"), ")"]));
+													} else if (e == releaseEvents[releaseID].length - 1) {
+														newCell.appendChild(createTag("div", {a: {class: userjs.id + "hiddenEvent"}, s: {display: "none", padding: "8px"}}, ["(", createTag("a", {e: {click: tooManyEventsToggle}}, "show less"), ")"]));
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				});
+				xhr_recording_length_column.open("get", MBS + "/ws/2" + location.pathname.match(new RegExp("^/" + enttype + "/" + stre_GUID)) + "?inc=recording-rels+release-rels&fmt=json", true);
+				xhr_recording_length_column.send(null);
+			}
+		}
+	}
+#+end_example
+
+and when "sa_enable_release_events_column: true" inject a new column "Release events" in the table(s) on the final
+rendered page with the return value of the function "extractReleaseEvents". If the table also has a "Relationships"
+column, render the "Release events" column before the "Relationships" column
+
+#+begin_example
+        // Inject column headers for injectedColumns (e.g. 'Relationships') LAST so
+        // they always appear after every other synthetic column (MB-Name, Comment, …).
+        // The row-building pipeline appends injected <td> cells after MB-Name/Comment
+        // (step 5b), so header and data columns must stay in the same order.
+#+end_example
+
+otherwise as the last column in the table.
+
+** bugs
+
+some bugs:
+
+1.)
+
+On the URL https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances and https://musicbrainz.org/label/0b805b9c-ea03-4fc1-b50d-6dcef76433e0/relationships
+
+the former "Relationships" column is now named "Release Events" but still holds in the data cells the relationship
+icons.
+
+2.)
+
+The new column with the actual "Release event" information is completely missing
+
+** bugs
+
+Now BOTH columns "Relationships" and "Release Events" are missing from
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances and https://musicbrainz.org/label/0b805b9c-ea03-4fc1-b50d-6dcef76433e0/relationships
+
+** bugs
+
+Some bugs:
+
+1.)
+
+all the definitions of
+
+#+begin_example
+                injectedColumns: [ 'Release events' ],
+#+end_example
+
+should actually be changed to
+
+#+begin_example
+                injectedColumns: [ 'Release events', 'Relationships' ],
+#+end_example
+
+* DONE addCAA: 'Title' to more pageTypes
+
+Add
+
+#+begin_example
+                addCAA: 'Title',
+#+end_example
+
+to the following pageType definitions
+
+#+begin_example
+
+            type: 'label-relationships-filtered',
+            type: 'label-relationships',
+            type: 'place-performances-filtered',
+            type: 'place-performances',
+#+end_example
+
+so it should look like the following
+
+#+begin_example
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                addCAA: 'Title',
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                addCAA: 'Title',
+                extractMainColumn: 'Title' // Specific header
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+
 
 
 * TODO add fetching to local db storage and reading from it
@@ -62085,412 +62489,6 @@ the final rendered pages which have columns with name "CAA"
 #+end_example
 
 
-* DONE Reintroduce jesus2099 "Release events"
-** initial
-
-some new features:
-
-1.)
-
-add a new "RELEASE EVENTS COLUMN SECTION" to the variable "const configSchema"
-
-#+begin_example
-        // ============================================================
-        // RELEASE EVENTS COLUMN SECTION
-        // ============================================================
-        divider_release_events_col: {
-            type: 'divider',
-            label: '<release event icon> RELEASE EVENTS COLUMN'
-        },
-
-        sa_enable_release_events_column: {
-            label: 'Enable Release events column',
-            type: 'checkbox',
-            default: true,
-        },
-
-        sa_enable_release_events_debug: {
-            label: 'Enable Release events column debug logging',
-            type: 'checkbox',
-            default: true,
-        },
-#+end_example
-
-2.)
-
-add the "injectedColumns" and "collapsableColumns" definitions 
-
-#+begin_example
-injectedColumns: [ 'Release events' ],
-collapsableColumns: [ 'Release events' ],
-#+end_example
-
-to the following pageType definitions
-
-#+begin_example
-            type: 'place-performances-filtered',
-            type: 'place-performances',
-            type: 'label-relationships-filtered',
-            type: 'label-relationships',
-#+end_example
-
-and
-
-#+begin_example
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-#+end_example
-
-to
-
-#+begin_example
-            type: 'place-performances-filtered',
-            type: 'artist-relationships',
-#+end_example
-
-so it looks like:
-
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                injectedColumns: [ 'Release events' ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                injectedColumns: [ 'Release events' ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        {
-            type: 'label-relationships-filtered',
-            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
-            features: {
-                injectedColumns: [ 'Release events' ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title' // Specific header
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        {
-            type: 'label-relationships',
-            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label' } ],
-            features: {
-                injectedColumns: [ 'Release events' ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title' // Specific header
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        {
-            type: 'artist-relationships-filtered',
-            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                collapsableColumns: [ 'CAA' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'artist-relationships',
-            // Only match if NO link_type_id is present (the overview page)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
-                ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                collapsableColumns: [ 'CAA' ],
-                tooltipColumns: [ 'Title', 'Artist', '---', 'Credited as', 'Attributes' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-#+end_example
-
-3.)
-
-extract from the following code block the functionality to query the "releaseEvents" information in a new function
-"extractReleaseEvents" and use it in our userscript
-
-#+begin_example
-	// ## RELEASE_EVENT_COLUMN ## requested by Lotheric https://github.com/jesus2099/konami-command/issues/132
-	// =========================================================================
-	if (
-		j2sets.RECORDING_LENGTH_COLUMN && (enttype == "work" && location.pathname.match(new RegExp("^/work/" + stre_GUID + "$")) || enttype == "artist" && location.pathname.match(new RegExp("^/artist/" + stre_GUID + "/relationships$")) || enttype == "place" && location.pathname.match(new RegExp("^/place/" + stre_GUID + "/performances$")))
-		||
-		j2sets.RELEASE_EVENT_COLUMN && location.pathname.match(new RegExp("^/(artist|label)/" + stre_GUID + "/relationships$"))
-	) {
-		debug("RECORDING_LENGTH_COLUMN and/or RELEASE_EVENT_COLUMN");
-		var relationshipTable = document.querySelector("div#content table.tbl");
-		if (relationshipTable) {
-			var fetchRecordingLength = j2sets.RECORDING_LENGTH_COLUMN && relationshipTable.getElementsByClassName("treleases").length == 0 && relationshipTable.querySelector("a[href*='/recording/']");
-			var fetchReleaseEvents = j2sets.RELEASE_EVENT_COLUMN && relationshipTable.getElementsByClassName(userjs.id + "releaseEvents").length == 0 && relationshipTable.querySelector("a[href*='/release/']");
-			if (fetchRecordingLength || fetchReleaseEvents) {
-				var xhr_recording_length_column = new XMLHttpRequest();
-				xhr_recording_length_column.addEventListener("load", function(event) {
-					var relations = JSON.parse(this.responseText).relations;
-					var recordingLengths = {};
-					var recordingLengthFound = false;
-					var releaseEvents = {};
-					var releaseEventFound = false;
-					// collecting recording length and release events
-					for (let r = 0; r < relations.length; r++) {
-						if (fetchRecordingLength && relations[r].recording && relations[r].recording.id && relations[r].recording.length) {
-							recordingLengthFound = true;
-							recordingLengths[relations[r].recording.id] = relations[r].recording.length;
-						}
-						if (fetchReleaseEvents && relations[r].release && relations[r].release.id && relations[r].release["release-events"]) {
-							releaseEventFound = true;
-							releaseEvents[relations[r].release.id] = relations[r].release["release-events"];
-						}
-					}
-					if (recordingLengthFound || releaseEventFound) {
-						// column headers
-						if (recordingLengthFound) {
-							var length_header = relationshipTable.querySelector("thead > tr").lastChild;
-							length_header.style.setProperty("text-shadow", "0 0 2px yellow");
-							length_header.classList.add("treleases");
-							length_header.setAttribute("title", userjs.name);
-						}
-						if (releaseEventFound) {
-							relationshipTable.querySelector("thead > tr").insertBefore(createTag("th", {a: {title: userjs.name, class: userjs.id + "releaseEvents"}, s: {textShadow: "0 0 2px yellow"}}, "Release events"), relationshipTable.querySelector("thead > tr > th:nth-child(2)"));
-						}
-						var rows = relationshipTable.querySelectorAll("tbody > tr");
-						for (let r = 0; r < rows.length; r++) {
-							if (rows[r].classList.contains("subh")) {
-								// sub title row
-								if (releaseEventFound) {
-									var secondHeader = rows[r].querySelector("tr.subh > th:nth-child(2)");
-									if (secondHeader) {
-										rows[r].insertBefore(document.createElement("th"), secondHeader);
-									}
-								}
-							} else {
-								// normal data row
-								if (recordingLengthFound) {
-									var length_cell = rows[r].lastChild;
-									length_cell.style.setProperty("text-align", "right");
-									length_cell.classList.add("treleases");
-									length_cell.setAttribute("title", userjs.name);
-									var recordingID = rows[r].querySelector("a[href*='/recording/']");
-									if (recordingID && (recordingID = recordingID.getAttribute("href").match(re_GUID)[0])) {
-										replaceChildren(document.createTextNode(recordingLengths[recordingID] ? time(recordingLengths[recordingID]) : "?:??"), length_cell);
-									}
-								}
-								if (releaseEventFound) {
-									var secondCell = rows[r].querySelector("tr:not(.subh) > td:nth-child(2)");
-									if (secondCell) {
-										let newCell = rows[r].insertBefore(document.createElement("td"), secondCell);
-										var releaseID = secondCell.querySelector("a[href*='/release/']");
-										if (releaseID && (releaseID = releaseID.getAttribute("href").match(re_GUID)[0]) && releaseEvents[releaseID]) {
-											for (let e = 0; e < releaseEvents[releaseID].length; e++) {
-												var releaseDate = releaseEvents[releaseID][e].date ? releaseEvents[releaseID][e].date : "\u00a0";
-												var releaseEvent = createTag("div", {}, releaseDate);
-												if (releaseEvents[releaseID][e].area) {
-													if (releaseEvents[releaseID][e].area.name) {
-														releaseEvent.setAttribute("title", releaseEvents[releaseID][e].area.name);
-													}
-													if (releaseEvents[releaseID][e].area["iso-3166-1-codes"] && releaseEvents[releaseID][e].area["iso-3166-1-codes"].length > 0) {
-														releaseEvent.classList.add("flag");
-														releaseEvent.classList.add("flag-" + releaseEvents[releaseID][e].area["iso-3166-1-codes"][0]);
-														releaseEvent.setAttribute("title", releaseEvent.getAttribute("title") + " (" + releaseEvents[releaseID][e].area["iso-3166-1-codes"][0] + ")");
-													}
-												}
-												newCell.appendChild(releaseEvent);
-												if (releaseEvents[releaseID].length > 4) {
-													if (e > 1 && e != releaseEvents[releaseID].length - 1) {
-														releaseEvent.classList.add(userjs.id + "hiddenEvent");
-														releaseEvent.style.setProperty("display", "none");
-													}
-													if (e == 1) {
-														newCell.appendChild(createTag("div", {s: {padding: "8px"}}, ["(", createTag("a", {e: {click: tooManyEventsToggle}}, "show " + (releaseEvents[releaseID].length - 3) + " more"), ")"]));
-													} else if (e == releaseEvents[releaseID].length - 1) {
-														newCell.appendChild(createTag("div", {a: {class: userjs.id + "hiddenEvent"}, s: {display: "none", padding: "8px"}}, ["(", createTag("a", {e: {click: tooManyEventsToggle}}, "show less"), ")"]));
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				});
-				xhr_recording_length_column.open("get", MBS + "/ws/2" + location.pathname.match(new RegExp("^/" + enttype + "/" + stre_GUID)) + "?inc=recording-rels+release-rels&fmt=json", true);
-				xhr_recording_length_column.send(null);
-			}
-		}
-	}
-#+end_example
-
-and when "sa_enable_release_events_column: true" inject a new column "Release events" in the table(s) on the final
-rendered page with the return value of the function "extractReleaseEvents". If the table also has a "Relationships"
-column, render the "Release events" column before the "Relationships" column
-
-#+begin_example
-        // Inject column headers for injectedColumns (e.g. 'Relationships') LAST so
-        // they always appear after every other synthetic column (MB-Name, Comment, …).
-        // The row-building pipeline appends injected <td> cells after MB-Name/Comment
-        // (step 5b), so header and data columns must stay in the same order.
-#+end_example
-
-otherwise as the last column in the table.
-
-** bugs
-
-some bugs:
-
-1.)
-
-On the URL https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances and https://musicbrainz.org/label/0b805b9c-ea03-4fc1-b50d-6dcef76433e0/relationships
-
-the former "Relationships" column is now named "Release Events" but still holds in the data cells the relationship
-icons.
-
-2.)
-
-The new column with the actual "Release event" information is completely missing
-
-** bugs
-
-Now BOTH columns "Relationships" and "Release Events" are missing from
-https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances and https://musicbrainz.org/label/0b805b9c-ea03-4fc1-b50d-6dcef76433e0/relationships
-
-** bugs
-
-Some bugs:
-
-1.)
-
-all the definitions of
-
-#+begin_example
-                injectedColumns: [ 'Release events' ],
-#+end_example
-
-should actually be changed to
-
-#+begin_example
-                injectedColumns: [ 'Release events', 'Relationships' ],
-#+end_example
-
-* DONE addCAA: 'Title' to more pageTypes
-
-Add
-
-#+begin_example
-                addCAA: 'Title',
-#+end_example
-
-to the following pageType definitions
-
-#+begin_example
-
-            type: 'label-relationships-filtered',
-            type: 'label-relationships',
-            type: 'place-performances-filtered',
-            type: 'place-performances',
-#+end_example
-
-so it should look like the following
-
-#+begin_example
-        {
-            type: 'label-relationships-filtered',
-            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
-            features: {
-                addCAA: 'Title',
-                extractMainColumn: 'Title' // Specific header
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        {
-            type: 'label-relationships',
-            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label' } ],
-            features: {
-                addCAA: 'Title',
-                extractMainColumn: 'Title' // Specific header
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-#+end_example
-
-
-
 * TODO extract the VZ event disambiguation configurable in its constituents
 ** DONE initial
 
@@ -62913,392 +62911,6 @@ STF highlight: bg #90ee90 (hardcoded light green), color #000
 
 * TODO add more keyboard shortcuts, e.g. for 'CAA' and 'multi-row' cell collapsing/uncollapsing
 
-* TODO fix Artist-Releasegroup pages
-** DONE changes to do
-
-Change the code blocks
-
-#+begin_example
-        {
-            type: 'artist-releasegroups',
-            // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { label: '🧮 Artist RGs',         params: { all: '1', va: '0' } },
-                { label: '🧮 Various Artist RGs', params: { all: '1', va: '1' } }
-            ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
-                ],
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
-                ],
-                collapsableColumns: [ 'CAA' ],
-                addCAA: 'Title',
-                extractMainColumn: 'Title'
-            },
-            tableMode: 'multi' // native tables, h3 headers
-        },
-#+end_example
-
-#+begin_example
-        // Add tooltip based on button label
-        if (conf.label.includes('Show all')) {
-            // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
-            eb.title = `Fetch all the table data from the MusicBrainz backend database`;
-        } else if (conf.label.includes('Artist RGs')) {
-            eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database (combined)';
-        } else if (conf.label.includes('Various Artists RGs')) {
-            eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
-        } else if (conf.label.includes('Artist releases')) {
-            eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
-        } else if (conf.label.includes('VA releases')) {
-            eb.title = 'Fetch all various artists releases from the MusicBrainz backend database';
-        }
-#+end_example
-
-Remove the complete code block
-
-#+begin_example
-                // ── Section-break h2 injection ────────────────────────────────
-                // Stamped by the multi-pass fetch (Artist RGs button) to separate
-                // the official groups from the non-official groups.
-                if (group.h2SectionBreak) {
-                    const breakH2 = document.createElement('h2');
-                    breakH2.className = 'mb-toggle-h2';
-                    breakH2.textContent = group.h2SectionBreak;
-                    breakH2.style.cssText =
-                        'cursor:pointer; user-select:none; margin-top:1.4em;';
-                    breakH2.title = 'Click to collapse/uncollapse section';
-                    // Wire the same collapse-on-click behaviour as the original h2.
-                    breakH2.addEventListener('click', (ev) => {
-                        if (['A','BUTTON','INPUT','LABEL','SELECT','TEXTAREA']
-                            .includes(ev.target.tagName)) return;
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                    });
-                    if (lastInsertedElement) {
-                        lastInsertedElement.after(breakH2);
-                        lastInsertedElement = breakH2;
-                    } else {
-                        container.appendChild(breakH2);
-                        lastInsertedElement = breakH2;
-                    }
-                }
-#+end_example
-
-** DONE initial
-
-In the NEWLY uploaded userscript,
-
-For the next implentation you have to do, first of all the big picture:
-
-For the special case if URLs have a pageType of "type: 'artist-releasegroups'" e.g.
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f the full fetch pipeline fetches the combined ("all: '1'")
-discography of an artist, the 'official' and the 'non-official' discography defined with "params: { all: '1', va: '0' }"
-in the page definition variable "const pageDefinitions".
-
-Currently the final rendered page shows after the h2 header line named "Discography", first all sub-tables for the
-'official discography' where each sub-table is preceeded with a h3 header line with the release-group 'category' of the
-discography data, e.g. "Album", "Album + Compilation", etc. After all the 'official' categories, the sub-tables for the
-'non-official discography' are rendered the same way. There is currently no way to know where the 'non-official' section
-starts. And, to make it worse, a h3 header name like "Album" could exist in both sections the 'official' and
-'non-official' one.
-
-In order to know which sub-tables belong to which section types, the plan is to pre-fetch all the paginated webpages
-belonging to just the 'official' artist-releasegroups and EXTRACTING (but NOT rendering them) just the h3 header names
-in a new array variable "h3_official_category_header_array", BEFORE we do the usual full fetch pipeline for the combined
-("all: '1'") discography and the rest of the processing logic.
-
-There is a new "subType: 'artist-releasegroups'" definition in the variable "const pageDefinitions"
-
-#+begin_example
-        {
-            subType: 'artist-releasegroups',
-            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
-            buttons: [
-                { mainLabel: '🧮 Artist RGs',         pre_fetch_type: 'Official', params: { all: '0', va: '0' } },
-                { mainLabel: '🧮 Various Artist RGs', pre_fetch_type: 'Official', params: { all: '0', va: '1' } },
-            ]
-        },
-#+end_example
-
-which defines, when clicking on the inital page the "mainLabel" button, which URL ("match") with which query_parameters ("params") should be used 
-to get the corresponding webpages for JUST the h3 header name extraction for the pre_fetch_type: 'Official' (like in the main fetch loop)
-
-The commented block between
-
-#+begin_example
-        // ── BEGIN: Artist-Releasegroups pre-fetch pass ────────────────────────────────────────
-        // ── END: Artist-Releasegroups pre-fetch pass ──────────────────────────────────────────────
-#+end_example
-
-is probably the place where the pre-fetch logic belongs to.
-
-On the final rendered page we additionally extract ALL the h3 category header names from the full fetch pipeline (they
-represent the 'official' and 'non-official' ones) in a new array variable "h3_all_category_header_array".
-
-The category names from array "h3_all_category_header_array" are then compared against the array
-"h3_official_category_header_array" in order to create a third array "h3_non_official_category_header_array" which holds
-ONLY the 'non-offical' entries.
-
-In the comparison strategy, as long as names match, those entries are 'official'. The first name in
-"h3_all_category_header_array" that is not in the "h3_official_category_header_array" sequence marks the start of the
-'non-official' section.
-
-For later display purposes another array "h3_all_category_unique_header_array" is also created which should hold ONLY
-the unique values of the "h3_all_category_header_array" array, but leaving the order intact. That means, if an entry
-with the same name repeats in the array "h3_all_category_header_array" the second entry should be disgarded in the newly
-created array "h3_all_category_unique_header_array".
-
-When we have that information the goal is to create on the final rendered page two new buttons "Official Discography" and
-"Non-Official Discography" right beside the existing buttons rerendered from the initial page and
-
-- the "globalStatusDisplay.textContent" and the '<span id="mb-fetch-progress-outer"' should display the ongoing prefetching state 
-
-- when clicking the "Official Discography"-button we only display the 'offical' headers with their sub-tables and hide
-  the 'non-offical' ones. 
-
-- when clicking the "Non-Official Discography"-button we only display the 'non-offical' headers with their sub-tables and hide
-  the 'offical' ones
-
-- depending on which button has been clicked, the h2 header name initially displayed as "Discography" should be cahnge
-  either to "Official Discography" or "Non-Official Discography"
-
-- also the total row count calculation in the span
-
-#+begin_example
-<span class="mb-row-count-stat">(2123)</span>
-#+end_example
-
-should account which subType has been selected.
-
-#+begin_example
-globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
-#+end_example
-
-** DONE bugs
-
-There are some bugs:
-
-Please also check the uploaded console debug file, the userscript eecution has bee stopped during processing "Page 2/22
-processed" when the real fetch pipeline executes
-
-1.) 
-
-when the pre-fetch pass is executed the "globalStatusDisplay" is dynamically updated with the pre-fetch loading info, but the span
-
-#+begin_example
-<span id="mb-fetch-progress-outer"..>
-#+end_example
-
-is NOT updated. The new function documentation (// ── BEGIN: Artist-Releasegroups pre-fetch pass ─...) mentions the "fetchProgressLabel" would be updated
-
-
-2.)
-
-on the final rendered page the two new buttons DO not show up when the function
-
-#+begin_example
-function _injectDiscographyViewButtons()
-#+end_example
-
-is supposed to be called
-
-** DONE bugs
-
-there are some bugs
-
-1.) starting from the final rendered page:
-
-- when clicked on the "Official Discography"-button and e.g. uncollapsed the CAA artwork images for the first sub-table
-  "Album and then clicking on the "Non-Official Discography"-button, the artwork stripe just uncollapsed in the official
-  view, is still displayed in the un-official view, but above ALL sub-tables. On the un-official view (if more image
-  stripes on other sub-tables in the official view are un-collapsed) they are accumulating above all other sub-tables
-
-- the same effect happens if I uncollapse image stripes on the un-offical view, BUT they accumulate BELOW all sub-tables
-
-2.) starting from the final rendered page:
-
-- switching to the official view ("Official Discography"-button)
-
-#+begin_example
-h2 header line: "Official Discography" (582 of 2123) [artwork 2067]
-#+end_example
-
-whereas (how it should be displayed, as the different views should ONLY take their own total and sub-table level counts
-into account)
-
-#+begin_example
-h2 header line: "Official Discography" (582) [artwork 578]
-#+end_example
-
-3.) starting from the final rendered page:
-
-a.)
-
-- switching to the non-official view ("Non-Official Discography"-button)
-
-#+begin_example
-h2 header line: "Non-Official Discography" (1541 of 2123) [artwork 2067]
-#+end_example
-
-whereas (how it should be displayed, as the different views should ONLY take their own total and sub-table level counts
-into account)
-
-#+begin_example
-h2 header line: "Non-OfficialDiscography" (2123) [artwork 2067]
-#+end_example
-
-b.)
-
-- the row display, if uncollapsed all sub-tables is correct, but some sub-tables have a count in the h3 header of the
-  sub-table which render in the format
-
-#+begin_example
-(<actual rows in sub-table of the un-official case> of <actual rows in sub-table of the official case>)
-#+end_example
-
-e.g in the sub-table with name "Album + Compilation"
-
-#+begin_example
-h3 header line: "Album + Compilation (168 of 36)"
-#+end_example
-
-4.) and NOW add some new functionality:
-
-
-- add another button "Complete Discography" in front of the "Official Discography" and "Non-Official Discography"
-  buttons. That button should have the green background color because that what is displayed after the initial rendering
-  on the final page. The button could also be used when clicking on it to toggle back to this same state using the array
-  "h3_all_category_header_array" after another button like "Official Discography" or "Non-Official Discography" had been
-  clicked meanwhile.
-
-- add another button "Complete Discography (merged)" after the "Official Discography" and "Non-Official Discography"
-  buttons based on the array "h3_all_category_unique_header_array".
-
-- always the latest button clicked (of the 4 "Complete Discography", "Official Discography", "Non-Official Discography",
-  "Complete Discography (merged)" should have the green background color
-
-** DONE still bugs  
-
-Still bugs
-
-1.)
-
-the "Complete Discography"-button still has NOT the green backgound initially on the rendered page
-
-2.)
-
-in merged mode, make sure that all headers and corresponding sub-tables of the array
-"h3_all_category_unique_header_array" are present on the page, but ALL the rows from a same named sub-table from the
-"official" view should be ADDED together with ALL the rows from a same named sub-table from the "un-official" view
-(under just one sub-table with the name which is the same in both views)
-
-3.)
-
-the total count of rows which have CAA artwork images are wrong in the "toggle CAA artwork"-button in the h2 header row
-when switching from the initial rendered page to one of the other views, it always shows the total count of rows which
-have CAA artwork images from the initial "Complete Discography" case.
-
-** DONE bug in merged mode
-
-There is still a bug in "merged" view. Not all h3 headers/sub-tables are included in the "merged" view when compared to
-the h3 "official" and "non-official" headers, but they should. h3 headers which are ONLY in the official view OR h3
-headers which are ONLY in the "un-official" view should BOTH be included in the "merged" view. for same named columns in
-both the "official" and "non-official" views, ALL their individual rows should be added to the same named
-h3 header/sub-table in the "merged" view (so it should be the union of both sub-tables)
-
-The question is if we need the array "h3_all_category_unique_header_array" at all for this algorithm. If not please
-remove from the code with all it's references.
-
-** DONE bug in collapse/uncollapse CAA images, per cell. per column, per table, global
-
-more bugs
-
-1.)
-
-the "Various Artist RGs"-button tooltip is wrong, it shows the same tooltip as the "Artist RGs"-button", please fix this
-
-2.)
-
-there is bug in that the "collapse/uncollapse CAA images"-buttons/glyph are NOT working (only the per column data cell glyph works)
-
-#+begin_example
-per column glyph
-per table button
-global button
-#+end_example
-
-3.)
-
-The h1 header "Density" button does not work on this type of pages anymore
-
-** DONE fix button text and all related code
-
-#+begin_example
-'🧮 Various Artist RGs'  ==> '🧮 Various Artists RGs'
-#+end_example
-*
-** DONE merged still wrong
-still bugs
-
-1.)
-
-"merged" view still wrong
-
-lets take the example from https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when the "Various Artist
-RGs"-button has been clicked on the initial page in the merged views:
-
-- After initial rendering of the final table  (counts seem to be OK)
-
-| column name | complete presence | complete row coun | official presence | official row count | non-official presence | non-official row count | merged presence | merged row count |
-|-------------+-------------------+-------------------+-------------------+--------------------+-----------------------+------------------------+-----------------+------------------|
-| Compilation | yes               |                 2 | yes               |                  2 | no                    |                        | yes             |                2 |
-| Album       | yes               |                32 | yes               |                 32 | yes                   |                      2 | yes             |               34 |
-
-- After initial rendering of the final table 
-
-| column name | complete presence | complete row coun | official presence | official row count | non-official presence | non-official row count | merged presence | merged row count |
-|-------------+-------------------+-------------------+-------------------+--------------------+-----------------------+------------------------+-----------------+------------------|
-| Compilation | yes               |                 2 | yes               |                  2 | no                    |                        | yes             |                2 |
-| Album       | yes               |                34 | yes               |                 34 | yes                   |                      2 | yes             |               34 |
-
-2.)
-
-Fix the button text on the VA button on the initial page from
-
-#+begin_example
-'🧮 Various Artist RGs'
-#+end_example
-
-to plural
-
-#+begin_example
-'🧮 Various Artists RGs'
-#+end_example
-
-** DONE bugs
-
-the toggle "CAA artwork count"-button is wrong on some h3 headers in "merged" view: it still shows the count from the "official" view
-
-- After initial rendering of the final table
-
-| column name  | complete presence | complete row count | complete artwork count | official presence | official row count | official artwork count | non-official presence | non-official row count | non-official artwork count | merged presence | merged row count | merged artwork count |
-|--------------+-------------------+--------------------+------------------------+-------------------+--------------------+------------------------+-----------------------+------------------------+----------------------------+-----------------+------------------+----------------------|
-| Album + Live | yes               |                 23 |                     23 | yes               |                 23 |                     23 | yes                   |                     13 |                          9 | yes             |               36 |                   23 |
-
-** DONE bug
-
-Another bug
-
-- switching the first time to the "merged" view from any other view, the toggle "CAA artwork count"-buttons ALL show the right expected artwork counts
-- when switching back from the "merged" view to the "un-official" view, the h2 artwork count is wrong, it's the same as for the "merged" view, but the individell artwork counts in the h2 rows are OK 
-- when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
-
-
 
 * TODO make the "Official Discography" and "Non-Official Discography" button based a new experimental boolean
 
@@ -63327,9 +62939,6 @@ comumn cell level accordingly)
 
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell strucure" areas in the unique value pull-down menu
-
-
-* TODO event pages need the primary alias below the h1 header "Bleachers"
 
 
 * TODO counting and display wrong: actually with indexedDB cache
@@ -63446,31 +63055,6 @@ to the commented "changelog_library" variable
 #+begin_example
 type: "table",
 default: "<table declaration>" + UI support "add", "modify", "delete"
-#+end_example
-
-
-* TODO rename tooltip for toggle CAA "single"-table button
-
-rename tooltip for toggle CAA "single"-table button
-
-from
-
-#+begin_example
-  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
-  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
-  33831:                    : 'Show ' + ctx.stripeLabel + ' for this sub-section';
-  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
-  33879:            : 'Show ' + ctx.stripeLabel + ' for this sub-section';
-#+end_example
-
-to
-
-#+begin_example
-  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
-  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this section'
-  33831:                    : 'Show ' + ctx.stripeLabel + ' for this section';
-  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this section'
-  33879:            : 'Show ' + ctx.stripeLabel + ' for this section';
 #+end_example
 
 
@@ -66084,559 +65668,6 @@ actually it's not worknig at all, now the injected and the sticky columns have n
 
 It works now, but NOT for the injected columns
 
-
-* TODO read the unicode chars from a configuration table definition 
-** DONE initial
-
-Add a new functionality:
-
-1.)
-
-in the variable "const configSchema" add a new section
-
-#+begin_example
-        // ============================================================
-        // UNICODE CHARACTER PICKER SECTION
-        // ============================================================
-        divider_unicode_char_picker: {
-            type: 'divider',
-            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
-        },
-
-        sa_unicode_char_picker: {
-            label: "Enable Unicode Character Picker",
-            type: "checkbox",
-            default: true,
-            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
-                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
-        },
-
-        // Configurable lookup table for the Unicode Character Picker.
-        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
-        sa_unicode_char_picker_mappings: {
-            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
-            type: 'table',
-            table_name: 'Unicode Code Symbols',
-            columns: ['Unicode Code Symbol', 'Name', 'Default'],
-            description: '<add appropriate description here>'
-        },
-#+end_example
-
-2.)
-
-Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
-There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
-
-3.)
-
-read the unicode chars definitions, currently hardcoded in
-
-#+begin_example
-const SA_UNICODE_CHARS
-#+end_example
-
-from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
-extend the mappings
-
-4.)
-
-also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
-session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
-
-** DONE Add © ℗ in the default code
-** TODO add a quickfilter with search string highlightning to 
-** TODO add a new column with examples
-
-
-* TODO Implement column movement
-
-* TODO JSDoc
-
-Please check the following JSDoc definitions which have multiple entries after each other
-and either
-
-- remove the obsolete ones
-- move them to the right function definition
-- or merge them if it makes sense
-
-** DONE 1 - REMOVE by hand
-*** DONE initial
-
-#+begin_example
-    /**
-     * Prepares the table header row for the final rendered view.
-     *
-     * Three sequential passes are performed:
-     *
-     *   1. **Column removal** — removes columns whose header text prefix matches
-     *      an entry in `removalMap` and whose corresponding setting is enabled
-     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
-     *
-     *   2. **Column origin stamping** — stamps each surviving original <th> with
-     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
-     *      from a re-render pass are skipped.
-     *
-     *   3. **Synthetic column injection** — injects new <th> elements for each
-     *      configured extractor, assigning:
-     *        - `mb-extracted-column`         for activeColumnExtractors entries
-     *                                        and extractMainColumn (MB-Name/Comment)
-     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
-     *                                        entries (second-pass derivations)
-     *      Each injected <th> also receives `dataset.colName`, the appropriate
-     *      background color from settings, and is appended to the header row if
-     *      not already present (idempotent across re-renders).
-     *
-     * The three CSS classes are the authoritative source for the Statistics panel
-     * column-origin breakdown (original / extracted / derived counts).
-     *
-     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
-     *   The `<thead>` element or its first `<tr>` row to process.
-     */
-
-    /**
-     * Returns a human-readable tooltip describing a synthetic column header.
-     *
-     * The tooltip is stamped onto the <th> element injected by cleanupHeaders()
-     * so users can hover over any synthetic column name and instantly see which
-     * source column it was extracted from and what the column contains.
-     *
-     * @param {string} extractor     - The extractor key (e.g. 'splitCountryDate').
-     * @param {string} sourceColumn  - The originating column name (e.g. 'Country/Date').
-     * @param {string} colName       - The synthetic column name (e.g. 'Country').
-     * @returns {string} Tooltip text, or '' when no description is available.
-     */
-#+end_example
-*** DONE REMOVE by hand (1st occurence)
-
-#+begin_example
-    /**
-     * Prepares the table header row for the final rendered view.
-     *
-     * Three sequential passes are performed:
-     *
-     *   1. **Column removal** — removes columns whose header text prefix matches
-     *      an entry in `removalMap` and whose corresponding setting is enabled
-     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
-     *
-     *   2. **Column origin stamping** — stamps each surviving original <th> with
-     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
-     *      from a re-render pass are skipped.
-     *
-     *   3. **Synthetic column injection** — injects new <th> elements for each
-     *      configured extractor, assigning:
-     *        - `mb-extracted-column`         for activeColumnExtractors entries
-     *                                        and extractMainColumn (MB-Name/Comment)
-     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
-     *                                        entries (second-pass derivations)
-     *      Each injected <th> also receives `dataset.colName`, the appropriate
-     *      background color from settings, and is appended to the header row if
-     *      not already present (idempotent across re-renders).
-     *
-     * The three CSS classes are the authoritative source for the Statistics panel
-     * column-origin breakdown (original / extracted / derived counts).
-     *
-     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
-     *   The `<thead>` element or its first `<tr>` row to process.
-     */
-#+end_example
-
-** DONE 2
-
-#+begin_example
-    /**
-     * Recalculates and updates the h2 row-count badge from current DOM state of all
-     * subtables after global + subtable filters have been applied.
-     *
-     * Mirrors the 3-tier format used by updateSubTableRowCount():
-     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
-     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
-     *
-     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
-     */
-    /**
-     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
-     * reflecting the current combination of global filter, column filters, and
-     * sub-table filter active on this specific table.
-     *
-     * Called from:
-     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
-     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
-     *
-     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
-     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
-     *
-     * @param {HTMLTableElement} tbl  The live sub-table element.
-     */
-#+end_example
-
-** DONE 3
-
-#+begin_example
-    /**
-     * Standard download fallback using an anchor element with user notification
-     * @param {string} url - The blob URL to download from
-     * @param {string} filename - The filename to save as
-     */
-    /**
-     * Trigger a browser file download for a Blob object-URL and show a notification popup.
-     *
-     * @param {string} url       - Object URL created via URL.createObjectURL().
-     * @param {string} filename  - Suggested save filename.
-     * @param {number} rowCount  - Number of rows saved (0 = unknown / not shown).
-     */
-#+end_example
-
-** DONE 4 - REMOVE by hand
-*** DONE initial
-
-#+begin_example
-    /**
-     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
-     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
-     * network fetch, or "timing unavailable" (no entry / API absent).
-     *
-     * Classification rules (in priority order):
-     *
-     *   1. transferSize === 0 AND encodedBodySize > 0
-     *        → Memory cache (🟢).  Browser served from RAM; size is known even
-     *          for cross-origin resources when served from memory.
-     *
-     *   2. transferSize > 0
-     *        → Network fetch (🔵).  Actual bytes received over the wire.
-     *
-     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
-     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
-     *          the response arrived in under 5 ms — consistent with a disk-cached
-     *          redirect chain where BOTH the redirect and the final resource are
-     *          served from cache.
-     *          NOTE: this path is NEVER triggered for coverartarchive.org /
-     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
-     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
-     *          always adds 2–4 s of network latency and duration never drops below
-     *          5 ms on a page reload.  🟡 is therefore only observable for image
-     *          URLs that are served directly (no redirect) or whose redirect chain
-     *          is genuinely disk-cached.
-     *
-     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
-     *        → Network / redirect chain (🔵).  This is the only outcome ever
-     *          produced for CAA/EAA archive URLs on any repeated page load, because
-     *          the non-cacheable redirect to archive.org always requires a fresh
-     *          network round-trip.  Even if the final image bytes are already in
-     *          the disk cache, the redirect latency keeps duration > 5 ms.
-     *
-     *   5. No matching entry, or Performance API absent
-     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
-     *          'unavailable'; every case where an entry exists resolves to one of
-     *          the three statuses above.
-     *
-     * Returned object shape:
-     * ```
-     * {
-     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
-     *   transferSize:    number | null,
-     *   encodedBodySize: number | null,
-     *   duration:        number | null,
-     *   redirectStart:   number | null,   // 0 for opaque cross-origin
-     *   responseStart:   number | null,   // 0 for opaque cross-origin
-     * }
-     * ```
-     *
-     * @param  {string} url  The exact URL to look up (matched against entry.name).
-     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
-     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
-     */
-    /**
-     * Determines the correct cache-hint status and label for a loaded image
-     * source URL, taking the IDB/memory/native-path distinction into account.
-     *
-     * The core problem this solves: when IDB is enabled and an image is fetched
-     * via GM_xmlhttpRequest (_artGmFetchBlob), the result is stored as a blob:
-     * URL.  Blob: URLs are never recorded by the browser's Resource Timing API,
-     * so getResourceTimingHint(blobUrl) always returns 'unavailable' → ⚠️.
-     * The correct status in this case is 'network' (the GM_xhr fetch IS a
-     * genuine network request).
-     *
-     * When IDB is disabled the browser fetches images directly via <img>.src
-     * (a real https:// URL), which IS recorded by the RT API.
-     *
-     * Decision logic:
-     *   • fromIdb    → synthesise 'idb'
-     *   • fromMemory → synthesise 'memory'
-     *   • src starts with 'blob:' → synthesise 'network'  (GM_xhr IDB path)
-     *   • otherwise → query getResourceTimingHint(src)     (native img.src path)
-     *
-     * @param {string}  src         Resolved image URL (blob: or https://).
-     * @param {boolean} fromIdb     Whether the blob was served from IDB.
-     * @param {boolean} fromMemory  Whether the blob was served from session Map.
-     * @returns {{ status: string, label: string }}
-     */
-#+end_example
-
-*** DONE REMOVE by hand (1st occurence)
-
-#+begin_example
-    /**
-     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
-     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
-     * network fetch, or "timing unavailable" (no entry / API absent).
-     *
-     * Classification rules (in priority order):
-     *
-     *   1. transferSize === 0 AND encodedBodySize > 0
-     *        → Memory cache (🟢).  Browser served from RAM; size is known even
-     *          for cross-origin resources when served from memory.
-     *
-     *   2. transferSize > 0
-     *        → Network fetch (🔵).  Actual bytes received over the wire.
-     *
-     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
-     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
-     *          the response arrived in under 5 ms — consistent with a disk-cached
-     *          redirect chain where BOTH the redirect and the final resource are
-     *          served from cache.
-     *          NOTE: this path is NEVER triggered for coverartarchive.org /
-     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
-     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
-     *          always adds 2–4 s of network latency and duration never drops below
-     *          5 ms on a page reload.  🟡 is therefore only observable for image
-     *          URLs that are served directly (no redirect) or whose redirect chain
-     *          is genuinely disk-cached.
-     *
-     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
-     *        → Network / redirect chain (🔵).  This is the only outcome ever
-     *          produced for CAA/EAA archive URLs on any repeated page load, because
-     *          the non-cacheable redirect to archive.org always requires a fresh
-     *          network round-trip.  Even if the final image bytes are already in
-     *          the disk cache, the redirect latency keeps duration > 5 ms.
-     *
-     *   5. No matching entry, or Performance API absent
-     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
-     *          'unavailable'; every case where an entry exists resolves to one of
-     *          the three statuses above.
-     *
-     * Returned object shape:
-     * ```
-     * {
-     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
-     *   transferSize:    number | null,
-     *   encodedBodySize: number | null,
-     *   duration:        number | null,
-     *   redirectStart:   number | null,   // 0 for opaque cross-origin
-     *   responseStart:   number | null,   // 0 for opaque cross-origin
-     * }
-     * ```
-     *
-     * @param  {string} url  The exact URL to look up (matched against entry.name).
-     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
-     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
-     */
-#+end_example
-
-** DONE 11 - Wires the single global ▶/◀ toggle button for multi-table mode. - REMOVE BY HAND
-*** DONE initial
-
-#+begin_example
-    /**
-     * Wires the single global ▶/◀ toggle button for multi-table mode.
-     *
-     * In multi-table mode `initCollapsableColumns` is called once per sub-table
-     * (because each rendered `<table>` is independent), so it cannot accumulate
-     * all column-header buttons into one `collapseHdrBtns` array.  This helper
-     * fills that role: it is called once after ALL sub-tables have been
-     * processed by `initCollapsableColumns`, scans the live DOM for every
-     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
-     *
-     *   • Hides the global button when no such buttons exist (none of the
-     *     filtered-in sub-tables has a multi-row column).
-     *   • Shows the global button and re-wires its `onclick` to drive every
-     *     found header button (and therefore every cell toggle across every
-     *     sub-table) to the target expanded/collapsed state.
-     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
-     *     the highlight tint on the global button based on the current filter
-     *     match state across all sub-tables.
-     *
-     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
-     * loop completes — both on initial render and on every filter re-run.
-     */
-    /**
-     * _applyCollapseState — expand or collapse a single multi-row cell toggle
-     * WITHOUT dispatching a synthetic click event.
-     *
-     * Calling `toggle.click()` from within another click handler is suppressed
-     * by some browsers / userscript managers because the dispatched MouseEvent
-     * has `isTrusted = false`.  This helper replicates the delegation-handler
-     * logic from `ensureCollapseDelegate` directly so that mass-expand /
-     * mass-collapse from column-header, sub-table, and global collapse buttons
-     * works in all environments.
-     *
-     * @param {HTMLSpanElement} toggle  - The `.mb-cell-collapse-toggle` span.
-     * @param {boolean}         expand  - true → expand; false → collapse.
-     */
-#+end_example
-
-*** DONE remove
-
-#+begin_example
-    /**
-     * Wires the single global ▶/◀ toggle button for multi-table mode.
-     *
-     * In multi-table mode `initCollapsableColumns` is called once per sub-table
-     * (because each rendered `<table>` is independent), so it cannot accumulate
-     * all column-header buttons into one `collapseHdrBtns` array.  This helper
-     * fills that role: it is called once after ALL sub-tables have been
-     * processed by `initCollapsableColumns`, scans the live DOM for every
-     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
-     *
-     *   • Hides the global button when no such buttons exist (none of the
-     *     filtered-in sub-tables has a multi-row column).
-     *   • Shows the global button and re-wires its `onclick` to drive every
-     *     found header button (and therefore every cell toggle across every
-     *     sub-table) to the target expanded/collapsed state.
-     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
-     *     the highlight tint on the global button based on the current filter
-     *     match state across all sub-tables.
-     *
-     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
-     * loop completes — both on initial render and on every filter re-run.
-     */
-#+end_example
-
-** TODO 12 - Removes all consecutive <br> tags found in the document : MISSING
-*** DONE initial
-
-#+begin_example
-    /**
-     * Removes all consecutive <br> tags found in the document,
-     * leaving only a single <br> if multiple were found together.
-     * Logs the occurrences and count of tags removed.
-     */
-    /**
-     * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
-     * data-table h2 to immediately before it, preserving their original order.
-     *
-     * Idempotent: sections that are already before the data h2 are skipped.
-     * Must be called AFTER the .mb-row-count-stat span has been inserted into
-     * the h2 by updateH2Count() — that span is the anchor used to identify the
-     * data h2.  During a live fetch finalCleanup() runs after the render which
-     * already created the stat; during a disk load this function must be called
-     * explicitly after updateH2Count().
-     *
-     * Controlled by sa_enable_h2_section_relocation_on_final_page (default: true).
-     */
-#+end_example
-
-*** TODO MISSING
-
-#+begin_example
-    /**
-     * Removes all consecutive <br> tags found in the document,
-     * leaving only a single <br> if multiple were found together.
-     * Logs the occurrences and count of tags removed.
-     */
-#+end_example
-
-** TODO 19 - * Populates the shared bigbox tooltip `tip` (already cleared by the caller) : MISSING
-*** DONE initial
-
-#+begin_example
-    /**
-     * Populates the shared bigbox tooltip `tip` (already cleared by the caller)
-     * according to the active page definition's `tooltipColumns` and
-     * `extractMainColumn` features.
-     *
-     * tooltipColumns element forms:
-     *   \'---'             → horizontal divider rule
-     *   plain string      → one text row from the matching column.
-     *                        When the column name equals `extractMainColumn`,
-     *                        the title is rendered bold and any disambiguation
-     *                        comment (from `<span class="comment">`) appears in
-     *                        italic below it.
-     *   JS array of tokens → single inline row.  Each token is either a column
-     *                        name (resolved to cell text) or a literal punctuation
-     *                        string \'(\', \')\', \'-\', etc. (rendered as-is).
-     *                        The whole line is omitted when every column token
-     *                        resolves to an empty string.  Adjacent literals are
-     *                        suppressed when their neighbouring column value is
-     *                        absent.
-     *
-     * @param {HTMLDivElement}      tip      Cleared tooltip div to populate.
-     * @param {HTMLTableRowElement} row      The hovered data row.
-     * @param {object|null}         pageDef  Active page definition (may be null).
-     * @param {HTMLTableElement}    table    Owning table (for header lookups).
-     * @returns {boolean}  true when tooltipColumns was applied;
-     *                     false when the feature is absent (caller must fall back).
-     */
-
-    /**
-     * Renders the artist-roles list from an Artists column cell into the tooltip.
-     *
-     * MusicBrainz event "Artists" cells contain a `.artist-roles-container` div
-     * with a `<ul class="artist-roles">` whose `<li>` items follow this pattern:
-     *
-     *   <li>
-     *     <span class="name-variation"><a href="…"><bdi>Artist Name</bdi></a></span>
-     *     (role text)
-     *   </li>
-     *
-     * or (without name-variation span):
-     *
-     *   <li>
-     *     <a href="…"><bdi>Artist Name</bdi></a> (role text)
-     *   </li>
-     *
-     * ALL <li> elements are read regardless of their inline `display:none` style
-     * (MusicBrainz collapses extras behind the ▶ toggle; we want the full list).
-     *
-     * Each entry is rendered as "Name (role)", entries comma-separated on one line.
-     *
-     * @param {HTMLTableRowElement} row  Data row.
-     * @param {number}              ci   Column index of the Artists cell.
-     * @param {HTMLDivElement}      tip  Tooltip div to append the artists line to.
-     * @returns {boolean}  true when at least one artist entry was appended.
-     */
-#+end_example
-
-*** TODO MISSING
-
-#+begin_example
-    /**
-     * Populates the shared bigbox tooltip `tip` (already cleared by the caller)
-     * according to the active page definition's `tooltipColumns` and
-     * `extractMainColumn` features.
-     *
-     * tooltipColumns element forms:
-     *   \'---'             → horizontal divider rule
-     *   plain string      → one text row from the matching column.
-     *                        When the column name equals `extractMainColumn`,
-     *                        the title is rendered bold and any disambiguation
-     *                        comment (from `<span class="comment">`) appears in
-     *                        italic below it.
-     *   JS array of tokens → single inline row.  Each token is either a column
-     *                        name (resolved to cell text) or a literal punctuation
-     *                        string \'(\', \')\', \'-\', etc. (rendered as-is).
-     *                        The whole line is omitted when every column token
-     *                        resolves to an empty string.  Adjacent literals are
-     *                        suppressed when their neighbouring column value is
-     *                        absent.
-     *
-     * @param {HTMLDivElement}      tip      Cleared tooltip div to populate.
-     * @param {HTMLTableRowElement} row      The hovered data row.
-     * @param {object|null}         pageDef  Active page definition (may be null).
-     * @param {HTMLTableElement}    table    Owning table (for header lookups).
-     * @returns {boolean}  true when tooltipColumns was applied;
-     *                     false when the feature is absent (caller must fall back).
-     */
-#+end_example
-
-
-* TODO colorize "main" and "guest" performer in the EAA tooltips
-
-
-* TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
-
-* TODO add the current defaults (h2/h3 color backgrounds) to our code base
-
-
 * DONE add "/collections" support
 ** initial
 
@@ -66952,7 +65983,6 @@ Here the debug log
 
 I also uploaded the complete web page as "Collection “Synchronized with Discogs” - MusicBrainz.html"
 to check what's wrong
-
 
 * DONE add "/tags" support
 ** initial
@@ -67417,112 +66447,6 @@ we would derive the first column name as the capitalized substring from before "
 Genre
 #+end_example
 
-
-* TODO make zebra striping configurable
-
-#+begin_example
-        const oddBg  = '#ffffff';
-        const evenBg = '#f2f2f2';
-#+end_example
-
-* TODO Search pages
-** DONE add "renderMultiRowCell" and "collapsableColumns"
-
-#+begin_example
-        // Search pages
-        {
-            type: 'search',
-            match: (path) => path.includes('/search'),
-            buttons: [ { label: 'Show all Search results' } ],
-            tableMode: 'single',
-            features: {
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
-                extractMainColumn: 'Name', // Specific header
-                stickyColumn: 'Name',
-                transformToH2: true        // New flag to trigger <h2> transformation
-            },
-            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
-        },
-#+end_example
-
-#+begin_example
-        {
-            type: 'artist-works',
-            match: (path) => path.includes('/works'),
-            buttons: [ { label: 'Show all Works for Artist' } ],
-            features: {
-                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
-                extractMainColumn: 'Work',
-                stickyColumn: 'Work'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-** TODO move the query dialog to the top, before the table
-
-
-* TODO sticky table column
-** TODO remove the ghosting on some pages
-*** single table mode
-
-#+begin_example
-https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
-https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
-
-https://musicbrainz.org/series/37040fc0-4687-4484-b1e3-fe93ba8677f4
-https://musicbrainz.org/series/db03e180-5b76-4fae-8ca8-52ec6ac9de1f
-https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
-
-https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
-
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
-https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
-
-
-#+end_example
-
-*** multi
-
-#+begin_example
-https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
-
-#+end_example
-
-** TODO fix the manual resizing bug
-** TODO make the h3 headers in "multi"-table mode sticky
-*** initial
-
-1.)
-
-create a new boolen configuration parameter "sa_enable_sticky_h3_sub_section_headers" (default: true)
-in the configuration section
-
-#+begin_example
-        // ============================================================
-        // TABLE STICKINESS CONFIGURATION SECTION
-        // ============================================================
-#+end_example
-
-2.)
-
-when "sa_enable_sticky_h3_sub_section_headers" is true make the h3 sub-section headers in "multi"-table mode sticky, so
-when horizontally scrolling the table(s), the h3 header line itslef should not move
-
-*** bug
-
-No, it's not working. ONLY the tables under each h3 header section should scroll horizontally (except the configured
-sticky column). The h3 sub-section headers should stay fixed and NOT scroll
-
-*** bug
-
-No, it's not working. Now not only the h3 header sections still move when scrolling horizontally, but also the sticky
-column feature on the tables itself is NOT working anymore
-
-
 * DONE remove the "checkbox-cell" column
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -67688,28 +66612,6 @@ so that it looks like
 the "async function initRelationshipsColumn()" is NOT working for the pageType "artist-works". It looks like it doesn't
 yet support "work" MBIDs.
 
-
-* TODO ghosting bug still present also checkbox column removed for date column in first column
-
-ghosting bug still present also checkbox column removed for date column in first column
-
-#+begin_example
-Year - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
-Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
-
-#, Year - https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
-#+end_example
-
-but it works force
-
-#+begin_example
-Date - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
-#+end_example
-
-
 * DONE add other <entity>-tags pageType definitions
 
 #+begin_example
@@ -67725,7 +66627,6 @@ Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/perfor
             }
         },
 #+end_example
-
 
 * DONE subscriptions
 
@@ -68203,10 +67104,6 @@ by clicking the "🧮 Label subscriptions"-button, then on the final rendered pa
 should be changed to "Label subscriptions", as that's the button that was pressed and the table data also represents the
 "Label" data
 
-
-* TODO retry "Relationships" buttons double on "single"-table pageTypes
-
-
 * DONE change "/tags" with parameter support "show_downvoted"
 
 enhance user tag pages:
@@ -68295,53 +67192,6 @@ on the final rendered page of pageType "type: 'user-tags'" remove the "from" con
   </div>
 </form>
 #+end_example
-
-
-* TODO Most popular tags in MusicBrainz
-
-add most popular tags in MusicBrainz support:
-
-1.)
-
-add a new userscript "match" directive
-
-#+begin_example
-// @match        *://*.musicbrainz.org/tags*
-#+end_example
-
-after
-
-#+begin_example
-// @match        *://*.musicbrainz.org/user/*/tags*
-#+end_example
-
-2.)
-
-add a new pageType definition
-
-#+begin_example
-        // Most popular tags in MusicBrainz
-        {
-            type: 'popular-tags',
-            match: (path, params) => path.match(/\/tags/),
-            buttons: [
-                { label: 'Show list',   params: { show_list: '1' } }
-            ],
-            features: {
-                listToTable: [ 'genres', 'tags' ]
-            },
-            tableMode: 'multi'
-        },
-#+end_example
-
-3.)
-
-add support for
-
-https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly one table)
-
-https://musicbrainz.org/user/vzell/collections - multiple H2 (each has multiple H3 based tables)
-
 
 * DONE li2table for user specific tag values and global tag values
 ** https://musicbrainz.org/user/vzell/tag/handwritten
@@ -68996,9 +67846,6 @@ still not working:
 14:30:08.604 [VZ-ShowAllEntityData: area-users] 🖥️ Auto-focused global filter input after final render 
 14:30:09.434 [VZ-ShowAllEntityData: area-users] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s)
 #+end_example
-
-
-* TODO further split "Area"
 
 * DONE fix synching synthetic columns in all event relation pageTypes: series, collections, artist
 * DONE check "Date" splitter
@@ -70234,6 +69081,1155 @@ There are currently "<n>-<number of anonymous users> real and <number of anonymo
 in bold
 
 
+
+* TODO fix Artist-Releasegroup pages
+** DONE changes to do
+
+Change the code blocks
+
+#+begin_example
+        {
+            type: 'artist-releasegroups',
+            // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { label: '🧮 Artist RGs',         params: { all: '1', va: '0' } },
+                { label: '🧮 Various Artist RGs', params: { all: '1', va: '1' } }
+            ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', 'jesus2099'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Title', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] }
+                ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title'
+            },
+            tableMode: 'multi' // native tables, h3 headers
+        },
+#+end_example
+
+#+begin_example
+        // Add tooltip based on button label
+        if (conf.label.includes('Show all')) {
+            // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
+            eb.title = `Fetch all the table data from the MusicBrainz backend database`;
+        } else if (conf.label.includes('Artist RGs')) {
+            eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database (combined)';
+        } else if (conf.label.includes('Various Artists RGs')) {
+            eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
+        } else if (conf.label.includes('Artist releases')) {
+            eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
+        } else if (conf.label.includes('VA releases')) {
+            eb.title = 'Fetch all various artists releases from the MusicBrainz backend database';
+        }
+#+end_example
+
+Remove the complete code block
+
+#+begin_example
+                // ── Section-break h2 injection ────────────────────────────────
+                // Stamped by the multi-pass fetch (Artist RGs button) to separate
+                // the official groups from the non-official groups.
+                if (group.h2SectionBreak) {
+                    const breakH2 = document.createElement('h2');
+                    breakH2.className = 'mb-toggle-h2';
+                    breakH2.textContent = group.h2SectionBreak;
+                    breakH2.style.cssText =
+                        'cursor:pointer; user-select:none; margin-top:1.4em;';
+                    breakH2.title = 'Click to collapse/uncollapse section';
+                    // Wire the same collapse-on-click behaviour as the original h2.
+                    breakH2.addEventListener('click', (ev) => {
+                        if (['A','BUTTON','INPUT','LABEL','SELECT','TEXTAREA']
+                            .includes(ev.target.tagName)) return;
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                    });
+                    if (lastInsertedElement) {
+                        lastInsertedElement.after(breakH2);
+                        lastInsertedElement = breakH2;
+                    } else {
+                        container.appendChild(breakH2);
+                        lastInsertedElement = breakH2;
+                    }
+                }
+#+end_example
+
+** DONE initial
+
+In the NEWLY uploaded userscript,
+
+For the next implentation you have to do, first of all the big picture:
+
+For the special case if URLs have a pageType of "type: 'artist-releasegroups'" e.g.
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f the full fetch pipeline fetches the combined ("all: '1'")
+discography of an artist, the 'official' and the 'non-official' discography defined with "params: { all: '1', va: '0' }"
+in the page definition variable "const pageDefinitions".
+
+Currently the final rendered page shows after the h2 header line named "Discography", first all sub-tables for the
+'official discography' where each sub-table is preceeded with a h3 header line with the release-group 'category' of the
+discography data, e.g. "Album", "Album + Compilation", etc. After all the 'official' categories, the sub-tables for the
+'non-official discography' are rendered the same way. There is currently no way to know where the 'non-official' section
+starts. And, to make it worse, a h3 header name like "Album" could exist in both sections the 'official' and
+'non-official' one.
+
+In order to know which sub-tables belong to which section types, the plan is to pre-fetch all the paginated webpages
+belonging to just the 'official' artist-releasegroups and EXTRACTING (but NOT rendering them) just the h3 header names
+in a new array variable "h3_official_category_header_array", BEFORE we do the usual full fetch pipeline for the combined
+("all: '1'") discography and the rest of the processing logic.
+
+There is a new "subType: 'artist-releasegroups'" definition in the variable "const pageDefinitions"
+
+#+begin_example
+        {
+            subType: 'artist-releasegroups',
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
+            buttons: [
+                { mainLabel: '🧮 Artist RGs',         pre_fetch_type: 'Official', params: { all: '0', va: '0' } },
+                { mainLabel: '🧮 Various Artist RGs', pre_fetch_type: 'Official', params: { all: '0', va: '1' } },
+            ]
+        },
+#+end_example
+
+which defines, when clicking on the inital page the "mainLabel" button, which URL ("match") with which query_parameters ("params") should be used 
+to get the corresponding webpages for JUST the h3 header name extraction for the pre_fetch_type: 'Official' (like in the main fetch loop)
+
+The commented block between
+
+#+begin_example
+        // ── BEGIN: Artist-Releasegroups pre-fetch pass ────────────────────────────────────────
+        // ── END: Artist-Releasegroups pre-fetch pass ──────────────────────────────────────────────
+#+end_example
+
+is probably the place where the pre-fetch logic belongs to.
+
+On the final rendered page we additionally extract ALL the h3 category header names from the full fetch pipeline (they
+represent the 'official' and 'non-official' ones) in a new array variable "h3_all_category_header_array".
+
+The category names from array "h3_all_category_header_array" are then compared against the array
+"h3_official_category_header_array" in order to create a third array "h3_non_official_category_header_array" which holds
+ONLY the 'non-offical' entries.
+
+In the comparison strategy, as long as names match, those entries are 'official'. The first name in
+"h3_all_category_header_array" that is not in the "h3_official_category_header_array" sequence marks the start of the
+'non-official' section.
+
+For later display purposes another array "h3_all_category_unique_header_array" is also created which should hold ONLY
+the unique values of the "h3_all_category_header_array" array, but leaving the order intact. That means, if an entry
+with the same name repeats in the array "h3_all_category_header_array" the second entry should be disgarded in the newly
+created array "h3_all_category_unique_header_array".
+
+When we have that information the goal is to create on the final rendered page two new buttons "Official Discography" and
+"Non-Official Discography" right beside the existing buttons rerendered from the initial page and
+
+- the "globalStatusDisplay.textContent" and the '<span id="mb-fetch-progress-outer"' should display the ongoing prefetching state 
+
+- when clicking the "Official Discography"-button we only display the 'offical' headers with their sub-tables and hide
+  the 'non-offical' ones. 
+
+- when clicking the "Non-Official Discography"-button we only display the 'non-offical' headers with their sub-tables and hide
+  the 'offical' ones
+
+- depending on which button has been clicked, the h2 header name initially displayed as "Discography" should be cahnge
+  either to "Official Discography" or "Non-Official Discography"
+
+- also the total row count calculation in the span
+
+#+begin_example
+<span class="mb-row-count-stat">(2123)</span>
+#+end_example
+
+should account which subType has been selected.
+
+#+begin_example
+globalStatusDisplay.textContent = 'Loading (pass 1 of 2)…';
+#+end_example
+
+** DONE bugs
+
+There are some bugs:
+
+Please also check the uploaded console debug file, the userscript eecution has bee stopped during processing "Page 2/22
+processed" when the real fetch pipeline executes
+
+1.) 
+
+when the pre-fetch pass is executed the "globalStatusDisplay" is dynamically updated with the pre-fetch loading info, but the span
+
+#+begin_example
+<span id="mb-fetch-progress-outer"..>
+#+end_example
+
+is NOT updated. The new function documentation (// ── BEGIN: Artist-Releasegroups pre-fetch pass ─...) mentions the "fetchProgressLabel" would be updated
+
+
+2.)
+
+on the final rendered page the two new buttons DO not show up when the function
+
+#+begin_example
+function _injectDiscographyViewButtons()
+#+end_example
+
+is supposed to be called
+
+** DONE bugs
+
+there are some bugs
+
+1.) starting from the final rendered page:
+
+- when clicked on the "Official Discography"-button and e.g. uncollapsed the CAA artwork images for the first sub-table
+  "Album and then clicking on the "Non-Official Discography"-button, the artwork stripe just uncollapsed in the official
+  view, is still displayed in the un-official view, but above ALL sub-tables. On the un-official view (if more image
+  stripes on other sub-tables in the official view are un-collapsed) they are accumulating above all other sub-tables
+
+- the same effect happens if I uncollapse image stripes on the un-offical view, BUT they accumulate BELOW all sub-tables
+
+2.) starting from the final rendered page:
+
+- switching to the official view ("Official Discography"-button)
+
+#+begin_example
+h2 header line: "Official Discography" (582 of 2123) [artwork 2067]
+#+end_example
+
+whereas (how it should be displayed, as the different views should ONLY take their own total and sub-table level counts
+into account)
+
+#+begin_example
+h2 header line: "Official Discography" (582) [artwork 578]
+#+end_example
+
+3.) starting from the final rendered page:
+
+a.)
+
+- switching to the non-official view ("Non-Official Discography"-button)
+
+#+begin_example
+h2 header line: "Non-Official Discography" (1541 of 2123) [artwork 2067]
+#+end_example
+
+whereas (how it should be displayed, as the different views should ONLY take their own total and sub-table level counts
+into account)
+
+#+begin_example
+h2 header line: "Non-OfficialDiscography" (2123) [artwork 2067]
+#+end_example
+
+b.)
+
+- the row display, if uncollapsed all sub-tables is correct, but some sub-tables have a count in the h3 header of the
+  sub-table which render in the format
+
+#+begin_example
+(<actual rows in sub-table of the un-official case> of <actual rows in sub-table of the official case>)
+#+end_example
+
+e.g in the sub-table with name "Album + Compilation"
+
+#+begin_example
+h3 header line: "Album + Compilation (168 of 36)"
+#+end_example
+
+4.) and NOW add some new functionality:
+
+
+- add another button "Complete Discography" in front of the "Official Discography" and "Non-Official Discography"
+  buttons. That button should have the green background color because that what is displayed after the initial rendering
+  on the final page. The button could also be used when clicking on it to toggle back to this same state using the array
+  "h3_all_category_header_array" after another button like "Official Discography" or "Non-Official Discography" had been
+  clicked meanwhile.
+
+- add another button "Complete Discography (merged)" after the "Official Discography" and "Non-Official Discography"
+  buttons based on the array "h3_all_category_unique_header_array".
+
+- always the latest button clicked (of the 4 "Complete Discography", "Official Discography", "Non-Official Discography",
+  "Complete Discography (merged)" should have the green background color
+
+** DONE still bugs  
+
+Still bugs
+
+1.)
+
+the "Complete Discography"-button still has NOT the green backgound initially on the rendered page
+
+2.)
+
+in merged mode, make sure that all headers and corresponding sub-tables of the array
+"h3_all_category_unique_header_array" are present on the page, but ALL the rows from a same named sub-table from the
+"official" view should be ADDED together with ALL the rows from a same named sub-table from the "un-official" view
+(under just one sub-table with the name which is the same in both views)
+
+3.)
+
+the total count of rows which have CAA artwork images are wrong in the "toggle CAA artwork"-button in the h2 header row
+when switching from the initial rendered page to one of the other views, it always shows the total count of rows which
+have CAA artwork images from the initial "Complete Discography" case.
+
+** DONE bug in merged mode
+
+There is still a bug in "merged" view. Not all h3 headers/sub-tables are included in the "merged" view when compared to
+the h3 "official" and "non-official" headers, but they should. h3 headers which are ONLY in the official view OR h3
+headers which are ONLY in the "un-official" view should BOTH be included in the "merged" view. for same named columns in
+both the "official" and "non-official" views, ALL their individual rows should be added to the same named
+h3 header/sub-table in the "merged" view (so it should be the union of both sub-tables)
+
+The question is if we need the array "h3_all_category_unique_header_array" at all for this algorithm. If not please
+remove from the code with all it's references.
+
+** DONE bug in collapse/uncollapse CAA images, per cell. per column, per table, global
+
+more bugs
+
+1.)
+
+the "Various Artist RGs"-button tooltip is wrong, it shows the same tooltip as the "Artist RGs"-button", please fix this
+
+2.)
+
+there is bug in that the "collapse/uncollapse CAA images"-buttons/glyph are NOT working (only the per column data cell glyph works)
+
+#+begin_example
+per column glyph
+per table button
+global button
+#+end_example
+
+3.)
+
+The h1 header "Density" button does not work on this type of pages anymore
+
+** DONE fix button text and all related code
+
+#+begin_example
+'🧮 Various Artist RGs'  ==> '🧮 Various Artists RGs'
+#+end_example
+*
+** DONE merged still wrong
+still bugs
+
+1.)
+
+"merged" view still wrong
+
+lets take the example from https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f when the "Various Artist
+RGs"-button has been clicked on the initial page in the merged views:
+
+- After initial rendering of the final table  (counts seem to be OK)
+
+| column name | complete presence | complete row coun | official presence | official row count | non-official presence | non-official row count | merged presence | merged row count |
+|-------------+-------------------+-------------------+-------------------+--------------------+-----------------------+------------------------+-----------------+------------------|
+| Compilation | yes               |                 2 | yes               |                  2 | no                    |                        | yes             |                2 |
+| Album       | yes               |                32 | yes               |                 32 | yes                   |                      2 | yes             |               34 |
+
+- After initial rendering of the final table 
+
+| column name | complete presence | complete row coun | official presence | official row count | non-official presence | non-official row count | merged presence | merged row count |
+|-------------+-------------------+-------------------+-------------------+--------------------+-----------------------+------------------------+-----------------+------------------|
+| Compilation | yes               |                 2 | yes               |                  2 | no                    |                        | yes             |                2 |
+| Album       | yes               |                34 | yes               |                 34 | yes                   |                      2 | yes             |               34 |
+
+2.)
+
+Fix the button text on the VA button on the initial page from
+
+#+begin_example
+'🧮 Various Artist RGs'
+#+end_example
+
+to plural
+
+#+begin_example
+'🧮 Various Artists RGs'
+#+end_example
+
+** DONE bugs
+
+the toggle "CAA artwork count"-button is wrong on some h3 headers in "merged" view: it still shows the count from the "official" view
+
+- After initial rendering of the final table
+
+| column name  | complete presence | complete row count | complete artwork count | official presence | official row count | official artwork count | non-official presence | non-official row count | non-official artwork count | merged presence | merged row count | merged artwork count |
+|--------------+-------------------+--------------------+------------------------+-------------------+--------------------+------------------------+-----------------------+------------------------+----------------------------+-----------------+------------------+----------------------|
+| Album + Live | yes               |                 23 |                     23 | yes               |                 23 |                     23 | yes                   |                     13 |                          9 | yes             |               36 |                   23 |
+
+** DONE bug
+
+Another bug
+
+- switching the first time to the "merged" view from any other view, the toggle "CAA artwork count"-buttons ALL show the right expected artwork counts
+- when switching back from the "merged" view to the "un-official" view, the h2 artwork count is wrong, it's the same as for the "merged" view, but the individell artwork counts in the h2 rows are OK 
+- when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
+
+
+
+* TODO rename tooltip for toggle CAA "single"-table button
+
+rename tooltip for toggle CAA "single"-table button
+
+from
+
+#+begin_example
+  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
+  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
+  33831:                    : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
+  33879:            : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+#+end_example
+
+to
+
+#+begin_example
+  33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
+  33830:                    ? 'Hide ' + ctx.stripeLabel + ' for this section'
+  33831:                    : 'Show ' + ctx.stripeLabel + ' for this section';
+  33878:            ? 'Hide ' + ctx.stripeLabel + ' for this section'
+  33879:            : 'Show ' + ctx.stripeLabel + ' for this section';
+#+end_example
+
+
+
+* TODO event pages need the primary alias below the h1 header "Bleachers"
+
+
+* TODO read the unicode chars from a configuration table definition 
+** DONE initial
+
+Add a new functionality:
+
+1.)
+
+in the variable "const configSchema" add a new section
+
+#+begin_example
+        // ============================================================
+        // UNICODE CHARACTER PICKER SECTION
+        // ============================================================
+        divider_unicode_char_picker: {
+            type: 'divider',
+            label: '<choose a nice unicode icon picker glyph> UNICODE CHARACTER PICKER'
+        },
+
+        sa_unicode_char_picker: {
+            label: "Enable Unicode Character Picker",
+            type: "checkbox",
+            default: true,
+            description: "Enable the Unicode character picker popup in any focused text input or textarea (default: Ctrl+U). " +
+                         "Adapted from the 'mb.unicodechars' userscript by Smeulf."
+        },
+
+        // Configurable lookup table for the Unicode Character Picker.
+        // Each entry populates one Unicode Code Symbol with its descriptive Name at startup.
+        sa_unicode_char_picker_mappings: {
+            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
+            type: 'table',
+            table_name: 'Unicode Code Symbols',
+            columns: ['Unicode Code Symbol', 'Name', 'Default'],
+            description: '<add appropriate description here>'
+        },
+#+end_example
+
+2.)
+
+Enable the whole "Enable Unicode Character Picker" feature only when the variable "sa_unicode_char_picker" is true.
+There is also "sa_shortcut_unicode_chars" shortcut definition which should also only work when "sa_unicode_char_picker" is true.
+
+3.)
+
+read the unicode chars definitions, currently hardcoded in
+
+#+begin_example
+const SA_UNICODE_CHARS
+#+end_example
+
+from the above configuration table definition "sa_unicode_char_picker_mappings", to make it easy for the enduser to
+extend the mappings
+
+4.)
+
+also always add a new changelog in each session and DO NOT remove previous changelog entries. You did this in the last
+session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
+
+** DONE Add © ℗ in the default code
+** TODO add a quickfilter with search string highlightning to 
+** TODO add a new column with examples
+
+* TODO Implement column movement
+
+* TODO JSDoc
+
+Please check the following JSDoc definitions which have multiple entries after each other
+and either
+
+- remove the obsolete ones
+- move them to the right function definition
+- or merge them if it makes sense
+
+** DONE 1 - REMOVE by hand
+*** DONE initial
+
+#+begin_example
+    /**
+     * Prepares the table header row for the final rendered view.
+     *
+     * Three sequential passes are performed:
+     *
+     *   1. **Column removal** — removes columns whose header text prefix matches
+     *      an entry in `removalMap` and whose corresponding setting is enabled
+     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
+     *
+     *   2. **Column origin stamping** — stamps each surviving original <th> with
+     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
+     *      from a re-render pass are skipped.
+     *
+     *   3. **Synthetic column injection** — injects new <th> elements for each
+     *      configured extractor, assigning:
+     *        - `mb-extracted-column`         for activeColumnExtractors entries
+     *                                        and extractMainColumn (MB-Name/Comment)
+     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
+     *                                        entries (second-pass derivations)
+     *      Each injected <th> also receives `dataset.colName`, the appropriate
+     *      background color from settings, and is appended to the header row if
+     *      not already present (idempotent across re-renders).
+     *
+     * The three CSS classes are the authoritative source for the Statistics panel
+     * column-origin breakdown (original / extracted / derived counts).
+     *
+     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
+     *   The `<thead>` element or its first `<tr>` row to process.
+     */
+
+    /**
+     * Returns a human-readable tooltip describing a synthetic column header.
+     *
+     * The tooltip is stamped onto the <th> element injected by cleanupHeaders()
+     * so users can hover over any synthetic column name and instantly see which
+     * source column it was extracted from and what the column contains.
+     *
+     * @param {string} extractor     - The extractor key (e.g. 'splitCountryDate').
+     * @param {string} sourceColumn  - The originating column name (e.g. 'Country/Date').
+     * @param {string} colName       - The synthetic column name (e.g. 'Country').
+     * @returns {string} Tooltip text, or '' when no description is available.
+     */
+#+end_example
+*** DONE REMOVE by hand (1st occurence)
+
+#+begin_example
+    /**
+     * Prepares the table header row for the final rendered view.
+     *
+     * Three sequential passes are performed:
+     *
+     *   1. **Column removal** — removes columns whose header text prefix matches
+     *      an entry in `removalMap` and whose corresponding setting is enabled
+     *      (e.g. sa_remove_rel, sa_remove_rating, sa_remove_tagger, …).
+     *
+     *   2. **Column origin stamping** — stamps each surviving original <th> with
+     *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
+     *      from a re-render pass are skipped.
+     *
+     *   3. **Synthetic column injection** — injects new <th> elements for each
+     *      configured extractor, assigning:
+     *        - `mb-extracted-column`         for activeColumnExtractors entries
+     *                                        and extractMainColumn (MB-Name/Comment)
+     *        - `mb-derived-extracted-column` for activeSyntheticColumnExtractors
+     *                                        entries (second-pass derivations)
+     *      Each injected <th> also receives `dataset.colName`, the appropriate
+     *      background color from settings, and is appended to the header row if
+     *      not already present (idempotent across re-renders).
+     *
+     * The three CSS classes are the authoritative source for the Statistics panel
+     * column-origin breakdown (original / extracted / derived counts).
+     *
+     * @param {HTMLTableSectionElement|HTMLTableRowElement} headerElement
+     *   The `<thead>` element or its first `<tr>` row to process.
+     */
+#+end_example
+
+** DONE 2
+
+#+begin_example
+    /**
+     * Recalculates and updates the h2 row-count badge from current DOM state of all
+     * subtables after global + subtable filters have been applied.
+     *
+     * Mirrors the 3-tier format used by updateSubTableRowCount():
+     *   No active subtable filter → relies on prior updateH2Count() call (no-op here)
+     *   Subtable filter active    → (sum_locally_visible of sum_globally_visible)/sum_total
+     *
+     * Sums over all script-owned subtables (those with a .mb-col-filter-row in their thead).
+     */
+    /**
+     * Updates the `.mb-row-count-stat` tooltip on the h3 that precedes `table`,
+     * reflecting the current combination of global filter, column filters, and
+     * sub-table filter active on this specific table.
+     *
+     * Called from:
+     *   • `updateSubTableRowCount` (inside the STF closure) — on STF apply/clear.
+     *   • `runFilter` per-table loop — after column-filter changes re-render rows.
+     *
+     * All tooltip text is set via the DOM `.title` property (never as an innerHTML
+     * attribute string) so filter expressions with `"`, `<`, `>`, etc. are safe.
+     *
+     * @param {HTMLTableElement} tbl  The live sub-table element.
+     */
+#+end_example
+
+** DONE 3
+
+#+begin_example
+    /**
+     * Standard download fallback using an anchor element with user notification
+     * @param {string} url - The blob URL to download from
+     * @param {string} filename - The filename to save as
+     */
+    /**
+     * Trigger a browser file download for a Blob object-URL and show a notification popup.
+     *
+     * @param {string} url       - Object URL created via URL.createObjectURL().
+     * @param {string} filename  - Suggested save filename.
+     * @param {number} rowCount  - Number of rows saved (0 = unknown / not shown).
+     */
+#+end_example
+
+** DONE 4 - REMOVE by hand
+*** DONE initial
+
+#+begin_example
+    /**
+     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
+     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
+     * network fetch, or "timing unavailable" (no entry / API absent).
+     *
+     * Classification rules (in priority order):
+     *
+     *   1. transferSize === 0 AND encodedBodySize > 0
+     *        → Memory cache (🟢).  Browser served from RAM; size is known even
+     *          for cross-origin resources when served from memory.
+     *
+     *   2. transferSize > 0
+     *        → Network fetch (🔵).  Actual bytes received over the wire.
+     *
+     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
+     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
+     *          the response arrived in under 5 ms — consistent with a disk-cached
+     *          redirect chain where BOTH the redirect and the final resource are
+     *          served from cache.
+     *          NOTE: this path is NEVER triggered for coverartarchive.org /
+     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
+     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
+     *          always adds 2–4 s of network latency and duration never drops below
+     *          5 ms on a page reload.  🟡 is therefore only observable for image
+     *          URLs that are served directly (no redirect) or whose redirect chain
+     *          is genuinely disk-cached.
+     *
+     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
+     *        → Network / redirect chain (🔵).  This is the only outcome ever
+     *          produced for CAA/EAA archive URLs on any repeated page load, because
+     *          the non-cacheable redirect to archive.org always requires a fresh
+     *          network round-trip.  Even if the final image bytes are already in
+     *          the disk cache, the redirect latency keeps duration > 5 ms.
+     *
+     *   5. No matching entry, or Performance API absent
+     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
+     *          'unavailable'; every case where an entry exists resolves to one of
+     *          the three statuses above.
+     *
+     * Returned object shape:
+     * ```
+     * {
+     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
+     *   transferSize:    number | null,
+     *   encodedBodySize: number | null,
+     *   duration:        number | null,
+     *   redirectStart:   number | null,   // 0 for opaque cross-origin
+     *   responseStart:   number | null,   // 0 for opaque cross-origin
+     * }
+     * ```
+     *
+     * @param  {string} url  The exact URL to look up (matched against entry.name).
+     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
+     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
+     */
+    /**
+     * Determines the correct cache-hint status and label for a loaded image
+     * source URL, taking the IDB/memory/native-path distinction into account.
+     *
+     * The core problem this solves: when IDB is enabled and an image is fetched
+     * via GM_xmlhttpRequest (_artGmFetchBlob), the result is stored as a blob:
+     * URL.  Blob: URLs are never recorded by the browser's Resource Timing API,
+     * so getResourceTimingHint(blobUrl) always returns 'unavailable' → ⚠️.
+     * The correct status in this case is 'network' (the GM_xhr fetch IS a
+     * genuine network request).
+     *
+     * When IDB is disabled the browser fetches images directly via <img>.src
+     * (a real https:// URL), which IS recorded by the RT API.
+     *
+     * Decision logic:
+     *   • fromIdb    → synthesise 'idb'
+     *   • fromMemory → synthesise 'memory'
+     *   • src starts with 'blob:' → synthesise 'network'  (GM_xhr IDB path)
+     *   • otherwise → query getResourceTimingHint(src)     (native img.src path)
+     *
+     * @param {string}  src         Resolved image URL (blob: or https://).
+     * @param {boolean} fromIdb     Whether the blob was served from IDB.
+     * @param {boolean} fromMemory  Whether the blob was served from session Map.
+     * @returns {{ status: string, label: string }}
+     */
+#+end_example
+
+*** DONE REMOVE by hand (1st occurence)
+
+#+begin_example
+    /**
+     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
+     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
+     * network fetch, or "timing unavailable" (no entry / API absent).
+     *
+     * Classification rules (in priority order):
+     *
+     *   1. transferSize === 0 AND encodedBodySize > 0
+     *        → Memory cache (🟢).  Browser served from RAM; size is known even
+     *          for cross-origin resources when served from memory.
+     *
+     *   2. transferSize > 0
+     *        → Network fetch (🔵).  Actual bytes received over the wire.
+     *
+     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
+     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
+     *          the response arrived in under 5 ms — consistent with a disk-cached
+     *          redirect chain where BOTH the redirect and the final resource are
+     *          served from cache.
+     *          NOTE: this path is NEVER triggered for coverartarchive.org /
+     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
+     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
+     *          always adds 2–4 s of network latency and duration never drops below
+     *          5 ms on a page reload.  🟡 is therefore only observable for image
+     *          URLs that are served directly (no redirect) or whose redirect chain
+     *          is genuinely disk-cached.
+     *
+     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
+     *        → Network / redirect chain (🔵).  This is the only outcome ever
+     *          produced for CAA/EAA archive URLs on any repeated page load, because
+     *          the non-cacheable redirect to archive.org always requires a fresh
+     *          network round-trip.  Even if the final image bytes are already in
+     *          the disk cache, the redirect latency keeps duration > 5 ms.
+     *
+     *   5. No matching entry, or Performance API absent
+     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
+     *          'unavailable'; every case where an entry exists resolves to one of
+     *          the three statuses above.
+     *
+     * Returned object shape:
+     * ```
+     * {
+     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
+     *   transferSize:    number | null,
+     *   encodedBodySize: number | null,
+     *   duration:        number | null,
+     *   redirectStart:   number | null,   // 0 for opaque cross-origin
+     *   responseStart:   number | null,   // 0 for opaque cross-origin
+     * }
+     * ```
+     *
+     * @param  {string} url  The exact URL to look up (matched against entry.name).
+     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
+     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
+     */
+#+end_example
+
+** DONE 11 - Wires the single global ▶/◀ toggle button for multi-table mode. - REMOVE BY HAND
+*** DONE initial
+
+#+begin_example
+    /**
+     * Wires the single global ▶/◀ toggle button for multi-table mode.
+     *
+     * In multi-table mode `initCollapsableColumns` is called once per sub-table
+     * (because each rendered `<table>` is independent), so it cannot accumulate
+     * all column-header buttons into one `collapseHdrBtns` array.  This helper
+     * fills that role: it is called once after ALL sub-tables have been
+     * processed by `initCollapsableColumns`, scans the live DOM for every
+     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
+     *
+     *   • Hides the global button when no such buttons exist (none of the
+     *     filtered-in sub-tables has a multi-row column).
+     *   • Shows the global button and re-wires its `onclick` to drive every
+     *     found header button (and therefore every cell toggle across every
+     *     sub-table) to the target expanded/collapsed state.
+     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
+     *     the highlight tint on the global button based on the current filter
+     *     match state across all sub-tables.
+     *
+     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
+     * loop completes — both on initial render and on every filter re-run.
+     */
+    /**
+     * _applyCollapseState — expand or collapse a single multi-row cell toggle
+     * WITHOUT dispatching a synthetic click event.
+     *
+     * Calling `toggle.click()` from within another click handler is suppressed
+     * by some browsers / userscript managers because the dispatched MouseEvent
+     * has `isTrusted = false`.  This helper replicates the delegation-handler
+     * logic from `ensureCollapseDelegate` directly so that mass-expand /
+     * mass-collapse from column-header, sub-table, and global collapse buttons
+     * works in all environments.
+     *
+     * @param {HTMLSpanElement} toggle  - The `.mb-cell-collapse-toggle` span.
+     * @param {boolean}         expand  - true → expand; false → collapse.
+     */
+#+end_example
+
+*** DONE remove
+
+#+begin_example
+    /**
+     * Wires the single global ▶/◀ toggle button for multi-table mode.
+     *
+     * In multi-table mode `initCollapsableColumns` is called once per sub-table
+     * (because each rendered `<table>` is independent), so it cannot accumulate
+     * all column-header buttons into one `collapseHdrBtns` array.  This helper
+     * fills that role: it is called once after ALL sub-tables have been
+     * processed by `initCollapsableColumns`, scans the live DOM for every
+     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
+     *
+     *   • Hides the global button when no such buttons exist (none of the
+     *     filtered-in sub-tables has a multi-row column).
+     *   • Shows the global button and re-wires its `onclick` to drive every
+     *     found header button (and therefore every cell toggle across every
+     *     sub-table) to the target expanded/collapsed state.
+     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
+     *     the highlight tint on the global button based on the current filter
+     *     match state across all sub-tables.
+     *
+     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
+     * loop completes — both on initial render and on every filter re-run.
+     */
+#+end_example
+
+** TODO 12 - Removes all consecutive <br> tags found in the document : MISSING
+*** DONE initial
+
+#+begin_example
+    /**
+     * Removes all consecutive <br> tags found in the document,
+     * leaving only a single <br> if multiple were found together.
+     * Logs the occurrences and count of tags removed.
+     */
+    /**
+     * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
+     * data-table h2 to immediately before it, preserving their original order.
+     *
+     * Idempotent: sections that are already before the data h2 are skipped.
+     * Must be called AFTER the .mb-row-count-stat span has been inserted into
+     * the h2 by updateH2Count() — that span is the anchor used to identify the
+     * data h2.  During a live fetch finalCleanup() runs after the render which
+     * already created the stat; during a disk load this function must be called
+     * explicitly after updateH2Count().
+     *
+     * Controlled by sa_enable_h2_section_relocation_on_final_page (default: true).
+     */
+#+end_example
+
+*** TODO MISSING
+
+#+begin_example
+    /**
+     * Removes all consecutive <br> tags found in the document,
+     * leaving only a single <br> if multiple were found together.
+     * Logs the occurrences and count of tags removed.
+     */
+#+end_example
+
+** TODO 19 - * Populates the shared bigbox tooltip `tip` (already cleared by the caller) : MISSING
+*** DONE initial
+
+#+begin_example
+    /**
+     * Populates the shared bigbox tooltip `tip` (already cleared by the caller)
+     * according to the active page definition's `tooltipColumns` and
+     * `extractMainColumn` features.
+     *
+     * tooltipColumns element forms:
+     *   \'---'             → horizontal divider rule
+     *   plain string      → one text row from the matching column.
+     *                        When the column name equals `extractMainColumn`,
+     *                        the title is rendered bold and any disambiguation
+     *                        comment (from `<span class="comment">`) appears in
+     *                        italic below it.
+     *   JS array of tokens → single inline row.  Each token is either a column
+     *                        name (resolved to cell text) or a literal punctuation
+     *                        string \'(\', \')\', \'-\', etc. (rendered as-is).
+     *                        The whole line is omitted when every column token
+     *                        resolves to an empty string.  Adjacent literals are
+     *                        suppressed when their neighbouring column value is
+     *                        absent.
+     *
+     * @param {HTMLDivElement}      tip      Cleared tooltip div to populate.
+     * @param {HTMLTableRowElement} row      The hovered data row.
+     * @param {object|null}         pageDef  Active page definition (may be null).
+     * @param {HTMLTableElement}    table    Owning table (for header lookups).
+     * @returns {boolean}  true when tooltipColumns was applied;
+     *                     false when the feature is absent (caller must fall back).
+     */
+
+    /**
+     * Renders the artist-roles list from an Artists column cell into the tooltip.
+     *
+     * MusicBrainz event "Artists" cells contain a `.artist-roles-container` div
+     * with a `<ul class="artist-roles">` whose `<li>` items follow this pattern:
+     *
+     *   <li>
+     *     <span class="name-variation"><a href="…"><bdi>Artist Name</bdi></a></span>
+     *     (role text)
+     *   </li>
+     *
+     * or (without name-variation span):
+     *
+     *   <li>
+     *     <a href="…"><bdi>Artist Name</bdi></a> (role text)
+     *   </li>
+     *
+     * ALL <li> elements are read regardless of their inline `display:none` style
+     * (MusicBrainz collapses extras behind the ▶ toggle; we want the full list).
+     *
+     * Each entry is rendered as "Name (role)", entries comma-separated on one line.
+     *
+     * @param {HTMLTableRowElement} row  Data row.
+     * @param {number}              ci   Column index of the Artists cell.
+     * @param {HTMLDivElement}      tip  Tooltip div to append the artists line to.
+     * @returns {boolean}  true when at least one artist entry was appended.
+     */
+#+end_example
+
+*** TODO MISSING
+
+#+begin_example
+    /**
+     * Populates the shared bigbox tooltip `tip` (already cleared by the caller)
+     * according to the active page definition's `tooltipColumns` and
+     * `extractMainColumn` features.
+     *
+     * tooltipColumns element forms:
+     *   \'---'             → horizontal divider rule
+     *   plain string      → one text row from the matching column.
+     *                        When the column name equals `extractMainColumn`,
+     *                        the title is rendered bold and any disambiguation
+     *                        comment (from `<span class="comment">`) appears in
+     *                        italic below it.
+     *   JS array of tokens → single inline row.  Each token is either a column
+     *                        name (resolved to cell text) or a literal punctuation
+     *                        string \'(\', \')\', \'-\', etc. (rendered as-is).
+     *                        The whole line is omitted when every column token
+     *                        resolves to an empty string.  Adjacent literals are
+     *                        suppressed when their neighbouring column value is
+     *                        absent.
+     *
+     * @param {HTMLDivElement}      tip      Cleared tooltip div to populate.
+     * @param {HTMLTableRowElement} row      The hovered data row.
+     * @param {object|null}         pageDef  Active page definition (may be null).
+     * @param {HTMLTableElement}    table    Owning table (for header lookups).
+     * @returns {boolean}  true when tooltipColumns was applied;
+     *                     false when the feature is absent (caller must fall back).
+     */
+#+end_example
+
+
+* TODO colorize "main" and "guest" performer in the EAA tooltips
+
+* TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
+
+
+* DONE add the current defaults (h2/h3 color backgrounds) to our code base
+* TODO make zebra striping configurable
+
+#+begin_example
+        const oddBg  = '#ffffff';
+        const evenBg = '#f2f2f2';
+#+end_example
+
+
+* TODO Search pages
+** DONE add "renderMultiRowCell" and "collapsableColumns"
+
+#+begin_example
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                extractMainColumn: 'Name', // Specific header
+                stickyColumn: 'Name',
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-works',
+            match: (path) => path.includes('/works'),
+            buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
+                extractMainColumn: 'Work',
+                stickyColumn: 'Work'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+** TODO move the query dialog to the top, before the table
+
+* TODO sticky table column
+** TODO remove the ghosting on some pages
+*** single table mode
+
+#+begin_example
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/releases
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+https://musicbrainz.org/series/37040fc0-4687-4484-b1e3-fe93ba8677f4
+https://musicbrainz.org/series/db03e180-5b76-4fae-8ca8-52ec6ac9de1f
+https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
+
+https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases
+
+
+#+end_example
+
+*** multi
+
+#+begin_example
+https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
+
+#+end_example
+
+** TODO fix the manual resizing bug
+** TODO make the h3 headers in "multi"-table mode sticky
+*** initial
+
+1.)
+
+create a new boolen configuration parameter "sa_enable_sticky_h3_sub_section_headers" (default: true)
+in the configuration section
+
+#+begin_example
+        // ============================================================
+        // TABLE STICKINESS CONFIGURATION SECTION
+        // ============================================================
+#+end_example
+
+2.)
+
+when "sa_enable_sticky_h3_sub_section_headers" is true make the h3 sub-section headers in "multi"-table mode sticky, so
+when horizontally scrolling the table(s), the h3 header line itslef should not move
+
+*** bug
+
+No, it's not working. ONLY the tables under each h3 header section should scroll horizontally (except the configured
+sticky column). The h3 sub-section headers should stay fixed and NOT scroll
+
+*** bug
+
+No, it's not working. Now not only the h3 header sections still move when scrolling horizontally, but also the sticky
+column feature on the tables itself is NOT working anymore
+
+
+
+* TODO ghosting bug still present also checkbox column removed for date column in first column
+
+ghosting bug still present also checkbox column removed for date column in first column
+
+#+begin_example
+Year - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
+Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
+
+#, Year - https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
+#+end_example
+
+but it works force
+
+#+begin_example
+Date - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+#+end_example
+
+
+* TODO retry "Relationships" buttons double on "single"-table pageTypes
+
+* TODO Most popular tags in MusicBrainz
+** initial
+
+add most popular tags in MusicBrainz support:
+
+1.)
+
+add a new userscript "match" directive
+
+#+begin_example
+// @match        *://*.musicbrainz.org/tags*
+#+end_example
+
+before
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/tags*
+#+end_example
+
+2.)
+
+add a new pageType definition
+
+#+begin_example
+        // Most popular tags in MusicBrainz
+        {
+            type: 'popular-tags',
+            match: (path, params) => path.match(/\/tags/),
+            buttons: [
+                { label: 'Show list',   params: { show_list: '1' } }
+            ],
+            features: {
+                listToTable: [ 'genres', 'tags' ]
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+before the pageType "type: 'user-tags'"
+
+** add support for multiple H2 (each has exactly one table)
+
+1.)
+
+add support for
+
+https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly one table)
+
+https://musicbrainz.org/user/vzell/collections - multiple H2 (each has multiple H3 based tables)
+
+
+* TODO further split "Area"
+
+
 * MB pages
 ** h2-p-ul(1)
 *** h2-p-nav-ul(1)
@@ -70253,4 +70249,77 @@ in bold
 
 #+begin_example
 /user/<username>/subscriptions/<entity type>  # /user/vzell/subscriptions/label
+#+end_example
+
+** h2-ul(class="tag-list top-tag-list")-h2-ul 
+
+#+begin_example
+https://musicbrainz.org/tags?show_list=1
+#+end_example
+
+** tags
+
+#+begin_example
+https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/vzell/tag/gig/event
+#+end_example
+
+* search page finalization
+** initial
+
+add some new functionality for the pageType "type: 'search'":
+
+1.)
+
+add a new h2 header named "Searchform" before the current present h2 header (there is only one) 
+
+2.)
+
+on the final rendered page
+
+move the searchform
+
+#+begin_example
+<div class="searchform">
+#+end_example
+
+after the newly added h2 header named "Searchform"
+
+** bugs
+
+some bugs
+
+1.)
+
+the whole search form should be relocated to right before the very first h2 header line which precedes the actual table
+
+** bugs
+
+you completely messed up
+
+1.)
+
+actually revert the last changes of repositioning and just move the searchform
+
+#+begin_example
+<div class="searchform">
+#+end_example
+
+right after the '<div id="mb-status-displays-wrapper"' container
+
+** buggy
+
+still buggy
+
+1.)
+
+the h2 header
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Searchform</h2>
+#+end_example
+
+should also move right in fron of the searchform
+
+#+begin_example
+<div class="searchform">
 #+end_example

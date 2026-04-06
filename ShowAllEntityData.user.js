@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.423+2026-04-06
+// @version      9.99.427+2026-04-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3598,6 +3598,38 @@
     }
 
     /**
+     * Inserts a new `<h2>` element with the text from `features.insertPrependH2`
+     * immediately BEFORE the first existing `<h2>` found inside `div#content`
+     * (or `div#page` / body as fallback).
+     *
+     * Used by the 'search' pageType to prepend a "Searchform" section heading
+     * before the search-results heading so the form can be wrapped in its own
+     * collapsible section.
+     *
+     * @param {object} def - The active merged pageDefinition object.
+     */
+    function applyInsertPrependH2(def) {
+        const _text = def?.features?.insertPrependH2;
+        if (!_text) return;
+
+        const _root = document.getElementById('content') ||
+                      document.getElementById('page') ||
+                      document.body;
+        const _existingH2 = _root.querySelector('h2');
+
+        const _h2 = document.createElement('h2');
+        _h2.textContent = _text;
+
+        if (_existingH2) {
+            _existingH2.parentNode.insertBefore(_h2, _existingH2);
+            Lib.debug('init', `applyInsertPrependH2: inserted <h2>"${_text}"</h2> before existing h2.`);
+        } else {
+            _root.prepend(_h2);
+            Lib.debug('init', `applyInsertPrependH2: inserted <h2>"${_text}"</h2> as first child (no existing h2 found).`);
+        }
+    }
+
+    /**
      * Clicks the "Show all tags." anchor on entity tag pages so that hidden
      * tags (score ≤ 0, downvoted) are exposed in the `<ul>` lists before the
      * `applyListToTable()` conversion runs.
@@ -4391,7 +4423,10 @@
                 collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
                 extractMainColumn: 'Name', // Specific header
                 stickyColumn: 'Name',
-                transformToH2: true        // New flag to trigger <h2> transformation
+                transformToH2: true,        // New flag to trigger <h2> transformation
+                // Inject a "Searchform" h2 before the existing (single) h2 on the page
+                // so the collapsible-section infrastructure can wrap the search form.
+                insertPrependH2: 'Searchform'
             },
             rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
         },
@@ -21451,6 +21486,10 @@ a { color: #1565c0; }`;
         if (activeDefinition.features?.insertH2) {
             applyInsertH2(activeDefinition);
         }
+        // insertPrependH2: inject an h2 BEFORE the existing one (e.g. search pages).
+        if (activeDefinition.features?.insertPrependH2) {
+            applyInsertPrependH2(activeDefinition);
+        }
 
         // ── listToTable pre-processing ────────────────────────────────────────
         // For pageTypes that carry features.listToTable (e.g. 'tags',
@@ -28264,6 +28303,32 @@ a { color: #1565c0; }`;
 
     function finalCleanup() {
         Lib.debug('cleanup', 'Running final cleanup...');
+
+        // ── search: move Searchform h2 + div.searchform after #mb-status-displays-wrapper ──
+        // Relocates both the injected "Searchform" <h2> and the native MusicBrainz
+        // search form <div> to sit directly after the script's status/controls wrapper.
+        // Final DOM order:
+        //   div#mb-status-displays-wrapper
+        //   h2 "Searchform"       ← moved here
+        //   div.searchform        ← moved here (immediately after the h2)
+        if (pageType === 'search') {
+            const _anchor = document.getElementById('mb-status-displays-wrapper');
+            const _h2 = _anchor && Array.from(document.querySelectorAll('h2'))
+                .find(h => h.textContent.replace(/[▼▲]/g, '').trim() === 'Searchform');
+            const _form = document.querySelector('div.searchform');
+            if (_anchor && _h2) {
+                // Insert h2 first, then form right after it.
+                _anchor.insertAdjacentElement('afterend', _h2);
+                _h2.insertAdjacentElement('afterend', _form || _h2); // form after h2
+                if (_form) {
+                    Lib.debug('cleanup', 'search: moved Searchform h2 + div.searchform after #mb-status-displays-wrapper.');
+                }
+            } else if (_anchor && _form) {
+                // h2 not found — move just the form.
+                _anchor.insertAdjacentElement('afterend', _form);
+                Lib.debug('cleanup', 'search: moved div.searchform after #mb-status-displays-wrapper (no Searchform h2 found).');
+            }
+        }
 
         // ── user-subscriptions: remove the subscription type navigation paragraph ─
         // The page renders a <p>[ Artist subscriptions | Collection subscriptions |
