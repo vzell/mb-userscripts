@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.415+2026-04-05
+// @version      9.99.417+2026-04-05
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3205,34 +3205,45 @@
      *   Replacement: the `<ul>` itself is replaced by the bare `<table>`.
      *   Column name: derived from the `<ul>` class attribute (see below).
      *
-     * ── Structure C: h2+ul (area users page /area/<mbid>/users only) ──────────
+     * ── Structure C: h2+ul (/area/<mbid>/users and /tag/<v>/<entity> pages) ───
      *
-     *   Triggered when `sectionId === ''` AND the current page path contains
-     *   `/area/` and `/users` (i.e. the page type is 'area-users').
+     *   Triggered when `sectionId === ''` AND the current page path matches
+     *   either `/area/<mbid>/users` (pageType 'area-users') OR the two-segment
+     *   tag-entity pattern `/tag/<value>/<entity>` (pageType 'tag-value-entity').
      *   For all other pageTypes with `sectionId === ''`, Structure D is used.
      *
-     *   Before:
-     *     <h2>Users</h2>
-     *     <p>…</p>
-     *     <nav>…</nav>
-     *     <ul>
-     *       <li>
-     *         <a href="/user/__MarioMadrid">
-     *           <img …> <bdi>__MarioMadrid</bdi>
-     *         </a>
-     *       </li>  …
-     *     </ul>
+     *   area-users variant:
+     *     Before:
+     *       <h2>Users</h2>
+     *       <p>…</p> <nav>…</nav>
+     *       <ul>
+     *         <li><a href="/user/__MarioMadrid"><img …><bdi>__MarioMadrid</bdi></a></li>
+     *         …
+     *       </ul>
+     *     After:
+     *       <h2>Users</h2>
+     *       <table class="tbl">…</table>
+     *     Column name: full h2 text (e.g. "Users").
      *
-     *   After:
-     *     <h2>Users</h2>
-     *     <table class="tbl">…</table>
+     *   tag-value-entity variant:
+     *     Before:
+     *       <h2>Labels tagged as "<a href="/tag/country">country</a>"</h2>
+     *       <p style>…</p>
+     *       <ul style>
+     *         <li>1 - <a href="/label/…"><bdi>1st Drop Music</bdi></a></li>
+     *         …
+     *       </ul>
+     *     After:
+     *       <h2>Labels tagged as "country"</h2>
+     *       <table class="tbl">…</table>
+     *     Column name: first word of the h2 text content before "tagged"
+     *                  (e.g. "Labels tagged as …" → "Labels").
      *
-     *   Detection : sectionId is '' AND path matches /area/<mbid>/users.
+     *   Detection : sectionId is '' AND path matches /area/<mbid>/users OR
+     *               /tag/<value>/<entity>.
      *               Scans `div#content` (or body) for every `<h2>` and walks
      *               its next element siblings (up to 5 steps) until a `<ul>`.
-     *   Column name: text content of the preceding `<h2>` (e.g. "Users").
-     *   Table layout: single column (the full `<a>` link from each `<li>`);
-     *               no "Tag count" second column.
+     *   Table layout: single column (full `<li>` inner content cloned).
      *   Replacement: the `<ul>` itself is replaced by the bare `<table>`.
      *
      * ── Structure D: h2 + h3+ul sections (tag value pages) ──────────────────
@@ -3290,11 +3301,77 @@
             if (sectionId === '') {
                 const _root = docContext.getElementById('content') || docContext.body;
 
-                // ── Structure D: h3+ul sections on tag value pages ───────────
-                // Triggered when path contains /tag/ (pageTypes 'user-tag-value'
-                // and 'tag-value').  Walks every <h3> and converts its sibling
-                // <ul> into a single-column table labelled with the h3 text.
-                if (_currentPath.includes('/tag/')) {
+                // Classify the path once for all Structure C/D branches.
+                // Order matters: two-segment /tag/<v>/<entity> must be tested
+                // BEFORE one-segment /tag/<v> because the latter matches both.
+                const _isAreaUsers      = _currentPath.match(/\/area\/[a-f0-9-]{36}\/users/);
+                const _isTagValueEntity = _currentPath.match(/\/tag\/[^/]+\/.+/);    // two-segment
+                const _isTagValue       = !_isTagValueEntity && _currentPath.match(/\/tag\//); // one-segment only
+
+                // ── Structure C: h2+ul (/area/<mbid>/users and /tag/<v>/<entity>) ─
+                // Triggered for area-users pages OR two-segment tag-entity pages.
+                if (_isAreaUsers || _isTagValueEntity) {
+                    Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
+                        let _next  = _h2.nextElementSibling;
+                        let _steps = 0;
+                        let _ul    = null;
+                        while (_next && _steps < 5) {
+                            if (_next.tagName === 'UL') { _ul = _next; break; }
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_ul) return;
+
+                        // Column name derivation:
+                        //   area-users:       full h2 text (e.g. "Users")
+                        //   tag-value-entity: first word before "tagged" in the h2 text
+                        //                     e.g. "Labels tagged as «country»" → "Labels"
+                        const _h2Text = _h2.textContent.trim();
+                        let _colName;
+                        if (_isTagValueEntity) {
+                            const _firstWord = _h2Text.split(/\s+tagged\b/i)[0].trim();
+                            _colName = _firstWord || _h2Text;
+                        } else {
+                            _colName = _h2Text;
+                        }
+
+                        const _table = docContext.createElement('table');
+                        _table.className = 'tbl';
+
+                        // thead — single column
+                        const _thead = docContext.createElement('thead');
+                        const _hr    = docContext.createElement('tr');
+                        const _th    = docContext.createElement('th');
+                        _th.textContent = _colName;
+                        _hr.appendChild(_th);
+                        _thead.appendChild(_hr);
+                        _table.appendChild(_thead);
+
+                        // tbody — one row per <li>, single <td> with full li content
+                        const _tbody = docContext.createElement('tbody');
+                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                            const _tr = docContext.createElement('tr');
+                            if (li.className) _tr.className = li.className;
+                            const _td = docContext.createElement('td');
+                            Array.from(li.childNodes).forEach(n => _td.appendChild(n.cloneNode(true)));
+                            _tr.appendChild(_td);
+                            _tbody.appendChild(_tr);
+                        });
+                        _table.appendChild(_tbody);
+
+                        _ul.parentNode.replaceChild(_table, _ul);
+                        Lib.debug('init',
+                            `applyListToTable: converted h2="${_colName}" ul → table`
+                            + ` (${_tbody.rows.length} rows, structure="h2-ul").`);
+                    });
+                    return; // Structure C handled all h2+ul pairs for this entry
+                }
+
+                // ── Structure D: h3+ul sections on one-segment tag pages ─────────
+                // Triggered when path is /tag/<value> (no entity segment) —
+                // pageTypes 'user-tag-value' and 'tag-value'.
+                // Walks every <h3> and converts its sibling <ul> into a table.
+                if (_isTagValue) {
                     Array.from(_root.querySelectorAll('h3')).forEach(_h3 => {
                         let _next  = _h3.nextElementSibling;
                         let _steps = 0;
@@ -3338,58 +3415,8 @@
                     return; // Structure D handled all h3+ul pairs for this entry
                 }
 
-                // ── Structure C: h2+ul (area users pages only) ───────────────
-                // Only active when path matches /area/<mbid>/users.
-                // For all other pageTypes with sectionId==='' use Structure D above.
-                if (!_currentPath.match(/\/area\/[a-f0-9-]{36}\/users/)) {
-                    Lib.debug('init', `applyListToTable: sectionId='' but path "${_currentPath}" is neither a /tag/ nor /area/.../users page — skipping Structure C/D.`);
-                    return;
-                }
-
-                Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
-                    let _next  = _h2.nextElementSibling;
-                    let _steps = 0;
-                    let _ul    = null;
-                    while (_next && _steps < 5) {
-                        if (_next.tagName === 'UL') { _ul = _next; break; }
-                        _next = _next.nextElementSibling;
-                        _steps++;
-                    }
-                    if (!_ul) return;
-
-                    const _colName = _h2.textContent.trim();
-
-                    const _table = docContext.createElement('table');
-                    _table.className = 'tbl';
-
-                    // thead — single column named after the h2
-                    const _thead = docContext.createElement('thead');
-                    const _hr    = docContext.createElement('tr');
-                    const _th    = docContext.createElement('th');
-                    _th.textContent = _colName;
-                    _hr.appendChild(_th);
-                    _thead.appendChild(_hr);
-                    _table.appendChild(_thead);
-
-                    // tbody — one row per <li>, single <td> with the <a> link
-                    const _tbody = docContext.createElement('tbody');
-                    Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
-                        const _tr = docContext.createElement('tr');
-                        if (li.className) _tr.className = li.className;
-                        const _td = docContext.createElement('td');
-                        const _a  = li.querySelector('a');
-                        if (_a) _td.appendChild(_a.cloneNode(true));
-                        _tr.appendChild(_td);
-                        _tbody.appendChild(_tr);
-                    });
-                    _table.appendChild(_tbody);
-
-                    _ul.parentNode.replaceChild(_table, _ul);
-                    Lib.debug('init',
-                        `applyListToTable: converted h2="${_colName}" ul → table`
-                        + ` (${_tbody.rows.length} rows, structure="h2-ul").`);
-                });
-                return; // Structure C handled all h2+ul pairs for this entry
+                Lib.debug('init', `applyListToTable: sectionId='' but path "${_currentPath}" matches no known structure — skipping.`);
+                return;
             }
 
             // ── Locate the <ul> and its replacement target ───────────────────
@@ -4186,6 +4213,21 @@
                 removeSelector: 'form:has(select[name="show_downvoted"])'
             },
             tableMode: 'multi'
+        },
+        // Tag pages per entity (e.g. /tag/country/labels) — must come before
+        // the generic tag-value entry because its match is narrower (two path
+        // segments after /tag/ instead of one).
+        {
+            type: 'tag-value-entity',
+            match: (path) => path.match(/\/tag\/[^/]+\/.+/),
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the first word of the h2 text as the column name (e.g. "Labels").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
         },
         // Tag pages (e.g. /tag/country)
         {

@@ -68217,7 +68217,7 @@ https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly o
 https://musicbrainz.org/user/vzell/collections - multiple H2 (each has multiple H3 based tables)
 
 
-* TODO li2table for user specific tag values and global tag values
+* DONE li2table for user specific tag values and global tag values
 ** https://musicbrainz.org/user/vzell/tag/handwritten
 
 #+begin_example
@@ -68457,6 +68457,127 @@ but it should be "(10)". It's probably because of the following implementation f
 
 Row removal — the trailing "See all" row is removed from the table since the button makes it redundant.
 
+** tag-value-entity
+*** initial
+
+add support for pageTypes of "/tag/<tag value>/<entity type>s" e.g. "/tag/country/labels"
+
+1.)
+
+add the following pageType definition
+
+#+begin_example
+        // Tag pages per entity ("/tag/<tag value>/<entity type>s" e.g. /tag/country/labels)
+        {
+            type: 'tag-value-entity',
+            match: (path) => path.match(/\/tag\/.*\/.*/),
+            buttons: [ { label: 'Show Entity tagged' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Labels").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+before
+
+#+begin_example
+        // Tag pages (e.g. /tag/country)
+        {
+            type: 'tag-value',
+            match: (path) => path.match(/\/tag\//),
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                // Empty sectionId triggers Structure D in applyListToTable.
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+2.)
+
+adjust the implementation for "Structure C: h2+ul" in the function "function applyListToTable(def, docContext = document)"
+
+#+begin_example
+     * ── Structure C: h2+ul (area users page /area/<mbid>/users only) ──────────
+     *
+     *   Triggered when `sectionId === ''` AND the current page path contains
+     *   `/area/` and `/users` (i.e. the page type is 'area-users').
+#+end_example
+
+to also support the pageType "type: 'tag-value-entity'". For this pageType we have the structure
+
+#+begin_example
+     *   Before:
+     *     <h2>Labels tagged as “<a href="/tag/country">country</a>”</h2>
+     *     <p style>…</p>
+     *     <ul style>
+     *       <li>1 - <a href="/label/c3b44ec1-5f88-443c-869e-399f0d6a631d"><bdi>1st Drop Music</bdi></a></li>
+     *       <li>  …
+     *     </ul>
+     *
+     *   After:
+     *     <h2>Users</h2>
+     *     <table class="tbl">…</table>
+#+end_example
+
+The column name for the single-column table should be extracted from the first string (e.g. "Labels") after the "<h2>" tag
+
+*** bugs
+
+doesn't work yet, see the console debug log
+
+#+begin_example
+00:21:08.676 [VZ-ShowAllEntityData: tag-value-entity] 📝 Changelog source: remote — replaced 0 local entries with 590 remote entries (fromCache=true) 
+00:21:15.573 [VZ-ShowAllEntityData: tag-value-entity] 🧹 Signalling other scripts to stop... 
+00:21:15.575 [VZ-ShowAllEntityData: tag-value-entity] 📥 Starting fetch process... null
+00:21:15.575 [VZ-ShowAllEntityData: tag-value-entity] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+00:21:15.575 [VZ-ShowAllEntityData: tag-value-entity] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+00:21:15.576 [VZ-ShowAllEntityData: tag-value-entity] 📥 Total pages to fetch: 1 
+00:21:15.576 [VZ-ShowAllEntityData: tag-value-entity] 🧹 Starting clutter element removal. 
+00:21:15.579 [VZ-ShowAllEntityData: tag-value-entity] 📥 Page 1 is current page. Using existing document. 
+00:21:15.579 [VZ-ShowAllEntityData: tag-value-entity] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+00:21:15.580 [VZ-ShowAllEntityData: tag-value-entity] 📝 No targetHeader provided; returning all tables found in container. 
+00:21:15.580 [VZ-ShowAllEntityData: tag-value-entity] 📝 parseDocumentForTables: Found 0 total tables. Target header filter: "none" 
+00:21:15.580 [VZ-ShowAllEntityData: tag-value-entity] 📥 No tables found matching "null" on page 1 to parse. Skipping. 
+00:21:15.581 [VZ-ShowAllEntityData: tag-value-entity] 🎨 DOM rendering starting... 
+00:21:15.581 [VZ-ShowAllEntityData: tag-value-entity] 🎨 Starting updateH2Count: filtered=0, total=0, absoluteTotal=null 
+00:21:15.582 [VZ-ShowAllEntityData: tag-value-entity] 🎨 Aborting updateH2Count: No table.tbl found on page. 
+00:21:15.583 [VZ-ShowAllEntityData: tag-value-entity] 🎨 Starting renderFinalTable with 0 rows. 
+00:21:15.583 [VZ-ShowAllEntityData: tag-value-entity] ❌ Abort: #tbody container not found. 
+00:21:15.584 [VZ-ShowAllEntityData: tag-value-entity] 🧹 Running final cleanup... 
+00:21:15.585 [VZ-ShowAllEntityData: tag-value-entity] 🧹 No Sanojjonas elements found during final cleanup. 
+00:21:15.585 [VZ-ShowAllEntityData: tag-value-entity] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+00:21:15.586 [VZ-ShowAllEntityData: tag-value-entity] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+00:21:15.586 [VZ-ShowAllEntityData: tag-value-entity] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+00:21:15.587 [VZ-ShowAllEntityData: tag-value-entity] 🎨 Initializing collapsible H2 headers... 
+00:21:15.588 [VZ-ShowAllEntityData: tag-value-entity] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+00:21:15.589 [VZ-ShowAllEntityData: tag-value-entity] 🖥️ Auto-resize button added to controls 
+00:21:15.590 [VZ-ShowAllEntityData: tag-value-entity] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+00:21:15.591 [VZ-ShowAllEntityData: tag-value-entity] 🖥️ Density control button added to controls 
+00:21:15.592 [VZ-ShowAllEntityData: tag-value-entity] 🖥️ Statistics button added to controls 
+00:21:15.593 [VZ-ShowAllEntityData: tag-value-entity] 📝 Keyboard shortcuts initialized 
+00:21:15.593 [VZ-ShowAllEntityData: tag-value-entity] 🖥️ Shortcuts help button already exists, skipping 
+00:21:15.596 [VZ-ShowAllEntityData: tag-value-entity] 🖥️ Export button with dropdown menu added to controls 
+00:21:15.598 [VZ-ShowAllEntityData: tag-value-entity] 📝 initBarcodeHighlight: no table.tbl found — skipping 
+00:21:15.598 [VZ-ShowAllEntityData: tag-value-entity] 📝 initCaaPics: request queue created (concurrency=4) 
+00:21:15.599 [VZ-ShowAllEntityData: tag-value-entity] 📝 initCAAPics: no table.tbl found — skipping 
+00:21:15.599 [VZ-ShowAllEntityData: tag-value-entity] 📝 initEAAPics: no table.tbl found — skipping 
+00:21:15.600 [VZ-ShowAllEntityData: tag-value-entity] 📝 initCAAInlinePics: no addCAA column configured for this page type — skipping 
+00:21:15.601 [VZ-ShowAllEntityData: tag-value-entity] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+00:21:15.602 [VZ-ShowAllEntityData: tag-value-entity] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
+00:21:15.612 [VZ-ShowAllEntityData: tag-value-entity] 📝 Unicode character picker initialised 
+00:21:15.612 [VZ-ShowAllEntityData: tag-value-entity] 🎨 DOM rendering finished in 31.60ms 
+00:21:15.613 [VZ-ShowAllEntityData: tag-value-entity] ✅ Process complete. Final Row Count: 0. Total Time: 0.03s 
+00:21:15.622 [VZ-ShowAllEntityData: tag-value-entity] 📝 sa_auto_resize_columns: triggering auto-resize on load 
+00:21:17.608 [VZ-ShowAllEntityData: tag-value-entity] 📝 No tables found for auto-resize 
+00:21:17.754 [VZ-ShowAllEntityData: tag-value-entity] 📝 _artOpenIdb: database opened successfully 
+00:21:18.665 [VZ-ShowAllEntityData: tag-value-entity] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s)
+#+end_example
 
 * DONE new area-users pageType
 ** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users
@@ -69798,7 +69919,7 @@ finalCleanup()              → removeSelector removes div.all-tags  ← here
 #+end_example
 
 
-* add feature to <entity>-tags
+* TODO add feature to <entity>-tags
 
 #+begin_example
                 // Click "Show all tags." before processing so hidden zero-score

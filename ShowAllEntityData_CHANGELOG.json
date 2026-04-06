@@ -1,5 +1,30 @@
 [
   {
+    "version": "9.99.417",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "applyListToTable() sectionId==='' dispatch order: Structure D's old guard '_currentPath.includes(\"/tag/\")' matched ALL tag paths including two-segment /tag/<v>/<entity> paths, so it ran first for tag-value-entity pages, found no <h3> elements, and returned — Structure C was never reached and applyListToTable produced no tables. Fixed by pre-computing three mutually-exclusive flags: _isTagValueEntity (/tag/[^/]+/.+, two segments), _isTagValue (!_isTagValueEntity && /tag//, one segment only), _isAreaUsers. Structure C is now checked first (isAreaUsers || isTagValueEntity), Structure D second (isTagValue). A fallback skip-log handles any remaining unrecognised paths."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.416",
+    "date": "2026-04-05",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "New 'tag-value-entity' pageType: matches /tag/<value>/<entity> paths (e.g. /tag/country/labels). Must be listed before 'tag-value' since its regex is narrower. Uses listToTable:[''] (Structure C), tableMode 'single', button 'Show all Entities tagged'.",
+          "applyListToTable() Structure C: extended to also activate for /tag/<value>/<entity> paths (tag-value-entity pageType), not just /area/<mbid>/users. The guard now checks _isAreaUsers OR _isTagValueEntity. Column-name derivation is path-dependent: for area-users the full h2 text is used (e.g. 'Users'); for tag-value-entity the first word before 'tagged' in the h2 text is extracted (e.g. 'Labels tagged as \"country\"' → 'Labels'). The li→td mapping now clones full li content (all child nodes) for tag-value-entity rows that contain ranking numbers and flag spans alongside links. JSDoc updated to document both variants with before/after examples."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.415",
     "date": "2026-04-05",
     "sections": [
