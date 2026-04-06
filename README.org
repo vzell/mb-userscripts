@@ -70043,14 +70043,13 @@ renderGroupedTable()        → clones thead template, builds output tables
 finalCleanup()              → removeSelector removes div.all-tags  ← here
 #+end_example
 
-
-* TODO add feature to <entity>-tags
+* DONE add feature to <entity>-tags
 
 some bugs:
 
 1.)
 
-readd
+re-add the pageType "type: 'editor-subscribers'"
 
 #+begin_example
         // Subscriber pages
@@ -70069,11 +70068,11 @@ readd
 
 #+end_example
 
-after
+after the pageType "type: 'user-subscriptions'"
 
-#+begin_example
+2.)
 
-#+end_example
+add the following configuration snippet
 
 #+begin_example
                 // Click "Show all tags." before processing so hidden zero-score
@@ -70084,6 +70083,19 @@ after
                 removeSelector: 'div.all-tags',
 #+end_example
 
+to the following pageType definitions
+
+#+begin_example
+type: 'artist-tags',
+type: 'releasegroup-tags',
+type: 'release-tags',
+type: 'recording-tags',
+type: 'work-tags',
+type: 'label-tags',
+type: 'series-tags',
+type: 'place-tags',
+type: 'instrument-tags',
+#+end_example
 
 * DONE add subscribers support
 ** DONE initial

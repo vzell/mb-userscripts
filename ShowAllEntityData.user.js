@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.422+2026-04-06
+// @version      9.99.423+2026-04-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4045,6 +4045,19 @@
             },
             tableMode: 'single'
         },
+        // Subscriber pages (e.g. /user/vzell/subscribers)
+        {
+            type: 'editor-subscribers',
+            match: (path) => path.includes('/subscribers'),
+            buttons: [ { label: 'Show all Editor Subscribers for User' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Subscribers").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
         // Entity tags sub-pages (e.g. /artist/<mbid>/tags) — must come before
         // the generic 'tags' entry because its match is narrower.
         {
@@ -4053,6 +4066,12 @@
             buttons: [ { label: 'Show all Tags for Artist' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Artist tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -4064,6 +4083,12 @@
             buttons: [ { label: 'Show all Tags for Releasegroup' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Releasegroup tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -4075,6 +4100,12 @@
             buttons: [ { label: 'Show all Tags for Release' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Release tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -4086,6 +4117,12 @@
             buttons: [ { label: 'Show all Tags for Recording' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Recording tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -4097,6 +4134,12 @@
             buttons: [ { label: 'Show all Tags for Work' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Work tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -4108,6 +4151,12 @@
             buttons: [ { label: 'Show all Tags for Label' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Label tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -4119,6 +4168,12 @@
             buttons: [ { label: 'Show all Tags for Series' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Series tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -4130,6 +4185,12 @@
             buttons: [ { label: 'Show all Tags for Place' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Place tags',
                 listToTable: [ 'genres', 'tags' ]
@@ -4158,6 +4219,12 @@
             buttons: [ { label: 'Show all Tags for Instrument' } ],
             tableMode: 'multi',
             features: {
+                // Click \"Show all tags.\" before processing so hidden zero-score
+                // and downvoted tags are exposed in the <ul> lists.
+                showAllTags: true,
+                // Remove the \"all-tags\" info/form container after rendering since
+                // the converted table replaces the ul and the form is no longer needed.
+                removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Instrument tags',
                 listToTable: [ 'genres', 'tags' ]

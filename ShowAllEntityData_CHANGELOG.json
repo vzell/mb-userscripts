@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.423",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "🐛 Fix / ✨ Enhancement",
+        "items": [
+          "Re-added 'editor-subscribers' pageType (accidentally dropped when consolidating subscription types in 9.99.421): matches /subscribers paths, tableMode 'single', listToTable:[''] (Structure C), button 'Show all Editor Subscribers for User'. Placed immediately after 'user-subscriptions'.",
+          "Added showAllTags:true and removeSelector:'div.all-tags' to all nine entity-tags pageTypes: artist-tags, releasegroup-tags, release-tags, recording-tags, work-tags, label-tags, series-tags, place-tags, instrument-tags. These were already present on area-tags but missing from the other entity tag page types. The two features ensure hidden zero-score/downvoted tags are exposed before conversion and the all-tags container is removed after rendering."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.422",
     "date": "2026-04-06",
     "sections": [
