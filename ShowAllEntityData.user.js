@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.420+2026-04-06
+// @version      9.99.422+2026-04-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4026,66 +4026,23 @@
 
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
-        // Subscriptions pages — each subscription sub-type gets its own entry so
-        // the button label and any future feature set can be tailored per type.
-        // Order: specific paths before the generic /subscriptions fallback.
+        // Subscriptions pages — a single consolidated type with per-button
+        // virtualPath values that replace the last URL path segment on click,
+        // allowing all five subscription types from one unified page definition.
         {
-            type: 'artist-subscriptions',
-            match: (path) => path.includes('/subscriptions/artist'),
-            buttons: [ { label: 'Show all Artist Subscriptions for User' } ],
-            tableMode: 'single',
+            type: 'user-subscriptions',
+            match: (path) => path.match(/\/user\/.*\/subscriptions/),
+            buttons: [
+                { label: '🧮 Artist subscriptions',     virtualPath: '/artist' },
+                { label: '🧮 Collection subscriptions', virtualPath: '/collection' },
+                { label: '🧮 Label subscriptions',      virtualPath: '/label' },
+                { label: '🧮 Series subscriptions',     virtualPath: '/series' },
+                { label: '🧮 Editor subscriptions',     virtualPath: '/editor' }
+            ],
             features: {
                 extractMainColumn: 'Name',
                 stickyColumn: 'Name'
-            }
-        },
-        {
-            type: 'collection-subscriptions',
-            match: (path) => path.includes('/subscriptions/collection'),
-            buttons: [ { label: 'Show all Collection Subscriptions for User' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name',
-                stickyColumn: 'Name'
-            }
-        },
-        {
-            type: 'label-subscriptions',
-            match: (path) => path.includes('/subscriptions/label'),
-            buttons: [ { label: 'Show all Label Subscriptions for User' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name',
-                stickyColumn: 'Name'
-            }
-        },
-        {
-            type: 'series-subscriptions',
-            match: (path) => path.includes('/subscriptions/series'),
-            buttons: [ { label: 'Show all Series Subscriptions for User' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name',
-                stickyColumn: 'Name'
-            }
-        },
-        // Subscriber pages (e.g. /user/vzell/subscribers)
-        {
-            type: 'editor-subscribers',
-            match: (path) => path.includes('/subscribers'),
-            buttons: [ { label: 'Show all Editor Subscribers for User' } ],
-            features: {
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text as the column name (e.g. "Subscribers").
-                listToTable: [ '' ]
             },
-            tableMode: 'single'
-        },
-        {
-            type: 'editor-subscriptions',
-            match: (path) => path.includes('/subscriptions/editor'),
-            buttons: [ { label: 'Show all Editor Subscriptions for User' } ],
             tableMode: 'single'
         },
         // Entity tags sub-pages (e.g. /artist/<mbid>/tags) — must come before
@@ -21472,6 +21429,14 @@ a { color: #1565c0; }`;
         globalStatusDisplay.textContent = 'Getting number of pages to fetch...';
         let maxPage = 1;
 
+        // ── Compute effective fetch path (accounts for virtualPath) ──────────
+        // When a button carries virtualPath (e.g. '/label'), replace the last
+        // path segment of the current URL path so fetches target the correct
+        // subscription type page (e.g. /subscriptions/artist → /subscriptions/label).
+        const _effectivePath = buttonConfig.virtualPath
+            ? path.replace(/\/[^/]*$/, buttonConfig.virtualPath)
+            : path;
+
         // Determine maxPage based on context
         if (activeDefinition && activeDefinition.non_paginated) {
             // For non-paginated types, initially assume maxPage is 1
@@ -21480,8 +21445,12 @@ a { color: #1565c0; }`;
             globalStatusDisplay.textContent = 'Getting number of pages to fetch... Non-paginated page definition. Initially assuming 1';
         } else if (overrideParams) {
             Lib.debug('fetch', 'Context: overrideParams detected. Fetching maxPage with overrides.', overrideParams);
-            maxPage = await fetchMaxPageGeneric(path, overrideParams);
+            maxPage = await fetchMaxPageGeneric(_effectivePath, overrideParams);
             globalStatusDisplay.textContent = `Getting number of pages to fetch... Paginated page definition extracted from URL with queryParameters: ${maxPage}`;
+        } else if (buttonConfig.virtualPath) {
+            Lib.debug('fetch', `Context: virtualPath detected. Fetching maxPage from ${_effectivePath}.`);
+            maxPage = await fetchMaxPageGeneric(_effectivePath, {});
+            globalStatusDisplay.textContent = `Getting number of pages to fetch... virtualPath page. Fetched maxPage: ${maxPage}`;
         } else {
             Lib.debug('fetch', 'Context: Paginated page definition. Fetching maxPage from DOM.');
             maxPage = determineMaxPageFromDOM();
@@ -21574,6 +21543,16 @@ a { color: #1565c0; }`;
                 const fetchUrl = new URL(window.location.href);
                 fetchUrl.searchParams.set('page', p.toString());
 
+                // ── virtualPath support ───────────────────────────────────────
+                // When the clicked button carries a virtualPath value (e.g.
+                // '/label'), replace the last path segment of the URL with it.
+                // Example: /user/vzell/subscriptions/artist + virtualPath=/label
+                //        → /user/vzell/subscriptions/label
+                if (buttonConfig.virtualPath) {
+                    fetchUrl.pathname = fetchUrl.pathname
+                        .replace(/\/[^/]*$/, buttonConfig.virtualPath);
+                }
+
                 if (overrideParams) {
                     Object.keys(overrideParams).forEach(k => fetchUrl.searchParams.set(k, overrideParams[k]));
                 }
@@ -21589,7 +21568,7 @@ a { color: #1565c0; }`;
                     // Fix: always fetch search pages fresh from the network so the DOMParser
                     // receives a fully server-rendered response, regardless of whether p===1.
                     const _isSearchPage = activeDefinition && activeDefinition.type === 'search';
-                    if (!_isSearchPage && p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
+                    if (!_isSearchPage && !buttonConfig.virtualPath && p === currentPageNum && (!overrideParams || Object.keys(overrideParams).length === 0)) {
                         Lib.debug('fetch', `Page ${p} is current page. Using existing document.`);
                         doc = document;
                    } else {
@@ -22670,6 +22649,44 @@ a { color: #1565c0; }`;
             }
 
             let renderingTimeStart = performance.now();
+
+            // ── virtualPath h2 label patch ────────────────────────────────────
+            // When the clicked button carries a virtualPath (e.g. user-subscriptions
+            // "🧮 Label subscriptions"), the live DOM h2 still reflects the page
+            // the browser is on (e.g. "Artist subscriptions").  Rename it to match
+            // the button label BEFORE updateH2Count reads it, so the header shows
+            // the correct subscription type in the final rendered view.
+            if (buttonConfig.virtualPath) {
+                // Strip emoji + superscript prefix (e.g. "🧮¹ " or "🧮 ") from label.
+                const _cleanLabel = (buttonConfig.label || '')
+                    .replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}][¹²³⁴⁵⁶⁷⁸⁹]?\s*/u, '')
+                    .trim();
+                if (_cleanLabel) {
+                    // Find the h2 that precedes the first table — same logic as updateH2Count.
+                    const _firstTbl = document.querySelector('table.tbl');
+                    let _h2 = _firstTbl ? _findPrecedingH2(_firstTbl) : null;
+                    if (!_h2) _h2 = document.querySelector('h2');
+                    if (_h2) {
+                        // Preserve any child elements (toggle icon, count stat) by
+                        // replacing only the text nodes in the h2.
+                        Array.from(_h2.childNodes).forEach(n => {
+                            if (n.nodeType === Node.TEXT_NODE && n.textContent.trim()) {
+                                n.textContent = _cleanLabel + ' ';
+                            }
+                        });
+                        // If no text node was found, just set textContent as fallback.
+                        if (![...Array.from(_h2.childNodes)].some(
+                            n => n.nodeType === Node.TEXT_NODE && n.textContent.trim() === _cleanLabel + ' '
+                        )) {
+                            _h2.childNodes[0] && (_h2.childNodes[0].nodeType === Node.ELEMENT_NODE)
+                                ? _h2.insertBefore(document.createTextNode(_cleanLabel + ' '), _h2.childNodes[0].nextSibling)
+                                : null;
+                        }
+                        Lib.debug('render',
+                            `virtualPath: renamed h2 to "${_cleanLabel}".`);
+                    }
+                }
+            }
 
             // --- RENDERING START ---
             Lib.debug('render', 'DOM rendering starting...');
@@ -28181,7 +28198,18 @@ a { color: #1565c0; }`;
     function finalCleanup() {
         Lib.debug('cleanup', 'Running final cleanup...');
 
-        // ── editor-subscribers: fix subscriber count display ──────────────────
+        // ── user-subscriptions: remove the subscription type navigation paragraph ─
+        // The page renders a <p>[ Artist subscriptions | Collection subscriptions |
+        // … ]</p> nav bar.  The per-button virtualPath switching makes it redundant.
+        if (pageType === 'user-subscriptions') {
+            document.querySelectorAll('p').forEach(_p => {
+                if (_p.querySelector('a[href*="/subscriptions/artist"]') &&
+                    _p.querySelector('a[href*="/subscriptions/editor"]')) {
+                    _p.remove();
+                    Lib.debug('cleanup', 'user-subscriptions: removed subscription navigation paragraph.');
+                }
+            });
+        }
         // The rendered table may contain a trailing row "Plus N other anonymous
         // users".  When found:
         //   1. Parse N from the row text.

@@ -67727,174 +67727,6 @@ Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/perfor
 #+end_example
 
 
-* TODO add subscriptions support
-** DONE initial
-
-add subscriptions support for Muscibrainz page of type
-
-https://musicbrainz.org/user/vzell/subscriptions/<type>
-
-e.g.
-
-https://musicbrainz.org/user/vzell/subscriptions/label
-
-by implementing the following two changes:
-
-1.)
-
-add the following "@match" directive
-
-#+begin_example
-// @match        *://*.musicbrainz.org/user/*/subscriptions/*
-#+end_example
-
-to the userscript header so that it looks like
-
-#+begin_example
-// @match        *://*.musicbrainz.org/search?query=*
-// @match        *://*.musicbrainz.org/user/*/subscriptions/*
-#+end_example
-
-2.)
-
-add the following new pageType definition to "const pageDefinitions"
-
-#+begin_example
-        // Subscriptions pages
-        {
-            type: 'subscriptions',
-            match: (path) => path.includes('/subscriptions'),
-            buttons: [ { label: 'Show all Subscription results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name'
-            }
-        },
-#+end_example
-
-so that it looks like
-
-#+begin_example
-    const pageDefinitions = [
-        // Subscriptions pages
-        {
-            type: 'subscriptions',
-            match: (path) => path.includes('/subscriptions'),
-            buttons: [ { label: 'Show all Subscription results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name'
-            }
-        },
-        // Search pages
-        {
-            type: 'search',
-            match: (path) => path.includes('/search'),
-            buttons: [ { label: 'Show all Search results' } ],
-            tableMode: 'single',
-            features: {
-                extractMainColumn: 'Name', // Specific header
-                transformToH2: true        // New flag to trigger <h2> transformation
-            },
-            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
-        },
-#+end_example
-
-3.)
-
-remove the double misplaced JSDoc comment from the function "_hintFromSrc(src, fromIdb, fromMemory)"
-
-#+begin_example
-    /**
-     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
-     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
-     * network fetch, or "timing unavailable" (no entry / API absent).
-     *
-     * Classification rules (in priority order):
-     *
-     *   1. transferSize === 0 AND encodedBodySize > 0
-     *        → Memory cache (🟢).  Browser served from RAM; size is known even
-     *          for cross-origin resources when served from memory.
-     *
-     *   2. transferSize > 0
-     *        → Network fetch (🔵).  Actual bytes received over the wire.
-     *
-     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
-     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
-     *          the response arrived in under 5 ms — consistent with a disk-cached
-     *          redirect chain where BOTH the redirect and the final resource are
-     *          served from cache.
-     *          NOTE: this path is NEVER triggered for coverartarchive.org /
-     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
-     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
-     *          always adds 2–4 s of network latency and duration never drops below
-     *          5 ms on a page reload.  🟡 is therefore only observable for image
-     *          URLs that are served directly (no redirect) or whose redirect chain
-     *          is genuinely disk-cached.
-     *
-     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
-     *        → Network / redirect chain (🔵).  This is the only outcome ever
-     *          produced for CAA/EAA archive URLs on any repeated page load, because
-     *          the non-cacheable redirect to archive.org always requires a fresh
-     *          network round-trip.  Even if the final image bytes are already in
-     *          the disk cache, the redirect latency keeps duration > 5 ms.
-     *
-     *   5. No matching entry, or Performance API absent
-     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
-     *          'unavailable'; every case where an entry exists resolves to one of
-     *          the three statuses above.
-     *
-     * Returned object shape:
-     * ```
-     * {
-     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
-     *   transferSize:    number | null,
-     *   encodedBodySize: number | null,
-     *   duration:        number | null,
-     *   redirectStart:   number | null,   // 0 for opaque cross-origin
-     *   responseStart:   number | null,   // 0 for opaque cross-origin
-     * }
-     * ```
-     *
-     * @param  {string} url  The exact URL to look up (matched against entry.name).
-     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
-     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
-     */
-#+end_example
-
-4.)
-
-remove the double misplaced JSDoc comment from the function "_applyCollapseState(toggle, expand)"
-
-#+begin_example
-    /**
-     * Wires the single global ▶/◀ toggle button for multi-table mode.
-     *
-     * In multi-table mode `initCollapsableColumns` is called once per sub-table
-     * (because each rendered `<table>` is independent), so it cannot accumulate
-     * all column-header buttons into one `collapseHdrBtns` array.  This helper
-     * fills that role: it is called once after ALL sub-tables have been
-     * processed by `initCollapsableColumns`, scans the live DOM for every
-     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
-     *
-     *   • Hides the global button when no such buttons exist (none of the
-     *     filtered-in sub-tables has a multi-row column).
-     *   • Shows the global button and re-wires its `onclick` to drive every
-     *     found header button (and therefore every cell toggle across every
-     *     sub-table) to the target expanded/collapsed state.
-     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
-     *     the highlight tint on the global button based on the current filter
-     *     match state across all sub-tables.
-     *
-     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
-     * loop completes — both on initial render and on every filter re-run.
-     */
-#+end_example
-
-** TODO enhancement
-
-add n action buttons like for "Artist-ReleaseGroups" pageType for the different collection types 
-
 * DONE subscriptions
 
 some enhancements:
@@ -68076,6 +67908,300 @@ add
 #+end_example
 
 after the "type: 'artist-tags'" pageType definition
+
+* DONE add subscriptions support
+** DONE initial
+
+add subscriptions support for Muscibrainz page of type
+
+https://musicbrainz.org/user/vzell/subscriptions/<type>
+
+e.g.
+
+https://musicbrainz.org/user/vzell/subscriptions/label
+
+by implementing the following two changes:
+
+1.)
+
+add the following "@match" directive
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+to the userscript header so that it looks like
+
+#+begin_example
+// @match        *://*.musicbrainz.org/search?query=*
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+2.)
+
+add the following new pageType definition to "const pageDefinitions"
+
+#+begin_example
+        // Subscriptions pages
+        {
+            type: 'subscriptions',
+            match: (path) => path.includes('/subscriptions'),
+            buttons: [ { label: 'Show all Subscription results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name'
+            }
+        },
+#+end_example
+
+so that it looks like
+
+#+begin_example
+    const pageDefinitions = [
+        // Subscriptions pages
+        {
+            type: 'subscriptions',
+            match: (path) => path.includes('/subscriptions'),
+            buttons: [ { label: 'Show all Subscription results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name'
+            }
+        },
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name', // Specific header
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+#+end_example
+
+3.)
+
+remove the double misplaced JSDoc comment from the function "_hintFromSrc(src, fromIdb, fromMemory)"
+
+#+begin_example
+    /**
+     * Probes the Resource Timing API for the most recent PerformanceResourceEntry
+     * that matches `url` and classifies it as a memory-cache hit, disk-cache hit,
+     * network fetch, or "timing unavailable" (no entry / API absent).
+     *
+     * Classification rules (in priority order):
+     *
+     *   1. transferSize === 0 AND encodedBodySize > 0
+     *        → Memory cache (🟢).  Browser served from RAM; size is known even
+     *          for cross-origin resources when served from memory.
+     *
+     *   2. transferSize > 0
+     *        → Network fetch (🔵).  Actual bytes received over the wire.
+     *
+     *   3. transferSize === 0 AND encodedBodySize === 0 AND duration < 5 ms
+     *        → Disk cache (🟡).  Both size fields are 0 (opaque cross-origin) but
+     *          the response arrived in under 5 ms — consistent with a disk-cached
+     *          redirect chain where BOTH the redirect and the final resource are
+     *          served from cache.
+     *          NOTE: this path is NEVER triggered for coverartarchive.org /
+     *          eventartarchive.org.  Their CDN issues non-cacheable 302 redirects
+     *          (Cache-Control: no-store or max-age=0), so the redirect round-trip
+     *          always adds 2–4 s of network latency and duration never drops below
+     *          5 ms on a page reload.  🟡 is therefore only observable for image
+     *          URLs that are served directly (no redirect) or whose redirect chain
+     *          is genuinely disk-cached.
+     *
+     *   4. transferSize === 0 AND encodedBodySize === 0 AND duration >= 5 ms
+     *        → Network / redirect chain (🔵).  This is the only outcome ever
+     *          produced for CAA/EAA archive URLs on any repeated page load, because
+     *          the non-cacheable redirect to archive.org always requires a fresh
+     *          network round-trip.  Even if the final image bytes are already in
+     *          the disk cache, the redirect latency keeps duration > 5 ms.
+     *
+     *   5. No matching entry, or Performance API absent
+     *        → Timing unavailable (⚠️).  This is the ONLY case that returns
+     *          'unavailable'; every case where an entry exists resolves to one of
+     *          the three statuses above.
+     *
+     * Returned object shape:
+     * ```
+     * {
+     *   status:          'memory' | 'disk' | 'network' | 'unavailable',
+     *   transferSize:    number | null,
+     *   encodedBodySize: number | null,
+     *   duration:        number | null,
+     *   redirectStart:   number | null,   // 0 for opaque cross-origin
+     *   responseStart:   number | null,   // 0 for opaque cross-origin
+     * }
+     * ```
+     *
+     * @param  {string} url  The exact URL to look up (matched against entry.name).
+     * @returns {{ status: string, transferSize: number|null, encodedBodySize: number|null,
+     *             duration: number|null, redirectStart: number|null, responseStart: number|null }}
+     */
+#+end_example
+
+4.)
+
+remove the double misplaced JSDoc comment from the function "_applyCollapseState(toggle, expand)"
+
+#+begin_example
+    /**
+     * Wires the single global ▶/◀ toggle button for multi-table mode.
+     *
+     * In multi-table mode `initCollapsableColumns` is called once per sub-table
+     * (because each rendered `<table>` is independent), so it cannot accumulate
+     * all column-header buttons into one `collapseHdrBtns` array.  This helper
+     * fills that role: it is called once after ALL sub-tables have been
+     * processed by `initCollapsableColumns`, scans the live DOM for every
+     * `.mb-col-collapse-hdr-btn` across every `table.tbl`, and then:
+     *
+     *   • Hides the global button when no such buttons exist (none of the
+     *     filtered-in sub-tables has a multi-row column).
+     *   • Shows the global button and re-wires its `onclick` to drive every
+     *     found header button (and therefore every cell toggle across every
+     *     sub-table) to the target expanded/collapsed state.
+     *   • Calls `updateGlobalCollapseButtonHighlight(null)` to apply or clear
+     *     the highlight tint on the global button based on the current filter
+     *     match state across all sub-tables.
+     *
+     * Must be called from `renderGroupedTable` after the `dataArray.forEach`
+     * loop completes — both on initial render and on every filter re-run.
+     */
+#+end_example
+
+** TODO enhancement
+*** initial
+
+add action buttons like for "Artist-ReleaseGroups" pageTypes for the different collection pageTypes:
+
+1.)
+
+change the following list of pageType definitions
+
+#+begin_example
+        {
+            type: 'artist-subscriptions',
+            match: (path) => path.includes('/subscriptions/artist'),
+            buttons: [ { label: 'Show all Artist Subscriptions for User' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+        {
+            type: 'collection-subscriptions',
+            match: (path) => path.includes('/subscriptions/collection'),
+            buttons: [ { label: 'Show all Collection Subscriptions for User' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+        {
+            type: 'label-subscriptions',
+            match: (path) => path.includes('/subscriptions/label'),
+            buttons: [ { label: 'Show all Label Subscriptions for User' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+        {
+            type: 'series-subscriptions',
+            match: (path) => path.includes('/subscriptions/series'),
+            buttons: [ { label: 'Show all Series Subscriptions for User' } ],
+            tableMode: 'single',
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            }
+        },
+        {
+            type: 'editor-subscriptions',
+            match: (path) => path.includes('/subscriptions/editor'),
+            buttons: [ { label: 'Show all Editor Subscriptions for User' } ],
+            tableMode: 'single'
+        },
+#+end_example
+
+to just one
+
+#+begin_example
+        {
+            type: 'user-subscriptions',
+            match: (path, virtualPath) => path.match(/\/user\/.*\/subscriptions/),
+            buttons: [
+                { label: '🧮 Artist subscriptions',     virtualPath: '/artist' },
+                { label: '🧮 Collection subscriptions', virtualPath: '/collection' },
+                { label: '🧮 Label subscriptions',      virtualPath: '/label' },
+                { label: '🧮 Series subscriptions',     virtualPath: '/series' },
+                { label: '🧮 Editor subscriptions',     virtualPath: '/editor' },
+            ],
+            features: {
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name'
+            },
+            tableMode: 'single'
+#+end_example
+
+2.)
+
+support the new "{ label: '🧮 Label subscriptions',     virtualPath: '/label' }" syntax in the following way:
+
+- when a button is rendered which has a "virtualPath" parameter, then the action should be when clicking the button,
+  that the last part of the currently rendered page shozuld be replaced with the value of the "virtualPath" parameter, e.g.
+
+when on
+
+#+begin_example
+https://musicbrainz.org/user/vzell/subscriptions/artist
+#+end_example
+
+"/artist" should be replaced with "/label", so
+
+#+begin_example
+https://musicbrainz.org/user/vzell/subscriptions/label
+#+end_example
+
+3.)
+
+on the final rendered page, remove the container
+
+#+begin_example
+<p>[ <a href="/user/vzell/subscriptions/artist">Artist subscriptions</a> | <a href="/user/vzell/subscriptions/collection">Collection subscriptions</a> | <a href="/user/vzell/subscriptions/label">Label subscriptions</a> | <a href="/user/vzell/subscriptions/series">Series subscriptions</a> | <a href="/user/vzell/subscriptions/editor">Editor subscriptions</a> ]</p>
+#+end_example
+
+*** bugs
+
+there is a bug:
+
+when the final page is rendered, the h2 header line should represent the clicked action button in the following way:
+
+Let's say we start from the initial page
+
+#+begin_example
+https://musicbrainz.org/user/vzell/subscriptions/artist
+#+end_example
+
+by clicking the "🧮 Label subscriptions"-button, then on the final rendered page the h2 header text "Artist subscriptions"
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;">
+  <span class="mb-toggle-icon">▼
+  </span>Artist subscriptions
+  <span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;718&lt;/span&gt; rows total unfiltered in this table">(718)
+  </span>
+#+end_example
+
+should be changed to "Label subscriptions", as that's the button that was pressed and the table data also represents the
+"Label" data
 
 
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
@@ -68578,7 +68704,6 @@ doesn't work yet, see the console debug log
 00:21:17.754 [VZ-ShowAllEntityData: tag-value-entity] 📝 _artOpenIdb: database opened successfully 
 00:21:18.665 [VZ-ShowAllEntityData: tag-value-entity] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s)
 #+end_example
-
 
 * DONE new area-users pageType
 ** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users
@@ -69921,6 +70046,35 @@ finalCleanup()              → removeSelector removes div.all-tags  ← here
 
 * TODO add feature to <entity>-tags
 
+some bugs:
+
+1.)
+
+readd
+
+#+begin_example
+        // Subscriber pages
+        {
+            type: 'editor-subscribers',
+            match: (path) => path.includes('/subscribers'),
+            buttons: [ { label: 'Show all Editor Subscribers for User' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Users").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+
+#+end_example
+
+after
+
+#+begin_example
+
+#+end_example
+
 #+begin_example
                 // Click "Show all tags." before processing so hidden zero-score
                 // and downvoted tags are exposed in the <ul> lists.
@@ -69930,7 +70084,8 @@ finalCleanup()              → removeSelector removes div.all-tags  ← here
                 removeSelector: 'div.all-tags',
 #+end_example
 
-* TODO add subscribers support
+
+* DONE add subscribers support
 ** DONE initial
 
 add MusicBrainz subscription pages support:
@@ -69967,7 +70122,6 @@ after
         },
 
 #+end_example
-
 
 3.)
 
@@ -70066,6 +70220,7 @@ There are currently "<n>-<number of anonymous users> real and <number of anonymo
 #+end_example
 
 in bold
+
 
 * MB pages
 ** h2-p-ul(1)

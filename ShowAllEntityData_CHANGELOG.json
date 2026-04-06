@@ -1,5 +1,31 @@
 [
   {
+    "version": "9.99.422",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "virtualPath h2 label patch: when a button carries virtualPath (e.g. 'user-subscriptions'), the live DOM h2 still reflects the page the browser is on (e.g. 'Artist subscriptions') even though the fetched data comes from a different path. Inserted a pre-render patch block that strips the emoji+superscript prefix from buttonConfig.label, finds the h2 preceding the first table via _findPrecedingH2(), and updates its text node to the clean label (e.g. 'Label subscriptions') before updateH2Count() reads it. Preserves existing child elements (toggle icon, count stat span)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.421",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Consolidated five separate subscription pageTypes (artist-, collection-, label-, series-, editor-subscriptions) into a single 'user-subscriptions' pageType with five per-button virtualPath values ('/artist', '/collection', '/label', '/series', '/editor').",
+          "New virtualPath button parameter: when a button carries virtualPath, the last URL path segment is replaced before fetching. Example: on /user/vzell/subscriptions/artist, clicking '🧮 Label subscriptions' (virtualPath='/label') fetches /user/vzell/subscriptions/label. Implemented in three places: (1) _effectivePath computation for maxPage determination (new else-if branch calls fetchMaxPageGeneric on the effective path); (2) fetchUrl.pathname replacement inside the fetch loop; (3) the 'use existing document' optimisation is disabled for virtualPath buttons (always fetches from network since a different path is targeted).",
+          "user-subscriptions finalCleanup: removes the subscription-type navigation <p> (the [ Artist subscriptions | Collection subscriptions | … ] bar) since the per-button virtualPath switching replaces its function."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.420",
     "date": "2026-04-06",
     "sections": [
