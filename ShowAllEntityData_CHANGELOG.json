@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.99.418",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "@match *://*.musicbrainz.org/user/*/subscribers added.",
+          "New 'editor-subscribers' pageType: matches /subscribers paths, tableMode 'single', button 'Show all Editor Subscribers for User', listToTable:[''] (Structure C). Placed before 'editor-subscriptions' to avoid match overlap.",
+          "applyListToTable() Structure C: extended guard to also activate for /subscribers paths (_isSubscribers flag). JSDoc updated with user-subscribers variant before/after example."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.417",
     "date": "2026-04-05",
     "sections": [

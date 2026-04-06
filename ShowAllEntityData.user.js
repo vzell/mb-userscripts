@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.417+2026-04-05
+// @version      9.99.418+2026-04-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -17,6 +17,7 @@
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users)(?:\?.*)?$/
 // @match        *://*.musicbrainz.org/search?query=*
 // @match        *://*.musicbrainz.org/user/*/subscriptions/*
+// @match        *://*.musicbrainz.org/user/*/subscribers
 // @match        *://*.musicbrainz.org/user/*/collections
 // @match        *://*.musicbrainz.org/user/*/tags*
 // @match        *://*.musicbrainz.org/user/*/tag/*
@@ -3205,11 +3206,12 @@
      *   Replacement: the `<ul>` itself is replaced by the bare `<table>`.
      *   Column name: derived from the `<ul>` class attribute (see below).
      *
-     * ── Structure C: h2+ul (/area/<mbid>/users and /tag/<v>/<entity> pages) ───
+     * ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>, /subscribers) ─
      *
      *   Triggered when `sectionId === ''` AND the current page path matches
-     *   either `/area/<mbid>/users` (pageType 'area-users') OR the two-segment
-     *   tag-entity pattern `/tag/<value>/<entity>` (pageType 'tag-value-entity').
+     *   one of: `/area/<mbid>/users` (pageType 'area-users'), the two-segment
+     *   tag-entity pattern `/tag/<value>/<entity>` (pageType 'tag-value-entity'),
+     *   or `/subscribers` (pageType 'editor-subscribers').
      *   For all other pageTypes with `sectionId === ''`, Structure D is used.
      *
      *   area-users variant:
@@ -3224,6 +3226,19 @@
      *       <h2>Users</h2>
      *       <table class="tbl">…</table>
      *     Column name: full h2 text (e.g. "Users").
+     *
+     *   user-subscribers variant:
+     *     Before:
+     *       <h2>Subscribers</h2>
+     *       <p>…</p>
+     *       <ul>
+     *         <li><a href="/user/Goulash"><img … class="avatar no-avatar" …><bdi>Goulash</bdi></a></li>
+     *         …
+     *       </ul>
+     *     After:
+     *       <h2>Subscribers</h2>
+     *       <table class="tbl">…</table>
+     *     Column name: full h2 text (e.g. "Subscribers").
      *
      *   tag-value-entity variant:
      *     Before:
@@ -3307,10 +3322,10 @@
                 const _isAreaUsers      = _currentPath.match(/\/area\/[a-f0-9-]{36}\/users/);
                 const _isTagValueEntity = _currentPath.match(/\/tag\/[^/]+\/.+/);    // two-segment
                 const _isTagValue       = !_isTagValueEntity && _currentPath.match(/\/tag\//); // one-segment only
+                const _isSubscribers    = _currentPath.includes('/subscribers');
 
-                // ── Structure C: h2+ul (/area/<mbid>/users and /tag/<v>/<entity>) ─
-                // Triggered for area-users pages OR two-segment tag-entity pages.
-                if (_isAreaUsers || _isTagValueEntity) {
+                // ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>, /subscribers) ─
+                if (_isAreaUsers || _isTagValueEntity || _isSubscribers) {
                     Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
                         let _next  = _h2.nextElementSibling;
                         let _steps = 0;
@@ -4053,6 +4068,19 @@
                 extractMainColumn: 'Name',
                 stickyColumn: 'Name'
             }
+        },
+        // Subscriber pages (e.g. /user/vzell/subscribers)
+        {
+            type: 'editor-subscribers',
+            match: (path) => path.includes('/subscribers'),
+            buttons: [ { label: 'Show all Editor Subscribers for User' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Subscribers").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
         },
         {
             type: 'editor-subscriptions',

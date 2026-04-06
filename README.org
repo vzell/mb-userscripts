@@ -68324,7 +68324,7 @@ add support for "Structure D"
      *
 #+end_example
 
-make sure to document (and alos guard in the code) that "Structure C" is only for area users pages "/area/<mbid>/users"
+make sure to document (and also guard in the code) that "Structure C" is only for area users pages "/area/<mbid>/users"
 
 #+begin_example
 Structure C: h2+ul (area users page /area/<mbid>/users)
@@ -68457,7 +68457,7 @@ but it should be "(10)". It's probably because of the following implementation f
 
 Row removal — the trailing "See all" row is removed from the table since the button makes it redundant.
 
-** tag-value-entity
+** DONE tag-value-entity
 *** initial
 
 add support for pageTypes of "/tag/<tag value>/<entity type>s" e.g. "/tag/country/labels"
@@ -68578,6 +68578,7 @@ doesn't work yet, see the console debug log
 00:21:17.754 [VZ-ShowAllEntityData: tag-value-entity] 📝 _artOpenIdb: database opened successfully 
 00:21:18.665 [VZ-ShowAllEntityData: tag-value-entity] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s)
 #+end_example
+
 
 * DONE new area-users pageType
 ** https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users
@@ -68873,7 +68874,6 @@ still not working:
 
 
 * TODO further split "Area"
-
 
 * DONE fix synching synthetic columns in all event relation pageTypes: series, collections, artist
 * DONE check "Date" splitter
@@ -69928,4 +69928,107 @@ finalCleanup()              → removeSelector removes div.all-tags  ← here
                 // Remove the "all-tags" info/form container after rendering since
                 // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
+#+end_example
+
+* add subscribers support
+
+add MusicBrainz subscription pages support:
+
+1.)
+
+add a new userscript "match" directive
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/subscribers
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/subscriptions/*
+#+end_example
+
+2.)
+
+#+begin_example
+        // Subscriber pages
+        {
+            type: 'editor-subscribers',
+            match: (path) => path.includes('/subscribers'),
+            buttons: [ { label: 'Show all Editor Subscribers for User' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Users").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+
+#+end_example
+
+
+3.)
+
+Extend "Structure C: h2+ul"
+
+#+begin_example
+     * ── Structure C: h2+ul (/area/<mbid>/users and /tag/<v>/<entity> pages) ───
+     *
+     *   Triggered when `sectionId === ''` AND the current page path matches
+     *   either `/area/<mbid>/users` (pageType 'area-users') OR the two-segment
+     *   tag-entity pattern `/tag/<value>/<entity>` (pageType 'tag-value-entity').
+     *   For all other pageTypes with `sectionId === ''`, Structure D is used.
+     *
+     *   area-users variant:
+     *     Before:
+     *       <h2>Users</h2>
+     *       <p>…</p> <nav>…</nav>
+     *       <ul>
+     *         <li><a href="/user/__MarioMadrid"><img …><bdi>__MarioMadrid</bdi></a></li>
+     *         …
+     *       </ul>
+     *     After:
+     *       <h2>Users</h2>
+     *       <table class="tbl">…</table>
+     *     Column name: full h2 text (e.g. "Users").
+#+end_example
+
+to additionally support pageType "type: 'editor-subscribers'"
+
+#+begin_example
+     *   user-subscribers variant:
+     *     Before:
+     *       <h2>Subsribers</h2>
+     *       <p>…</p>
+     *       <ul>
+     *         <li><a href="/user/Goulash"><img alt="" class="avatar no-avatar" height="15" src="https://static.metabrainz.org/MB/editor-b055e61.svg" width="15"><bdi>Goulash</bdi></a></li>
+     *         …
+     *       </ul>
+     *     After:
+     *       <h2>Subscribers</h2>
+     *       <table class="tbl">…</table>
+     *     Column name: full h2 text (e.g. "Subscribers").
+#+end_example
+
+
+* MB pages
+** h2-p-ul(1)
+*** h2-p-nav-ul(1)
+
+#+begin_example
+/area/<MBID>/users
+/tag/<tag value>/<entity type>
+#+end_example
+
+*** h2-p-ul(1)
+
+#+begin_example
+/user/<username>/subscribers
+#+end_example
+
+** h2-p-p-ul-nav-paginatedTable
+
+#+begin_example
+/user/<username>/subscriptions/<entity type>  # /user/vzell/subscriptions/label
 #+end_example
