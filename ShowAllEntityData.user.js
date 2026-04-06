@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.418+2026-04-06
+// @version      9.99.420+2026-04-06
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -28180,6 +28180,79 @@ a { color: #1565c0; }`;
 
     function finalCleanup() {
         Lib.debug('cleanup', 'Running final cleanup...');
+
+        // ── editor-subscribers: fix subscriber count display ──────────────────
+        // The rendered table may contain a trailing row "Plus N other anonymous
+        // users".  When found:
+        //   1. Parse N from the row text.
+        //   2. Remove the row from the table.
+        //   3. Patch the h2 row-count stat to reflect the reduced row count.
+        //   4. Rewrite the preceding <p> as
+        //      "There are currently <b>R</b> real and <b>N</b> anonymous users
+        //       subscribed to edits that you make:" where R = total - N.
+        if (pageType === 'editor-subscribers') {
+            const _tbl = document.querySelector('table.tbl');
+            let _anonCount = 0;
+            let _lastRow   = null;
+
+            if (_tbl) {
+                const _rows = _tbl.querySelectorAll('tbody tr');
+                if (_rows.length > 0) {
+                    const _candidate = _rows[_rows.length - 1];
+                    const _m = _candidate.textContent.trim()
+                        .match(/Plus\s+([\d,]+)\s+other anonymous/i);
+                    if (_m) {
+                        _anonCount = parseInt(_m[1].replace(/,/g, ''), 10) || 0;
+                        _lastRow   = _candidate;
+                        Lib.debug('cleanup',
+                            `editor-subscribers: found ${_anonCount} anonymous users in last row.`);
+                    }
+                }
+            }
+
+            if (_anonCount > 0 && _lastRow) {
+                // 1. Remove the anonymous-users row.
+                _lastRow.remove();
+
+                // 2. Patch table.dataset.mbTotalRows and the h2 row-count stat.
+                if (_tbl) {
+                    const _newCount = _tbl.querySelectorAll('tbody tr').length;
+                    _tbl.dataset.mbTotalRows = String(_newCount);
+                    const _stat = document.querySelector('h2 .mb-row-count-stat');
+                    if (_stat) {
+                        _stat.textContent = `(${_newCount})`;
+                        _stat.removeAttribute('data-mbtt');
+                    }
+                }
+
+                // 3. Rewrite the subscriber-count paragraph with bold numbers.
+                document.querySelectorAll('p').forEach(_p => {
+                    const _pm = _p.textContent.match(
+                        /There are currently\s+([\d,]+)\s+users?\s+subscribed/i
+                    );
+                    if (!_pm) return;
+                    const _total = parseInt(_pm[1].replace(/,/g, ''), 10) || 0;
+                    const _real  = _total - _anonCount;
+                    const _rest  = _p.textContent.replace(
+                        /There are currently\s+[\d,]+\s+users?\s+subscribed/i, ''
+                    );
+                    // Rebuild the paragraph as DOM nodes to get bold numbers.
+                    _p.textContent = '';
+                    _p.append('There are currently ');
+                    const _bReal = document.createElement('b');
+                    _bReal.textContent = String(_real);
+                    _p.appendChild(_bReal);
+                    _p.append(' real and ');
+                    const _bAnon = document.createElement('b');
+                    _bAnon.textContent = String(_anonCount);
+                    _p.appendChild(_bAnon);
+                    _p.append(` anonymous users subscribed${_rest}`);
+                    Lib.debug('cleanup',
+                        `editor-subscribers: patched paragraph ` +
+                        `(total=${_total}, real=${_real}, anon=${_anonCount}).`);
+                });
+            }
+        }
 
         // ── features.removeSelector (post-render) ─────────────────────────────
         // Remove the element matching features.removeSelector now that rendering

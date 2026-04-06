@@ -69930,7 +69930,8 @@ finalCleanup()              → removeSelector removes div.all-tags  ← here
                 removeSelector: 'div.all-tags',
 #+end_example
 
-* add subscribers support
+* TODO add subscribers support
+** DONE initial
 
 add MusicBrainz subscription pages support:
 
@@ -70011,6 +70012,60 @@ to additionally support pageType "type: 'editor-subscribers'"
      *     Column name: full h2 text (e.g. "Subscribers").
 #+end_example
 
+** fix count of subscribed users bug
+
+fix count of subscribed real users for pageType "type: 'editor-subscribers'":
+
+1.)
+
+Parse the "number of anonymous users" e.g. "2" from the last row in the "Subscribers" table
+
+#+begin_example
+Plus <number of anonymous users> other anonymous users
+#+end_example
+
+and use it to calculate the "real users" for edits that you make in the "<p>" container right befor the table.
+
+So change the current number "<n>" in
+
+#+begin_example
+There are currently <> users subscribed to edits that you make:
+#+end_example
+
+to
+
+#+begin_example
+There are currently "<n>-<number of anonymous users> real and <number of anonymous users> anonymous users subscribed to edits that you make:
+#+end_example
+
+** fix
+
+some last glitches:
+
+1.)
+
+Remove the 
+
+#+begin_example
+Plus <number of anonymous users> other anonymous users
+#+end_example
+
+from the table after parsing and recalculation. Also make sure that the number of rows in the h2 header line before the
+table reflects the removal.
+
+2.)
+
+render the numbers in
+
+#+begin_example
+There are currently "<n>-<number of anonymous users> real and <number of anonymous users> anonymous users subscribed to edits that you make:
+#+end_example
+
+#+begin_example
+
+#+end_example
+
+in bold
 
 * MB pages
 ** h2-p-ul(1)

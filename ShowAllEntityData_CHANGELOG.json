@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.420",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "editor-subscribers finalCleanup: (1) the trailing 'Plus N other anonymous users' row is now removed from the rendered table after parsing N; (2) table.dataset.mbTotalRows and the h2 .mb-row-count-stat span are patched to reflect the reduced row count so the header shows the correct number; (3) the subscriber-count paragraph is rebuilt as DOM nodes with <b> elements around the real and anonymous counts so they render in bold: 'There are currently <b>R</b> real and <b>N</b> anonymous users subscribed to edits that you make:' (previously the numbers were plain text and the anon row was left in the table)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.419",
+    "date": "2026-04-06",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "editor-subscribers: in finalCleanup(), when pageType is 'editor-subscribers', the last rendered table row is inspected for the pattern 'Plus N other anonymous users'. When found, N is parsed, and the preceding <p> element matching 'There are currently M users subscribed…' is rewritten to 'There are currently M-N real and N anonymous users subscribed…'. This gives editors an accurate count of real (named) subscribers vs. anonymous ones."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.418",
     "date": "2026-04-06",
     "sections": [
