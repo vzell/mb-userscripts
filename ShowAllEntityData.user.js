@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.431+2026-04-07
+// @version      9.99.432+2026-04-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1352,6 +1352,26 @@
         },
 
         // ============================================================
+        // ARTIST ROLE COLOURS (used in tooltip for place-events "Artists" column)
+        divider_artist_role_colours: {
+            type: 'divider',
+            label: '🎨 ARTIST ROLE COLOURS'
+        },
+
+        sa_ui_artist_role_main_performer_color: {
+            label: 'Main performer role colour',
+            type: 'color_picker',
+            default: '#006400',
+            description: 'Colour used to highlight the "(main performer)" role label in the rich HTML tooltip of the Artists column on place-events pages. Default: dark green (#006400).'
+        },
+
+        sa_ui_artist_role_guest_performer_color: {
+            label: 'Guest performer role colour',
+            type: 'color_picker',
+            default: '#e07000',
+            description: 'Colour used to highlight the "(guest performer)" role label in the rich HTML tooltip of the Artists column on place-events pages. Default: orange (#e07000).'
+        },
+
         // CAA/EAA ILLUSTRATED DISCOGRAPHY SECTION
         // Adapted from "mb. FUNKEY ILLUSTRATED RECORDS" by jesus2099
         // (CC-BY-NC-SA-4.0 / GPL-3.0-or-later).
@@ -34046,32 +34066,57 @@ a { color: #1565c0; }`;
             return true;
         }
 
-        const parts = [];
-        Array.from(ul.querySelectorAll('li')).forEach(li => {
-            // Extract artist name from <bdi> inside the <li>.
-            const bdi = li.querySelector('bdi');
-            const name = bdi ? bdi.textContent.replace(/\s+/g, ' ').trim()
-                             : '';
-            if (!name) return;
+        // Configurable role colours (settings → palette → hard-coded defaults).
+        const _mainColor  = Lib.settings.sa_ui_artist_role_main_performer_color  || '#006400';
+        const _guestColor = Lib.settings.sa_ui_artist_role_guest_performer_color || '#e07000';
 
-            // Extract role text: collect all direct text nodes of <li>, skip
-            // child elements.  The role is rendered as " (main performer)" etc.
-            let roleRaw = '';
-            for (const node of li.childNodes) {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    roleRaw += node.nodeValue;
-                }
+        /**
+         * Returns a <span> coloured by role keyword, or a plain text node if
+         * the role doesn't match a known keyword.
+         * @param {string} roleText - e.g. "(main performer)" or "(guest)"
+         */
+        function _roleSpan(roleText) {
+            const _lower = roleText.toLowerCase();
+            let _color = null;
+            if (_lower.includes('main performer'))  _color = _mainColor;
+            else if (_lower.includes('guest'))       _color = _guestColor;
+
+            if (_color) {
+                const s = document.createElement('span');
+                s.style.color = _color;
+                s.style.fontWeight = 'bold';
+                s.textContent = roleText;
+                return s;
             }
-            roleRaw = roleRaw.replace(/\s+/g, ' ').trim();
-
-            parts.push(roleRaw ? name + '\u00a0' + roleRaw : name);
-        });
-
-        if (!parts.length) return false;
+            return document.createTextNode(roleText);
+        }
 
         const d = document.createElement('div');
         d.style.cssText = 'margin-bottom:2px;';
-        d.textContent = parts.join(', ');
+
+        Array.from(ul.querySelectorAll('li')).forEach((li, idx) => {
+            // Extract artist name from <bdi> inside the <li>.
+            const bdi  = li.querySelector('bdi');
+            const name = bdi ? bdi.textContent.replace(/\s+/g, ' ').trim() : '';
+            if (!name) return;
+
+            // Extract role text: collect all direct text nodes of <li>.
+            // The role is rendered as " (main performer)" or " (guest)" etc.
+            let roleRaw = '';
+            for (const node of li.childNodes) {
+                if (node.nodeType === Node.TEXT_NODE) roleRaw += node.nodeValue;
+            }
+            roleRaw = roleRaw.replace(/\s+/g, ' ').trim();
+
+            if (idx > 0) d.appendChild(document.createTextNode(', '));
+            d.appendChild(document.createTextNode(name));
+            if (roleRaw) {
+                d.appendChild(document.createTextNode('\u00a0'));
+                d.appendChild(_roleSpan(roleRaw));
+            }
+        });
+
+        if (!d.hasChildNodes()) return false;
         tip.appendChild(d);
         return true;
     }

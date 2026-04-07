@@ -69778,6 +69778,27 @@ to
 
 * TODO event pages need the primary alias below the h1 header "Bleachers"
 
+#+begin_example
+        // ============================================================
+        // PAGE HEADER AND BODY CONFIGURATION SECTION
+        // ============================================================
+        divider_page_header: {
+            type: 'divider',
+            label: '🏷️ PAGE HEADER AND BODY CONFIGURATION'
+        },
+
+        sa_enable_h1_comment_span_relocation_on_initial_page: {
+            label: "Relocate H1 comment-span alias block (initial page)",
+            type: "checkbox",
+            default: true,
+            description: "On the original MusicBrainz entity page (before any 'Show all' button is pressed), move the alias <i title='...'> block from the h1's <span class='comment'> into a dedicated italic line injected below the page title. Only affects release-group and event pages where MusicBrainz injects an alias marker directly inside the h1 element. Standard disambiguation comments (e.g. '(live)') that contain no <i title> are never touched."
+        },
+#+end_example
+
+#+begin_example
+function applyH1CommentSpanRelocation(callSite)
+#+end_example
+
 
 * TODO read the unicode chars from a configuration table definition 
 ** DONE initial
@@ -70325,7 +70346,31 @@ and either
 
 
 * TODO colorize "main" and "guest" performer in the EAA tooltips
+** DONE initial
 
+1.)
+
+add two new "color" configuration parameter in the configuration section 
+
+#+begin_example
+        // CAA/EAA ILLUSTRATED DISCOGRAPHY SECTION
+#+end_example
+
+for the following two artist "roles":
+
+#+begin_example
+main performer - default color: "dark green"
+guest performer - default color: "orange" 
+#+end_example
+
+2.)
+
+in the rich HTML tooltip for the column "Artists" and pageType "type: 'place-events'" 
+render the artist "role" in different colors according to the previously defined colors.
+
+probably in the function "function _artTooltipArtistRoles(row, ci, tip)"
+
+** TODO change "main performer" color - green: #57ff5a
 
 * TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
 
@@ -70339,7 +70384,7 @@ and either
 
 
 * TODO sticky table column
-** TODO remove the ghosting on some pages
+** DONE remove the ghosting on some pages
 *** single table mode
 
 #+begin_example
@@ -70488,7 +70533,6 @@ https://musicbrainz.org/user/vzell/collections - multiple H2 (each has multiple 
 
 
 * TODO further split "Area"
-
 
 * MB pages
 ** h2-p-ul(1)

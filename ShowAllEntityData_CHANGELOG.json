@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.432",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "New configuration section '🎨 ARTIST ROLE COLOURS' added before the CAA/EAA section, with two color_picker settings: sa_ui_artist_role_main_performer_color (default dark green #006400) and sa_ui_artist_role_guest_performer_color (default orange #e07000).",
+          "_artTooltipArtistRoles(): rewritten to build the tooltip as DOM nodes instead of plain text. Artist names are plain text; role labels (e.g. '(main performer)', '(guest)') are wrapped in a <span> with configurable colour and font-weight:bold. Matching: text containing 'main performer' → main colour; text containing 'guest' → guest colour; all other roles → plain text node. The list items are comma-separated inline rather than joined as a single string."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.431",
     "date": "2026-04-07",
     "sections": [
