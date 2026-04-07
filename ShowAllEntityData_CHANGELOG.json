@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.431",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "applyStickyColumn: fixed ghosting artefact when the sticky column is not the first column (e.g. 'Name' after 'Year'/'Date'/'#'). Root cause: _leftOffset() computed the total width of all preceding columns and set left:Npx on the sticky cell. With CSS position:sticky, left:Npx means the element only snaps when it would go past Npx from the viewport left — creating a transparent gap in 0..Npx through which other columns visibly scroll (the ghost). Fix: _leftOffset() now always returns 0 so the sticky column immediately snaps to the left viewport edge (left:0px) regardless of how many non-sticky columns precede it. A non-zero offset is only meaningful when multiple preceding columns are also sticky (stacking), which this script does not implement. Also removed the MutationObserver on colgroup that was used to recompute _leftOffset() after auto-resize — it is no longer needed since the offset is always 0."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.430",
     "date": "2026-04-07",
     "sections": [

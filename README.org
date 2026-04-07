@@ -69307,6 +69307,61 @@ also change the current comment
 
 in the pageType "type: 'user-tag-value-entity'" accordingly
 
+* DONE add missing integerColumns to place-performaces pageTypes
+
+in the following pageType definitions 
+
+#+begin_example
+type: 'place-performances-filtered'
+type: 'place-performances'
+#+end_example
+
+add
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+#+end_example
+
+so that is looks like
+
+#+begin_example
+        {
+            type: 'place-performances-filtered',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'single' // Paginated single list
+        },
+        {
+            type: 'place-performances',
+            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Performances for Place' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
 
 * TODO fix Artist-Releasegroup pages
 ** DONE changes to do
@@ -70344,25 +70399,32 @@ column feature on the tables itself is NOT working anymore
 
 
 
-* TODO ghosting bug still present also checkbox column removed for date column in first column
+* DONE ghosting bug still present also checkbox column removed for date column in first column
 
-ghosting bug still present also checkbox column removed for date column in first column
-
-#+begin_example
-Year - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
-
-Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
-Date - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
-
-#, Year - https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
-#+end_example
-
-but it works force
+There is a ghosting bug present when a "stickyColumn" is defined in a table BUT it is NOT the first column of the table, e.g. in the following pageTypes 
 
 #+begin_example
-Date - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
-Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+"Year" in first column  - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f
+
+"Date" in first column  - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f
+"Date" in first column  - https://musicbrainz.org/work/f4a77656-8cdb-365c-aef9-034c098e249f?direction=2&link_type_id=278&page=1
+
+"#, Year" in first two columns - https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0
 #+end_example
+
+When scrolling horizontally to the right, the problem on these pageTypes is, the sticky column is NOT completely sticked
+to the left page border when scrolling, but insteaf it leaves an artificially space before getting sticky. In this space
+you can see the columns coming after the sticky one, srolling by when horizontally scrolling.
+
+But strangely this effect is NOT visible for the following pageTypes (no ghosting effect), even if they also have a
+"Date" column before the column defined as sticky
+
+#+begin_example
+"Date" in first column - https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+"Date" in first column  - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+#+end_example
+
+The sticky column in these cases when srolling to the right gets sticky when it reaches the exact left page border
 
 
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
@@ -70462,59 +70524,5 @@ https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/
 #+end_example
 
 
-* TODO add missing integerColumns to place-performaces pageTypes
-
-in the following pageType definitions 
-
-#+begin_example
-type: 'place-performances-filtered'
-type: 'place-performances'
-#+end_example
-
-add
-
-#+begin_example
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-#+end_example
-
-so that is looks like
-
-#+begin_example
-        {
-            type: 'place-performances-filtered',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                injectedColumns: [ 'Release events', 'Relationships' ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                extractMainColumn: 'Title',
-                stickyColumn: 'Title'
-            },
-            tableMode: 'single' // Paginated single list
-        },
-        {
-            type: 'place-performances',
-            match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
-                ],
-                injectedColumns: [ 'Release events', 'Relationships' ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                extractMainColumn: 'Title',
-                stickyColumn: 'Title'
-            },
-            tableMode: 'multi',
-            non_paginated: true
-        },
-#+end_example
 
 

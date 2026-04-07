@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.430+2026-04-07
+// @version      9.99.431+2026-04-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -5960,25 +5960,24 @@
         }
 
         /**
-         * Computes the total px width of all columns with index < colIdx by reading
-         * the colgroup <col> elements if present, otherwise the offsetWidth of each
-         * header <th>.
-         * @returns {number}
+         * Returns the `left` CSS offset for the sticky column.
+         *
+         * Always returns 0: the sticky column should snap to the left viewport
+         * edge (`left: 0px`), regardless of how many columns precede it.
+         *
+         * Using `left: Npx` (where N = sum of preceding column widths) causes a
+         * "ghosting" artefact: the sticky column only activates when the scroll
+         * position reaches N pixels, leaving a transparent gap in 0..N px through
+         * which other columns visibly scroll before the sticky column snaps.
+         *
+         * A non-zero `left` offset is only needed when multiple preceding columns
+         * are ALSO sticky (so each one stacks behind the next).  This script uses
+         * a single sticky column per table, so `left: 0` is always correct.
+         *
+         * @returns {number} always 0
          */
         function _leftOffset() {
-            if (stickyIdx === 0) return 0;
-            const colgroup = table.querySelector('colgroup');
-            if (colgroup) {
-                const cols = Array.from(colgroup.querySelectorAll('col'));
-                let left = 0;
-                for (let i = 0; i < stickyIdx && i < cols.length; i++) {
-                    const w = parseFloat(cols[i].style.width) || cols[i].offsetWidth || 0;
-                    left += w;
-                }
-                return left;
-            }
-            // Fallback: read offsetWidth from the header cells
-            return headers.slice(0, stickyIdx).reduce((s, th) => s + th.offsetWidth, 0);
+            return 0;
         }
 
         /**
@@ -6024,18 +6023,6 @@
         }
 
         _apply();
-
-        // ── Re-apply when colgroup widths change (column resize) ──────────────────
-        // Disconnect any previous observer on this table so we don't accumulate them.
-        if (table._stickyColObserver) {
-            table._stickyColObserver.disconnect();
-        }
-        const colgroup = table.querySelector('colgroup');
-        if (colgroup) {
-            const obs = new MutationObserver(() => _apply());
-            obs.observe(colgroup, { attributes: true, subtree: true, attributeFilter: ['style'] });
-            table._stickyColObserver = obs;
-        }
     }
 
     /**
