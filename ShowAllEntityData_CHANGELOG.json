@@ -1,5 +1,45 @@
 [
   {
+    "version": "9.99.435",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "columnExtractors with colIdx===-1 (unresolved source column): fixed two structural bugs. (1) cleanupHeaders() now skips header <th> injection for extractors whose sourceColumn was not found in the table (colIdx === -1). Previously the deduplication guard prevented duplicate headers, so this was already correct, but the explicit guard makes the intent clear. (2) Row processing in all three extractedSyntheticCells.forEach call sites now guards on activeColumnExtractors[i].colIdx === -1 and skips cell appending for unresolved entries. Previously every unresolved extractor appended 3 empty <td> cells per row — for tag-value-entity with 11 extractors and only 1 matching, this produced 30 empty extra cells per row against a 3-column synthetic header, breaking the table structure."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.434",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "New ColumnDataExtractor 'tagCount_Name_Comment': splits the combined entity cell on tag-value-entity pages ('26 - Johnny Cash (country music legend)') into three synthetic columns — Name (the <bdi> link text, with the anchor preserved), Tag count (the leading integer), and Comment (the <bdi> inside span.comment). Returns [tdName, tdCount, tdComment] as required by the ColumnDataExtractor contract.",
+          "tag-value-entity pageType: added columnExtractors covering all eleven entity types (Areas, Artists, Events, Instruments, Labels, Places, Release groups, Releases, Recordings, Series, Works), each using tagCount_Name_Comment and producing syntheticColumns ['Name', 'Tag count', 'Comment']. The sourceColumn matches the h2-derived table header produced by Structure C.",
+          "_synthColTooltip: added case 'tagCount_Name_Comment' with descriptions for all three synthetic column names."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.433",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "🐛 Fix / ✨ Enhancement",
+        "items": [
+          "applyListToTable() Structure C column-name derivation for tag-value-entity: changed from 'first word only' to 'everything before tagged', e.g. 'Release groups tagged as «gig»' → 'Release groups' (previously gave 'Release' only).",
+          "applyListToTable() Structure C column-name derivation for user-tag-value-entity: changed from 'first word only' to 'everything before tagged minus the trailing username', e.g. 'Release groups vzell tagged as «gig»' → 'Release groups' (previously gave 'Release' only). The username is identified as the last whitespace-separated word in the pre-tagged segment.",
+          "sa_ui_artist_role_main_performer_color default: changed from dark green #006400 to bright green #57ff5a."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.432",
     "date": "2026-04-07",
     "sections": [

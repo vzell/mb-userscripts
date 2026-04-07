@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.432+2026-04-07
+// @version      9.99.435+2026-04-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1361,8 +1361,8 @@
         sa_ui_artist_role_main_performer_color: {
             label: 'Main performer role colour',
             type: 'color_picker',
-            default: '#006400',
-            description: 'Colour used to highlight the "(main performer)" role label in the rich HTML tooltip of the Artists column on place-events pages. Default: dark green (#006400).'
+            default: '#57ff5a',
+            description: 'Colour used to highlight the "(main performer)" role label in the rich HTML tooltip of the Artists column on place-events pages. Default: bright green (#57ff5a).'
         },
 
         sa_ui_artist_role_guest_performer_color: {
@@ -2600,6 +2600,70 @@
             }
 
             return [tdDD, tdMM, tdYYYY, tdDay, tdMonth];
+        },
+
+        /**
+         * tagCount_Name_Comment — splits an entity row on tag-value entity pages
+         * into three synthetic columns: Name, Tag count, and Comment.
+         *
+         * Source cell structure (tag-value-entity / user-tag-value-entity pages):
+         *
+         *   <td>26 -
+         *     <a href="/artist/…" title="Cash, Johnny (country music legend)">
+         *       <bdi>Johnny Cash</bdi>
+         *     </a>
+         *     <span class="comment">(<bdi>country music legend</bdi>)</span>
+         *   </td>
+         *
+         * Extraction rules:
+         *   Name      — textContent of the first <bdi> not inside span.comment.
+         *   Tag count — leading integer in the cell's direct text content
+         *               (the number before " - ").
+         *   Comment   — textContent of the <bdi> inside span.comment (if present).
+         *
+         * Synthetic columns: ['Name', 'Tag count', 'Comment']
+         */
+        tagCount_Name_Comment(sourceCell) {
+            const tdName    = document.createElement('td');
+            const tdCount   = document.createElement('td');
+            const tdComment = document.createElement('td');
+
+            if (!sourceCell) return [tdName, tdCount, tdComment];
+
+            // ── Tag count — leading integer in direct text nodes ──────────────
+            let _rawLeading = '';
+            for (const node of sourceCell.childNodes) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    _rawLeading += node.nodeValue;
+                    break; // only the first text node matters
+                }
+            }
+            const _countMatch = _rawLeading.match(/^\s*(\d[\d,]*)/);
+            tdCount.textContent = _countMatch ? _countMatch[1].replace(/,/g, '') : '';
+            tdCount.style.fontVariantNumeric = 'tabular-nums';
+
+            // ── Name — first <bdi> NOT inside span.comment ───────────────────
+            const _a = sourceCell.querySelector('a');
+            const _bdi = _a ? _a.querySelector('bdi') : sourceCell.querySelector('bdi');
+            tdName.textContent = _bdi ? _bdi.textContent.replace(/\s+/g, ' ').trim() : '';
+
+            // Preserve the link on the Name cell so it stays clickable.
+            if (_a) {
+                const _aClone = _a.cloneNode(true);
+                // Strip the comment span from the clone if it leaked in.
+                _aClone.querySelectorAll('.comment').forEach(el => el.remove());
+                tdName.textContent = '';
+                tdName.appendChild(_aClone);
+            }
+
+            // ── Comment — <bdi> inside span.comment ──────────────────────────
+            const _commentSpan = sourceCell.querySelector('span.comment');
+            const _commentBdi  = _commentSpan ? _commentSpan.querySelector('bdi') : null;
+            tdComment.textContent = _commentBdi
+                ? _commentBdi.textContent.replace(/\s+/g, ' ').trim()
+                : '';
+
+            return [tdName, tdCount, tdComment];
         }
     };
 
@@ -3367,14 +3431,19 @@
                         //                     e.g. "Labels tagged as «country»" → "Labels"
                         const _h2Text = _h2.textContent.trim();
                         let _colName;
-                        if (_isTagValueEntity || _isUserTagValueEntity) {
-                            // tag-value-entity:      "Labels tagged as 'country'"       -> "Labels"
-                            // user-tag-value-entity: "Events vzell tagged as 'gig'"     -> "Events"
-                            // Split on 'tagged' gives "Labels" vs "Events vzell".
-                            // Taking the first whitespace-separated word handles both.
+                        if (_isUserTagValueEntity) {
+                            // e.g. "Release groups vzell tagged as «gig»"
+                            // → take everything before "tagged", then strip the trailing
+                            //   username (last whitespace-separated word) to get "Release groups".
                             const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
-                            const _firstWord    = _beforeTagged.split(/\s+/)[0];
-                            _colName = _firstWord || _h2Text;
+                            const _words        = _beforeTagged.split(/\s+/);
+                            // Remove last word (the username) if more than one word remains.
+                            _colName = (_words.length > 1 ? _words.slice(0, -1) : _words).join(' ') || _h2Text;
+                        } else if (_isTagValueEntity) {
+                            // e.g. "Release groups tagged as «gig»"
+                            // → everything before "tagged".
+                            const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
+                            _colName = _beforeTagged || _h2Text;
                         } else {
                             _colName = _h2Text;
                         }
@@ -4320,8 +4389,8 @@
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
-                // the first word of the h2 text as the column name, e.g.
-                // "Events vzell tagged as «gig»" → "Events".
+                // the h2 text up to "tagged" minus the trailing username as the
+                // column name, e.g. "Release groups vzell tagged as «gig»" → "Release groups".
                 listToTable: [ '' ],
                 // Remove the vote/sort form after rendering since the two buttons
                 // above replace its function and the form is no longer needed.
@@ -4359,8 +4428,25 @@
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
-                // the first word of the h2 text as the column name (e.g. "Labels").
-                listToTable: [ '' ]
+                // the h2 text up to "tagged" as the column name
+                // (e.g. "Release groups tagged as «gig»" → "Release groups").
+                listToTable: [ '' ],
+                // Split the entity cell ("26 - Johnny Cash (comment)") into three
+                // synthetic columns. The sourceColumn matches the h2-derived table
+                // header (e.g. "Labels", "Release groups", …).
+                columnExtractors: [
+                    { sourceColumn: 'Areas',          extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Artists',        extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Events',         extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Instruments',    extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Labels',         extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Places',         extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Release groups', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Releases',       extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Recordings',     extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Series',         extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Works',          extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] }
+                ]
             },
             tableMode: 'single'
         },
@@ -20717,6 +20803,14 @@ a { color: #1565c0; }`;
                 if (colName === 'Comment')
                     return `Extracted from '${src}': the disambiguation comment, split from the '${src}' column.`;
                 break;
+            case 'tagCount_Name_Comment':
+                if (colName === 'Name')
+                    return `Extracted from '${src}': the entity name (text of the <bdi> link), split from the combined entity cell on tag-value pages.`;
+                if (colName === 'Tag count')
+                    return `Extracted from '${src}': the leading integer tag vote count (e.g. "26" from "26 - Johnny Cash"), split from the entity cell.`;
+                if (colName === 'Comment')
+                    return `Extracted from '${src}': the disambiguation comment in parentheses (e.g. "country music legend"), split from the entity cell.`;
+                break;
             case 'injectedColumns':
                 return `Injected column — populated asynchronously after the table renders via the ` +
                        `MusicBrainz Web Service (${src} url-rels). ` +
@@ -20849,7 +20943,10 @@ a { color: #1565c0; }`;
         // Inject synthetic column headers for every active column extractor.
         // Each extractor may declare one or more synthetic columns; we only add a
         // header when it is not already present (idempotent across re-renders).
+        // Extractors whose sourceColumn was not found in this table (colIdx === -1)
+        // are skipped — they produce no cells and need no header.
         activeColumnExtractors.forEach(entry => {
+            if (entry.colIdx === -1) return; // column absent from this page
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim());
             entry.syntheticColumns.forEach(colName => {
                 if (!headersText.includes(colName)) {
@@ -22108,8 +22205,14 @@ a { color: #1565c0; }`;
                                 // 2. Delete excluded columns (descending to preserve index stability)
                                 [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
 
-                                // 3. Append synthetic cells from column extractors in declaration order
-                                extractedSyntheticCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                                // 3. Append synthetic cells from column extractors in declaration order.
+                                // Only append for extractors whose sourceColumn was found (colIdx !== -1);
+                                // unresolved entries (wrong entity type, absent column) are skipped so
+                                // they don't inject empty cells into the row.
+                                extractedSyntheticCells.forEach((cells, i) => {
+                                    if (activeColumnExtractors[i].colIdx === -1) return;
+                                    cells.forEach(td => newRow.appendChild(td));
+                                });
 
                                 // 4. Append synthetic cells from synthetic-column extractors (second pass)
                                 syntheticExtractorCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
@@ -22306,7 +22409,11 @@ a { color: #1565c0; }`;
                                     if (newRow.cells[idx]) newRow.deleteCell(idx);
                                 });
                                 // 2. Append primary extractor synthetic cells
-                                extractedSyntheticCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                                // Skip unresolved extractors (colIdx === -1) to avoid injecting empty cells.
+                                extractedSyntheticCells.forEach((cells, i) => {
+                                    if (activeColumnExtractors[i].colIdx === -1) return;
+                                    cells.forEach(td => newRow.appendChild(td));
+                                });
                                 // 3. Append synthetic-column extractor cells (second pass)
                                 syntheticExtractorCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
                                 // 4. Append MB-Name / Comment (when extractMainColumn is active)
@@ -22572,7 +22679,11 @@ a { color: #1565c0; }`;
                                     [...indicesToExclude].sort((a, b) => b - a).forEach(idx => { if (newRow.cells[idx]) newRow.deleteCell(idx); });
 
                                     // 3. Append synthetic cells from all extractors in declaration order
-                                    extractedSyntheticCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                                    // Skip unresolved extractors (colIdx === -1) to avoid injecting empty cells.
+                                extractedSyntheticCells.forEach((cells, i) => {
+                                    if (activeColumnExtractors[i].colIdx === -1) return;
+                                    cells.forEach(td => newRow.appendChild(td));
+                                });
 
                                     // 4. Append synthetic cells from synthetic-column extractors (second pass)
                                     syntheticExtractorCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
