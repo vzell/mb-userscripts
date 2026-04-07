@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.430",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "place-performances-filtered and place-performances pageTypes: added integerColumns:[{sourceColumn:'Length',align:':'}] to both features blocks so the Length column is formatted/aligned as a time value."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.429",
     "date": "2026-04-07",
     "sections": [

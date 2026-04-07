@@ -69180,6 +69180,133 @@ should also move right in fron of the searchform
 
 ** DONE move the query dialog to the top, before the table
 
+* DONE type: 'user-tag-value-entity' - https://musicbrainz.org/user/vzell/tag/gig/event
+** initial
+
+add support for a new pageType:
+
+1.)
+
+add the following new pagType definition
+
+#+begin_example
+        // User tag value entity pages (/user/<username>/tag/<tag>/<entity> e.g. /user/vzell/tag/gig/event)
+        // Must come before the generic tag-value entry (narrower match).
+        {
+            type: 'user-tag-value-entity',
+            match: (path, params) => path.match(/\/user\/.*\/tag\/.*/),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the first word of the h2 text as the column name (e.g. "Labels").
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+before the pageType "type: 'user-tag-value'"
+
+2.)
+
+Extend the "Structure C"
+
+#+begin_example
+     * ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>, /subscribers) ─
+#+end_example
+
+in the function "function applyListToTable(def, docContext = document)" to also support the pageType "type: 'user-tag-value-entity'"
+
+3.)
+
+fix the current "removeSelector" in the pageType definition "type: 'user-tags'"
+
+#+begin_example
+removeSelector: 'form:has(select[name="show_downvoted"])'
+#+end_example
+
+to remove the following "form"
+
+#+begin_example
+<form style="margin-top:1em">
+  <div class="row">
+    <label>Show votes:
+      <!-- -->
+      <select name="show_downvoted">
+	<option value="0" selected="">upvotes
+	</option>
+	<option value="1">downvotes
+	</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <label>Sort by:
+      <!-- -->
+      <select name="order">
+	<option value="name" selected="">name
+	</option>
+	<option value="count">count (more first)
+	</option>
+	<option value="countdesc">count (less first)
+	</option>
+      </select>
+    </label>
+  </div>
+  <div class="row">
+    <button type="submit">Submit
+    </button>
+  </div>
+</form>
+#+end_example
+
+** bugs
+
+small glitch:
+
+1.)
+
+in the newly introduced pageType "type: 'user-tag-value-entity'"
+the name of the table derived from the "<ul>" list structure is wrong, currently e.g. "Events vzell" instead of just
+"Events" when extracting it from the h2 header text.
+
+The problem is the current extraction works fine for the pageType "type: 'tag-value-entity'", see the the comment in the
+function "function applyListToTable(def, docContext = document)"
+
+#+begin_example
+     *     Column name: first word of the h2 text content before "tagged"
+     *                  (e.g. "Labels tagged as …" → "Labels").
+#+end_example
+
+but should be
+
+#+begin_example
+     *     Column name: first word of the h2 text content before "<username >tagged"
+     *                  (e.g. "Events vzell tagged as …" → "Events").
+#+end_example
+
+for the pageType "type: 'user-tag-value-entity'"
+
+2.)
+
+also change the current comment
+
+#+begin_example
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the first word of the h2 text as the column name (e.g. "Events").
+#+end_example
+
+in the pageType "type: 'user-tag-value-entity'" accordingly
+
 
 * TODO fix Artist-Releasegroup pages
 ** DONE changes to do
@@ -70246,6 +70373,7 @@ retry "Relationships" buttons double on "single"-table pageTypes like "type: 'pl
 type: 'place-performances-filtered'
 #+end_example
 
+
 * TODO Most popular tags in MusicBrainz
 ** initial
 
@@ -70275,7 +70403,7 @@ add a new pageType definition
             type: 'popular-tags',
             match: (path, params) => path.match(/\/tags/),
             buttons: [
-                { label: 'Show list',   params: { show_list: '1' } }
+                { label: 'Show list', params: { show_list: '1' } }
             ],
             features: {
                 listToTable: [ 'genres', 'tags' ]
@@ -70284,7 +70412,7 @@ add a new pageType definition
         },
 #+end_example
 
-before the pageType "type: 'user-tags'"
+after the pageType "type: 'user-tags'"
 
 ** add support for multiple H2 (each has exactly one table)
 
@@ -70332,6 +70460,7 @@ https://musicbrainz.org/tags?show_list=1
 #+begin_example
 https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/vzell/tag/gig/event
 #+end_example
+
 
 * TODO add missing integerColumns to place-performaces pageTypes
 
@@ -70388,130 +70517,4 @@ so that is looks like
         },
 #+end_example
 
-* TODO type: 'user-tag-value-entity' - https://musicbrainz.org/user/vzell/tag/gig/event
-** initial
-
-add support for a new pageType:
-
-1.)
-
-add the following new pagType definition
-
-#+begin_example
-        // User tag value entity pages (/user/<username>/tag/<tag>/<entity> e.g. /user/vzell/tag/gig/event)
-        // Must come before the generic tag-value entry (narrower match).
-        {
-            type: 'user-tag-value-entity',
-            match: (path, params) => path.match(/\/user\/.*\/tag\/.*/),
-            buttons: [
-                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
-                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
-            ],
-            buttons: [ { label: 'Show all Entities tagged' } ],
-            features: {
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the first word of the h2 text as the column name (e.g. "Labels").
-                listToTable: [ '' ],
-                // Remove the vote/sort form after rendering since the two buttons
-                // above replace its function and the form is no longer needed.
-                removeSelector: 'form:has(select[name="show_downvoted"])'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-before the pageType "type: 'user-tag-value'"
-
-2.)
-
-Extend the "Structure C"
-
-#+begin_example
-     * ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>, /subscribers) ─
-#+end_example
-
-in the function "function applyListToTable(def, docContext = document)" to also support the pageType "type: 'user-tag-value-entity'"
-
-3.)
-
-fix the current "removeSelector" in the pageType definition "type: 'user-tags'"
-
-#+begin_example
-removeSelector: 'form:has(select[name="show_downvoted"])'
-#+end_example
-
-to remove the following "form"
-
-#+begin_example
-<form style="margin-top:1em">
-  <div class="row">
-    <label>Show votes:
-      <!-- -->
-      <select name="show_downvoted">
-	<option value="0" selected="">upvotes
-	</option>
-	<option value="1">downvotes
-	</option>
-      </select>
-    </label>
-  </div>
-  <div class="row">
-    <label>Sort by:
-      <!-- -->
-      <select name="order">
-	<option value="name" selected="">name
-	</option>
-	<option value="count">count (more first)
-	</option>
-	<option value="countdesc">count (less first)
-	</option>
-      </select>
-    </label>
-  </div>
-  <div class="row">
-    <button type="submit">Submit
-    </button>
-  </div>
-</form>
-#+end_example
-
-** bugs
-
-small glitch:
-
-1.)
-
-in the newly introduced pageType "type: 'user-tag-value-entity'"
-the name of the table derived from the "<ul>" list structure is wrong, currently e.g. "Events vzell" instead of just
-"Events" when extracting it from the h2 header text.
-
-The problem is the current extraction works fine for the pageType "type: 'tag-value-entity'", see the the comment in the
-function "function applyListToTable(def, docContext = document)"
-
-#+begin_example
-     *     Column name: first word of the h2 text content before "tagged"
-     *                  (e.g. "Labels tagged as …" → "Labels").
-#+end_example
-
-but should be
-
-#+begin_example
-     *     Column name: first word of the h2 text content before "<username >tagged"
-     *                  (e.g. "Events vzell tagged as …" → "Events").
-#+end_example
-
-for the pageType "type: 'user-tag-value-entity'"
-
-2.)
-
-also change the current comment
-
-#+begin_example
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the first word of the h2 text as the column name (e.g. "Events").
-#+end_example
-
-in the pageType "type: 'user-tag-value-entity'" accordingly
 
