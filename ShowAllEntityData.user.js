@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.427+2026-04-06
+// @version      9.99.429+2026-04-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3206,12 +3206,14 @@
      *   Replacement: the `<ul>` itself is replaced by the bare `<table>`.
      *   Column name: derived from the `<ul>` class attribute (see below).
      *
-     * ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>, /subscribers) ─
+     * ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>,
+     *                       /user/.../tag/<v>/<entity>, /subscribers) ──────────
      *
-     *   Triggered when `sectionId === ''` AND the current page path matches
-     *   one of: `/area/<mbid>/users` (pageType 'area-users'), the two-segment
-     *   tag-entity pattern `/tag/<value>/<entity>` (pageType 'tag-value-entity'),
-     *   or `/subscribers` (pageType 'editor-subscribers').
+     *   Triggered when `sectionId === ''` AND the current page path matches one of:
+     *   - `/area/<mbid>/users`           (pageType 'area-users')
+     *   - `/tag/<value>/<entity>`        (pageType 'tag-value-entity')
+     *   - `/user/.../tag/<v>/<entity>`   (pageType 'user-tag-value-entity')
+     *   - `/subscribers`                 (pageType 'editor-subscribers')
      *   For all other pageTypes with `sectionId === ''`, Structure D is used.
      *
      *   area-users variant:
@@ -3319,13 +3321,15 @@
                 // Classify the path once for all Structure C/D branches.
                 // Order matters: two-segment /tag/<v>/<entity> must be tested
                 // BEFORE one-segment /tag/<v> because the latter matches both.
-                const _isAreaUsers      = _currentPath.match(/\/area\/[a-f0-9-]{36}\/users/);
-                const _isTagValueEntity = _currentPath.match(/\/tag\/[^/]+\/.+/);    // two-segment
-                const _isTagValue       = !_isTagValueEntity && _currentPath.match(/\/tag\//); // one-segment only
-                const _isSubscribers    = _currentPath.includes('/subscribers');
+                const _isAreaUsers          = _currentPath.match(/\/area\/[a-f0-9-]{36}\/users/);
+                const _isTagValueEntity     = _currentPath.match(/\/tag\/[^/]+\/.+/);    // /tag/<v>/<entity> (two-segment)
+                const _isUserTagValueEntity = _currentPath.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/); // /user/.../tag/<v>/<entity>
+                const _isTagValue           = !_isTagValueEntity && _currentPath.match(/\/tag\//); // one-segment only
+                const _isSubscribers        = _currentPath.includes('/subscribers');
 
-                // ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>, /subscribers) ─
-                if (_isAreaUsers || _isTagValueEntity || _isSubscribers) {
+                // ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>,
+                //                       /user/.../tag/<v>/<entity>, /subscribers) ─
+                if (_isAreaUsers || _isTagValueEntity || _isUserTagValueEntity || _isSubscribers) {
                     Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
                         let _next  = _h2.nextElementSibling;
                         let _steps = 0;
@@ -3343,8 +3347,13 @@
                         //                     e.g. "Labels tagged as «country»" → "Labels"
                         const _h2Text = _h2.textContent.trim();
                         let _colName;
-                        if (_isTagValueEntity) {
-                            const _firstWord = _h2Text.split(/\s+tagged\b/i)[0].trim();
+                        if (_isTagValueEntity || _isUserTagValueEntity) {
+                            // tag-value-entity:      "Labels tagged as 'country'"       -> "Labels"
+                            // user-tag-value-entity: "Events vzell tagged as 'gig'"     -> "Events"
+                            // Split on 'tagged' gives "Labels" vs "Events vzell".
+                            // Taking the first whitespace-separated word handles both.
+                            const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
+                            const _firstWord    = _beforeTagged.split(/\s+/)[0];
                             _colName = _firstWord || _h2Text;
                         } else {
                             _colName = _h2Text;
@@ -4272,11 +4281,33 @@
             ],
             features: {
                 listToTable: [ 'genres', 'tags' ],
-                // Remove the vote/sort form after rendering since the two buttons
-                // above replace its function and the form is no longer needed.
-                removeSelector: 'form:has(select[name="show_downvoted"])'
+                // Remove the vote/sort form (style="margin-top:1em") after rendering
+                // since the two buttons above replace its function.
+                removeSelector: 'form[style*="margin-top"]'
             },
             tableMode: 'multi'
+        },
+        // User tag value entity pages (/user/<username>/tag/<tag>/<entity>
+        // e.g. /user/vzell/tag/gig/event) — must come before user-tag-value
+        // (same /user/.*/tag/ prefix, but has an additional entity segment).
+        {
+            type: 'user-tag-value-entity',
+            match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the first word of the h2 text as the column name, e.g.
+                // "Events vzell tagged as «gig»" → "Events".
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form[style*="margin-top"]'
+            },
+            tableMode: 'single'
         },
         // User tag pages (e.g. /user/vzell/tag/handwritten)
         // Must come before the generic tag-value entry (narrower match).

@@ -1,5 +1,32 @@
 [
   {
+    "version": "9.99.429",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "applyListToTable() Structure C column-name derivation: for user-tag-value-entity pages the h2 text is 'Events vzell tagged as «gig»', so splitting on '\\s+tagged' gave 'Events vzell' instead of 'Events'. Fixed by taking the first whitespace-delimited word of the pre-tagged part (_beforeTagged.split(/\\s+/)[0]), which correctly extracts 'Events'. For tag-value-entity ('Labels tagged as «country»') the behaviour is unchanged since the first word is the only word before 'tagged'.",
+          "user-tag-value-entity pageType comment: updated to document the correct extraction example 'Events vzell tagged as «gig»' → 'Events'."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.428",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "✨ Feature / 🐛 Fix",
+        "items": [
+          "New 'user-tag-value-entity' pageType: matches /user/<username>/tag/<tag>/<entity> paths (e.g. /user/vzell/tag/gig/event). Uses listToTable:[''] (Structure C), tableMode 'single', two buttons Entities upvoted/downvoted with show_downvoted params, removeSelector:'form[style*=\"margin-top\"]'. Placed before 'user-tag-value' since its regex /user/[^/]+/tag/[^/]+/.+ is narrower.",
+          "applyListToTable() Structure C: added _isUserTagValueEntity flag (matches /user/[^/]+/tag/[^/]+/.+) to the guard condition and to the column-name derivation (uses first word before 'tagged', e.g. 'Events tagged as ...' -> 'Events').",
+          "user-tags pageType: fixed removeSelector from 'form:has(select[name=\"show_downvoted\"])' to 'form[style*=\"margin-top\"]' — the attribute selector is more reliable across browsers and Tampermonkey contexts. The same selector is used for user-tag-value-entity."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.427",
     "date": "2026-04-06",
     "sections": [
