@@ -69080,6 +69080,105 @@ There are currently "<n>-<number of anonymous users> real and <number of anonymo
 
 in bold
 
+* DONE add the current defaults (h2/h3 color backgrounds) to our code base
+
+* DONE search page finalization
+** initial
+
+add some new functionality for the pageType "type: 'search'":
+
+1.)
+
+add a new h2 header named "Searchform" before the current present h2 header (there is only one) 
+
+2.)
+
+on the final rendered page
+
+move the searchform
+
+#+begin_example
+<div class="searchform">
+#+end_example
+
+after the newly added h2 header named "Searchform"
+
+** bugs
+
+some bugs
+
+1.)
+
+the whole search form should be relocated to right before the very first h2 header line which precedes the actual table
+
+** bugs
+
+you completely messed up
+
+1.)
+
+actually revert the last changes of repositioning and just move the searchform
+
+#+begin_example
+<div class="searchform">
+#+end_example
+
+right after the '<div id="mb-status-displays-wrapper"' container
+
+** buggy
+
+still buggy
+
+1.)
+
+the h2 header
+
+#+begin_example
+<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Searchform</h2>
+#+end_example
+
+should also move right in fron of the searchform
+
+#+begin_example
+<div class="searchform">
+#+end_example
+
+* DONE Search pages
+** DONE add "renderMultiRowCell" and "collapsableColumns"
+
+#+begin_example
+        // Search pages
+        {
+            type: 'search',
+            match: (path) => path.includes('/search'),
+            buttons: [ { label: 'Show all Search results' } ],
+            tableMode: 'single',
+            features: {
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                extractMainColumn: 'Name', // Specific header
+                stickyColumn: 'Name',
+                transformToH2: true        // New flag to trigger <h2> transformation
+            },
+            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'artist-works',
+            match: (path) => path.includes('/works'),
+            buttons: [ { label: 'Show all Works for Artist' } ],
+            features: {
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
+                extractMainColumn: 'Work',
+                stickyColumn: 'Work'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+** DONE move the query dialog to the top, before the table
 
 
 * TODO fix Artist-Releasegroup pages
@@ -69560,7 +69659,9 @@ session where you produced a new entry for "version": "9.99.363" but skipped the
 ** TODO add a quickfilter with search string highlightning to 
 ** TODO add a new column with examples
 
+
 * TODO Implement column movement
+
 
 * TODO JSDoc
 
@@ -70043,10 +70144,10 @@ and either
 
 * TODO colorize "main" and "guest" performer in the EAA tooltips
 
+
 * TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
 
 
-* DONE add the current defaults (h2/h3 color backgrounds) to our code base
 * TODO make zebra striping configurable
 
 #+begin_example
@@ -70054,43 +70155,6 @@ and either
         const evenBg = '#f2f2f2';
 #+end_example
 
-
-* TODO Search pages
-** DONE add "renderMultiRowCell" and "collapsableColumns"
-
-#+begin_example
-        // Search pages
-        {
-            type: 'search',
-            match: (path) => path.includes('/search'),
-            buttons: [ { label: 'Show all Search results' } ],
-            tableMode: 'single',
-            features: {
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
-                extractMainColumn: 'Name', // Specific header
-                stickyColumn: 'Name',
-                transformToH2: true        // New flag to trigger <h2> transformation
-            },
-            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
-        },
-#+end_example
-
-#+begin_example
-        {
-            type: 'artist-works',
-            match: (path) => path.includes('/works'),
-            buttons: [ { label: 'Show all Works for Artist' } ],
-            features: {
-                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
-                extractMainColumn: 'Work',
-                stickyColumn: 'Work'
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-** TODO move the query dialog to the top, before the table
 
 * TODO sticky table column
 ** TODO remove the ghosting on some pages
@@ -70175,6 +70239,12 @@ Date - https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/perfor
 
 
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
+
+retry "Relationships" buttons double on "single"-table pageTypes like "type: 'place-performances-filtered'"
+
+#+begin_example
+type: 'place-performances-filtered'
+#+end_example
 
 * TODO Most popular tags in MusicBrainz
 ** initial
@@ -70261,65 +70331,4 @@ https://musicbrainz.org/tags?show_list=1
 
 #+begin_example
 https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/vzell/tag/gig/event
-#+end_example
-
-* search page finalization
-** initial
-
-add some new functionality for the pageType "type: 'search'":
-
-1.)
-
-add a new h2 header named "Searchform" before the current present h2 header (there is only one) 
-
-2.)
-
-on the final rendered page
-
-move the searchform
-
-#+begin_example
-<div class="searchform">
-#+end_example
-
-after the newly added h2 header named "Searchform"
-
-** bugs
-
-some bugs
-
-1.)
-
-the whole search form should be relocated to right before the very first h2 header line which precedes the actual table
-
-** bugs
-
-you completely messed up
-
-1.)
-
-actually revert the last changes of repositioning and just move the searchform
-
-#+begin_example
-<div class="searchform">
-#+end_example
-
-right after the '<div id="mb-status-displays-wrapper"' container
-
-** buggy
-
-still buggy
-
-1.)
-
-the h2 header
-
-#+begin_example
-<h2 class="mb-h2-processed mb-toggle-h2" title="Click to collapse/uncollapse section (Ctrl+Click to toggle ALL sections)" style="cursor: pointer; user-select: none;"><span class="mb-toggle-icon">▼</span>Searchform</h2>
-#+end_example
-
-should also move right in fron of the searchform
-
-#+begin_example
-<div class="searchform">
 #+end_example
