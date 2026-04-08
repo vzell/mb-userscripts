@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.441+2026-04-08
+// @version      9.99.446+2026-04-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4603,7 +4603,24 @@
                 listToTable: [ '' ],
                 // Remove the vote/sort form after rendering since the two buttons
                 // above replace its function and the form is no longer needed.
-                removeSelector: 'form[style*="margin-top"]'
+                removeSelector: 'form[style*="margin-top"]',
+                columnExtractors: [
+                    { sourceColumn: 'Areas',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artists',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Events',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instruments',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Labels',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Places',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release groups', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Releases',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recordings',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Works',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
             },
             tableMode: 'single'
         },
@@ -4623,7 +4640,24 @@
                 listToTable: [ '' ],
                 // Remove the vote/sort form after rendering since the two buttons
                 // above replace its function and the form is no longer needed.
-                removeSelector: 'form:has(select[name="show_downvoted"])'
+                removeSelector: 'form:has(select[name="show_downvoted"])',
+                columnExtractors: [
+                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
             },
             tableMode: 'multi'
         },
@@ -4661,7 +4695,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
             },
             tableMode: 'single'
         },
@@ -22477,7 +22511,14 @@ a { color: #1565c0; }`;
                                 //     (e.g. eventParts sources from 'Comment').
                                 //     Source cells are located by column name — no colIdx needed.
                                 const primarySyntheticCellMap = new Map();
+                                // Only populate from RESOLVED extractors (colIdx !== -1).
+                                // Unresolved extractors produce empty <td> placeholders which
+                                // are truthy but must NOT go into the map — otherwise shared
+                                // column names like 'Date' would be set to an empty cell and
+                                // the syntheticColumnExtractor guard (primarySyntheticCellMap.has)
+                                // would fire even when the column wasn't actually extracted.
                                 activeColumnExtractors.forEach((entry, i) => {
+                                    if (entry.colIdx === -1) return; // skip unresolved
                                     entry.syntheticColumns.forEach((colName, j) => {
                                         const cell = extractedSyntheticCells[i]?.[j];
                                         if (cell) primarySyntheticCellMap.set(colName, cell);
@@ -22638,6 +22679,41 @@ a { color: #1565c0; }`;
                                     if (_txt === entry.sourceColumn) entry.colIdx = idx;
                                 });
                             });
+
+                            // ── Per-table integerColumns colIdx re-resolution ──────────
+                            // The global _finalColNames resolution runs once against
+                            // referenceTable[0] (usually the Areas/first table), so DD/MM/YYYY
+                            // are never found when only Name_Comment is resolved there.
+                            // Re-resolve here using the current table's resolved extractor set.
+                            if (activeIntegerColumns.length) {
+                                // Reset all integerColumns colIdx first.
+                                activeIntegerColumns.forEach(e => { e.colIdx = -1; });
+                                // Build _finalColNames for this specific table.
+                                const _perTableColNames = [];
+                                // 1. Original headers (always index 0 for single-column tables).
+                                _ths.forEach((th, idx) => {
+                                    const _n = (th.dataset.colName || th.textContent)
+                                        .replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim()
+                                        .replace(/\s+/g, ' ');
+                                    _perTableColNames.push(_n);
+                                });
+                                // 2. Synthetic columns from resolved primary extractors only.
+                                activeColumnExtractors.forEach(entry => {
+                                    if (entry.colIdx === -1) return;
+                                    entry.syntheticColumns.forEach(cn => _perTableColNames.push(cn));
+                                });
+                                // 3. Synthetic columns from synthetic-column extractors,
+                                //    only when their sourceColumn is present.
+                                activeSyntheticColumnExtractors.forEach(entry => {
+                                    if (!_perTableColNames.includes(entry.sourceColumn)) return;
+                                    entry.syntheticColumns.forEach(cn => _perTableColNames.push(cn));
+                                });
+                                // Resolve colIdx for each integerColumns descriptor.
+                                activeIntegerColumns.forEach(entry => {
+                                    const idx = _perTableColNames.indexOf(entry.sourceColumn);
+                                    if (idx !== -1) entry.colIdx = idx;
+                                });
+                            }
                         }
 
                         table.querySelectorAll('tbody tr').forEach(row => {
@@ -22713,7 +22789,14 @@ a { color: #1565c0; }`;
 
                                 // ── Synthetic-column extractor pipeline ───────────────────
                                 const primarySyntheticCellMap = new Map();
+                                // Only populate from RESOLVED extractors (colIdx !== -1).
+                                // Unresolved extractors produce empty <td> placeholders which
+                                // are truthy but must NOT go into the map — otherwise shared
+                                // column names like 'Date' would be set to an empty cell and
+                                // the syntheticColumnExtractor guard (primarySyntheticCellMap.has)
+                                // would fire even when the column wasn't actually extracted.
                                 activeColumnExtractors.forEach((entry, i) => {
+                                    if (entry.colIdx === -1) return; // skip unresolved
                                     entry.syntheticColumns.forEach((colName, j) => {
                                         const cell = extractedSyntheticCells[i]?.[j];
                                         if (cell) primarySyntheticCellMap.set(colName, cell);
@@ -22992,6 +23075,7 @@ a { color: #1565c0; }`;
                                     //     Source cells are located by column name — no colIdx needed.
                                     const primarySyntheticCellMap = new Map();
                                     activeColumnExtractors.forEach((entry, i) => {
+                                        if (entry.colIdx === -1) return; // skip unresolved
                                         entry.syntheticColumns.forEach((colName, j) => {
                                             const cell = extractedSyntheticCells[i]?.[j];
                                             if (cell) primarySyntheticCellMap.set(colName, cell);
@@ -24672,10 +24756,16 @@ a { color: #1565c0; }`;
         }
 
         let templateHead = null;
+        // rawTemplateHead: unmodified thead clone used as the per-group base for
+        // tag-value/user-tag-value where each group needs differently-resolved
+        // synthetic column headers (cleanupHeaders depends on activeColumnExtractors
+        // colIdx which must be set per-group for these pageTypes).
+        let rawTemplateHead = null;
         const firstTable = document.querySelector('table.tbl');
         if (firstTable && firstTable.tHead) {
             Lib.debug('render', 'Cloning table head for template.');
-            templateHead = firstTable.tHead.cloneNode(true);
+            rawTemplateHead = firstTable.tHead.cloneNode(true);
+            templateHead = rawTemplateHead.cloneNode(true);
             cleanupHeaders(templateHead);
         } else {
             Lib.error('render', 'No template table head found.');
@@ -24879,22 +24969,45 @@ a { color: #1565c0; }`;
                 table.style.marginLeft = '1.5em';
                 table.style.width = 'calc(100% - 1.5em)';
                 if (templateHead) {
-                    const _thead = templateHead.cloneNode(true);
-                    // ── Per-group first-column name patch ─────────────────────────
-                    // For multi-table pageTypes where each group has its own singular
-                    // entity type as the first column (e.g. 'tag-value': Area / Artist /
-                    // Event / …), templateHead is always cloned from the first table.tbl
-                    // in the DOM and would give every group the same first column name.
-                    // Fix: use group.colName stored by the fetch loop (set to the
-                    // _toSingular form of the h3 category text for tag-value pages).
-                    if (group.colName) {
-                        const _firstTh = _thead.querySelector('tr:first-child th:first-child');
-                        if (_firstTh) {
-                            _firstTh.textContent = group.colName;
-                            _firstTh.dataset.colName = group.colName;
+                    let _theadForGroup;
+                    if ((pageType === 'tag-value' || pageType === 'user-tag-value') && rawTemplateHead) {
+                        // ── Per-group thead for tag-value multi-table mode ────────────
+                        // Each group has a different entity-type column and therefore
+                        // different synthetic columns (e.g. Events has Name/Date/Comment
+                        // while Artists only has Name/Comment).  We must resolve
+                        // activeColumnExtractors colIdx for THIS group's column before
+                        // calling cleanupHeaders so it injects the correct headers.
+                        // 1. Reset all extractors.
+                        activeColumnExtractors.forEach(e => { e.colIdx = -1; });
+                        // 2. Resolve: the group's source column is group.colName (singular),
+                        //    always at index 0 in the single-original-column table.
+                        const _matchEntry = activeColumnExtractors.find(
+                            e => e.sourceColumn === group.colName
+                        );
+                        if (_matchEntry) _matchEntry.colIdx = 0;
+                        // 3. Clone raw thead and run cleanupHeaders with correct colIdx.
+                        _theadForGroup = rawTemplateHead.cloneNode(true);
+                        cleanupHeaders(_theadForGroup);
+                        // 4. Patch first <th> text to the singular column name.
+                        if (group.colName) {
+                            const _firstTh = _theadForGroup.querySelector('tr:first-child th:first-child');
+                            if (_firstTh) {
+                                _firstTh.textContent = group.colName;
+                                _firstTh.dataset.colName = group.colName;
+                            }
+                        }
+                    } else {
+                        _theadForGroup = templateHead.cloneNode(true);
+                        // Patch first <th> text for non-tag-value pageTypes if needed.
+                        if (group.colName) {
+                            const _firstTh = _theadForGroup.querySelector('tr:first-child th:first-child');
+                            if (_firstTh) {
+                                _firstTh.textContent = group.colName;
+                                _firstTh.dataset.colName = group.colName;
+                            }
                         }
                     }
-                    table.appendChild(_thead);
+                    table.appendChild(_theadForGroup);
                 }
                 addColumnFilterRow(table);
                 tbody = document.createElement('tbody');

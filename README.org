@@ -71053,7 +71053,7 @@ https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/
 #+end_example
 
 
-* TODO add column extractors to more tag pages - 'tag-value'
+* DONE add column extractors to more tag pages - 'tag-value'
 ** initial
 
 some fixes:
@@ -71220,17 +71220,127 @@ doesn't seem to have any effect, specifically the alignment of the integer colum
 
 ** TODO integer bug
 
+for the pageType "type: 'tag-value'"
+
 for the table under the h3 header line "Events", the parameter "integerColumns"
 
 #+begin_example
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
 #+end_example
 
-still doesn't seem to have any effect, specifically the alignment of the integer columns is not respected.
+doesn't seem to have any effect, specifically the alignment of the integer columns is not respected.
 
+* DONE integer bug - pageType "type: 'tag-value-entity'"
 
-* add column extractors to more tag pages - 'user-tag-value-entity'
-   
+some bugs:
+
+1.)
+
+for the pageType "type: 'tag-value-entity'" change
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+#+end_example
+
+to
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+#+end_example
+
+* DONE pageType "type: 'user-tag-value'"
+
+for the pageType "type: 'user-tag-value'" change
+
+#+begin_example
+        {
+            type: 'user-tag-value',
+            match: (path, params) => path.match(/\/user\/.*\/tag\//),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                // Empty sectionId triggers Structure D in applyListToTable:
+                // the function scans for <h3>+<ul> pairs (each entity type
+                // section) and converts them to tables labelled with the h3 text.
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])'
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'user-tag-value',
+            match: (path, params) => path.match(/\/user\/.*\/tag\//),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                // Empty sectionId triggers Structure D in applyListToTable:
+                // the function scans for <h3>+<ul> pairs (each entity type
+                // section) and converts them to tables labelled with the h3 text.
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form:has(select[name="show_downvoted"])',
+                columnExtractors: [
+                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+* DONE add column extractors to more tag pages - 'user-tag-value-entity'
+
+for the pageType "type: 'user-tag-value-entity'" change
+
+#+begin_example
+        {
+            type: 'user-tag-value-entity',
+            match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text up to "tagged" minus the trailing username as the
+                // column name, e.g. "Release groups vzell tagged as «gig»" → "Release groups".
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form[style*="margin-top"]'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+to
+
 #+begin_example
         {
             type: 'user-tag-value-entity',
@@ -71269,6 +71379,5 @@ still doesn't seem to have any effect, specifically the alignment of the integer
             tableMode: 'single'
         },
 #+end_example
-
 
 

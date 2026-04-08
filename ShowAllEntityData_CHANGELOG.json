@@ -1,5 +1,68 @@
 [
   {
+    "version": "9.99.446",
+    "date": "2026-04-08",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "user-tag-value-entity pageType: added columnExtractors (11 entries with plural sourceColumn names matching the h2-derived Structure C header), syntheticColumnExtractors (dateParts on Date), and integerColumns (DD/MM/YYYY). Note: the missing comma after removeSelector in the user spec was corrected. Uses plural sourceColumn names (e.g. 'Release groups') matching the Structure C output for user-tag-value-entity pages (unlike user-tag-value which uses singular names from Structure D)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.445",
+    "date": "2026-04-08",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "tag-value / user-tag-value integerColumns alignment: added per-table integerColumns colIdx re-resolution inside the per-table extractor reset block. Root cause: the global _finalColNames block runs once per page against referenceTable[0] (the first/Areas table) where only Name_Comment is resolved; at that point 'Date' is absent so DD/MM/YYYY are never found and their colIdx stays -1. Fix: after the per-table extractor colIdx reset, a per-table _perTableColNames list is built from the current table's headers + resolved extractor synthetic columns + resolved syntheticColumnExtractor columns. activeIntegerColumns are then re-resolved against this list, giving correct colIdx for DD/MM/YYYY on the Events table."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.444",
+    "date": "2026-04-08",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "tag-value-entity pageType: added {sourceColumn:'Tag count',align:'R'} as first entry in integerColumns so the vote count column gets right-aligned integer styling.",
+          "user-tag-value pageType: added columnExtractors (same 11 entries as tag-value with singular sourceColumn names), syntheticColumnExtractors (dateParts on Date), and integerColumns (DD/MM/YYYY) — mirrors the tag-value configuration for user tag pages."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.443",
+    "date": "2026-04-08",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "primarySyntheticCellMap population: added 'if (entry.colIdx === -1) return;' guard in all three population sites. Root cause: empty <td> placeholders produced by unresolved extractors are truthy, so they were stored in the map under shared column names like 'Date'. This caused primarySyntheticCellMap.has('Date') to return true for non-Events groups (e.g. Areas, Artists), triggering dateParts to run and append 5 empty cells — producing a ghost trailing column (visible as extra cells beyond the column headers). Events group was unaffected because its 'Date' cell was real and the dateParts output cells all had headers. Fix: only resolved extractors (colIdx !== -1) contribute to the map, ensuring 'Date' is absent for non-Events groups and the guard correctly skips dateParts."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.442",
+    "date": "2026-04-08",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "tag-value multi-table: per-group cleanupHeaders() re-resolution. Saved rawTemplateHead (unmodified thead clone) before the global cleanupHeaders(templateHead) call. In renderGroupedTable, for tag-value/user-tag-value pageTypes, each group table now: (1) resets all activeColumnExtractors colIdx to -1; (2) resolves only the entry matching group.colName to colIdx=0; (3) clones rawTemplateHead and calls cleanupHeaders() on it — injecting only the synthetic headers appropriate for that group (e.g. Name+Date+Comment for Events, Name+Comment for Areas). This fixes missing Date/Artists column headers for multi-table tag-value pages.",
+          "renderGroupedTable first-column patch: Series bug fixed by removing the '!== categoryName' guard (previous fix 9.99.441 left this as 'if (group.colName && group.colName !== categoryName)'; changed to 'if (group.colName)'). Was already patched in the previous commit but the re-resolution approach supersedes it — the cleanup now happens inside the per-group cleanupHeaders path.",
+          "integerColumns _finalColNames: fix confirmed correct — only resolved extractor synthetic columns are included, and syntheticColumnExtractors are guarded on source column presence. For tag-value-entity Events page: ['Events','Name','Tag count','Date','Comment','DD','MM','YYYY','Day','Month'] gives correct colIdx values for DD/MM/YYYY."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.441",
     "date": "2026-04-08",
     "sections": [
