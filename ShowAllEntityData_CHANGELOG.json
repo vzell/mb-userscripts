@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.99.437",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "✨ Feature / 🐛 Fix",
+        "items": [
+          "tag-value-entity pageType: added syntheticColumnExtractors:[{sourceColumn:'Date',extractor:'dateParts',syntheticColumns:['DD','MM','YYYY','Day','Month']}] and integerColumns:[{sourceColumn:'DD',align:'R'},{sourceColumn:'MM',align:'R'},{sourceColumn:'YYYY',align:'C'}]. These only activate on /tag/.../event pages because the 'Date' synthetic column only exists when the Events extractor (tagCount_Name_Date_Comment) is resolved.",
+          "syntheticColumnExtractor guard — cleanupHeaders(): synthetic extractor <th> headers are now skipped when their sourceColumn is absent from the set of columns produced by resolved primary extractors (colIdx !== -1). Computed once as _resolvedPrimaryCols = Set of all syntheticColumns from active primary extractors with colIdx !== -1. Prevents DD/MM/YYYY/Day/Month headers appearing on non-Events tag pages where 'Date' was never extracted.",
+          "syntheticColumnExtractor guard — row processing (all 3 sites): synthetic extractor cell appending now checks primarySyntheticCellMap.has(entry.sourceColumn) before appending. Uses the per-row map rather than _resolvedPrimaryCols (which is scoped to cleanupHeaders). When 'Date' is absent from the map, dateParts cells are not appended, keeping row structure consistent."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.436",
     "date": "2026-04-07",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.436+2026-04-07
+// @version      9.99.437+2026-04-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4562,7 +4562,13 @@
                     { sourceColumn: 'Recordings',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
                     { sourceColumn: 'Series',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
                     { sourceColumn: 'Works',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
-                ]
+                ],
+                // Split the extracted Date column into DD/MM/YYYY/Day/Month sub-columns
+                // only when Events are shown (i.e. when the Date synthetic column exists).
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
             },
             tableMode: 'single'
         },
@@ -21102,7 +21108,22 @@ a { color: #1565c0; }`;
         // Inject synthetic column headers for every active synthetic-column extractor
         // (second-pass extractors that derive from primary synthetic outputs).
         // Insertion order mirrors declaration order in syntheticColumnExtractors.
+        // Skip entries whose sourceColumn is not produced by any resolved primary
+        // extractor (colIdx !== -1) — prevents DD/MM/YYYY headers appearing on
+        // entity pages where the Date column is absent (e.g. non-Events tag pages).
+        const _resolvedPrimaryCols = new Set(
+            activeColumnExtractors
+                .filter(e => e.colIdx !== -1)
+                .flatMap(e => e.syntheticColumns)
+        );
+        // Also include MB-Name and Comment when extractMainColumn is active.
+        if (activeDefinition?.features?.extractMainColumn) {
+            _resolvedPrimaryCols.add('MB-Name');
+            _resolvedPrimaryCols.add('Comment');
+        }
         activeSyntheticColumnExtractors.forEach(entry => {
+            // Skip if the source synthetic column was not produced on this page.
+            if (!_resolvedPrimaryCols.has(entry.sourceColumn)) return;
             const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim());
             entry.syntheticColumns.forEach(colName => {
                 if (!headersText.includes(colName)) {
@@ -22351,7 +22372,14 @@ a { color: #1565c0; }`;
                                 });
 
                                 // 4. Append synthetic cells from synthetic-column extractors (second pass)
-                                syntheticExtractorCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                                // 4b. Skip synthetic-extractor cells when sourceColumn absent from primary map.
+                                // Uses primarySyntheticCellMap (per-row) rather than _resolvedPrimaryCols
+                                // (cleanupHeaders scope) — if the source col wasn't extracted for this row,
+                                // don't append its derived cells either.
+                                syntheticExtractorCells.forEach((cells, i) => {
+                                    if (!primarySyntheticCellMap.has(activeSyntheticColumnExtractors[i].sourceColumn)) return;
+                                    cells.forEach(td => newRow.appendChild(td));
+                                });
 
                                 // 5. Append MB-Name / Comment when extractMainColumn is active
                                 if (mainColIdx !== -1) {
@@ -22551,7 +22579,14 @@ a { color: #1565c0; }`;
                                     cells.forEach(td => newRow.appendChild(td));
                                 });
                                 // 3. Append synthetic-column extractor cells (second pass)
-                                syntheticExtractorCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                                // 4b. Skip synthetic-extractor cells when sourceColumn absent from primary map.
+                                // Uses primarySyntheticCellMap (per-row) rather than _resolvedPrimaryCols
+                                // (cleanupHeaders scope) — if the source col wasn't extracted for this row,
+                                // don't append its derived cells either.
+                                syntheticExtractorCells.forEach((cells, i) => {
+                                    if (!primarySyntheticCellMap.has(activeSyntheticColumnExtractors[i].sourceColumn)) return;
+                                    cells.forEach(td => newRow.appendChild(td));
+                                });
                                 // 4. Append MB-Name / Comment (when extractMainColumn is active)
                                 if (mainColIdx !== -1) {
                                     newRow.appendChild(tdName);
@@ -22822,7 +22857,14 @@ a { color: #1565c0; }`;
                                 });
 
                                     // 4. Append synthetic cells from synthetic-column extractors (second pass)
-                                    syntheticExtractorCells.forEach(cells => cells.forEach(td => newRow.appendChild(td)));
+                                    // 4b. Skip synthetic-extractor cells when sourceColumn absent from primary map.
+                                // Uses primarySyntheticCellMap (per-row) rather than _resolvedPrimaryCols
+                                // (cleanupHeaders scope) — if the source col wasn't extracted for this row,
+                                // don't append its derived cells either.
+                                syntheticExtractorCells.forEach((cells, i) => {
+                                    if (!primarySyntheticCellMap.has(activeSyntheticColumnExtractors[i].sourceColumn)) return;
+                                    cells.forEach(td => newRow.appendChild(td));
+                                });
 
                                     // 5. Append MB-Name / Comment when extractMainColumn is active.
                                     // The artist-releasegroups branch has its own identical pipeline
