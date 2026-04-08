@@ -71052,9 +71052,9 @@ https://musicbrainz.org/tags?show_list=1
 https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/vzell/tag/gig/event
 #+end_example
 
-* fix 1st column name in tags
 
-* add column extractors to more tag pages
+* TODO add column extractors to more tag pages - 'tag-value'
+** initial
 
 some fixes:
 
@@ -71103,7 +71103,11 @@ for the pageType "type: 'tag-value'" definition add the following new "columnExt
                     { sourceColumn: 'Recordings',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
                     { sourceColumn: 'Series',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
                     { sourceColumn: 'Works',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
-                ]
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
             },
             tableMode: 'multi'
         },
@@ -71127,8 +71131,105 @@ tagCount_Name_Comment_Artists
 
 but without the extraction of "tagCount" as it doesn't exist on the pageType "type: 'tag-value'"
 
+** bugs
+
+still bugs
+
+1.)
+
+
+the singular form now works, but still EVERY table under each h3 header line now has the same "Area" column name.
+The different h3 header line texts are not respected in each first table column name.
+
+** bugs
+
+No, still the same result. All tables have the same first column name "Area"
+
+** bugs
+
+still some bugs
+
+1.)
+
+Gor the pageType "type: 'tag-value'" now the tables have the right first column name except for the table under the h3
+line
+
+#+begin_example
+<h3>Series</h3>
+#+end_example
+
+where the first column name is still "Area"
 
 2.)
+
+for the pageType "type: 'tag-value'" somehow ONLY the "extractor: 'Name_Comment'" is run on each sub-table under each h3 header line
+
+3.)
+
+specifically for the URL https://musicbrainz.org/tag/country/event where the pageType "type: 'tag-value-entity'" should
+be active, the parameter "integerColumns"
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+#+end_example
+
+doesn't seem to have any effect, specifically the alignment of the integer columns is not respected.
+
+** bugs
+
+OK, now the first column names in each sub-table are fixed for the pageType "type: 'tag-value'", but there are still
+some bugs:
+
+1.)
+
+the "columnExtractors" do actually run now and produce results, but the column headers for the new "syntheticColumns" except 'Name' and 'Comment' are MISSING.
+
+2.)
+
+the table under the h3 header line "Events", actually has the extracted "Date" column values below it, and the
+"Comment" column (albeit without the column header) is shifted to the right.
+
+2.)
+
+for the table under the h3 header line "Events", the parameter "integerColumns"
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+#+end_example
+
+doesn't seem to have any effect, specifically the alignment of the integer columns is not respected.
+
+** DONE integer bug
+
+OK, all synthetic columns are now shown, but still some bugs
+
+1.)
+
+there is kind of like a ghost last column albeit without column header (except when the 'dateParts'
+"syntheticColumnExtractors" is involved, than everything is fine)
+
+2.)
+
+for the table under the h3 header line "Events", the parameter "integerColumns"
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+#+end_example
+
+doesn't seem to have any effect, specifically the alignment of the integer columns is not respected.
+
+** TODO integer bug
+
+for the table under the h3 header line "Events", the parameter "integerColumns"
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+#+end_example
+
+still doesn't seem to have any effect, specifically the alignment of the integer columns is not respected.
+
+
+* add column extractors to more tag pages - 'user-tag-value-entity'
    
 #+begin_example
         {
@@ -71148,18 +71249,22 @@ but without the extraction of "tagCount" as it doesn't exist on the pageType "ty
                 // above replace its function and the form is no longer needed.
                 removeSelector: 'form[style*="margin-top"]',
                 columnExtractors: [
-                    { sourceColumn: 'Areas',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Artists',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Events',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instruments',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Labels',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Places',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Release groups', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Releases',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recordings',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Works',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
-                ]
+                    { sourceColumn: 'Areas',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artists',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Events',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instruments',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Labels',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Places',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release groups', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Releases',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recordings',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Works',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
             },
             tableMode: 'single'
         },

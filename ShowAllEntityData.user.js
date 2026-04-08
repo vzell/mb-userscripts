@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.437+2026-04-07
+// @version      9.99.441+2026-04-08
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -2780,6 +2780,71 @@
             }
 
             return [tdName, tdCount, tdComment, tdArtists];
+        },
+
+        // ── tag-value page extractors (no Tag count column) ──────────────────
+        //
+        // These mirror the tagCount_* family above but omit the Tag count cell.
+        // Used for pageType 'tag-value' (/tag/<value>) where the entity cells
+        // do not carry a leading vote count number.
+        //
+        // Structure:
+        //   <li><a href="…"><bdi>Name</bdi></a> <span class="comment">(…)</span></li>
+
+        /**
+         * Name_Comment — extracts Name and Comment from a tag-value entity cell.
+         * Mirrors tagCount_Name_Comment without the Tag count field.
+         * Synthetic columns: ['Name', 'Comment']
+         */
+        Name_Comment(sourceCell) {
+            const [tdName, , tdComment] = _tagCountBase(sourceCell);
+            return [tdName, tdComment];
+        },
+
+        /**
+         * Name_Date_Comment — extracts Name, Date and Comment from a tag-value
+         * Events cell.  Mirrors tagCount_Name_Date_Comment without Tag count.
+         * Synthetic columns: ['Name', 'Date', 'Comment']
+         */
+        Name_Date_Comment(sourceCell) {
+            const [tdName, , tdComment] = _tagCountBase(sourceCell);
+            const tdDate = document.createElement('td');
+
+            if (sourceCell) {
+                let _pastLink = false;
+                for (const node of sourceCell.childNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
+                        _pastLink = true;
+                        continue;
+                    }
+                    if (_pastLink && node.nodeType === Node.TEXT_NODE) {
+                        const _m = node.nodeValue.match(/\(\s*([\d\-]+)\s*\)/);
+                        if (_m) { tdDate.textContent = _m[1].trim(); break; }
+                    }
+                }
+            }
+
+            return [tdName, tdDate, tdComment];
+        },
+
+        /**
+         * Name_Comment_Artists — extracts Name, Comment and Artists from a
+         * tag-value Releases/Release groups/Recordings cell.
+         * Mirrors tagCount_Name_Comment_Artists without Tag count.
+         * Synthetic columns: ['Name', 'Comment', 'Artists']
+         */
+        Name_Comment_Artists(sourceCell) {
+            const [tdName, , tdComment] = _tagCountBase(sourceCell);
+            const tdArtists = document.createElement('td');
+
+            if (sourceCell) {
+                const _allBdi = Array.from(sourceCell.querySelectorAll(':scope > bdi'));
+                if (_allBdi.length > 0) {
+                    tdArtists.appendChild(_allBdi[_allBdi.length - 1].cloneNode(true));
+                }
+            }
+
+            return [tdName, tdComment, tdArtists];
         }
     };
 
@@ -3506,6 +3571,27 @@
      *                                 Pass a fetched DOMParser document to apply
      *                                 the conversion to remote pages in the fetch loop.
      */
+    /**
+     * Converts a plural MusicBrainz entity-type label to its singular form.
+     * Used by applyListToTable (Structure D column names) and renderGroupedTable
+     * (first-column header patching for tag-value multi-table mode).
+     *
+     * Rules:
+     *   "Series"         → "Series"        (already singular; explicit exception)
+     *   "… groups"       → "… group"       (e.g. "Release groups" → "Release group")
+     *   "… events"       → "… event"       (e.g. "Release events" → "Release event")
+     *   everything else  → strip trailing "s" (e.g. "Artists" → "Artist")
+     *
+     * @param {string} plural
+     * @returns {string}
+     */
+    function _toSingular(plural) {
+        if (plural === 'Series') return 'Series';
+        if (/ groups?$/i.test(plural)) return plural.replace(/ groups?$/i, ' group');
+        if (/ events?$/i.test(plural)) return plural.replace(/ events?$/i, ' event');
+        return plural.replace(/s$/i, '');
+    }
+
     function applyListToTable(def, docContext = document) {
         const sections = def?.features?.listToTable;
         if (!Array.isArray(sections) || sections.length === 0) return;
@@ -3600,7 +3686,10 @@
                 // Triggered when path is /tag/<value> (no entity segment) —
                 // pageTypes 'user-tag-value' and 'tag-value'.
                 // Walks every <h3> and converts its sibling <ul> into a table.
+                // Column name: singular form of the h3 text (e.g. "Release groups" → "Release group").
+                // Exception: "Series" stays "Series" (already singular).
                 if (_isTagValue) {
+
                     Array.from(_root.querySelectorAll('h3')).forEach(_h3 => {
                         let _next  = _h3.nextElementSibling;
                         let _steps = 0;
@@ -3612,9 +3701,13 @@
                         }
                         if (!_ul) return;
 
-                        const _colName = _h3.textContent.trim();
+                        const _h3Text  = _h3.textContent.trim();
+                        const _colName = _toSingular(_h3Text);
                         const _table   = docContext.createElement('table');
                         _table.className = 'tbl';
+                        // Store the per-group column name so renderGroupedTable can
+                        // patch the cloned templateHead for each group independently.
+                        _table.dataset.mbOriginalColName = _colName;
 
                         const _thead = docContext.createElement('thead');
                         const _hr    = docContext.createElement('tr');
@@ -3638,8 +3731,8 @@
 
                         _ul.parentNode.replaceChild(_table, _ul);
                         Lib.debug('init',
-                            `applyListToTable: converted h3="${_colName}" ul → table`
-                            + ` (${_tbody.rows.length} rows, structure="h3-ul").`);
+                            `applyListToTable: converted h3="${_h3Text}" ul → table`
+                            + ` (${_tbody.rows.length} rows, col="${_colName}", structure="h3-ul").`);
                     });
                     return; // Structure D handled all h3+ul pairs for this entry
                 }
@@ -4579,7 +4672,28 @@
             buttons: [ { label: 'Show all Entities tagged' } ],
             features: {
                 // Empty sectionId triggers Structure D in applyListToTable.
-                listToTable: [ '' ]
+                listToTable: [ '' ],
+                // Split each entity cell into Name/Comment (and Date for Events,
+                // Artists for Releases/Recordings/Release groups).
+                // Each sourceColumn matches the singular h3-derived column header
+                // produced by Structure D (e.g. "Areas" h3 → "Area" column).
+                columnExtractors: [
+                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
             },
             tableMode: 'multi'
         },
@@ -20953,6 +21067,28 @@ a { color: #1565c0; }`;
                 if (colName === 'Artists')
                     return `Extracted from '${src}': the artist credit following "by" in the release/recording cell.`;
                 break;
+            case 'Name_Comment':
+                if (colName === 'Name')
+                    return `Extracted from '${src}': the entity name link, split from the entity cell on tag-value pages.`;
+                if (colName === 'Comment')
+                    return `Extracted from '${src}': the disambiguation comment in parentheses, split from the entity cell.`;
+                break;
+            case 'Name_Date_Comment':
+                if (colName === 'Name')
+                    return `Extracted from '${src}': the event name link, split from the event cell.`;
+                if (colName === 'Date')
+                    return `Extracted from '${src}': the event date in parentheses after the entity link (e.g. "2019-07-05").`;
+                if (colName === 'Comment')
+                    return `Extracted from '${src}': the disambiguation comment, split from the event cell.`;
+                break;
+            case 'Name_Comment_Artists':
+                if (colName === 'Name')
+                    return `Extracted from '${src}': the release/recording name link, split from the combined cell.`;
+                if (colName === 'Comment')
+                    return `Extracted from '${src}': the disambiguation comment, split from the release/recording cell.`;
+                if (colName === 'Artists')
+                    return `Extracted from '${src}': the artist credit following "by" in the release/recording cell.`;
+                break;
             case 'injectedColumns':
                 return `Injected column — populated asynchronously after the table renders via the ` +
                        `MusicBrainz Web Service (${src} url-rels). ` +
@@ -22171,12 +22307,20 @@ a { color: #1565c0; }`;
                     headerNames.forEach((name, idx) => {
                         if (!_excludedSet.has(idx)) _finalColNames.push(name);
                     });
-                    // 2. Synthetic columns from primary column extractors
+                    // 2. Synthetic columns from primary column extractors (resolved only)
+                    // Unresolved extractors (colIdx === -1) produce no cells, so their
+                    // synthetic column names must NOT be included — including them would
+                    // offset the indexOf() lookups for columns that come later in the
+                    // actual rendered row (e.g. 'DD'/'MM'/'YYYY' from syntheticColumnExtractors).
                     activeColumnExtractors.forEach(entry => {
+                        if (entry.colIdx === -1) return;
                         entry.syntheticColumns.forEach(cn => _finalColNames.push(cn));
                     });
-                    // 3. Synthetic columns from synthetic-column extractors (second pass)
+                    // 3. Synthetic columns from synthetic-column extractors (second pass).
+                    // Similarly guard on source column presence.
                     activeSyntheticColumnExtractors.forEach(entry => {
+                        const _srcPresent = _finalColNames.includes(entry.sourceColumn);
+                        if (!_srcPresent) return;
                         entry.syntheticColumns.forEach(cn => _finalColNames.push(cn));
                     });
                     // 4. MB-Name / Comment (when extractMainColumn is configured)
@@ -22464,10 +22608,37 @@ a { color: #1565c0; }`;
 
                         if (category !== lastCategorySeenAcrossPages) {
                             Lib.debug('fetch', `listToTable category: "${category}". Rows so far: ${totalRowsAccumulated}`);
-                            groupedRows.push({ category: category, rows: [] });
+                            // colName: singular form of the category label, used by
+                            // renderGroupedTable to patch the first-column header of
+                            // each group's cloned templateHead (e.g. "Artists" → "Artist").
+                            const _colName = (pageType === 'tag-value' || pageType === 'user-tag-value')
+                                ? _toSingular(category)
+                                : category;
+                            groupedRows.push({ category: category, colName: _colName, rows: [] });
                             lastCategorySeenAcrossPages = category;
                         }
                         const currentGroup = groupedRows[groupedRows.length - 1];
+
+                        // ── Per-table extractor colIdx resolution ─────────────────────
+                        // For multi-table pages where each group table has a different
+                        // entity-type column (e.g. 'tag-value': Area / Artist / Event /…),
+                        // activeColumnExtractors must be re-resolved against the CURRENT
+                        // table's headers — otherwise previous tables' resolved colIdx
+                        // values linger and cause multiple extractors to fire on every row.
+                        if (pageType === 'tag-value' || pageType === 'user-tag-value') {
+                            // Reset all extractors for this table.
+                            activeColumnExtractors.forEach(e => { e.colIdx = -1; });
+                            // Re-resolve against this specific table's header cells.
+                            const _ths = Array.from(table.querySelectorAll('thead tr:first-child th'));
+                            _ths.forEach((th, idx) => {
+                                const _txt = (th.dataset.colName || th.textContent)
+                                    .replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim()
+                                    .replace(/\s+/g, ' ');
+                                activeColumnExtractors.forEach(entry => {
+                                    if (_txt === entry.sourceColumn) entry.colIdx = idx;
+                                });
+                            });
+                        }
 
                         table.querySelectorAll('tbody tr').forEach(row => {
                             if (row.cells.length > 0 && !row.classList.contains('explanation')) {
@@ -24707,7 +24878,24 @@ a { color: #1565c0; }`;
                 // Apply indentation to the table to match the sub-header
                 table.style.marginLeft = '1.5em';
                 table.style.width = 'calc(100% - 1.5em)';
-                if (templateHead) table.appendChild(templateHead.cloneNode(true));
+                if (templateHead) {
+                    const _thead = templateHead.cloneNode(true);
+                    // ── Per-group first-column name patch ─────────────────────────
+                    // For multi-table pageTypes where each group has its own singular
+                    // entity type as the first column (e.g. 'tag-value': Area / Artist /
+                    // Event / …), templateHead is always cloned from the first table.tbl
+                    // in the DOM and would give every group the same first column name.
+                    // Fix: use group.colName stored by the fetch loop (set to the
+                    // _toSingular form of the h3 category text for tag-value pages).
+                    if (group.colName) {
+                        const _firstTh = _thead.querySelector('tr:first-child th:first-child');
+                        if (_firstTh) {
+                            _firstTh.textContent = group.colName;
+                            _firstTh.dataset.colName = group.colName;
+                        }
+                    }
+                    table.appendChild(_thead);
+                }
                 addColumnFilterRow(table);
                 tbody = document.createElement('tbody');
                 table.appendChild(tbody);

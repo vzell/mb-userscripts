@@ -1,5 +1,58 @@
 [
   {
+    "version": "9.99.441",
+    "date": "2026-04-08",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "renderGroupedTable per-group column-name patch: removed the '!== categoryName' guard so 'Series' (where colName === categoryName) also gets patched. Previously the guard was intended to skip the no-op case but it blocked the required patch for Series.",
+          "listToTable multi-table branch: for tag-value and user-tag-value pageTypes, activeColumnExtractors colIdx is now reset to -1 and re-resolved against the CURRENT table's header cells before each table's rows are processed. Previously colIdx was only reset once per page, so after processing the first table ('Area' extractor colIdx=0), processing subsequent tables would have stale colIdx values from earlier tables, causing multiple extractors to fire on every row and produce duplicate or wrong synthetic cells.",
+          "integerColumns _finalColNames computation: changed to only include synthetic column names from RESOLVED primary extractors (colIdx !== -1) and only include syntheticColumnExtractor columns when their sourceColumn is actually present in _finalColNames. Previously ALL extractors' syntheticColumns were pushed regardless of resolution, inflating the list with 30+ phantom column names that offset indexOf() lookups and caused 'DD'/'MM'/'YYYY' colIdx to resolve to wrong positions (or not at all)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.440",
+    "date": "2026-04-08",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "tag-value first-column name fix (revised): replaced the DOM-lookup approach from 9.99.439 which had two bugs: (1) chained .replace() corrupted 'Series' → 'Serie' causing lookup misses, (2) all groups fell back to the template's 'Area' header. New approach: (a) _toSingular() promoted to module-level (was local inside Structure D's forEach); (b) the fetch-loop listToTable branch now stores colName on each groupedRows entry as _toSingular(category) for tag-value/user-tag-value pageTypes; (c) renderGroupedTable patches the first <th> directly from group.colName — no DOM query, no fragile string manipulation at render time."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.439",
+    "date": "2026-04-08",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "tag-value multi-table: fixed every sub-table showing 'Area' as its first column name. Root cause: renderGroupedTable clones a single templateHead from the first table.tbl in the DOM (always the 'Areas' table when sorted alphabetically), so all groups inherit 'Area' as their first column header. Fix: (1) applyListToTable Structure D stores the per-group singular column name as dataset.mbOriginalColName on each converted <table>. (2) renderGroupedTable, after cloning templateHead for a new group table, looks up the source table whose mbOriginalColName matches the singularised categoryName and patches the first <th> text and dataset.colName accordingly."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.438",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "✨ Feature / 🐛 Fix",
+        "items": [
+          "applyListToTable() Structure D: fixed column name — now uses the singular form of the h3 text rather than the raw h3 text. A local _toSingular() helper handles: 'Series' → 'Series' (unchanged); '... groups' → '... group'; '... events' → '... event'; all others → strip trailing 's'. So 'Release groups' → 'Release group', 'Recordings' → 'Recording', etc.",
+          "New ColumnDataExtractor functions Name_Comment, Name_Date_Comment, Name_Comment_Artists: mirror the tagCount_* variants but omit the Tag count column. Each delegates to _tagCountBase for Name and Comment extraction, discarding the count cell with destructuring. Used for tag-value pageType where the entity cells have no leading vote count.",
+          "tag-value pageType: added columnExtractors (singular sourceColumn names to match Structure D output), syntheticColumnExtractors (dateParts on Date from Events), and integerColumns (DD/MM/YYYY). The syntheticColumnExtractors dateParts guard (primarySyntheticCellMap.has) ensures date sub-columns only appear on /tag/.../event equivalent pages.",
+          "_synthColTooltip: added tooltip entries for Name_Comment, Name_Date_Comment, and Name_Comment_Artists."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.437",
     "date": "2026-04-07",
     "sections": [
