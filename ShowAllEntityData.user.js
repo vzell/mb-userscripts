@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.435+2026-04-07
+// @version      9.99.436+2026-04-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1812,6 +1812,72 @@
     //   2. Reference it by that name string in the `columnExtractors` array inside
     //      the relevant pageDefinitions `features` object.
     //   3. Declare the synthetic column header names in `syntheticColumns`.
+
+    /**
+     * Shared base extraction helper for tagCount_* extractors.
+     *
+     * Handles the common fields present in all tag-value-entity cell structures:
+     *   Tag count — leading integer in the first direct text node ("26 -").
+     *   Name      — entity link, optionally preceded by a country-flag span.
+     *               The flag span (if any) and the link are cloned together into
+     *               tdName so the flag renders alongside the entity name.
+     *   Comment   — text of the <bdi> inside the first span.comment child of
+     *               the <td> (not nested deeper), or empty if absent.
+     *
+     * @param   {HTMLTableCellElement|null} sourceCell
+     * @returns {[HTMLTableCellElement, HTMLTableCellElement, HTMLTableCellElement]}
+     *          [tdName, tdCount, tdComment]
+     */
+    function _tagCountBase(sourceCell) {
+        const tdName    = document.createElement('td');
+        const tdCount   = document.createElement('td');
+        const tdComment = document.createElement('td');
+
+        if (!sourceCell) return [tdName, tdCount, tdComment];
+
+        // ── Tag count — leading integer in first direct text node ────────────
+        let _rawLeading = '';
+        for (const node of sourceCell.childNodes) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                _rawLeading += node.nodeValue;
+                break;
+            }
+        }
+        const _countMatch = _rawLeading.match(/^\s*(\d[\d,]*)/);
+        tdCount.textContent = _countMatch ? _countMatch[1].replace(/,/g, '') : '';
+        tdCount.style.fontVariantNumeric = 'tabular-nums';
+
+        // ── Name — entity link, with optional preceding country-flag span ────
+        // Detect a flag span as a direct child of the <td> that precedes the <a>.
+        // Structure: <span class="flag flag-XX"><a>…</a></span>
+        const _flagSpan = Array.from(sourceCell.children).find(
+            el => el.tagName === 'SPAN' && /\bflag\b/.test(el.className) && el.querySelector('a')
+        );
+        if (_flagSpan) {
+            // Clone the entire flag+link span — flag sprite + entity link in one.
+            tdName.appendChild(_flagSpan.cloneNode(true));
+        } else {
+            // Standard: find the first top-level <a> (entity link).
+            const _a = sourceCell.querySelector(':scope > a, :scope > span:not(.comment) > a');
+            if (_a) {
+                const _aClone = _a.cloneNode(true);
+                _aClone.querySelectorAll('.comment').forEach(el => el.remove());
+                tdName.appendChild(_aClone);
+            }
+        }
+
+        // ── Comment — <bdi> inside the first direct span.comment ────────────
+        // Use :scope > span.comment to avoid matching artist comment spans
+        // that are nested inside <bdi> (for Artists columns).
+        const _commentSpan = sourceCell.querySelector(':scope > span.comment');
+        const _commentBdi  = _commentSpan ? _commentSpan.querySelector('bdi') : null;
+        tdComment.textContent = _commentBdi
+            ? _commentBdi.textContent.replace(/\s+/g, ' ').trim()
+            : '';
+
+        return [tdName, tdCount, tdComment];
+    }
+
     const ColumnDataExtractor = {
 
         /**
@@ -2606,64 +2672,114 @@
          * tagCount_Name_Comment — splits an entity row on tag-value entity pages
          * into three synthetic columns: Name, Tag count, and Comment.
          *
-         * Source cell structure (tag-value-entity / user-tag-value-entity pages):
+         * Also handles an optional country-flag span before the entity link:
          *
+         *   <td>6 -
+         *     <span class="flag flag-US">
+         *       <a href="/area/…"><bdi>United States</bdi></a>
+         *     </span>
+         *   </td>
+         *
+         * In that case the Name cell contains the cloned flag span + link.
+         *
+         * Standard structure:
          *   <td>26 -
-         *     <a href="/artist/…" title="Cash, Johnny (country music legend)">
-         *       <bdi>Johnny Cash</bdi>
-         *     </a>
+         *     <a href="/artist/…"><bdi>Johnny Cash</bdi></a>
          *     <span class="comment">(<bdi>country music legend</bdi>)</span>
          *   </td>
          *
          * Extraction rules:
-         *   Name      — textContent of the first <bdi> not inside span.comment.
-         *   Tag count — leading integer in the cell's direct text content
-         *               (the number before " - ").
-         *   Comment   — textContent of the <bdi> inside span.comment (if present).
+         *   Tag count — leading integer in the first direct text node.
+         *   Name      — if a flag span precedes the link, clone flag+link together;
+         *               otherwise clone just the entity <a> link.
+         *   Comment   — <bdi> inside the first span.comment (if any).
          *
          * Synthetic columns: ['Name', 'Tag count', 'Comment']
          */
         tagCount_Name_Comment(sourceCell) {
-            const tdName    = document.createElement('td');
-            const tdCount   = document.createElement('td');
-            const tdComment = document.createElement('td');
+            const [tdName, tdCount, tdComment] = _tagCountBase(sourceCell);
+            return [tdName, tdCount, tdComment];
+        },
 
-            if (!sourceCell) return [tdName, tdCount, tdComment];
+        /**
+         * tagCount_Name_Date_Comment — like tagCount_Name_Comment but also extracts
+         * a Date column.  Used for Events where the date appears in parentheses
+         * immediately after the closing </a>:
+         *
+         *   <td>1 -
+         *     <a href="/event/…"><bdi>Roots &amp; Boots …</bdi></a> (2019-07-05)
+         *     <span class="comment">(<bdi>Kamas, Utah</bdi>)</span>
+         *   </td>
+         *
+         * Extraction rules:
+         *   Tag count — leading integer in the first direct text node.
+         *   Name      — entity <a> link (see tagCount_Name_Comment).
+         *   Date      — text inside the first "(…)" that follows the entity link
+         *               in direct text nodes (brackets stripped).
+         *   Comment   — <bdi> inside the first span.comment (if any).
+         *
+         * Synthetic columns: ['Name', 'Tag count', 'Date', 'Comment']
+         */
+        tagCount_Name_Date_Comment(sourceCell) {
+            const [tdName, tdCount, tdComment] = _tagCountBase(sourceCell);
+            const tdDate = document.createElement('td');
 
-            // ── Tag count — leading integer in direct text nodes ──────────────
-            let _rawLeading = '';
-            for (const node of sourceCell.childNodes) {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    _rawLeading += node.nodeValue;
-                    break; // only the first text node matters
+            if (sourceCell) {
+                // Walk direct text nodes looking for "(YYYY-MM-DD)" or "(YYYY-MM)" after
+                // the entity anchor.  We skip text nodes that precede any <a>.
+                let _pastLink = false;
+                for (const node of sourceCell.childNodes) {
+                    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
+                        _pastLink = true;
+                        continue;
+                    }
+                    if (_pastLink && node.nodeType === Node.TEXT_NODE) {
+                        const _m = node.nodeValue.match(/\(\s*([\d\-]+)\s*\)/);
+                        if (_m) { tdDate.textContent = _m[1].trim(); break; }
+                    }
                 }
             }
-            const _countMatch = _rawLeading.match(/^\s*(\d[\d,]*)/);
-            tdCount.textContent = _countMatch ? _countMatch[1].replace(/,/g, '') : '';
-            tdCount.style.fontVariantNumeric = 'tabular-nums';
 
-            // ── Name — first <bdi> NOT inside span.comment ───────────────────
-            const _a = sourceCell.querySelector('a');
-            const _bdi = _a ? _a.querySelector('bdi') : sourceCell.querySelector('bdi');
-            tdName.textContent = _bdi ? _bdi.textContent.replace(/\s+/g, ' ').trim() : '';
+            return [tdName, tdCount, tdDate, tdComment];
+        },
 
-            // Preserve the link on the Name cell so it stays clickable.
-            if (_a) {
-                const _aClone = _a.cloneNode(true);
-                // Strip the comment span from the clone if it leaked in.
-                _aClone.querySelectorAll('.comment').forEach(el => el.remove());
-                tdName.textContent = '';
-                tdName.appendChild(_aClone);
+        /**
+         * tagCount_Name_Comment_Artists — like tagCount_Name_Comment but also
+         * extracts an Artists column.  Used for Releases, Release groups, and
+         * Recordings where artists follow "by" after the entity link.
+         *
+         * Possible structures:
+         *
+         *   Simple:   <a>…</a> by <bdi><a>Kyle Keller</a></bdi>
+         *
+         *   With comment on artist:
+         *             <a>…</a> by <bdi><a>Johnny Cash</a><span class="comment">…</span></bdi>
+         *
+         *   Multiple: <a>…</a> <span class="comment">(studio…)</span> by
+         *             <bdi><a>…</a>… and <a>…</a></bdi>
+         *
+         * Extraction: find the last top-level <bdi> sibling of the entity <a>
+         * (i.e. not inside span.comment) and clone its full HTML content.
+         * The <bdi> following "by" is always the last direct-child <bdi> of the <td>.
+         *
+         * Synthetic columns: ['Name', 'Tag count', 'Comment', 'Artists']
+         */
+        tagCount_Name_Comment_Artists(sourceCell) {
+            const [tdName, tdCount, tdComment] = _tagCountBase(sourceCell);
+            const tdArtists = document.createElement('td');
+
+            if (sourceCell) {
+                // The artists <bdi> is the last direct-child <bdi> of the <td>.
+                // It follows "by" in the text and is distinct from any <bdi> inside
+                // <a> or inside span.comment (those are nested, not direct children).
+                const _allBdi = Array.from(sourceCell.querySelectorAll(':scope > bdi'));
+                if (_allBdi.length > 0) {
+                    const _artistsBdi = _allBdi[_allBdi.length - 1];
+                    tdArtists.appendChild(_artistsBdi.cloneNode(true));
+                }
             }
 
-            // ── Comment — <bdi> inside span.comment ──────────────────────────
-            const _commentSpan = sourceCell.querySelector('span.comment');
-            const _commentBdi  = _commentSpan ? _commentSpan.querySelector('bdi') : null;
-            tdComment.textContent = _commentBdi
-                ? _commentBdi.textContent.replace(/\s+/g, ' ').trim()
-                : '';
-
-            return [tdName, tdCount, tdComment];
+            return [tdName, tdCount, tdComment, tdArtists];
         }
     };
 
@@ -4435,17 +4551,17 @@
                 // synthetic columns. The sourceColumn matches the h2-derived table
                 // header (e.g. "Labels", "Release groups", …).
                 columnExtractors: [
-                    { sourceColumn: 'Areas',          extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Artists',        extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Events',         extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Instruments',    extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Labels',         extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Places',         extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Release groups', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Releases',       extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Recordings',     extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Series',         extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Works',          extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] }
+                    { sourceColumn: 'Areas',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Artists',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Events',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instruments',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Labels',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Places',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Release groups', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Releases',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recordings',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Works',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
                 ]
             },
             tableMode: 'single'
@@ -20810,6 +20926,26 @@ a { color: #1565c0; }`;
                     return `Extracted from '${src}': the leading integer tag vote count (e.g. "26" from "26 - Johnny Cash"), split from the entity cell.`;
                 if (colName === 'Comment')
                     return `Extracted from '${src}': the disambiguation comment in parentheses (e.g. "country music legend"), split from the entity cell.`;
+                break;
+            case 'tagCount_Name_Date_Comment':
+                if (colName === 'Name')
+                    return `Extracted from '${src}': the event name link, split from the combined event cell.`;
+                if (colName === 'Tag count')
+                    return `Extracted from '${src}': the leading integer tag vote count, split from the event cell.`;
+                if (colName === 'Date')
+                    return `Extracted from '${src}': the event date in parentheses after the entity link (e.g. "2019-07-05").`;
+                if (colName === 'Comment')
+                    return `Extracted from '${src}': the disambiguation comment (e.g. location text), split from the event cell.`;
+                break;
+            case 'tagCount_Name_Comment_Artists':
+                if (colName === 'Name')
+                    return `Extracted from '${src}': the release/recording name link, split from the combined cell.`;
+                if (colName === 'Tag count')
+                    return `Extracted from '${src}': the leading integer tag vote count, split from the release/recording cell.`;
+                if (colName === 'Comment')
+                    return `Extracted from '${src}': the disambiguation comment, split from the release/recording cell.`;
+                if (colName === 'Artists')
+                    return `Extracted from '${src}': the artist credit following "by" in the release/recording cell.`;
                 break;
             case 'injectedColumns':
                 return `Injected column — populated asynchronously after the table renders via the ` +

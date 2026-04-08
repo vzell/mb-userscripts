@@ -1,5 +1,21 @@
 [
   {
+    "version": "9.99.436",
+    "date": "2026-04-07",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "New shared helper _tagCountBase(sourceCell): extracts the common Tag count / Name / Comment fields shared by all tagCount_* extractors. Handles optional country-flag span (<span class=\"flag flag-XX\">) before the entity link — when found, clones flag+link together into tdName. Uses ':scope > span.comment' selector to avoid matching artist-comment spans nested inside <bdi>.",
+          "tagCount_Name_Comment: refactored to delegate to _tagCountBase, no behaviour change except the flag-span support added via the helper.",
+          "New tagCount_Name_Date_Comment extractor for Events: extracts Name, Tag count, Date ('(2019-07-05)' → '2019-07-05' by walking direct text nodes after the entity link), and Comment. Added to columnExtractors for 'Events'.",
+          "New tagCount_Name_Comment_Artists extractor for Releases/Release groups/Recordings: extracts Name, Tag count, Comment, and Artists (the last direct-child <bdi> of the <td>, which contains the 'by …' artist credit, cloned with full HTML including multi-artist 'and' separators and artist comment spans). Added to columnExtractors for 'Release groups', 'Releases', 'Recordings'.",
+          "_synthColTooltip: added case entries for tagCount_Name_Date_Comment (Name, Tag count, Date, Comment) and tagCount_Name_Comment_Artists (Name, Tag count, Comment, Artists)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.435",
     "date": "2026-04-07",
     "sections": [
