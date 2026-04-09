@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.451",
+    "date": "2026-04-09",
+    "sections": [
+      {
+        "label": "🐛 Fix / ✨ Enhancement",
+        "items": [
+          "renderGroupedTable: fixed inline CAA/EAA thumbnails for tag-value/user-tag-value multi-table pages. Root cause: the single global addCAA value (e.g. 'Release group', the first found) was used by _artInitInlinePics for all tables; the Release table never matched because its column is named 'Release' not 'Release group'. Fix: after initCaaPics/initEaaPics, loop over dataArray groups that have addCAA/addEAA in their entityFeatures and call _artInitInlinePics once per group with the targetTable parameter and the per-group correct column name temporarily set in activeDefinition.features.",
+          "tag-value-entity pageType: Release groups/Releases/Recordings syntheticColumns 'Artists' → 'Artist' (singular). Added tooltipColumns for Events ['Name','---','Date','Tag count'], Release groups and Releases ['Name','Artist','---',['Tag count']]."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.450",
     "date": "2026-04-09",
     "sections": [

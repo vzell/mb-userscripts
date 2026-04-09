@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.450+2026-04-09
+// @version      9.99.451+2026-04-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4397,8 +4397,8 @@
             },
             tableMode: 'single'
         },
-        // Entity tags sub-pages (e.g. /artist/<mbid>/tags) — must come before
-        // the generic 'tags' entry because its match is narrower.
+        // Entity tags sub-pages (/<entity>/<mbid>/tags e.g. /artist/<mbid>/tags)
+        // must come before the generic 'tags' entry because its match is narrower.
         {
             type: 'artist-tags',
             match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/tags/),
@@ -4422,11 +4422,7 @@
             buttons: [ { label: 'Show all Tags for Releasegroup' } ],
             tableMode: 'multi',
             features: {
-                // Click \"Show all tags.\" before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the \"all-tags\" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Releasegroup tags',
@@ -4439,11 +4435,7 @@
             buttons: [ { label: 'Show all Tags for Release' } ],
             tableMode: 'multi',
             features: {
-                // Click \"Show all tags.\" before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the \"all-tags\" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Release tags',
@@ -4456,11 +4448,7 @@
             buttons: [ { label: 'Show all Tags for Recording' } ],
             tableMode: 'multi',
             features: {
-                // Click \"Show all tags.\" before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the \"all-tags\" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Recording tags',
@@ -4473,11 +4461,7 @@
             buttons: [ { label: 'Show all Tags for Work' } ],
             tableMode: 'multi',
             features: {
-                // Click \"Show all tags.\" before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the \"all-tags\" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Work tags',
@@ -4490,11 +4474,7 @@
             buttons: [ { label: 'Show all Tags for Label' } ],
             tableMode: 'multi',
             features: {
-                // Click \"Show all tags.\" before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the \"all-tags\" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Label tags',
@@ -4507,11 +4487,7 @@
             buttons: [ { label: 'Show all Tags for Series' } ],
             tableMode: 'multi',
             features: {
-                // Click \"Show all tags.\" before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the \"all-tags\" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Series tags',
@@ -4524,11 +4500,7 @@
             buttons: [ { label: 'Show all Tags for Place' } ],
             tableMode: 'multi',
             features: {
-                // Click \"Show all tags.\" before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the \"all-tags\" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Place tags',
@@ -4541,11 +4513,7 @@
             buttons: [ { label: 'Show all Tags for Area' } ],
             tableMode: 'multi',
             features: {
-                // Click "Show all tags." before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the "all-tags" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Area tags',
@@ -4558,18 +4526,14 @@
             buttons: [ { label: 'Show all Tags for Instrument' } ],
             tableMode: 'multi',
             features: {
-                // Click \"Show all tags.\" before processing so hidden zero-score
-                // and downvoted tags are exposed in the <ul> lists.
                 showAllTags: true,
-                // Remove the \"all-tags\" info/form container after rendering since
-                // the converted table replaces the ul and the form is no longer needed.
                 removeSelector: 'div.all-tags',
                 renameH2ToH3: true,
                 insertH2: 'Instrument tags',
                 listToTable: [ 'genres', 'tags' ]
             }
         },
-        // User tags pages (e.g. /user/vzell/tags, /user/vzell/tags?show_downvoted=1)
+        // User tags pages (/user/<username>/tags e.g. /user/vzell/tags, /user/vzell/tags?show_downvoted=1)
         {
             type: 'user-tags',
             match: (path, params) => path.match(/\/user\/[^/]+\/tags/),
@@ -4648,7 +4612,7 @@
             },
             tableMode: 'single'
         },
-        // User tag pages (e.g. /user/vzell/tag/handwritten)
+        // User tag pages (/user/<username>/tag/<tag-value> e.g. /user/vzell/tag/handwritten)
         // Must come before the generic tag-value entry (narrower match).
         {
             type: 'user-tag-value',
@@ -4706,9 +4670,8 @@
             },
             tableMode: 'multi'
         },
-        // Tag pages per entity (e.g. /tag/country/labels) — must come before
-        // the generic tag-value entry because its match is narrower (two path
-        // segments after /tag/ instead of one).
+        // Tag pages per entity (/tag/<tag-value>/<entity>s e.g. /tag/country/labels) — must come before
+        // the generic tag-value entry because its match is narrower (two path segments after /tag/ instead of one).
         {
             type: 'tag-value-entity',
             match: (path) => path.match(/\/tag\/[^/]+\/.+/),
@@ -4726,7 +4689,8 @@
                     columnExtractors: [ { sourceColumn: 'Event', extractor: 'tagCount_Name_Date_Comment', syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] } ],
                     syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
                     integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                    addEAA: 'Event'
+                    addEAA: 'Event',
+                    tooltipColumns: [ 'Name', '---', 'Date', 'Tag count' ]
                 },
                 'Instruments': {
                     columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
@@ -4741,17 +4705,19 @@
                     integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
                 },
                 'Release groups': {
-                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] } ],
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artist'] } ],
                     integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ],
-                    addCAA: 'Release group'
+                    addCAA: 'Release group',
+                    tooltipColumns: [ 'Name', 'Artist', '---', ['Tag count'] ]
                 },
                 'Releases': {
-                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] } ],
+                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artist'] } ],
                     integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ],
-                    addCAA: 'Release'
+                    addCAA: 'Release',
+                    tooltipColumns: [ 'Name', 'Artist', '---', ['Tag count'] ]
                 },
                 'Recordings': {
-                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] } ],
+                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artist'] } ],
                     integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
                 },
                 'Series': {
@@ -4772,7 +4738,7 @@
             },
             tableMode: 'single'
         },
-        // Tag pages (e.g. /tag/country)
+        // Tag pages (/tag/<tag-value> e.g. /tag/country)
         {
             type: 'tag-value',
             match: (path) => path.match(/\/tag\//),
@@ -4860,8 +4826,9 @@
             entityFeatures: {
                 'Releases': {
                     columnExtractors: [
-                        { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
-                        { sourceColumn: 'Tracks',       extractor: 'sumTracks',        syntheticColumns: ['Total Tracks'] },
+                        { sourceColumn: 'Release',      extractor: 'caa',                syntheticColumns: ['CAA'] },
+                        { sourceColumn: 'Country/Date', extractor: 'splitCountryDate',   syntheticColumns: ['Country', 'Date'] },
+                        { sourceColumn: 'Tracks',       extractor: 'sumTracks',          syntheticColumns: ['Total Tracks'] },
                         { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
                     ],
                     syntheticColumnExtractors: [
@@ -4872,20 +4839,22 @@
                     collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'CAA' ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
                     addCAA: 'Release',
-                    extractMainColumn: 'Release'
+                    extractMainColumn: 'Release',
+                    stickyColumn: 'Release'
                 },
                 'Events': {
                     columnExtractors: [
-                        { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
-                        { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
-                        { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] },
-                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                        { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
+                        { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                     ],
                     collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                     addEAA: 'Event',
-                    extractMainColumn: 'Event'
+                    extractMainColumn: 'Event',
+                    stickyColumn: 'Event'
                 },
                 'Release groups': {
                     columnExtractors: [
@@ -4896,17 +4865,20 @@
                     integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
                     collapsableColumns: [ 'CAA' ],
                     addCAA: 'Title',
-                    extractMainColumn: 'Title'
+                    extractMainColumn: 'Title',
+                    stickyColumn: 'Title'
                 },
                 'Recordings': {
                     columnExtractors: [
                         { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
                     ],
                     integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                    extractMainColumn: 'Name'
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
                 },
                 'Works': {
-                    extractMainColumn: 'Title'
+                    extractMainColumn: 'Work',
+                    stickyColumn: 'Work'
                 }
             },
             tableMode: 'single'
@@ -4920,7 +4892,7 @@
             features: {
                 renderMultiRowCell: [ 'Label', 'Catalog#' ],
                 collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
-                extractMainColumn: 'Name', // Specific header
+                extractMainColumn: 'Name',  // Specific header
                 stickyColumn: 'Name',
                 transformToH2: true,        // New flag to trigger <h2> transformation
                 // Inject a "Searchform" h2 before the existing (single) h2 on the page
@@ -4956,7 +4928,7 @@
                 ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
-                extractMainColumn: 'Release', // Specific header
+                extractMainColumn: 'Release',
                 stickyColumn: 'Release'
             },
             tableMode: 'single'
@@ -4966,7 +4938,7 @@
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
             buttons: [ { label: 'Show all Recordings for Instrument' } ],
             features: {
-                extractMainColumn: 'Name', // Specific header
+                extractMainColumn: 'Name',
                 stickyColumn: 'Name'
             },
             tableMode: 'single'
@@ -4994,7 +4966,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
                 ],
-                extractMainColumn: 'Artist', // Specific header
+                extractMainColumn: 'Artist',
                 stickyColumn: 'Artist'
             },
             tableMode: 'single'
@@ -5027,7 +4999,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
                 ],
-                extractMainColumn: 'Label', // Specific header
+                extractMainColumn: 'Label',
                 stickyColumn: 'Label'
             },
             tableMode: 'single'
@@ -5160,7 +5132,7 @@
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
-            tableMode: 'single' // Paginated single list
+            tableMode: 'single'
         },
         {
             type: 'area-works',
@@ -5214,7 +5186,7 @@
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
-            tableMode: 'single' // Paginated single list
+            tableMode: 'single'
         },
         {
             type: 'place-performances',
@@ -5341,7 +5313,7 @@
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title', // Specific header
+                extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
             tableMode: 'multi',
@@ -5358,7 +5330,7 @@
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
-                extractMainColumn: 'Title', // Specific header
+                extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
             tableMode: 'multi',
@@ -5418,7 +5390,7 @@
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
-            tableMode: 'single' // Paginated single list
+            tableMode: 'single'
         },
         {
             type: 'work-recordings',
@@ -5456,7 +5428,7 @@
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
-            tableMode: 'single' // Paginated single list
+            tableMode: 'single'
         },
         {
             type: 'artist-relationships',
@@ -25598,40 +25570,67 @@ a { color: #1565c0; }`;
         // For tag-value/user-tag-value, addCAA/addEAA live inside per-group
         // entityFeatures, not in the global activeDefinition.features.  _artInitPics
         // skips tables that have neither a CAA/EAA column nor features.addCAA/addEAA
-        // set on the global definition.  Temporarily expose ALL addCAA/addEAA values
-        // from any group so each table's entity links are eligible for art loading.
-        let _tagCaaRestoreNeeded = false;
+        // set on the global definition.
+        const _origFeaturesPreCaa = activeDefinition.features;
+        let _tagHasEntityFeatureCaa = false;
         if (activeDefinition.entityFeatures) {
             const _anyAddCAA = Object.values(activeDefinition.entityFeatures)
                 .map(f => f.addCAA).filter(Boolean)[0];
             const _anyAddEAA = Object.values(activeDefinition.entityFeatures)
                 .map(f => f.addEAA).filter(Boolean)[0];
             if (_anyAddCAA || _anyAddEAA) {
-                // Shallow-clone features so we can restore after the init calls.
-                const _origFeatures = activeDefinition.features;
+                // Temporarily expose any addCAA/addEAA so _artInitPics doesn't
+                // skip tables entirely. The exact column name doesn't matter here
+                // because initCaaPics/initEaaPics only use it for skipping — actual
+                // link scanning (_artCountLinks) works from entity URLs directly.
                 activeDefinition = {
                     ...activeDefinition,
                     features: {
-                        ..._origFeatures,
+                        ..._origFeaturesPreCaa,
                         ...(_anyAddCAA ? { addCAA: _anyAddCAA } : {}),
                         ...(_anyAddEAA ? { addEAA: _anyAddEAA } : {})
                     }
                 };
-                _tagCaaRestoreNeeded = true;
-                Lib.debug('render', `tag-entityFeatures CAA/EAA: temporarily set addCAA=${_anyAddCAA||'—'} addEAA=${_anyAddEAA||'—'}`);
+                _tagHasEntityFeatureCaa = true;
             }
         }
         initCaaPics();
         initEaaPics();
-        // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
-        // and after initCaaPics() (so _caaQueue is initialised).
-        initCaaInlinePics();
-        initEaaInlinePics();
-        // Restore activeDefinition.features after CAA/EAA init
-        if (_tagCaaRestoreNeeded) {
-            activeDefinition = { ...activeDefinition, features: { ...activeDefinition.features } };
-            delete activeDefinition.features.addCAA;
-            delete activeDefinition.features.addEAA;
+
+        if (_tagHasEntityFeatureCaa) {
+            // ── Per-group inline thumbnails ─────────────────────────────────────
+            // _artInitInlinePics reads activeDefinition.features.addCAA/addEAA to
+            // find the column name (e.g. 'Release', 'Release group', 'Event').
+            // With a single global value only the first matching entity type would
+            // get inline thumbnails; all others are skipped because the column name
+            // doesn't match.  Fix: call _artInitInlinePics once per group with
+            // the per-group column name, passing the specific table as targetTable.
+            const _domTables = Array.from(document.querySelectorAll('table.tbl'));
+            dataArray.forEach((group, idx) => {
+                const _gef = group.entityFeatures || {};
+                const _gAddCAA = _gef.addCAA;
+                const _gAddEAA = _gef.addEAA;
+                if (!_gAddCAA && !_gAddEAA) return;
+                const _tbl = _domTables[idx];
+                if (!_tbl) return;
+                // Temporarily set the exact per-group addCAA/addEAA.
+                activeDefinition = {
+                    ...activeDefinition,
+                    features: {
+                        ..._origFeaturesPreCaa,
+                        ...(_gAddCAA ? { addCAA: _gAddCAA } : {}),
+                        ...(_gAddEAA ? { addEAA: _gAddEAA } : {})
+                    }
+                };
+                if (_gAddCAA) _artInitInlinePics(CAA_CTX, false, _tbl);
+                if (_gAddEAA) _artInitInlinePics(EAA_CTX, false, _tbl);
+            });
+            // Restore features to original base (no addCAA/addEAA).
+            activeDefinition = { ...activeDefinition, features: _origFeaturesPreCaa };
+        } else {
+            // Standard single-feature pages.
+            initCaaInlinePics();
+            initEaaInlinePics();
         }
 
         // Register a one-shot toast for when the full queue drains (all artwork loaded).
