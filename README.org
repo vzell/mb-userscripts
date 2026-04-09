@@ -70120,6 +70120,227 @@ to
         },
 #+end_example
 
+* DONE singular first column name
+** DONE initial
+
+small glitches:
+
+1.)
+
+adjust the extraction algorithm for the first column in the sub-tables for the following pageTypes
+
+#+begin_example
+type: 'user-tag-value-entity'
+type: 'tag-value-entity'
+#+end_example
+
+to be singular instead of plural, except for "Series", where the singular form is
+still "Series".
+
+So e.g.
+
+#+begin_example
+<th class="mb-original-column mb-sticky-col" data-col-name="Artists" style="cursor: default; position: sticky; left: 0px; z-index: 101; background: rgb(232, 232, 232); min-width: 998px;">
+  <div class="mb-col-hdr-flex">Artists
+#+end_example
+
+should be
+
+#+begin_example
+<th class="mb-original-column mb-sticky-col" data-col-name="Artists" style="cursor: default; position: sticky; left: 0px; z-index: 101; background: rgb(232, 232, 232); min-width: 998px;">
+  <div class="mb-col-hdr-flex">Artist
+#+end_example
+
+2.)
+
+change the following two pageType definitions from 
+
+#+begin_example
+        {
+            type: 'user-tag-value-entity',
+            match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text up to "tagged" minus the trailing username as the
+                // column name, e.g. "Release groups vzell tagged as «gig»" → "Release groups".
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form[style*="margin-top"]',
+                columnExtractors: [
+                    { sourceColumn: 'Areas',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artists',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Events',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instruments',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Labels',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Places',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release groups', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Releases',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recordings',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Works',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+and
+
+#+begin_example
+        {
+            type: 'tag-value-entity',
+            match: (path) => path.match(/\/tag\/[^/]+\/.+/),
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text up to "tagged" as the column name
+                // (e.g. "Release groups tagged as «gig»" → "Release groups").
+                listToTable: [ '' ],
+                // Split the entity cell ("26 - Johnny Cash (comment)") into three
+                // synthetic columns. The sourceColumn matches the h2-derived table
+                // header (e.g. "Labels", "Release groups", …).
+                columnExtractors: [
+                    { sourceColumn: 'Areas',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Artists',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Events',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instruments',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Labels',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Places',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Release groups', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Releases',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recordings',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Works',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
+                ],
+                // Split the extracted Date column into DD/MM/YYYY/Day/Month sub-columns
+                // only when Events are shown (i.e. when the Date synthetic column exists).
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'user-tag-value-entity',
+            match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text up to "tagged" minus the trailing username as the
+                // column name, e.g. "Release groups vzell tagged as «gig»" → "Release groups".
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form[style*="margin-top"]',
+                columnExtractors: [
+                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+and
+
+#+begin_example
+        {
+            type: 'tag-value-entity',
+            match: (path) => path.match(/\/tag\/[^/]+\/.+/),
+            buttons: [ { label: 'Show all Entities tagged' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text up to "tagged" as the column name
+                // (e.g. "Release groups tagged as «gig»" → "Release groups").
+                listToTable: [ '' ],
+                // Split the entity cell ("26 - Johnny Cash (comment)") into three
+                // synthetic columns. The sourceColumn matches the h2-derived table
+                // header (e.g. "Labels", "Release groups", …).
+                columnExtractors: [
+                    { sourceColumn: 'Area',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Artist',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Event',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instrument',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Label',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Place',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Release group', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Release',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recording',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Work',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
+                ],
+                // Split the extracted Date column into DD/MM/YYYY/Day/Month sub-columns
+                // only when Events are shown (i.e. when the Date synthetic column exists).
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+to use singular first column names in the "sourceColumn" parameters, except for "Series", where the singular form is
+still "Series".
+
+** DONE bugs
+
+small glitches:
+
+1.)
+
+adjust the extraction algorithm for the first column in the sub-tables for the following pageTypes "type: '<entity>-tags'" where "entity" is
+
+#+begin_example
+artist
+release-group
+area
+instrument
+etc...
+#+end_example
+
+and "type: 'user-tags'" to be singular instead of plural so e.g.
+
+#+begin_example
+Genres => Genre
+Other tags => Other tag
+#+end_example
+
 
 * TODO fix Artist-Releasegroup pages
 ** DONE changes to do
@@ -71379,202 +71600,13 @@ https://musicbrainz.org/tags?show_list=1
 https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/vzell/tag/gig/event
 #+end_example
 
-* singular first column name
 
-small glitches:
-
-1.)
-
-adjust the extraction algorithm for the first column in the sub-tables for the following pageTypes
+* TODO in "tag" pageTypes switch to "entityFeatures" syntax like for "type: 'series-releases'" and "type: 'collections-releases'"
 
 #+begin_example
-type: 'user-tag-value-entity'
-type: 'tag-value-entity'
+            entityFeatures: {
+                'Releases': {
+                    columnExtractors: [
+                        { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    ],
 #+end_example
-
-to be singular instead of plural, except for "Series", where the singular form is
-still "Series".
-
-So e.g.
-
-#+begin_example
-<th class="mb-original-column mb-sticky-col" data-col-name="Artists" style="cursor: default; position: sticky; left: 0px; z-index: 101; background: rgb(232, 232, 232); min-width: 998px;">
-  <div class="mb-col-hdr-flex">Artists
-#+end_example
-
-should be
-
-#+begin_example
-<th class="mb-original-column mb-sticky-col" data-col-name="Artists" style="cursor: default; position: sticky; left: 0px; z-index: 101; background: rgb(232, 232, 232); min-width: 998px;">
-  <div class="mb-col-hdr-flex">Artist
-#+end_example
-
-2.)
-
-change the following two pageType definitions from 
-
-#+begin_example
-        {
-            type: 'user-tag-value-entity',
-            match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
-            buttons: [
-                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
-                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
-            ],
-            features: {
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text up to "tagged" minus the trailing username as the
-                // column name, e.g. "Release groups vzell tagged as «gig»" → "Release groups".
-                listToTable: [ '' ],
-                // Remove the vote/sort form after rendering since the two buttons
-                // above replace its function and the form is no longer needed.
-                removeSelector: 'form[style*="margin-top"]',
-                columnExtractors: [
-                    { sourceColumn: 'Areas',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Artists',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Events',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instruments',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Labels',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Places',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Release groups', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Releases',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recordings',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Works',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
-                ],
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-and
-
-#+begin_example
-        {
-            type: 'tag-value-entity',
-            match: (path) => path.match(/\/tag\/[^/]+\/.+/),
-            buttons: [ { label: 'Show all Entities tagged' } ],
-            features: {
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text up to "tagged" as the column name
-                // (e.g. "Release groups tagged as «gig»" → "Release groups").
-                listToTable: [ '' ],
-                // Split the entity cell ("26 - Johnny Cash (comment)") into three
-                // synthetic columns. The sourceColumn matches the h2-derived table
-                // header (e.g. "Labels", "Release groups", …).
-                columnExtractors: [
-                    { sourceColumn: 'Areas',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Artists',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Events',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instruments',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Labels',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Places',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Release groups', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Releases',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recordings',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Works',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
-                ],
-                // Split the extracted Date column into DD/MM/YYYY/Day/Month sub-columns
-                // only when Events are shown (i.e. when the Date synthetic column exists).
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-to
-
-#+begin_example
-        {
-            type: 'user-tag-value-entity',
-            match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
-            buttons: [
-                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
-                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
-            ],
-            features: {
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text up to "tagged" minus the trailing username as the
-                // column name, e.g. "Release groups vzell tagged as «gig»" → "Release groups".
-                listToTable: [ '' ],
-                // Remove the vote/sort form after rendering since the two buttons
-                // above replace its function and the form is no longer needed.
-                removeSelector: 'form[style*="margin-top"]',
-                columnExtractors: [
-                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
-                ],
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-and
-
-#+begin_example
-        {
-            type: 'tag-value-entity',
-            match: (path) => path.match(/\/tag\/[^/]+\/.+/),
-            buttons: [ { label: 'Show all Entities tagged' } ],
-            features: {
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text up to "tagged" as the column name
-                // (e.g. "Release groups tagged as «gig»" → "Release groups").
-                listToTable: [ '' ],
-                // Split the entity cell ("26 - Johnny Cash (comment)") into three
-                // synthetic columns. The sourceColumn matches the h2-derived table
-                // header (e.g. "Labels", "Release groups", …).
-                columnExtractors: [
-                    { sourceColumn: 'Area',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Artist',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Event',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instrument',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Label',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Place',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Release group', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Release',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recording',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Work',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
-                ],
-                // Split the extracted Date column into DD/MM/YYYY/Day/Month sub-columns
-                // only when Events are shown (i.e. when the Date synthetic column exists).
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-to use singular first column names in the "sourceColumn" parameters, except for "Series", where the singular form is
-still "Series".
-
-
-

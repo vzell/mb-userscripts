@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.448",
+    "date": "2026-04-09",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "entity-tags and user-tags pageTypes: first-column header in each sub-table is now singular. Extended the _toSingular(category) colName derivation to include all entity-tags pageTypes (artist-tags, releasegroup-tags, release-tags, recording-tags, work-tags, label-tags, series-tags, place-tags, area-tags, instrument-tags) and user-tags. The category text from the h3 backward-walk (e.g. 'Genres', 'Other tags') is now passed through _toSingular before being stored as group.colName, which renderGroupedTable uses to patch each group's first <th>. Result: 'Genres' → 'Genre', 'Other tags' → 'Other tag'."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.447",
     "date": "2026-04-09",
     "sections": [

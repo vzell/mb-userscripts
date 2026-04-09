@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.447+2026-04-09
+// @version      9.99.448+2026-04-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22652,8 +22652,17 @@ a { color: #1565c0; }`;
                             Lib.debug('fetch', `listToTable category: "${category}". Rows so far: ${totalRowsAccumulated}`);
                             // colName: singular form of the category label, used by
                             // renderGroupedTable to patch the first-column header of
-                            // each group's cloned templateHead (e.g. "Artists" → "Artist").
-                            const _colName = (pageType === 'tag-value' || pageType === 'user-tag-value')
+                            // each group's cloned templateHead.
+                            // Apply to tag-value pages (entity-type columns) and to
+                            // entity/user-tags pages ("Genres" → "Genre", "Other tags" → "Other tag").
+                            const _singularPageTypes = new Set([
+                                'tag-value', 'user-tag-value',
+                                'user-tags',
+                                'artist-tags', 'releasegroup-tags', 'release-tags',
+                                'recording-tags', 'work-tags', 'label-tags',
+                                'series-tags', 'place-tags', 'area-tags', 'instrument-tags'
+                            ]);
+                            const _colName = _singularPageTypes.has(pageType)
                                 ? _toSingular(category)
                                 : category;
                             groupedRows.push({ category: category, colName: _colName, rows: [] });
