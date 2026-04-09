@@ -1,5 +1,32 @@
 [
   {
+    "version": "9.99.450",
+    "date": "2026-04-09",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "resolveEntityFeaturesFromH2: for tag-value-entity and user-tag-value-entity page types, the H2 text contains the full heading ('Artists tagged as «country»', 'Release groups vzell tagged as «gig»') which doesn't match the entityFeatures plural keys. Fixed by extracting the entity-type prefix using the same 'split on tagged' + 'strip username' logic as Structure C column-name derivation, giving 'Artists' and 'Release groups' respectively.",
+          "renderGroupedTable CAA/EAA for tag-value/user-tag-value: _artInitPics skips tables that have neither a dedicated CAA/EAA column nor features.addCAA/addEAA set globally. For multi-table tag pages, addCAA/addEAA live in per-group entityFeatures, not in the global features. Fixed by scanning all groupedRows entityFeatures before calling initCaaPics/initEaaPics, collecting any addCAA/addEAA values, temporarily merging them into activeDefinition.features, calling the CAA/EAA init functions, then deleting the temporary keys."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.449",
+    "date": "2026-04-09",
+    "sections": [
+      {
+        "label": "✨ Refactor",
+        "items": [
+          "New resolveEntityFeaturesFromH3(category, def): resolves per-entity features for multi-table tag pages by matching the group's h3 category text (e.g. 'Events', 'Release groups') against def.entityFeatures keys. Stored on each groupedRows entry as group.entityFeatures at fetch time.",
+          "Four tag pageTypes refactored to entityFeatures syntax: user-tag-value-entity, user-tag-value, tag-value-entity, tag-value. Each now has an entityFeatures map keyed by plural entity-type name (matching h3/h2 DOM text) with per-entity columnExtractors, syntheticColumnExtractors, integerColumns, addCAA/addEAA. Common features (listToTable, removeSelector) remain in the base features object.",
+          "Per-group feature resolution: in the fetch loop's per-table reset block and in renderGroupedTable's per-group cleanupHeaders block, when group.entityFeatures is populated the active extractor/integerColumns lists are rebuilt from the merged (base + entity-specific) features. This enables per-entity CAA/EAA columns, correct column headers, and correct integerColumns alignment per entity type."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.448",
     "date": "2026-04-09",
     "sections": [

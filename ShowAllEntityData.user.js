@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.448+2026-04-09
+// @version      9.99.450+2026-04-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4595,6 +4595,46 @@
                 { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
                 { label: 'Entities downvoted', params: { show_downvoted: '1' } }
             ],
+            entityFeatures: {
+                'Areas': {
+                    columnExtractors: [ { sourceColumn: 'Area', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Artists': {
+                    columnExtractors: [ { sourceColumn: 'Artist', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Events': {
+                    columnExtractors: [ { sourceColumn: 'Event', extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] } ],
+                    syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                    addEAA: 'Event'
+                },
+                'Instruments': {
+                    columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Labels': {
+                    columnExtractors: [ { sourceColumn: 'Label', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Places': {
+                    columnExtractors: [ { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Release groups': {
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
+                    addCAA: 'Release group'
+                },
+                'Releases': {
+                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
+                    addCAA: 'Release'
+                },
+                'Recordings': {
+                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ]
+                },
+                'Series': {
+                    columnExtractors: [ { sourceColumn: 'Series', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Works': {
+                    columnExtractors: [ { sourceColumn: 'Work', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                }
+            },
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
@@ -4604,24 +4644,7 @@
                 listToTable: [ '' ],
                 // Remove the vote/sort form after rendering since the two buttons
                 // above replace its function and the form is no longer needed.
-                removeSelector: 'form[style*="margin-top"]',
-                columnExtractors: [
-                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
-                ],
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+                removeSelector: 'form[style*="margin-top"]'
             },
             tableMode: 'single'
         },
@@ -4634,31 +4657,52 @@
                 { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
                 { label: 'Entities downvoted', params: { show_downvoted: '1' } }
             ],
+            entityFeatures: {
+                'Areas': {
+                    columnExtractors: [ { sourceColumn: 'Area', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Artists': {
+                    columnExtractors: [ { sourceColumn: 'Artist', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Events': {
+                    columnExtractors: [ { sourceColumn: 'Event', extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] } ],
+                    syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                    addEAA: 'Event'
+                },
+                'Instruments': {
+                    columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Labels': {
+                    columnExtractors: [ { sourceColumn: 'Label', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Places': {
+                    columnExtractors: [ { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Release groups': {
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
+                    addCAA: 'Release group'
+                },
+                'Releases': {
+                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
+                    addCAA: 'Release'
+                },
+                'Recordings': {
+                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ]
+                },
+                'Series': {
+                    columnExtractors: [ { sourceColumn: 'Series', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Works': {
+                    columnExtractors: [ { sourceColumn: 'Work', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                }
+            },
             features: {
-                // Empty sectionId triggers Structure D in applyListToTable:
-                // the function scans for <h3>+<ul> pairs (each entity type
-                // section) and converts them to tables labelled with the h3 text.
+                // Empty sectionId triggers Structure D in applyListToTable.
                 listToTable: [ '' ],
                 // Remove the vote/sort form after rendering since the two buttons
                 // above replace its function and the form is no longer needed.
-                removeSelector: 'form:has(select[name="show_downvoted"])',
-                columnExtractors: [
-                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
-                ],
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+                removeSelector: 'form:has(select[name="show_downvoted"])'
             },
             tableMode: 'multi'
         },
@@ -4669,34 +4713,62 @@
             type: 'tag-value-entity',
             match: (path) => path.match(/\/tag\/[^/]+\/.+/),
             buttons: [ { label: 'Show all Entities tagged' } ],
+            entityFeatures: {
+                'Areas': {
+                    columnExtractors: [ { sourceColumn: 'Area', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+                },
+                'Artists': {
+                    columnExtractors: [ { sourceColumn: 'Artist', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+                },
+                'Events': {
+                    columnExtractors: [ { sourceColumn: 'Event', extractor: 'tagCount_Name_Date_Comment', syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] } ],
+                    syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                    addEAA: 'Event'
+                },
+                'Instruments': {
+                    columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+                },
+                'Labels': {
+                    columnExtractors: [ { sourceColumn: 'Label', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+                },
+                'Places': {
+                    columnExtractors: [ { sourceColumn: 'Place', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+                },
+                'Release groups': {
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ],
+                    addCAA: 'Release group'
+                },
+                'Releases': {
+                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ],
+                    addCAA: 'Release'
+                },
+                'Recordings': {
+                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+                },
+                'Series': {
+                    columnExtractors: [ { sourceColumn: 'Series', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+                },
+                'Works': {
+                    columnExtractors: [ { sourceColumn: 'Work', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
+                    integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ]
+                }
+            },
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area, uses
-                // the h2 text up to "tagged" and singularises it as the column name
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text up to "tagged", then singularises it as the column name
                 // (e.g. "Release groups tagged as «gig»" → "Release group").
-                listToTable: [ '' ],
-                // Split the entity cell ("26 - Johnny Cash (comment)") into three
-                // synthetic columns. The sourceColumn matches the h2-derived table
-                // header (e.g. "Labels", "Release groups", …).
-                columnExtractors: [
-                    { sourceColumn: 'Area',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Artist',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Event',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instrument',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Label',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Place',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Release group', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Release',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recording',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Work',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
-                ],
-                // Split the extracted Date column into DD/MM/YYYY/Day/Month sub-columns
-                // only when Events are shown (i.e. when the Date synthetic column exists).
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+                listToTable: [ '' ]
             },
             tableMode: 'single'
         },
@@ -4705,30 +4777,49 @@
             type: 'tag-value',
             match: (path) => path.match(/\/tag\//),
             buttons: [ { label: 'Show all Entities tagged' } ],
+            entityFeatures: {
+                'Areas': {
+                    columnExtractors: [ { sourceColumn: 'Area', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Artists': {
+                    columnExtractors: [ { sourceColumn: 'Artist', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Events': {
+                    columnExtractors: [ { sourceColumn: 'Event', extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] } ],
+                    syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                    addEAA: 'Event'
+                },
+                'Instruments': {
+                    columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Labels': {
+                    columnExtractors: [ { sourceColumn: 'Label', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Places': {
+                    columnExtractors: [ { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Release groups': {
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
+                    addCAA: 'Release group'
+                },
+                'Releases': {
+                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
+                    addCAA: 'Release'
+                },
+                'Recordings': {
+                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ]
+                },
+                'Series': {
+                    columnExtractors: [ { sourceColumn: 'Series', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Works': {
+                    columnExtractors: [ { sourceColumn: 'Work', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                }
+            },
             features: {
                 // Empty sectionId triggers Structure D in applyListToTable.
-                listToTable: [ '' ],
-                // Split each entity cell into Name/Comment (and Date for Events,
-                // Artists for Releases/Recordings/Release groups).
-                // Each sourceColumn matches the singular h3-derived column header
-                // produced by Structure D (e.g. "Areas" h3 → "Area" column).
-                columnExtractors: [
-                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
-                ],
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+                listToTable: [ '' ]
             },
             tableMode: 'multi'
         },
@@ -21625,7 +21716,27 @@ a { color: #1565c0; }`;
      */
     function resolveEntityFeaturesFromH2(def) {
         if (!def.entityFeatures) return {};
-        const h2Type = _getH2EntityType();
+        let h2Type = _getH2EntityType();
+
+        // ── Tag page H2 text normalisation ───────────────────────────────────
+        // For tag-value-entity and user-tag-value-entity the H2 text is not
+        // just the entity type but the full heading, e.g.:
+        //   "Artists tagged as «country»"         → "Artists"
+        //   "Release groups vzell tagged as «gig»" → "Release groups"
+        // Extract the entity-type prefix (everything before "tagged") and strip
+        // the trailing username for user-tag-value-entity pages.
+        const _tagEntityType = def.type === 'tag-value-entity' || def.type === 'user-tag-value-entity';
+        if (_tagEntityType && h2Type.toLowerCase().includes('tagged')) {
+            const _beforeTagged = h2Type.split(/\s+tagged\b/i)[0].trim();
+            if (def.type === 'user-tag-value-entity') {
+                // Strip trailing username word (last word before "tagged").
+                const _words = _beforeTagged.split(/\s+/);
+                h2Type = (_words.length > 1 ? _words.slice(0, -1) : _words).join(' ');
+            } else {
+                h2Type = _beforeTagged;
+            }
+        }
+
         Lib.debug('init', `resolveEntityFeaturesFromH2: H2 entity type = "${h2Type}"`);
         if (h2Type && def.entityFeatures[h2Type]) {
             Lib.debug('init', `resolveEntityFeaturesFromH2: matched key "${h2Type}"`);
@@ -21642,6 +21753,29 @@ a { color: #1565c0; }`;
 
     // Backward-compatibility alias for code that still calls the old series-specific name.
     const resolveSeriesEntityFeatures = resolveEntityFeaturesFromH2;
+
+    /**
+     * Resolves the per-entity feature set for a multi-table tag page group by
+     * matching the group's h3 category text against the `entityFeatures` map.
+     *
+     * Used by tag-value and user-tag-value (multi-table) pageTypes where each
+     * group table represents a different entity type.  The h3 text (e.g. "Events",
+     * "Release groups") is matched as a key in the map; the plural h3 text is used
+     * as-is because entityFeatures keys use plural labels.
+     *
+     * @param {string} category  The h3 category text (e.g. "Events", "Release groups").
+     * @param {object} def       The page definition (may carry `entityFeatures`).
+     * @returns {object}         Resolved feature set (empty object if no match).
+     */
+    function resolveEntityFeaturesFromH3(category, def) {
+        if (!def.entityFeatures || !category) return {};
+        if (def.entityFeatures[category]) {
+            Lib.debug('init', `resolveEntityFeaturesFromH3: matched key "${category}"`);
+            return def.entityFeatures[category];
+        }
+        Lib.debug('init', `resolveEntityFeaturesFromH3: no match for "${category}"`);
+        return {};
+    }
 
     async function startFetchingProcess(e, buttonConfig, baseDef) {
         // MERGE LOGIC: Combine base definition with button-specific overrides.
@@ -22667,6 +22801,12 @@ a { color: #1565c0; }`;
                                 : category;
                             groupedRows.push({ category: category, colName: _colName, rows: [] });
                             lastCategorySeenAcrossPages = category;
+                            // Store the per-entity feature set (resolved from entityFeatures map)
+                            // so renderGroupedTable can drive per-group cleanupHeaders correctly.
+                            const _lastGroup = groupedRows[groupedRows.length - 1];
+                            if (activeDefinition.entityFeatures) {
+                                _lastGroup.entityFeatures = resolveEntityFeaturesFromH3(category, activeDefinition);
+                            }
                         }
                         const currentGroup = groupedRows[groupedRows.length - 1];
 
@@ -22677,6 +22817,21 @@ a { color: #1565c0; }`;
                         // table's headers — otherwise previous tables' resolved colIdx
                         // values linger and cause multiple extractors to fire on every row.
                         if (pageType === 'tag-value' || pageType === 'user-tag-value') {
+                            // If this group has entity-specific features (from entityFeatures map),
+                            // rebuild the active extractors and integer columns from that feature set,
+                            // merged with the base features (listToTable, removeSelector, etc.).
+                            const _groupFeatures = currentGroup.entityFeatures || {};
+                            if (Object.keys(_groupFeatures).length > 0) {
+                                const _mergedForGroup = {
+                                    ...(activeDefinition.features || {}),
+                                    ..._groupFeatures
+                                };
+                                const _tmpDef = { ...activeDefinition, features: _mergedForGroup };
+                                activeColumnExtractors = buildActiveColumnExtractors(_tmpDef);
+                                activeSyntheticColumnExtractors = buildActiveSyntheticColumnExtractors(_tmpDef);
+                                activeIntegerColumns = buildActiveIntegerColumns(_tmpDef);
+                            }
+
                             // Reset all extractors for this table.
                             activeColumnExtractors.forEach(e => { e.colIdx = -1; });
                             // Re-resolve against this specific table's header cells.
@@ -22691,34 +22846,23 @@ a { color: #1565c0; }`;
                             });
 
                             // ── Per-table integerColumns colIdx re-resolution ──────────
-                            // The global _finalColNames resolution runs once against
-                            // referenceTable[0] (usually the Areas/first table), so DD/MM/YYYY
-                            // are never found when only Name_Comment is resolved there.
-                            // Re-resolve here using the current table's resolved extractor set.
                             if (activeIntegerColumns.length) {
-                                // Reset all integerColumns colIdx first.
                                 activeIntegerColumns.forEach(e => { e.colIdx = -1; });
-                                // Build _finalColNames for this specific table.
                                 const _perTableColNames = [];
-                                // 1. Original headers (always index 0 for single-column tables).
-                                _ths.forEach((th, idx) => {
+                                _ths.forEach((th) => {
                                     const _n = (th.dataset.colName || th.textContent)
                                         .replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim()
                                         .replace(/\s+/g, ' ');
                                     _perTableColNames.push(_n);
                                 });
-                                // 2. Synthetic columns from resolved primary extractors only.
                                 activeColumnExtractors.forEach(entry => {
                                     if (entry.colIdx === -1) return;
                                     entry.syntheticColumns.forEach(cn => _perTableColNames.push(cn));
                                 });
-                                // 3. Synthetic columns from synthetic-column extractors,
-                                //    only when their sourceColumn is present.
                                 activeSyntheticColumnExtractors.forEach(entry => {
                                     if (!_perTableColNames.includes(entry.sourceColumn)) return;
                                     entry.syntheticColumns.forEach(cn => _perTableColNames.push(cn));
                                 });
-                                // Resolve colIdx for each integerColumns descriptor.
                                 activeIntegerColumns.forEach(entry => {
                                     const idx = _perTableColNames.indexOf(entry.sourceColumn);
                                     if (idx !== -1) entry.colIdx = idx;
@@ -24983,10 +25127,17 @@ a { color: #1565c0; }`;
                     if ((pageType === 'tag-value' || pageType === 'user-tag-value') && rawTemplateHead) {
                         // ── Per-group thead for tag-value multi-table mode ────────────
                         // Each group has a different entity-type column and therefore
-                        // different synthetic columns (e.g. Events has Name/Date/Comment
-                        // while Artists only has Name/Comment).  We must resolve
-                        // activeColumnExtractors colIdx for THIS group's column before
-                        // calling cleanupHeaders so it injects the correct headers.
+                        // different synthetic columns.  Resolve extractors from the group's
+                        // entity-specific features (entityFeatures map), rebuild active lists,
+                        // then call cleanupHeaders so it injects the correct headers.
+                        const _groupEntityFeatures = group.entityFeatures || {};
+                        if (Object.keys(_groupEntityFeatures).length > 0) {
+                            const _mf = { ...(activeDefinition.features || {}), ..._groupEntityFeatures };
+                            const _td = { ...activeDefinition, features: _mf };
+                            activeColumnExtractors          = buildActiveColumnExtractors(_td);
+                            activeSyntheticColumnExtractors = buildActiveSyntheticColumnExtractors(_td);
+                            activeIntegerColumns            = buildActiveIntegerColumns(_td);
+                        }
                         // 1. Reset all extractors.
                         activeColumnExtractors.forEach(e => { e.colIdx = -1; });
                         // 2. Resolve: the group's source column is group.colName (singular),
@@ -25442,12 +25593,46 @@ a { color: #1565c0; }`;
         // Re-apply CAA/EAA illustrated discography across all freshly rendered sub-table rows.
         // initCaaPics() MUST run before initEaaPics() and the inline variants —
         // it creates _caaQueue used by all three.
+        //
+        // ── Multi-table tag pages: per-group addCAA/addEAA exposure ─────────────
+        // For tag-value/user-tag-value, addCAA/addEAA live inside per-group
+        // entityFeatures, not in the global activeDefinition.features.  _artInitPics
+        // skips tables that have neither a CAA/EAA column nor features.addCAA/addEAA
+        // set on the global definition.  Temporarily expose ALL addCAA/addEAA values
+        // from any group so each table's entity links are eligible for art loading.
+        let _tagCaaRestoreNeeded = false;
+        if (activeDefinition.entityFeatures) {
+            const _anyAddCAA = Object.values(activeDefinition.entityFeatures)
+                .map(f => f.addCAA).filter(Boolean)[0];
+            const _anyAddEAA = Object.values(activeDefinition.entityFeatures)
+                .map(f => f.addEAA).filter(Boolean)[0];
+            if (_anyAddCAA || _anyAddEAA) {
+                // Shallow-clone features so we can restore after the init calls.
+                const _origFeatures = activeDefinition.features;
+                activeDefinition = {
+                    ...activeDefinition,
+                    features: {
+                        ..._origFeatures,
+                        ...(_anyAddCAA ? { addCAA: _anyAddCAA } : {}),
+                        ...(_anyAddEAA ? { addEAA: _anyAddEAA } : {})
+                    }
+                };
+                _tagCaaRestoreNeeded = true;
+                Lib.debug('render', `tag-entityFeatures CAA/EAA: temporarily set addCAA=${_anyAddCAA||'—'} addEAA=${_anyAddEAA||'—'}`);
+            }
+        }
         initCaaPics();
         initEaaPics();
         // Inline CAA/EAA thumbnails must run after ERG (▶ button already present)
         // and after initCaaPics() (so _caaQueue is initialised).
         initCaaInlinePics();
         initEaaInlinePics();
+        // Restore activeDefinition.features after CAA/EAA init
+        if (_tagCaaRestoreNeeded) {
+            activeDefinition = { ...activeDefinition, features: { ...activeDefinition.features } };
+            delete activeDefinition.features.addCAA;
+            delete activeDefinition.features.addEAA;
+        }
 
         // Register a one-shot toast for when the full queue drains (all artwork loaded).
         // Only fires on the final render pass — runFilter re-runs are excluded because

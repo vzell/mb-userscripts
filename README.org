@@ -71602,11 +71602,190 @@ https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/
 
 
 * TODO in "tag" pageTypes switch to "entityFeatures" syntax like for "type: 'series-releases'" and "type: 'collections-releases'"
+** initial
+
+Rewrite the current "features" parameter in the "tag" related pageType definitions
 
 #+begin_example
+            type: 'user-tag-value-entity',
+            type: 'user-tag-value',
+            type: 'tag-value-entity',
+            type: 'tag-value',
+#+end_example
+
+to use the "entityFeatures" syntax like for pageTypes "type: 'series-releases'" and "type: 'collections-releases'" so
+that "columnExtractors", "syntheticColumnExtractors", "integerColumns", "addCAA", "addEAA", etc. can be set separately.
+
+So e.g. the current pageType "type: 'user-tag-value-entity'"
+
+#+begin_example
+        {
+            type: 'user-tag-value-entity',
+            match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text up to "tagged" minus the trailing username, then
+                // singularises it as the column name,
+                // e.g. "Release groups vzell tagged as «gig»" → "Release group".
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form[style*="margin-top"]',
+                columnExtractors: [
+                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+should look like
+
+#+begin_example
+        {
+            type: 'user-tag-value-entity',
+            match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
+            buttons: [
+                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+            ],
             entityFeatures: {
+                'Areas': {
+                    columnExtractors: [
+		        { sourceColumn: 'Area', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] }
+                    ]
+                },
+                'Artists': {
+                    columnExtractors: [
+		        { sourceColumn: 'Artist', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] }
+                    ]
+                },
+                'Events': {
+                    columnExtractors: [
+		        { sourceColumn: 'Event', extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                    addEAA: 'Event',
+                },
+                'Labels': {
+                    columnExtractors: [
+		        { sourceColumn: 'Label', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] }
+                    ]
+                },
+                'Places': {
+                    columnExtractors: [
+		        { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] }
+                    ]
+                },
+                'Release groups': {
+                    columnExtractors: [
+		        { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] }
+                    ],
+                    addCAA: 'Release group',
+                },
                 'Releases': {
                     columnExtractors: [
-                        { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+		        { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] }
                     ],
+                    addCAA: 'Release',
+                },
+                'Recordings': {
+                    columnExtractors: [
+		        { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] }
+                    ]
+                },
+                'Series': {
+                    columnExtractors: [
+		        { sourceColumn: 'Series', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] }
+                    ]
+                },
+                'Works': {
+                    columnExtractors: [
+		        { sourceColumn: 'Work', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] }
+                    ]
+                },
+            },
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text up to "tagged" minus the trailing username, then
+                // singularises it as the column name,
+                // e.g. "Release groups vzell tagged as «gig»" → "Release group".
+                listToTable: [ '' ],
+                // Remove the vote/sort form after rendering since the two buttons
+                // above replace its function and the form is no longer needed.
+                removeSelector: 'form[style*="margin-top"]',
+            },
+            tableMode: 'single'
+        },
 #+end_example
+
+The "features" parameter which is valid for all "entities" should still be there and honored.
+
+The same for the other 3 pageType definitions.
+
+** bugs
+
+some bugs
+
+1.)
+
+the following pageType definitions
+
+#+begin_example
+            type: 'user-tag-value',
+            type: 'tag-value',
+#+end_example
+
+do not honour the
+ 
+#+begin_example
+addEAA: 'Event'  for "Events"
+addCAA: 'Release'  for "Releases"
+addCAA: 'Release group'  for "Release groups"
+#+end_example
+
+2.)
+
+the following pageType definitions
+
+#+begin_example
+            type: 'user-tag-value-entity',
+            type: 'tag-value-entity',
+#+end_example
+
+do not honour any "entityFeatures" at all, just the first column in each sub-table is rendered.
+
+** bugs
+
+the following pageType definitions
+
+#+begin_example
+type: 'user-tag-value'
+type: 'tag-value'
+#+end_example
+
+specifically for the "Releases" entityFeatures the "addCAA" is honoured in such a way that the big image CAA stripe is
+rendered but not the "CAA" thumbnail in the column flagged with "addCAA"
