@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.446+2026-04-08
+// @version      9.99.447+2026-04-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3635,17 +3635,17 @@
                         let _colName;
                         if (_isUserTagValueEntity) {
                             // e.g. "Release groups vzell tagged as «gig»"
-                            // → take everything before "tagged", then strip the trailing
-                            //   username (last whitespace-separated word) to get "Release groups".
+                            // → take everything before "tagged", strip the trailing
+                            //   username, then singularise: "Release groups" → "Release group".
                             const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
                             const _words        = _beforeTagged.split(/\s+/);
-                            // Remove last word (the username) if more than one word remains.
-                            _colName = (_words.length > 1 ? _words.slice(0, -1) : _words).join(' ') || _h2Text;
+                            const _plural = (_words.length > 1 ? _words.slice(0, -1) : _words).join(' ') || _h2Text;
+                            _colName = _toSingular(_plural);
                         } else if (_isTagValueEntity) {
                             // e.g. "Release groups tagged as «gig»"
-                            // → everything before "tagged".
+                            // → everything before "tagged", then singularise: "Release groups" → "Release group".
                             const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
-                            _colName = _beforeTagged || _h2Text;
+                            _colName = _toSingular(_beforeTagged || _h2Text);
                         } else {
                             _colName = _h2Text;
                         }
@@ -4598,24 +4598,25 @@
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text up to "tagged" minus the trailing username as the
-                // column name, e.g. "Release groups vzell tagged as «gig»" → "Release groups".
+                // the h2 text up to "tagged" minus the trailing username, then
+                // singularises it as the column name,
+                // e.g. "Release groups vzell tagged as «gig»" → "Release group".
                 listToTable: [ '' ],
                 // Remove the vote/sort form after rendering since the two buttons
                 // above replace its function and the form is no longer needed.
                 removeSelector: 'form[style*="margin-top"]',
                 columnExtractors: [
-                    { sourceColumn: 'Areas',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Artists',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Events',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instruments',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Labels',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Places',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Release groups', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Releases',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recordings',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
-                    { sourceColumn: 'Works',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
+                    { sourceColumn: 'Area',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Artist',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Event',         extractor: 'Name_Date_Comment',    syntheticColumns: ['Name', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instrument',    extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Label',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Place',         extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Release',       extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recording',     extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',        extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] },
+                    { sourceColumn: 'Work',          extractor: 'Name_Comment',         syntheticColumns: ['Name', 'Comment'] }
                 ],
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
@@ -4670,25 +4671,25 @@
             buttons: [ { label: 'Show all Entities tagged' } ],
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text up to "tagged" as the column name
-                // (e.g. "Release groups tagged as «gig»" → "Release groups").
+                // function scans for <h2>…<ul> pairs in the content area, uses
+                // the h2 text up to "tagged" and singularises it as the column name
+                // (e.g. "Release groups tagged as «gig»" → "Release group").
                 listToTable: [ '' ],
                 // Split the entity cell ("26 - Johnny Cash (comment)") into three
                 // synthetic columns. The sourceColumn matches the h2-derived table
                 // header (e.g. "Labels", "Release groups", …).
                 columnExtractors: [
-                    { sourceColumn: 'Areas',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Artists',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Events',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
-                    { sourceColumn: 'Instruments',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Labels',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Places',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Release groups', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Releases',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Recordings',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
-                    { sourceColumn: 'Series',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
-                    { sourceColumn: 'Works',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
+                    { sourceColumn: 'Area',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Artist',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Event',         extractor: 'tagCount_Name_Date_Comment',    syntheticColumns: ['Name', 'Tag count', 'Date', 'Comment'] },
+                    { sourceColumn: 'Instrument',    extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Label',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Place',         extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Release group', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Release',       extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Recording',     extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artists'] },
+                    { sourceColumn: 'Series',        extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] },
+                    { sourceColumn: 'Work',          extractor: 'tagCount_Name_Comment',         syntheticColumns: ['Name', 'Tag count', 'Comment'] }
                 ],
                 // Split the extracted Date column into DD/MM/YYYY/Day/Month sub-columns
                 // only when Events are shown (i.e. when the Date synthetic column exists).

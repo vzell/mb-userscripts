@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.99.447",
+    "date": "2026-04-09",
+    "sections": [
+      {
+        "label": "🐛 Fix / ✨ Enhancement",
+        "items": [
+          "applyListToTable() Structure C: for tag-value-entity and user-tag-value-entity page types, now applies _toSingular() to the extracted column name so the first column header is singular (e.g. 'Release groups tagged as…' → 'Release group', 'Artists tagged as…' → 'Artist'). Exception: 'Series' stays 'Series'.",
+          "user-tag-value-entity pageType: updated all 11 columnExtractors sourceColumn names from plural to singular (e.g. 'Areas' → 'Area', 'Release groups' → 'Release group') to match the Structure C singular output.",
+          "tag-value-entity pageType: same plural→singular update for all 11 columnExtractors sourceColumn names. Comments updated in both blocks."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.446",
     "date": "2026-04-08",
     "sections": [
