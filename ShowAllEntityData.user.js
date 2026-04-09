@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.451+2026-04-09
+// @version      9.99.452+2026-04-09
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1728,15 +1728,18 @@
         // Configurable lookup table for the Unicode Character Picker.
         // Each entry populates one Unicode code symbol with its descriptive name at startup.
         // The 'Default' column marks the entry that is pre-highlighted when the picker opens.
+        // The 'Examples' column is purely informational and shown in the settings UI only.
         // Changes take effect after saving settings and reloading the page.
         sa_unicode_char_picker_mappings: {
             label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
             type: 'table',
             table_name: 'Unicode Code Symbols',
-            columns: ['Unicode Code Symbol', 'Name', 'Default'],
+            columns: ['Unicode Code Symbol', 'Name', 'Default', 'Examples'],
             description: 'Catalogue of Unicode characters offered by the picker. ' +
                          'Each row defines one entry: the character(s) to insert, a human-readable name ' +
-                         'shown in the picker list, and whether this row is pre-highlighted when the menu opens. ' +
+                         'shown in the picker list, whether this row is pre-highlighted when the menu opens, ' +
+                         'and optional usage examples for reference (the Examples column is display-only and ' +
+                         'not used by the picker itself). ' +
                          'Set "Default" to "true" on exactly one row (the others can be "false" or empty). ' +
                          'The cursor is always placed after the first character of a pair (e.g. between ' +
                          '\u201C and \u201D so the user can type inside the quotes). ' +
@@ -32173,33 +32176,34 @@ a { color: #1565c0; }`;
      * Built-in catalogue of Unicode characters offered by the picker.
      * Used as the fallback / seed when no user-defined rows are stored yet
      * in the sa_unicode_char_picker_mappings config table.
-     * Each entry: { code, name, offset, default }
+     * Each entry: { code, name, offset, default, examples }
      * "offset" controls cursor placement after insert (1 = after first char of a pair).
      * "default" marks the item pre-highlighted when the menu opens.
+     * "examples" is a human-readable string shown in the settings UI only (not used by the picker).
      *
-     * @type {Array<{code: string, name: string, offset: number, default: boolean}>}
+     * @type {Array<{code: string, name: string, offset: number, default: boolean, examples: string}>}
      */
     const SA_UNICODE_CHARS_DEFAULT = [
-        { code: '\u2018',         name: 'Left Single Quote',                     offset: 1, default: false },
-        { code: '\u2019',         name: 'Apostrophe, Right Single Quote',        offset: 1, default: false },
-        { code: '\u2018\u2019',   name: 'Left+Right Single Quotes',              offset: 1, default: false },
-        { code: '\u201C',         name: 'Left Double Quotes',                    offset: 1, default: false },
-        { code: '\u201D',         name: 'Right Double Quotes',                   offset: 1, default: false },
-        { code: '\u201C\u201D',   name: 'Left+Right Double Quotes',              offset: 1, default: false },
-        { code: '\u300C\u300D',   name: 'Left+Right Corner Brackets',            offset: 1, default: false },
-        { code: '\u300E\u300F',   name: 'Left+Right White Corner Brackets',      offset: 1, default: false },
-        { code: '\u2026',         name: 'Horizontal Ellipsis',                   offset: 1, default: false },
-        { code: '\u2010',         name: 'Hyphen',                                offset: 1, default: true  },
-        { code: '\u2013',         name: 'En Dash',                               offset: 1, default: false },
-        { code: '\u2014',         name: 'Em Dash',                               offset: 1, default: false },
-        { code: '\u2012',         name: 'Figure Dash',                           offset: 1, default: false },
-        { code: '\u301C',         name: 'Wave Dash',                             offset: 1, default: false },
-        { code: '\u2032',         name: 'Prime',                                 offset: 1, default: false },
-        { code: '\u2033',         name: 'Double Prime',                          offset: 1, default: false },
-        { code: '\u2212',         name: 'Minus Sign',                            offset: 1, default: false },
-        { code: '\u00D7',         name: 'Multiplication Sign',                   offset: 1, default: false },
-        { code: '\u00A9',         name: 'Copyright Symbol',                      offset: 1, default: false },
-        { code: '\u2117',         name: 'Phonographic Copyright Symbol',         offset: 1, default: false },
+        { code: '\u2018',         name: 'Left Single Quote',                     offset: 1, default: false, examples: '\u2018text'                                  },
+        { code: '\u2019',         name: 'Apostrophe, Right Single Quote',        offset: 1, default: false, examples: 'it\u2019s, don\u2019t, rock \u2019n\u2019 roll' },
+        { code: '\u2018\u2019',   name: 'Left+Right Single Quotes',              offset: 1, default: false, examples: '\u2018quoted\u2019'                           },
+        { code: '\u201C',         name: 'Left Double Quotes',                    offset: 1, default: false, examples: '\u201Ctext'                                  },
+        { code: '\u201D',         name: 'Right Double Quotes',                   offset: 1, default: false, examples: 'text\u201D'                                  },
+        { code: '\u201C\u201D',   name: 'Left+Right Double Quotes',              offset: 1, default: false, examples: '\u201Cquoted\u201D'                           },
+        { code: '\u300C\u300D',   name: 'Left+Right Corner Brackets',            offset: 1, default: false, examples: '\u300C\u65E5\u672C\u8A9E\u300D'              },
+        { code: '\u300E\u300F',   name: 'Left+Right White Corner Brackets',      offset: 1, default: false, examples: '\u300E\u767D\u62EC\u5F27\u300F'              },
+        { code: '\u2026',         name: 'Horizontal Ellipsis',                   offset: 1, default: false, examples: 'to be continued\u2026, and so on\u2026'       },
+        { code: '\u2010',         name: 'Hyphen',                                offset: 1, default: true,  examples: 'well\u2010known, self\u2010aware'             },
+        { code: '\u2013',         name: 'En Dash',                               offset: 1, default: false, examples: 'pp.\u202012\u201315, 2010\u20132020'          },
+        { code: '\u2014',         name: 'Em Dash',                               offset: 1, default: false, examples: 'word\u2014and another\u2014here'             },
+        { code: '\u2012',         name: 'Figure Dash',                           offset: 1, default: false, examples: 'tel.\u2006555\u20120100'                     },
+        { code: '\u301C',         name: 'Wave Dash',                             offset: 1, default: false, examples: '\u301C\u6CE2\u30C0\u30C3\u30B7\u30E5\u301C' },
+        { code: '\u2032',         name: 'Prime',                                 offset: 1, default: false, examples: '5\u2032 (feet), 45\u2032 (minutes of arc)'   },
+        { code: '\u2033',         name: 'Double Prime',                          offset: 1, default: false, examples: '5\u2033 (inches), 30\u2033 (seconds of arc)' },
+        { code: '\u2212',         name: 'Minus Sign',                            offset: 1, default: false, examples: '\u22122, a\u2212b, \u221240\u202F\u00B0C'    },
+        { code: '\u00D7',         name: 'Multiplication Sign',                   offset: 1, default: false, examples: '3\u202F\u00D7\u202F4\u202F=\u202F12'         },
+        { code: '\u00A9',         name: 'Copyright Symbol',                      offset: 1, default: false, examples: '\u00A9 2024 Artist Name'                     },
+        { code: '\u2117',         name: 'Phonographic Copyright Symbol',         offset: 1, default: false, examples: '\u2117 2024 Record Label'                    },
     ];
 
     /**
@@ -32216,10 +32220,11 @@ a { color: #1565c0; }`;
      * Loads the Unicode character catalogue from the sa_unicode_char_picker_mappings
      * config table and updates {@link SA_UNICODE_CHARS} in-place.
      *
-     * Each table row is expected to have three columns:
+     * Each table row is expected to have four columns:
      *   [0] Unicode Code Symbol  — the character(s) to insert (e.g. "’")
      *   [1] Name                 — human-readable label shown in the picker
      *   [2] Default              — "true" to pre-highlight this row; anything else = false
+     *   [3] Examples             — optional usage examples (display-only; not used by the picker)
      *
      * The cursor offset is always set to 1 (places cursor after the first character
      * of a pair, consistent with the built-in defaults).
@@ -32227,7 +32232,7 @@ a { color: #1565c0; }`;
      * Falls back to SA_UNICODE_CHARS_DEFAULT when no rows are stored, and seeds
      * the persistent config table with the defaults for the user's first visit.
      *
-     * @returns {Array<{code: string, name: string, offset: number, default: boolean}>}
+     * @returns {Array<{code: string, name: string, offset: number, default: boolean, examples: string}>}
      */
     function _loadUnicodeCharsMappings() {
         const rows = (typeof Lib.getTableRows === 'function')
@@ -32239,7 +32244,8 @@ a { color: #1565c0; }`;
                 const seedRows = SA_UNICODE_CHARS_DEFAULT.map(e => [
                     e.code,
                     e.name,
-                    e.default ? 'true' : 'false'
+                    e.default ? 'true' : 'false',
+                    e.examples || ''
                 ]);
                 GM_setValue('sa_unicode_char_picker_mappings', seedRows);
             }
@@ -32251,10 +32257,11 @@ a { color: #1565c0; }`;
         SA_UNICODE_CHARS = rows
             .filter(row => row[0])   // skip rows with empty code column
             .map(row => ({
-                code:    row[0],
-                name:    row[1] || row[0],
-                offset:  1,
-                default: row[2] === 'true'
+                code:     row[0],
+                name:     row[1] || row[0],
+                offset:   1,
+                default:  row[2] === 'true',
+                examples: row[3] || ''
             }));
         Lib.debug('unicode', '_loadUnicodeCharsMappings: loaded ' +
             SA_UNICODE_CHARS.length + ' entries from config table');

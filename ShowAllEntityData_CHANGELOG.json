@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.99.452",
+    "date": "2026-04-09",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "sa_unicode_char_picker_mappings: added 'Examples' column (display-only, shown in settings UI but not used by the picker); updated comment block and description accordingly.",
+          "SA_UNICODE_CHARS_DEFAULT: added 'examples' field to all entries with typical real-world usage examples for each Unicode glyph; updated JSDoc type annotation.",
+          "_loadUnicodeCharsMappings: updated seedRows to include examples column (index 3); updated live-load map to carry examples field from stored rows."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.451",
     "date": "2026-04-09",
     "sections": [

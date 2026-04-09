@@ -70838,9 +70838,64 @@ also always add a new changelog in each session and DO NOT remove previous chang
 session where you produced a new entry for "version": "9.99.363" but skipped the "version": "9.99.362". please reintroduce the "version": "9.99.362" again.
 
 ** DONE Add © ℗ in the default code
-** TODO add a quickfilter with search string highlightning to 
-** TODO add a new column with examples
+** DONE add a new column with examples
 
+some more features:
+
+1.)
+
+Add a new column named "Examples" to the variable "sa_unicode_char_picker_mappings" and adjust the "description"
+
+#+begin_example
+        // Configurable lookup table for the Unicode Character Picker.
+        // Each entry populates one Unicode code symbol with its descriptive name at startup.
+        // The 'Default' column marks the entry that is pre-highlighted when the picker opens.
+        // Changes take effect after saving settings and reloading the page.
+        sa_unicode_char_picker_mappings: {
+            label: 'Unicode Character Picker Mapping: Unicode code symbol → Name',
+            type: 'table',
+            table_name: 'Unicode Code Symbols',
+            columns: ['Unicode Code Symbol', 'Name', 'Default'],
+            description: 'Catalogue of Unicode characters offered by the picker. ' +
+                         'Each row defines one entry: the character(s) to insert, a human-readable name ' +
+                         'shown in the picker list, and whether this row is pre-highlighted when the menu opens. ' +
+                         'Set "Default" to "true" on exactly one row (the others can be "false" or empty). ' +
+                         'The cursor is always placed after the first character of a pair (e.g. between ' +
+                         '\u201C and \u201D so the user can type inside the quotes). ' +
+                         'Populates SA_UNICODE_CHARS. Changes take effect after saving and reloading.'
+        }
+#+end_example
+
+2.)
+
+also adjust the "SA_UNICODE_CHARS_DEFAULT" with typical examples for the use of the unicode glyphs
+
+#+begin_example
+    const SA_UNICODE_CHARS_DEFAULT = [
+        { code: '\u2018',         name: 'Left Single Quote',                     offset: 1, default: false },
+        { code: '\u2019',         name: 'Apostrophe, Right Single Quote',        offset: 1, default: false },
+        { code: '\u2018\u2019',   name: 'Left+Right Single Quotes',              offset: 1, default: false },
+        { code: '\u201C',         name: 'Left Double Quotes',                    offset: 1, default: false },
+        { code: '\u201D',         name: 'Right Double Quotes',                   offset: 1, default: false },
+        { code: '\u201C\u201D',   name: 'Left+Right Double Quotes',              offset: 1, default: false },
+        { code: '\u300C\u300D',   name: 'Left+Right Corner Brackets',            offset: 1, default: false },
+        { code: '\u300E\u300F',   name: 'Left+Right White Corner Brackets',      offset: 1, default: false },
+        { code: '\u2026',         name: 'Horizontal Ellipsis',                   offset: 1, default: false },
+        { code: '\u2010',         name: 'Hyphen',                                offset: 1, default: true  },
+        { code: '\u2013',         name: 'En Dash',                               offset: 1, default: false },
+        { code: '\u2014',         name: 'Em Dash',                               offset: 1, default: false },
+        { code: '\u2012',         name: 'Figure Dash',                           offset: 1, default: false },
+        { code: '\u301C',         name: 'Wave Dash',                             offset: 1, default: false },
+        { code: '\u2032',         name: 'Prime',                                 offset: 1, default: false },
+        { code: '\u2033',         name: 'Double Prime',                          offset: 1, default: false },
+        { code: '\u2212',         name: 'Minus Sign',                            offset: 1, default: false },
+        { code: '\u00D7',         name: 'Multiplication Sign',                   offset: 1, default: false },
+        { code: '\u00A9',         name: 'Copyright Symbol',                      offset: 1, default: false },
+        { code: '\u2117',         name: 'Phonographic Copyright Symbol',         offset: 1, default: false },
+    ];
+#+end_example
+
+** TODO add a quickfilter with search string highlightning to 
 
 * TODO Implement column movement
 
@@ -71397,6 +71452,8 @@ column feature on the tables itself is NOT working anymore
 
 
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
+** on /collections/<mbid>
+** "single"-table pageTypes like "type: 'place-performances-filtered'"
 
 retry "Relationships" buttons double on "single"-table pageTypes like "type: 'place-performances-filtered'"
 
@@ -71941,5 +71998,38 @@ to
 #+end_example
 ** TODO add more tooltips for CAA/EAA columns
 
+
 * TODO add more collection pages
 
+
+* TODO fix naming in "Statistics" panel for Tage pages
+
+
+* TODO Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
+
+Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
+
+#+begin_example
+            // Get available action buttons
+            const actionButtons = Array.from(document.querySelectorAll('button'))
+                .filter(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
+#+end_example
+
+#+begin_example
+        // Build button label with Ctrl-M+N superscript mnemonic (¹²³…) after the 🧮 emoji.
+        // Handles two cases:
+        //   (a) label starts with "Show all"  → prefix is "🧮N ", rest is the label as-is
+        //   (b) label already starts with "🧮 " → insert superscript between emoji and space
+        //   (c) any other label                 → leave unchanged (no emoji, no superscript)
+#+end_example
+
+#+begin_example
+            // ── virtualPath h2 label patch ────────────────────────────────────
+            // When the clicked button carries a virtualPath (e.g. user-subscriptions
+            // "🧮 Label subscriptions"), the live DOM h2 still reflects the page
+            // the browser is on (e.g. "Artist subscriptions").  Rename it to match
+            // the button label BEFORE updateH2Count reads it, so the header shows
+            // the correct subscription type in the final rendered view.
+            if (buttonConfig.virtualPath) {
+                // Strip emoji + superscript prefix (e.g. "🧮¹ " or "🧮 ") from label.
+#+end_example
