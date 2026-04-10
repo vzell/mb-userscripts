@@ -70341,6 +70341,21 @@ Genres => Genre
 Other tags => Other tag
 #+end_example
 
+* DONE add more collection pages
+* DONE add '➕' to "type: 'releasegroup-releases'"
+
+#+begin_example
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+#+end_example
+
+
 
 * TODO fix Artist-Releasegroup pages
 ** DONE changes to do
@@ -72125,9 +72140,6 @@ to
 ** TODO add more tooltips for CAA/EAA columns
 
 
-* TODO add more collection pages
-
-
 * TODO fix naming in "Statistics" panel for Tage pages
 
 
@@ -72159,20 +72171,6 @@ Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-e
             if (buttonConfig.virtualPath) {
                 // Strip emoji + superscript prefix (e.g. "🧮¹ " or "🧮 ") from label.
 #+end_example
-
-* add '➕' to "type: 'releasegroup-releases'"
-
-#+begin_example
-        {
-            type: 'releasegroup-releases',
-            match: (path) => path.includes('/release-group/'),
-            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
-            features: {
-                columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
-                ],
-#+end_example
-
 
 * TODO unique values for "Country" column should render the flag additionally
 

@@ -4573,7 +4573,8 @@
                     columnExtractors: [ { sourceColumn: 'Event', extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] } ],
                     syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
                     integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                    addEAA: 'Event'
+                    addEAA: 'Event',
+                    tooltipColumns: [ 'Name', ['(', 'Comment', ')'], 'Date' ]
                 },
                 'Instruments': {
                     columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
@@ -4585,15 +4586,17 @@
                     columnExtractors: [ { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
                 },
                 'Release groups': {
-                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
-                    addCAA: 'Release group'
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    addCAA: 'Release group',
+                    tooltipColumns: [ 'Name', ['(', 'Comment', ')'], 'Artist' ]
                 },
                 'Releases': {
-                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
-                    addCAA: 'Release'
+                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    addCAA: 'Release',
+                    tooltipColumns: [ 'Name', ['(', 'Comment', ')'], 'Artist' ]
                 },
                 'Recordings': {
-                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ]
+                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ]
                 },
                 'Series': {
                     columnExtractors: [ { sourceColumn: 'Series', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
@@ -4635,7 +4638,8 @@
                     columnExtractors: [ { sourceColumn: 'Event', extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] } ],
                     syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
                     integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                    addEAA: 'Event'
+                    addEAA: 'Event',
+                    tooltipColumns: [ 'Name', ['(', 'Comment', ')'], 'Date' ]
                 },
                 'Instruments': {
                     columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
@@ -4647,15 +4651,17 @@
                     columnExtractors: [ { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
                 },
                 'Release groups': {
-                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
-                    addCAA: 'Release group'
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    addCAA: 'Release group',
+                    tooltipColumns: [ 'Name', ['(', 'Comment' , ')'], 'Artist' ]
                 },
                 'Releases': {
-                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
-                    addCAA: 'Release'
+                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    addCAA: 'Release',
+                    tooltipColumns: [ 'Name', ['(', 'Comment' , ')'], 'Artist' ]
                 },
                 'Recordings': {
-                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ]
+                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ]
                 },
                 'Series': {
                     columnExtractors: [ { sourceColumn: 'Series', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
@@ -4693,7 +4699,7 @@
                     syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
                     integerColumns: [ {sourceColumn: 'Tag count', align: 'R'}, {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                     addEAA: 'Event',
-                    tooltipColumns: [ 'Name', '---', 'Date', 'Tag count' ]
+                    tooltipColumns: [ 'Name', ['(', 'Comment', ')'], '---', 'Date', 'Tag count' ]
                 },
                 'Instruments': {
                     columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'tagCount_Name_Comment', syntheticColumns: ['Name', 'Tag count', 'Comment'] } ],
@@ -4757,7 +4763,8 @@
                     columnExtractors: [ { sourceColumn: 'Event', extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] } ],
                     syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
                     integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                    addEAA: 'Event'
+                    addEAA: 'Event',
+                    tooltipColumns: [ 'Name', ['(', 'Comment', ')'], '---', 'Date' ]
                 },
                 'Instruments': {
                     columnExtractors: [ { sourceColumn: 'Instrument', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
@@ -4769,15 +4776,17 @@
                     columnExtractors: [ { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
                 },
                 'Release groups': {
-                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
-                    addCAA: 'Release group'
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    addCAA: 'Release group',
+                    tooltipColumns: [ 'Name', 'Artist' ]
                 },
                 'Releases': {
-                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ],
-                    addCAA: 'Release'
+                    columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    addCAA: 'Release',
+                    tooltipColumns: [ 'Name', 'Artist' ]
                 },
                 'Recordings': {
-                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artists'] } ]
+                    columnExtractors: [ { sourceColumn: 'Recording', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ]
                 },
                 'Series': {
                     columnExtractors: [ { sourceColumn: 'Series', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
@@ -21208,7 +21217,7 @@ a { color: #1565c0; }`;
                     return `Extracted from '${src}': the leading integer tag vote count, split from the release/recording cell.`;
                 if (colName === 'Comment')
                     return `Extracted from '${src}': the disambiguation comment, split from the release/recording cell.`;
-                if (colName === 'Artists')
+                if (colName === 'Artist')
                     return `Extracted from '${src}': the artist credit following "by" in the release/recording cell.`;
                 break;
             case 'Name_Comment':
@@ -21230,7 +21239,7 @@ a { color: #1565c0; }`;
                     return `Extracted from '${src}': the release/recording name link, split from the combined cell.`;
                 if (colName === 'Comment')
                     return `Extracted from '${src}': the disambiguation comment, split from the release/recording cell.`;
-                if (colName === 'Artists')
+                if (colName === 'Artist')
                     return `Extracted from '${src}': the artist credit following "by" in the release/recording cell.`;
                 break;
             case 'injectedColumns':
