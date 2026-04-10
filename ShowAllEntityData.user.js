@@ -4814,7 +4814,7 @@
             // header text that precedes the table and substitute it into the label so
             // the button reads "Show all <EntityType> for Collections" dynamically.
             // Collections pages can contain Releases, Events, Works, Recordings, etc.
-            buttons: [ { label: 'Show all Releases for Collections', labelFromH2: true } ],
+            buttons: [ { label: 'Show all Releases for Collection', labelFromH2: true } ],
             // columnHeaderErasers: list of eraser tokens applied to <thead> cells before
             // the header-scanning pass reads column names.  Currently supports '▴/▾'
             // which extracts only the text from <a> link(s) inside a <th>, concatenating
