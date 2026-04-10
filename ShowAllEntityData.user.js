@@ -4541,8 +4541,8 @@
             type: 'user-tags',
             match: (path, params) => path.match(/\/user\/[^/]+\/tags/),
             buttons: [
-                { label: 'Upvoted',   params: { show_downvoted: '0' } },
-                { label: 'Downvoted', params: { show_downvoted: '1' } }
+                { label: 'Tags upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Tags downvoted', params: { show_downvoted: '1' } }
             ],
             features: {
                 listToTable: [ 'genres', 'tags' ],
@@ -4559,8 +4559,8 @@
             type: 'user-tag-value-entity',
             match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
             buttons: [
-                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
-                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+                { label: 'Tag for Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Tag for Entities downvoted', params: { show_downvoted: '1' } }
             ],
             entityFeatures: {
                 'Areas': {
@@ -4621,8 +4621,8 @@
             type: 'user-tag-value',
             match: (path, params) => path.match(/\/user\/.*\/tag\//),
             buttons: [
-                { label: 'Entities upvoted',   params: { show_downvoted: '0' } },
-                { label: 'Entities downvoted', params: { show_downvoted: '1' } }
+                { label: 'Tag for Entities upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Tag for Entities downvoted', params: { show_downvoted: '1' } }
             ],
             entityFeatures: {
                 'Areas': {
