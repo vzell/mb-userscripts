@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.452+2026-04-09
+// @version      9.99.453+2026-04-10
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4827,6 +4827,65 @@
             // found the fallback first-key feature set is used so the page still works
             // for unrecognised entity types.
             entityFeatures: {
+                'Areas': {
+                    columnExtractors: [
+                        { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                    ],
+                    extractMainColumn: 'Area',
+                    stickyColumn: 'Area'
+                },
+                'Artists': {
+                    columnExtractors: [
+                        { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
+                        { sourceColumn: 'Begin area', extractor: 'splitArea', syntheticColumns: ['MB-Begin area', 'Begin country'] },
+                        { sourceColumn: 'End area',   extractor: 'splitArea', syntheticColumns: ['MB-End area', 'End country'] },
+                        { sourceColumn: 'Begin',      extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                        { sourceColumn: 'End',        extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                    ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'B-DD', align: 'R'}, {sourceColumn: 'B-MM', align: 'R'}, {sourceColumn: 'B-YYYY', align: 'C'}, {sourceColumn: 'E-DD', align: 'R'}, {sourceColumn: 'E-MM', align: 'R'}, {sourceColumn: 'E-YYYY', align: 'C'} ],
+                    extractMainColumn: 'Artist',
+                    stickyColumn: 'Artist'
+                },
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
+                        { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                    addEAA: 'Event',
+                    extractMainColumn: 'Event',
+                    stickyColumn: 'Event'
+                },
+                'Genres': {
+                    extractMainColumn: 'Genre',
+                    stickyColumn: 'Genre'
+                },
+                'Instruments': {
+                    extractMainColumn: 'Instrument',
+                    stickyColumn: 'Instrument'
+                },
+                'Labels': {
+                    columnExtractors: [
+                        { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
+                        { sourceColumn: 'Begin',      extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                        { sourceColumn: 'End',        extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                    ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'B-DD', align: 'R'}, {sourceColumn: 'B-MM', align: 'R'}, {sourceColumn: 'B-YYYY', align: 'C'}, {sourceColumn: 'E-DD', align: 'R'}, {sourceColumn: 'E-MM', align: 'R'}, {sourceColumn: 'E-YYYY', align: 'C'} ],
+                    extractMainColumn: 'Label',
+                    stickyColumn: 'Label'
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+                    integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
                 'Releases': {
                     columnExtractors: [
                         { sourceColumn: 'Release',      extractor: 'caa',                syntheticColumns: ['CAA'] },
@@ -4845,20 +4904,6 @@
                     extractMainColumn: 'Release',
                     stickyColumn: 'Release'
                 },
-                'Events': {
-                    columnExtractors: [
-                        { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
-                        { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
-                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
-                        { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
-                        { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                    ],
-                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
-                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
-                    addEAA: 'Event',
-                    extractMainColumn: 'Event',
-                    stickyColumn: 'Event'
-                },
                 'Release groups': {
                     columnExtractors: [
                         { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
@@ -4871,15 +4916,13 @@
                     extractMainColumn: 'Title',
                     stickyColumn: 'Title'
                 },
-                'Recordings': {
-                    columnExtractors: [
-                        { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
-                    ],
-                    integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
-                    extractMainColumn: 'Name',
-                    stickyColumn: 'Name'
+                'Series': {
+                    integerColumns: [ {sourceColumn: 'Number of entities', align: 'R'} ],
+                    extractMainColumn: 'Series',
+                    stickyColumn: 'Series'
                 },
                 'Works': {
+                    collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
                     extractMainColumn: 'Work',
                     stickyColumn: 'Work'
                 }

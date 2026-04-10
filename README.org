@@ -70897,6 +70897,7 @@ also adjust the "SA_UNICODE_CHARS_DEFAULT" with typical examples for the use of 
 
 ** TODO add a quickfilter with search string highlightning to 
 
+
 * TODO Implement column movement
 
 
@@ -71475,7 +71476,7 @@ add a new userscript "match" directive
 // @match        *://*.musicbrainz.org/tags*
 #+end_example
 
-before
+after
 
 #+begin_example
 // @match        *://*.musicbrainz.org/user/*/tags*
@@ -71491,7 +71492,7 @@ add a new pageType definition
             type: 'popular-tags',
             match: (path, params) => path.match(/\/tags/),
             buttons: [
-                { label: 'Show list', params: { show_list: '1' } }
+                { label: 'Show most popular tags', params: { show_list: '1' } }
             ],
             features: {
                 listToTable: [ 'genres', 'tags' ]
@@ -71502,13 +71503,136 @@ add a new pageType definition
 
 after the pageType "type: 'user-tags'"
 
-** add support for multiple H2 (each has exactly one table)
+3.)
 
-1.)
+the structure for this new pageType is
 
-add support for
+#+begin_example
+h2
+ul
+h2
+ul
+#+end_example
 
-https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly one table)
+Add support for multiple H2 header lines where each section between consecutive H2 header lines has exactly one list
+which should be converted to a one column table with the colmn name dreived from the singulat from of the h2 header
+text.
+
+** wrong solution
+
+#+begin_example
+modified   ShowAllEntityData.user.js
+@@ -20,6 +20,7 @@
+ // @match        *://*.musicbrainz.org/user/*/subscribers
+ // @match        *://*.musicbrainz.org/user/*/collections
+ // @match        *://*.musicbrainz.org/user/*/tags*
++// @match        *://*.musicbrainz.org/tags*
+ // @match        *://*.musicbrainz.org/user/*/tag/*
+ // @match        *://*.musicbrainz.org/tag/*
+ // @connect      raw.githubusercontent.com
+@@ -3740,6 +3741,71 @@
+                     return; // Structure D handled all h3+ul pairs for this entry
+                 }
+ 
++                // ── Structure E: multi-h2+ul (/tags — Most popular tags) ──────────
++                // Triggered when the pageType is 'popular-tags'.
++                // The /tags page has the structure:
++                //   <h2>Genres</h2>  <ul>…</ul>
++                //   <h2>Tags</h2>    <ul>…</ul>
++                // Each <h2>+<ul> pair is converted to an <h3>+<table> so that
++                // the existing multi-table <h3>-backward-walk machinery in the
++                // fetch pipeline picks up the category labels automatically.
++                // Column name: singular form of the <h2> text content.
++                if (def?.type === 'popular-tags') {
++                    Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
++                        // Walk forward up to 5 siblings to find the sibling <ul>.
++                        let _next  = _h2.nextElementSibling;
++                        let _steps = 0;
++                        let _ul    = null;
++                        while (_next && _steps < 5) {
++                            if (_next.tagName === 'UL') { _ul = _next; break; }
++                            _next = _next.nextElementSibling;
++                            _steps++;
++                        }
++                        if (!_ul) return;
++
++                        const _h2Text  = _h2.textContent.trim();
++                        const _colName = _toSingular(_h2Text);
++
++                        // Replace <h2> with <h3> so the multi-table renderer
++                        // finds the section label via its backward <h3> walk.
++                        const _h3 = docContext.createElement('h3');
++                        _h3.textContent = _h2Text;
++                        _h2.parentNode.replaceChild(_h3, _h2);
++
++                        // Build the replacement <table class="tbl">.
++                        const _table  = docContext.createElement('table');
++                        _table.className = 'tbl';
++                        _table.dataset.mbOriginalColName = _colName;
++
++                        // thead — single column, name derived from h2 text.
++                        const _thead = docContext.createElement('thead');
++                        const _hr    = docContext.createElement('tr');
++                        const _th    = docContext.createElement('th');
++                        _th.textContent = _colName;
++                        _hr.appendChild(_th);
++                        _thead.appendChild(_hr);
++                        _table.appendChild(_thead);
++
++                        // tbody — one row per <li>, single <td> with full li content.
++                        const _tbody = docContext.createElement('tbody');
++                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
++                            const _tr = docContext.createElement('tr');
++                            if (li.className) _tr.className = li.className;
++                            const _td = docContext.createElement('td');
++                            Array.from(li.childNodes).forEach(n => _td.appendChild(n.cloneNode(true)));
++                            _tr.appendChild(_td);
++                            _tbody.appendChild(_tr);
++                        });
++                        _table.appendChild(_tbody);
++
++                        _ul.parentNode.replaceChild(_table, _ul);
++                        Lib.debug('init',
++                            `applyListToTable: converted h2="${_h2Text}" ul → table`
++                            + ` (${_tbody.rows.length} rows, col="${_colName}", structure="h2-ul-multi").`);
++                    });
++                    return; // Structure E handled all h2+ul pairs for this entry
++                }
++
+                 Lib.debug('init', `applyListToTable: sectionId='' but path "${_currentPath}" matches no known structure — skipping.`);
+                 return;
+             }
+@@ -4552,6 +4618,18 @@
+             },
+             tableMode: 'multi'
+         },
++        // Most popular tags in MusicBrainz (/tags)
++        {
++            type: 'popular-tags',
++            match: (path, params) => path.match(/\/tags/),
++            buttons: [
++                { label: 'Show most popular tags', params: { show_list: '1' } }
++            ],
++            features: {
++                listToTable: [ 'genres', 'tags' ]
++            },
++            tableMode: 'multi'
++        },
+         // User tag value entity pages (/user/<username>/tag/<tag>/<entity>
+         // e.g. /user/vzell/tag/gig/event) — must come before user-tag-value
+         // (same /user/.*/tag/ prefix, but has an additional entity segment).
+@@ -22766,6 +22844,7 @@ a { color: #1565c0; }`;
+                             // entity/user-tags pages ("Genres" → "Genre", "Other tags" → "Other tag").
+                             const _singularPageTypes = new Set([
+                                 'tag-value', 'user-tag-value',
++                                'popular-tags',
+                                 'user-tags',
+                                 'artist-tags', 'releasegroup-tags', 'release-tags',
+                                 'recording-tags', 'work-tags', 'label-tags',
+
+#+end_example
+
+* maybe
 
 https://musicbrainz.org/user/vzell/collections - multiple H2 (each has multiple H3 based tables)
 
@@ -71650,6 +71774,8 @@ United States, Canada
 #+begin_example
 https://musicbrainz.org/tags?show_list=1
 #+end_example
+
+https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly one table)
 
 ** tags
 
@@ -72033,3 +72159,21 @@ Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-e
             if (buttonConfig.virtualPath) {
                 // Strip emoji + superscript prefix (e.g. "🧮¹ " or "🧮 ") from label.
 #+end_example
+
+* add '➕' to "type: 'releasegroup-releases'"
+
+#+begin_example
+        {
+            type: 'releasegroup-releases',
+            match: (path) => path.includes('/release-group/'),
+            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
+                ],
+#+end_example
+
+
+* TODO unique values for "Country" column should render the flag additionally
+
+* TODO https://musicbrainz.org/collection/3d73c67c-76c6-459d-ac8b-3145cb49d672 - for RGs add multi-table support
