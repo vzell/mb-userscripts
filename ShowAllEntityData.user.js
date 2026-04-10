@@ -5591,7 +5591,7 @@
             buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
             features: {
                 columnErasers: [
-                    { sourceColumn: 'Release', erasers: ['▶'] }
+                    { sourceColumn: 'Release', erasers: ['▶', '➕'] }
                 ],
                 columnExtractors: [
                     { sourceColumn: 'Release', extractor: 'caa', syntheticColumns: ['CAA'] },
