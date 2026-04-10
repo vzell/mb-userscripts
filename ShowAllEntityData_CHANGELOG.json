@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.453",
+    "date": "2026-04-10",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Add missing collection pageTypes and more tooltips."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.452",
     "date": "2026-04-09",
     "sections": [

@@ -1,3 +1,8 @@
+* support@metabrainz.org
+
+If you are blocked, send an email to support@metabrainz.org with your public IPs (IPv4 & IPv6) so we can check and eventually unblock.
+
+
 * Claude
 
 https://claude.ai/referral/0po2z2N-xQ
@@ -71467,17 +71472,6 @@ column feature on the tables itself is NOT working anymore
 
 
 
-* TODO retry "Relationships" buttons double on "single"-table pageTypes
-** on /collections/<mbid>
-** "single"-table pageTypes like "type: 'place-performances-filtered'"
-
-retry "Relationships" buttons double on "single"-table pageTypes like "type: 'place-performances-filtered'"
-
-#+begin_example
-type: 'place-performances-filtered'
-#+end_example
-
-
 * TODO Most popular tags in MusicBrainz
 ** initial
 
@@ -71646,6 +71640,7 @@ modified   ShowAllEntityData.user.js
                                  'recording-tags', 'work-tags', 'label-tags',
 
 #+end_example
+
 
 * maybe
 
@@ -72140,8 +72135,7 @@ to
 ** TODO add more tooltips for CAA/EAA columns
 
 
-* TODO fix naming in "Statistics" panel for Tage pages
-
+* TODO fix naming in "Statistics" panel for Tag pages
 
 * TODO Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
 
@@ -72172,6 +72166,95 @@ Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-e
                 // Strip emoji + superscript prefix (e.g. "🧮¹ " or "🧮 ") from label.
 #+end_example
 
+
 * TODO unique values for "Country" column should render the flag additionally
 
 * TODO https://musicbrainz.org/collection/3d73c67c-76c6-459d-ac8b-3145cb49d672 - for RGs add multi-table support
+
+* TODO retry "Relationships" buttons double on "single"-table pageTypes
+** on /collections/<mbid>
+** "single"-table pageTypes like "type: 'place-performances-filtered'"
+
+retry "Relationships" buttons double on "single"-table pageTypes like "type: 'place-performances-filtered'"
+
+#+begin_example
+type: 'place-performances-filtered'
+#+end_example
+
+* TODO Relationships "Retry" buttons
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '@version      9.99.453+2026-04-10') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.453"')
+
+there are some bugs with the "Relationship" retry buttons:
+
+1.)
+
+On "multi"-table pageTypes the "mb-rel-retry-global"-button
+
+#+begin_example
+<button id="mb-rel-retry-global" type="button" title="Globally retry loading all Relationship icons for every sub-table (forces network reload, clears IDB cache)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">🔗⟳
+</button>
+#+end_example
+
+which is initially rendered right after the "mb-caa-toggle-btn-global-retry"-button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳
+</button>
+#+end_example
+
+in the h2 header line, moves right after the h2 header line text after the class "mb-toggle-icon"
+
+#+begin_example
+<span class="mb-toggle-icon">▼</span>
+"Album"
+#+end_example
+
+as soon as a sorting or filtering action is performed on the final rendered page
+
+e.g. on https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+It should always be rendered after the "mb-caa-toggle-btn-global-retry"-button and the "mb-master-toggle"-button
+
+#+begin_example
+<button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button>
+#+end_example
+
+2.)
+
+On "single"-table pageTypes there are actually two "Relationship" retry buttons rendered on the h2 header line on the
+final rendered page
+
+- the "mb-rel-retry-0"-button
+
+#+begin_example
+<button id="mb-rel-retry-0" type="button" title="Retry loading Relationship icons for this sub-table (forces network reload, clears IDB cache)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">🔗⟳
+</button>
+#+end_example
+
+after the "mb-caa-toggle-btn-retry-0"-button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-0" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+#+end_example
+
+- and the "mb-rel-retry-global"
+
+#+begin_example
+<button id="mb-rel-retry-global" type="button" title="Globally retry Relationship icons (network reload, clears IDB)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">🔗⟳</button>
+#+end_example
+
+after the table rowcount "mb-row-count-stat"
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;240&lt;/span&gt; rows total unfiltered in this table">(240)</span>
+#+end_example
+
+On "single"-table pageTypes there should be only ONE button after the CAA cover-art retry "mb-caa-toggle-btn-retry-0"-button
+
+#+begin_example
+<button id="mb-caa-toggle-btn-retry-0" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+#+end_example
+
+with the tooltip title "Retry loading Relationship icons for this table (network reload, clears IDB cache)"
