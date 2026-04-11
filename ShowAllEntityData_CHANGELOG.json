@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.454",
+    "date": "2026-04-10",
+    "sections": [
+      {
+        "label": "🎨 UI",
+        "items": [
+          "Country column unique-values dropdown: each entry now shows the country flag icon (scraped from the table cell) prepended between the occurrence-count badge and the country text label, matching the visual appearance of the rendered table data. Applies to all synthetic Country columns produced by splitCountryDate, splitLocation, and splitArea (i.e. columns named \"Country\", \"Begin country\", \"End country\")."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.453",
     "date": "2026-04-10",
     "sections": [

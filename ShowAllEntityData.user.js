@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.453+2026-04-10
+// @version      9.99.454+2026-04-10
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -26761,6 +26761,26 @@ a { color: #1565c0; }`;
                 badge.style.textAlign          = 'right';
                 item.appendChild(badge);
 
+                // ---- Country flag icon (Country columns only) ---------------
+                // For synthetic Country columns (splitCountryDate / splitLocation
+                // / splitArea), prepend the CSS flag <span class="flag flag-XX">
+                // so each dropdown entry matches the visual appearance of the
+                // table cells.  MusicBrainz renders flags as CSS background-image
+                // sprites on the span itself — there is no child <img> element.
+                // countryFlagMap stores a pre-built span clone (className copied
+                // from the source cell) keyed by the country text value.
+                if (isCountryCol) {
+                    const flagSpan = countryFlagMap.get(v);
+                    if (flagSpan) {
+                        // Clone so each item gets its own independent node.
+                        const flagClone = flagSpan.cloneNode(false);
+                        flagClone.setAttribute('aria-hidden', 'true');
+                        flagClone.style.cssText =
+                            'display:inline-block; margin-right:4px; vertical-align:middle;';
+                        item.appendChild(flagClone);
+                    }
+                }
+
                 if (filter) {
                     // Build highlighted content with a <mark> around the match
                     const li = v.toLowerCase();
@@ -26823,6 +26843,101 @@ a { color: #1565c0; }`;
         })();
         const caaYesCount = isCaaOrEaaCol ? (valueCounts.get('yes') || 0) : 0;
         const caaNoCount  = isCaaOrEaaCol ? (valueCounts.get('no')  || 0) : 0;
+
+        // Is this a synthetic Country column produced by splitCountryDate,
+        // splitLocation, or splitArea?  Detected by column header name so that
+        // the unique-values dropdown can decorate each entry with its country
+        // flag icon (the same <img> already rendered in the table cell).
+        const _COUNTRY_COL_NAMES = new Set([
+            'Country', 'Begin country', 'End country'
+        ]);
+        const isCountryCol = (() => {
+            const headers = table.querySelectorAll('thead tr:first-child th');
+            const th = headers[colIndex];
+            if (!th) return false;
+            const name = th.dataset.colName ||
+                th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' ');
+            return _COUNTRY_COL_NAMES.has(name);
+        })();
+
+        /**
+         * Maps each unique country text value (e.g. "Germany (DE)") to a
+         * clone of the MusicBrainz flag <span class="flag flag-XX ..."> element
+         * scraped from the first visible tbody cell that contains that value.
+         * Built only when isCountryCol is true to avoid the DOM scan overhead
+         * on every other column type.
+         *
+         * MusicBrainz country flags are rendered exclusively via CSS background-
+         * image on a <span class="flag flag-XX"> element — there is no child
+         * <img> tag.  The extractors (splitCountryDate, splitLocation, splitArea)
+         * preserve the original className verbatim on the reconstructed span, so
+         * the CSS rules from MusicBrainz continue to apply in the cloned node.
+         *
+         * The text label is derived from the cell value produced by
+         * getCleanColumnText() so the Map keys are guaranteed to match the keys
+         * in valueCounts (which is also built via getCleanColumnText()).
+         *
+         * @type {Map<string, HTMLSpanElement>}  value → cloned flag span element
+         */
+        const countryFlagMap = isCountryCol ? (() => {
+            const flagMap = new Map();
+            if (!tbody) return flagMap;
+            for (const row of tbody.rows) {
+                if (row.style.display === 'none') continue;
+                const cell = row.cells[colIndex];
+                if (!cell) continue;
+                // Each cell may hold a flat span or a ul>li list (multi-event).
+                // Walk every span that carries at least one "flag-XX" class
+                // (e.g. "flag flag-DE release-country", "flag flag-US", …).
+                // "flag" alone is not enough — we need a country code class
+                // so we can be sure it is a flag icon and not just a wrapper.
+                const flagSpans = cell.querySelectorAll('span[class*="flag-"]');
+                for (const span of flagSpans) {
+                    // Derive the text label for this flag span — must match the
+                    // key produced by getCleanColumnText() for the same cell.
+                    // The extractors rebuild the span innerHTML as:
+                    //   "${flagImg} <a href="...">${countryFull} (${countryCode})</a>"
+                    //   or fallback to flagSpan.innerHTML (which preserves the
+                    //   original <a><abbr title="Country">CODE</abbr></a>).
+                    // In either case the visible text normalised by
+                    // normalizeExtractedText() becomes "Country (CODE)" or "CODE".
+                    const a = span.querySelector('a');
+                    let label = '';
+                    if (a) {
+                        const abbr = a.querySelector('abbr');
+                        if (abbr) {
+                            // Original MusicBrainz markup: <abbr title="Japan">JP</abbr>
+                            const code = abbr.textContent.trim();
+                            const full = abbr.getAttribute('title') || '';
+                            label = (full && code) ? `${full} (${code})` : (full || code);
+                        } else {
+                            // Rebuilt markup: plain text inside <a>: "Japan (JP)"
+                            label = a.textContent.trim().replace(/\s+/g, ' ');
+                        }
+                    }
+                    if (!label) {
+                        // Last resort: raw text content of the whole span,
+                        // normalised the same way as getCleanColumnText().
+                        label = span.textContent.trim().replace(/\s+/g, ' ')
+                            .replace(/\( /g, '(').replace(/ \)/g, ')');
+                    }
+                    // Register only if this label is a known unique value and
+                    // we have not yet stored a flag element for it.
+                    if (label && valueCounts.has(label) && !flagMap.has(label)) {
+                        // Clone the span, strip child nodes (we only want the
+                        // CSS flag background, not the link text), and record it.
+                        const flagClone = document.createElement('span');
+                        // Copy every CSS class from the source span so the
+                        // MusicBrainz stylesheet applies the correct flag sprite.
+                        flagClone.className = span.className;
+                        flagMap.set(label, flagClone);
+                    }
+                    if (flagMap.size === valueCounts.size) break;
+                }
+                if (flagMap.size === valueCounts.size) break;
+            }
+            return flagMap;
+        })() : new Map();
 
         const isRelCellCol = (() => {
             if (!tbody) return false;

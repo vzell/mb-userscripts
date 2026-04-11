@@ -72167,9 +72167,26 @@ Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-e
 #+end_example
 
 
-* TODO unique values for "Country" column should render the flag additionally
+* DONE unique values for "Country" column should render the flag additionally
+** initial
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '@version      9.99.453+2026-04-10') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.453"')
+
+implement the following for the synthetic "Country" column:
+
+Currently the unique value dropdown list for for the synthetic "Country" column, only shows the country text
+representations in the pull down list, e.g. "Europe (XE)". Extend the implementation for this column specifically to
+also show the country flag icon.
+
+** bug
+
+Actually no flag is rendered at all in the unique value drop down list for the synthetic "Country" column, same result
+as befoer, just text representations
+
 
 * TODO https://musicbrainz.org/collection/3d73c67c-76c6-459d-ac8b-3145cb49d672 - for RGs add multi-table support
+
 
 * TODO retry "Relationships" buttons double on "single"-table pageTypes
 ** on /collections/<mbid>
