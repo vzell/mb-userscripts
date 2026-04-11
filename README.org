@@ -70360,7 +70360,6 @@ Other tags => Other tag
                 ],
 #+end_example
 
-
 * DONE unique values for "Country" column should render the flag additionally
 ** initial
 
@@ -70486,6 +70485,46 @@ after a soring/filtering action. I should also always be rendered after the "mb-
 #+begin_example
 <button id="mb-caa-toggle-btn-retry-0" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
 #+end_example
+
+* DONE Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
+
+Why have the action buttons on pageType "type: 'artist-recordings'"
+e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages with the pageTypes
+
+#+begin_example
+type: 'user-tags'
+type: 'user-tag-value'
+type: 'user-tag-value-entity'
+#+end_example
+
+not the superscript for shortcut access
+
+#+begin_example
+            // Get available action buttons
+            const actionButtons = Array.from(document.querySelectorAll('button'))
+                .filter(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
+#+end_example
+
+#+begin_example
+        // Build button label with Ctrl-M+N superscript mnemonic (¹²³…) after the 🧮 emoji.
+        // Handles two cases:
+        //   (a) label starts with "Show all"  → prefix is "🧮N ", rest is the label as-is
+        //   (b) label already starts with "🧮 " → insert superscript between emoji and space
+        //   (c) any other label                 → leave unchanged (no emoji, no superscript)
+#+end_example
+
+#+begin_example
+            // ── virtualPath h2 label patch ────────────────────────────────────
+            // When the clicked button carries a virtualPath (e.g. user-subscriptions
+            // "🧮 Label subscriptions"), the live DOM h2 still reflects the page
+            // the browser is on (e.g. "Artist subscriptions").  Rename it to match
+            // the button label BEFORE updateH2Count reads it, so the header shows
+            // the correct subscription type in the final rendered view.
+            if (buttonConfig.virtualPath) {
+                // Strip emoji + superscript prefix (e.g. "🧮¹ " or "🧮 ") from label.
+#+end_example
+
+Please fix.
 
 
 * TODO fix Artist-Releasegroup pages
@@ -72275,46 +72314,6 @@ to
 
 * TODO fix naming in "Statistics" panel for Tag pages
 
-
-* TODO Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
-
-Why have the action buttons on pageType "type: 'artist-recordings'"
-e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages with the pageTypes
-
-#+begin_example
-type: 'user-tags'
-type: 'user-tag-value'
-type: 'user-tag-value-entity'
-#+end_example
-
-not the superscript for shortcut access
-
-#+begin_example
-            // Get available action buttons
-            const actionButtons = Array.from(document.querySelectorAll('button'))
-                .filter(btn => btn.textContent.includes('Show all') || btn.textContent.includes('🧮'));
-#+end_example
-
-#+begin_example
-        // Build button label with Ctrl-M+N superscript mnemonic (¹²³…) after the 🧮 emoji.
-        // Handles two cases:
-        //   (a) label starts with "Show all"  → prefix is "🧮N ", rest is the label as-is
-        //   (b) label already starts with "🧮 " → insert superscript between emoji and space
-        //   (c) any other label                 → leave unchanged (no emoji, no superscript)
-#+end_example
-
-#+begin_example
-            // ── virtualPath h2 label patch ────────────────────────────────────
-            // When the clicked button carries a virtualPath (e.g. user-subscriptions
-            // "🧮 Label subscriptions"), the live DOM h2 still reflects the page
-            // the browser is on (e.g. "Artist subscriptions").  Rename it to match
-            // the button label BEFORE updateH2Count reads it, so the header shows
-            // the correct subscription type in the final rendered view.
-            if (buttonConfig.virtualPath) {
-                // Strip emoji + superscript prefix (e.g. "🧮¹ " or "🧮 ") from label.
-#+end_example
-
-Please fix.
 
 * TODO https://musicbrainz.org/collection/3d73c67c-76c6-459d-ac8b-3145cb49d672 - for RGs add multi-table support
 
