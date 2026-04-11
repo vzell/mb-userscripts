@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.458",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Action buttons on artist-recordings, user-tags, user-tag-value, and user-tag-value-entity pages were missing the 🧮N superscript mnemonic that enables Ctrl-M shortcut access. Root cause: the three-branch label-building block in generateActionButtons only prepended the '🧮N ' prefix when a label started with 'Show all' or '🧮 '; all other labels (plain text like 'Tags upvoted', other-emoji labels like '⊚ All recordings') fell into the 'leave unchanged' branch (c). Fix: collapsed to two branches — labels already carrying 🧮 get the superscript inserted (stripping any existing emoji+space first); every other label, regardless of format, gets the '🧮N ' prefix prepended. The Ctrl-M button discovery filter (btn.textContent.includes('🧮')) already covered this case, so no changes were needed to the shortcut handler."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.457",
     "date": "2026-04-11",
     "sections": [

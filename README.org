@@ -72278,7 +72278,16 @@ to
 
 * TODO Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
 
-Why have the action buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
+Why have the action buttons on pageType "type: 'artist-recordings'"
+e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages with the pageTypes
+
+#+begin_example
+type: 'user-tags'
+type: 'user-tag-value'
+type: 'user-tag-value-entity'
+#+end_example
+
+not the superscript for shortcut access
 
 #+begin_example
             // Get available action buttons
@@ -72305,6 +72314,7 @@ Why have the action buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4
                 // Strip emoji + superscript prefix (e.g. "🧮¹ " or "🧮 ") from label.
 #+end_example
 
+Please fix.
 
 * TODO https://musicbrainz.org/collection/3d73c67c-76c6-459d-ac8b-3145cb49d672 - for RGs add multi-table support
 

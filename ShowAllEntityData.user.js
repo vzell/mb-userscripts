@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.457+2026-04-11
+// @version      9.99.458+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -15066,23 +15066,22 @@ a { color: #1565c0; }`;
         }
 
         // Build button label with Ctrl-M+N superscript mnemonic (¹²³…) after the 🧮 emoji.
-        // Handles two cases:
-        //   (a) label starts with "Show all"  → prefix is "🧮N ", rest is the label as-is
-        //   (b) label already starts with "🧮 " → insert superscript between emoji and space
-        //   (c) any other label                 → leave unchanged (no emoji, no superscript)
+        // Every action button receives this prefix so the Ctrl-M shortcut system can
+        // discover and activate it regardless of the button's original label format.
+        // This previously used a three-branch approach that left labels not starting with
+        // 'Show all' or '🧮 ' unchanged (no emoji, no superscript), which caused buttons
+        // on artist-recordings, user-tags, user-tag-value, and user-tag-value-entity pages
+        // to be invisible to the Ctrl-M shortcut system.
+        //
+        // Two cases now:
+        //   (a) label already carries '🧮' (with or without a following space):
+        //       strip the existing emoji+space prefix, then re-prefix with '🧮N '
+        //   (b) all other labels ('Show all…', plain text, other-emoji prefix, …):
+        //       prepend '🧮N ' directly
         const superscript = btnIndex < SUPERSCRIPT_DIGITS.length ? SUPERSCRIPT_DIGITS[btnIndex] : '';
-        let labelText;
-        if (conf.label.startsWith('Show all')) {
-            labelText = `🧮${superscript} ` + conf.label;
-        } else if (conf.label.startsWith('🧮 ')) {
-            // Insert superscript between 🧮 and the following space
-            labelText = `🧮${superscript}` + conf.label.slice(1); // slice(1) removes the bare space kept by slice of '🧮 ...'
-            // '🧮 '.slice(1) would give ' ...' which is wrong — use slice(2) since '🧮 ' is emoji+space (2 codepoints but emoji is 2 UTF-16 units)
-            // Safer: rebuild properly
-            labelText = `🧮${superscript} ` + conf.label.replace(/^🧮\s*/, '');
-        } else {
-            labelText = conf.label;
-        }
+        const labelText = conf.label.startsWith('🧮')
+            ? `🧮${superscript} ` + conf.label.replace(/^🧮\s*/, '')
+            : `🧮${superscript} ` + conf.label;
         eb.textContent = labelText;
         eb.style.cssText = uiActionBtnBaseCSS();
         eb.type = 'button';
