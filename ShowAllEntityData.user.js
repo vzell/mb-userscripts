@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.454+2026-04-10
+// @version      9.99.456+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -19561,13 +19561,30 @@ a { color: #1565c0; }`;
             // Buttons are collected in current DOM order and re-inserted in REVERSE
             // order via span.after() — reversing ensures the first-collected element
             // ends up first in the DOM after all insertions complete.
+            //
+            // NOTE: all mb-rel-retry-* buttons must be included here.
+            //
+            // • Multi-table mode: mb-rel-retry-global is a direct h2 child and sits
+            //   after the last art-retry button.  Without it the button floats to the
+            //   very beginning of the h2 child list (right after the toggle icon/text)
+            //   whenever the count-stat span is rebuilt.
+            //
+            // • Single-table mode: mb-rel-retry-0 is also a direct h2 child (placed
+            //   after mb-caa-toggle-btn-retry-0 by _artCreateOrUpdateRetryButton) and
+            //   suffers the exact same displacement for the same reason.
+            //
+            // Using the prefix pattern [id^="mb-rel-retry-"] covers both cases in one
+            // selector.  The :scope > guard ensures only direct h2 children are
+            // matched, so mb-rel-retry-1 / mb-rel-retry-2 … inside h3 sub-headers in
+            // multi-table mode are never collected here.
             const globalArtBtns = Array.from(targetH2.querySelectorAll(
                 ':scope > .mb-global-art-toggle-btn,' +
                 ' :scope > .mb-eaa-art-toggle-btn,' +
                 ' :scope > .mb-caa-art-toggle-btn,' +
                 ' :scope > [id$="-global-retry"],' +
                 ' :scope > [id^="mb-eaa-toggle-btn-retry-"],' +
-                ' :scope > [id^="mb-caa-toggle-btn-retry-"]'
+                ' :scope > [id^="mb-caa-toggle-btn-retry-"],' +
+                ' :scope > [id^="mb-rel-retry-"]'
             ));
             for (let i = globalArtBtns.length - 1; i >= 0; i--) {
                 span.after(globalArtBtns[i]);
@@ -31433,8 +31450,24 @@ a { color: #1565c0; }`;
         if (!activeInjectedColumns.length) return;
         const C = 'cursor:pointer;padding:1px 4px;border:1px solid #aaa;border-radius:3px;background:#f5f5f5;vertical-align:middle;font-size:0.8em;margin-left:3px;line-height:1;display:inline-flex;align-items:center;box-sizing:border-box;transition:transform 0.1s,box-shadow 0.1s;';
         function mk(id,t,fn) { if(document.getElementById(id))return null; const b=document.createElement('button'); b.id=id;b.type='button';b.title=t;b.textContent='🔗⟳';b.style.cssText=C;b.addEventListener('click',e=>{e.stopPropagation();fn();});return b;}
-        const gb=mk('mb-rel-retry-global','Globally retry Relationship icons (network reload, clears IDB)',()=>_relRetryAll());
-        if(gb){const a=document.querySelector('h2 [id$="-global-retry"]')||document.querySelector('h2 .mb-row-count-stat');if(a)a.after(gb);}
+        // The global Relationships retry button is only meaningful on multi-table
+        // pages where there are multiple sub-tables.  On single-table pages the
+        // per-table button (mb-rel-retry-0) created by _artCreateOrUpdateRetryButton
+        // is the only one needed.  Creating it unconditionally caused a second,
+        // superfluous "mb-rel-retry-global" button to appear after mb-row-count-stat
+        // on single-table pages (Bug #2).
+        if (activeDefinition && activeDefinition.tableMode === 'multi') {
+            const gb = mk(
+                'mb-rel-retry-global',
+                'Globally retry loading all Relationship icons for every sub-table (forces network reload, clears IDB cache)',
+                () => _relRetryAll()
+            );
+            if (gb) {
+                const a = document.querySelector('h2 [id$="-global-retry"]')
+                       || document.querySelector('h2 .mb-row-count-stat');
+                if (a) a.after(gb);
+            }
+        }
         Array.from(document.querySelectorAll('table.tbl')).forEach((tbl,i)=>{
             const sb=mk('mb-rel-retry-'+i,'Retry Relationship icons for this sub-table (network reload, clears IDB)',()=>_relRetryTable(tbl));
             if(!sb)return;
@@ -37843,8 +37876,13 @@ a { color: #1565c0; }`;
             const relRetryBtn2   = document.createElement('button');
             relRetryBtn2.id      = relRetryBtnId;
             relRetryBtn2.type    = 'button';
-            relRetryBtn2.title   = 'Retry loading Relationship icons for this sub-table '
-                                 + '(forces network reload, clears IDB cache)';
+            // On single-table pages this IS the only table, so the tooltip says
+            // "table" rather than "sub-table".  In multi-table mode "sub-table"
+            // is correct because several sibling tables coexist on the page.
+            const _relIsSingle = !activeDefinition || activeDefinition.tableMode !== 'multi';
+            relRetryBtn2.title   = _relIsSingle
+                ? 'Retry loading Relationship icons for this table (network reload, clears IDB cache)'
+                : 'Retry loading Relationship icons for this sub-table (forces network reload, clears IDB cache)';
             relRetryBtn2.textContent = '🔗⟳';
             relRetryBtn2.style.cssText =
                 'cursor:pointer; padding:1px 4px; border:1px solid #aaa;'

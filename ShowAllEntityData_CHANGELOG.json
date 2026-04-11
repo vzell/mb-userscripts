@@ -1,5 +1,31 @@
 [
   {
+    "version": "9.99.456",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug (single-table): mb-rel-retry-0 button displaced before mb-row-count-stat after sort/filter — same root cause as the multi-table mb-rel-retry-global displacement fixed in v9.99.455: the updateH2Count globalArtBtns re-anchor selector included '#mb-rel-retry-global' but not the per-table 'mb-rel-retry-0' (or any mb-rel-retry-N) button. Fix: replaced ':scope > #mb-rel-retry-global' with the broader ':scope > [id^=\"mb-rel-retry-\"]' which covers both the global (multi-table) and per-table (single-table) variants in one selector; the :scope > direct-child guard prevents matching mb-rel-retry-1/-2/… inside h3 sub-headers in multi-table mode."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.455",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug #1 (multi-table): mb-rel-retry-global button displaced after sort/filter. Root cause: updateH2Count re-anchors art buttons after rebuilding the mb-row-count-stat span, but its querySelectorAll selector did not include #mb-rel-retry-global, leaving it stranded before the new span. Fix: added ':scope > #mb-rel-retry-global' to the globalArtBtns selector so it is collected in DOM order and correctly re-inserted after the last art-retry button.",
+          "Bug #2 (single-table): two Relationship retry buttons appeared — mb-rel-retry-0 (correct, after mb-caa-toggle-btn-retry-0) and a spurious mb-rel-retry-global (after mb-row-count-stat). Root cause: _relCreateRetryButtons() unconditionally created mb-rel-retry-global on every page type. Fix: wrapped that creation in a tableMode === 'multi' guard so the global button is only created on multi-table pages.",
+          "Bug #2 follow-up: mb-rel-retry-0 tooltip changed from 'sub-table' to 'table' when running in single-table mode ('Retry loading Relationship icons for this table (network reload, clears IDB cache)'), since on a single-table page there is only one table. Multi-table mode retains the 'sub-table' wording."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.454",
     "date": "2026-04-10",
     "sections": [
