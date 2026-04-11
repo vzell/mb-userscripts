@@ -70876,6 +70876,21 @@ Another bug
 
 
 * TODO rename tooltip for toggle CAA "single"-table button
+** DONE rename the tooltip title for the CAA/EAA toggle button in the case of "single"-table mode from
+
+rename the tooltip title for the CAA/EAA toggle button in the case of "single"-table mode from
+
+#+begin_example
+        btn.title   = 'Retry loading all ' + ctx.toggleLabel + ' for this sub-table (forces network reload)';
+#+end_example
+
+to
+
+#+begin_example
+        btn.title   = 'Retry loading all ' + ctx.toggleLabel + ' for this table (forces network reload)';
+#+end_example
+
+** rename tooltip for toggle CAA "single"-table button
 
 rename tooltip for toggle CAA "single"-table button
 
@@ -70898,8 +70913,6 @@ to
   33878:            ? 'Hide ' + ctx.stripeLabel + ' for this section'
   33879:            : 'Show ' + ctx.stripeLabel + ' for this section';
 #+end_example
-
-
 
 * TODO event pages need the primary alias below the h1 header "Bleachers"
 
@@ -72260,12 +72273,12 @@ to
 #+end_example
 ** TODO add more tooltips for CAA/EAA columns
 
-
 * TODO fix naming in "Statistics" panel for Tag pages
+
 
 * TODO Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
 
-Why have the buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
+Why have the action buttons on https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings and on tag pages not the superscript for shortcut access
 
 #+begin_example
             // Get available action buttons

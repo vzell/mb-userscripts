@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.457",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "_artCreateOrUpdateRetryButton: CAA/EAA per-table retry button tooltip now reads '…for this table (forces network reload)' on single-table pages and '…for this sub-table (forces network reload)' on multi-table pages, mirroring the same context-aware pattern applied to the Relationship retry button in v9.99.455."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.456",
     "date": "2026-04-11",
     "sections": [
