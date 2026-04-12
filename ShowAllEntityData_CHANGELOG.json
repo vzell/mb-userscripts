@@ -1,5 +1,41 @@
 [
   {
+    "version": "9.99.461",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Statistics panel Table Details: second column showed full h1 innerHTML including all injected button labels, loading text, etc. on tag-value (and other no-<bdi>) page types. Root cause: _h1Text fell back to h1.textContent when no <bdi> was present, but on tag pages the controlsContainer (#mb-show-all-controls-container) is appended directly to the <h1>, so textContent included everything. Fix: on the no-<bdi> path, clone the h1 and strip #mb-show-all-controls-container, .mb-row-count-stat, and .mb-toggle-icon before reading textContent, matching the same defensive clone-and-strip pattern used elsewhere in the script."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.460",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "_artTooltipCellText: multi-credit Artist cells (and any other cell with more than one anchor) were truncated to the first artist only in bigbox hover tooltips. Root cause: the 'Linked cell' branch unconditionally called clone.querySelector('a') and returned only that single anchor's text, discarding everything after it — including ' & The E Street Band' in a cell like '<a>Bruce Springsteen</a> & <a>The E Street Band</a>'. Fix: replaced querySelector('a') with querySelectorAll('a'); when exactly one anchor is found the behaviour is unchanged (single anchor text returned); when multiple anchors are present the branch is skipped and the full cleaned cell textContent is returned instead, preserving the complete artist credit string with all its separators and names."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.459",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "tooltipColumns had no effect on tag-value and user-tag-value multi-table pages. Root cause: on these pages tooltipColumns lives in entityFeatures[entityType] (per group), not in activeDefinition.features. initCaaPics/initEaaPics run AFTER the renderGroupedTable group loop, at which point activeDefinition.features has been restored to the base (no tooltipColumns). The _artInitBigPics mouseenter handler read activeDefinition at hover time — long after restoration — so _renderBigboxTooltipFromColumns always received features.tooltipColumns=undefined and fell back to the static tooltip path. Fix in three parts: (1) renderGroupedTable: inside the per-group thead setup block where _groupEntityFeatures is already merged into _mf, persist any per-group tooltipColumns and extractMainColumn onto table.dataset (mbEntityTooltipColumns / mbEntityExtractMainColumn) so they survive past the group loop. (2) _artInitBigPics: snapshot those dataset values into _tableTooltipCols / _tableExtractMain immediately at call time (closed over by value). (3) mouseenter handler: build _effPageDef by merging the snapshot over activeDefinition.features and pass it to _renderBigboxTooltipFromColumns instead of the raw activeDefinition, giving the correct per-sub-table tooltipColumns at hover time without mutating any shared state."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.458",
     "date": "2026-04-11",
     "sections": [

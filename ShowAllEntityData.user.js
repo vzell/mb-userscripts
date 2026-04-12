@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.458+2026-04-11
+// @version      9.99.461+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -11832,7 +11832,19 @@ ${sections.join('\n')}
                 '.artistheader h1, .rgheader h1, .labelheader h1, h1');
             if (!h1) return '';
             const bdi = h1.querySelector('bdi');
-            return (bdi ? bdi.textContent : h1.textContent).trim().replace(/\s+/g, ' ');
+            if (bdi) return bdi.textContent.trim().replace(/\s+/g, ' ');
+            // No <bdi>: clone and strip all injected script elements before reading
+            // textContent.  On tag pages (and others where there is no <bdi>) the
+            // controlsContainer (#mb-show-all-controls-container) is appended
+            // directly to the <h1>, so a bare h1.textContent includes all button
+            // labels, loading messages, etc.  Strip it plus any other script nodes.
+            const clone = h1.cloneNode(true);
+            clone.querySelectorAll(
+                '#mb-show-all-controls-container,' +
+                '.mb-row-count-stat,' +
+                '.mb-toggle-icon'
+            ).forEach(el => el.remove());
+            return clone.textContent.trim().replace(/\s+/g, ' ');
         })();
 
         // Column header background colors — used for detection fallback and to tint
@@ -25183,6 +25195,28 @@ a { color: #1565c0; }`;
                             activeColumnExtractors          = buildActiveColumnExtractors(_td);
                             activeSyntheticColumnExtractors = buildActiveSyntheticColumnExtractors(_td);
                             activeIntegerColumns            = buildActiveIntegerColumns(_td);
+
+                            // Persist any per-group tooltipColumns / extractMainColumn on the
+                            // table element so that _artInitBigPics can snapshot them at call
+                            // time and close over them in its mouseenter handler.
+                            //
+                            // Background: initCaaPics/initEaaPics are called AFTER the group
+                            // loop, at which point activeDefinition.features has been restored
+                            // to the base (without per-entity tooltipColumns).  Without this
+                            // annotation the bigbox tooltip falls back to the static path and
+                            // tooltipColumns has no effect on tag-value/user-tag-value pages.
+                            if (_groupEntityFeatures.tooltipColumns) {
+                                table.dataset.mbEntityTooltipColumns =
+                                    JSON.stringify(_groupEntityFeatures.tooltipColumns);
+                            } else {
+                                delete table.dataset.mbEntityTooltipColumns;
+                            }
+                            if (_groupEntityFeatures.extractMainColumn) {
+                                table.dataset.mbEntityExtractMainColumn =
+                                    _groupEntityFeatures.extractMainColumn;
+                            } else {
+                                delete table.dataset.mbEntityExtractMainColumn;
+                            }
                         }
                         // 1. Reset all extractors.
                         activeColumnExtractors.forEach(e => { e.colIdx = -1; });
@@ -34950,13 +34984,19 @@ a { color: #1565c0; }`;
             return liTexts.join(', ');
         }
 
-        // ── Linked cell: prefer the first anchor's text ───────────────────────
-        const anchor = clone.querySelector('a');
-        if (anchor) {
-            return anchor.textContent.replace(/\s+/g, ' ').trim();
+        // ── Linked cell: prefer anchor text — but only when a single anchor is
+        // present.  Multi-credit Artist cells (and similarly structured cells)
+        // contain several anchors interleaved with plain text nodes, e.g.:
+        //   <a>Bruce Springsteen</a> &amp; <a>The E Street Band</a>
+        // Taking only querySelector('a') (the first anchor) discards everything
+        // after it.  When multiple anchors exist, fall through to the full-cell
+        // textContent path below so the entire credit string is returned.
+        const _anchors = clone.querySelectorAll('a');
+        if (_anchors.length === 1) {
+            return _anchors[0].textContent.replace(/\s+/g, ' ').trim();
         }
 
-        // ── Plain text fallback ───────────────────────────────────────────────
+        // ── Plain text fallback (also used for multi-anchor cells) ────────────
         const _raw = clone.textContent
             .replace(/\s+/g, ' ')
             .replace(/^[\u25b6\u2795\u26a0\ufe0f\u{1F300}-\u{1FAFF}\u2600-\u27BF]+/gu, '')
@@ -36754,6 +36794,25 @@ a { color: #1565c0; }`;
         const size   = Lib.settings.sa_caa_big_img_size   || 250;
         const colour = Lib.settings.sa_caa_highlight_colour || '#ffff00';
 
+        // ── Snapshot per-table entity features for the tooltip handler ────────
+        // On tag-value / user-tag-value pages each sub-table has its own
+        // tooltipColumns stored in entityFeatures, but initCaaPics/initEaaPics
+        // run AFTER the group loop and activeDefinition.features has been
+        // restored to the base (no per-group tooltipColumns).  renderGroupedTable
+        // serialises the per-group values onto the table element via
+        // table.dataset.mbEntityTooltipColumns / .mbEntityExtractMainColumn.
+        // We snapshot them here so the mouseenter closure below captures the
+        // correct values for this specific table rather than reading the live
+        // (by-then-restored) activeDefinition at hover time.
+        const _tableTooltipCols = (() => {
+            try {
+                return table.dataset.mbEntityTooltipColumns
+                    ? JSON.parse(table.dataset.mbEntityTooltipColumns)
+                    : null;
+            } catch (_e) { return null; }
+        })();
+        const _tableExtractMain = table.dataset.mbEntityExtractMainColumn || null;
+
         // ── 1. Create / reuse the bigbox ──────────────────────────────────────
         const boxId = ctx.boxPrefix + '-' + tableIndex;
         let   box   = document.getElementById(boxId);
@@ -37132,14 +37191,36 @@ a { color: #1565c0; }`;
                                 return _a ? _a.closest('tr') : null;
                             })();
 
+                            // Build the effective page-definition for the tooltip renderer.
+                            // On tag-value / user-tag-value pages, tooltipColumns lives in
+                            // per-group entityFeatures (not in activeDefinition.features).
+                            // _tableTooltipCols / _tableExtractMain were snapshotted from
+                            // table.dataset at _artInitBigPics call time (see above).
+                            // Merging them here produces the correct per-sub-table definition
+                            // without touching the live module-level activeDefinition.
+                            const _effPageDef = _tableTooltipCols
+                                ? {
+                                    ...(activeDefinition || {}),
+                                    features: {
+                                        ...((activeDefinition && activeDefinition.features) || {}),
+                                        tooltipColumns:    _tableTooltipCols,
+                                        ...(_tableExtractMain
+                                            ? { extractMainColumn: _tableExtractMain }
+                                            : {})
+                                    }
+                                  }
+                                : activeDefinition;
+
                             // ── DEBUG: log everything we know at tooltip-open time ────────────
                             if (Lib.settings.sa_enable_tooltip_debug) Lib.debug('tooltips', '[bigbox tooltip] wrapHref=' + _wrapHref);
                             if (Lib.settings.sa_enable_tooltip_debug) Lib.debug('tooltips', '[bigbox tooltip] _rowEl found=' + !!_rowEl);
                             if (Lib.settings.sa_enable_tooltip_debug) Lib.debug('tooltips', '[bigbox tooltip] activeDefinition type=' +
                                 (activeDefinition ? activeDefinition.type : 'null'));
-                            if (Lib.settings.sa_enable_tooltip_debug) Lib.debug('tooltips', '[bigbox tooltip] tooltipColumns=' +
-                                JSON.stringify(activeDefinition && activeDefinition.features &&
-                                    activeDefinition.features.tooltipColumns));
+                            if (Lib.settings.sa_enable_tooltip_debug) Lib.debug('tooltips', '[bigbox tooltip] _tableTooltipCols (snapshot)=' +
+                                JSON.stringify(_tableTooltipCols));
+                            if (Lib.settings.sa_enable_tooltip_debug) Lib.debug('tooltips', '[bigbox tooltip] tooltipColumns (effective)=' +
+                                JSON.stringify(_effPageDef && _effPageDef.features &&
+                                    _effPageDef.features.tooltipColumns));
                             if (_rowEl) {
                                 // Log every cell in the row with its header name
                                 const _dbgHdr = table.querySelector('thead tr:first-child');
@@ -37156,7 +37237,7 @@ a { color: #1565c0; }`;
                             // ── END DEBUG ──────────────────────────────────────────────────────
 
                             if (_rowEl && _renderBigboxTooltipFromColumns(
-                                    _tip, _rowEl, activeDefinition, table)) {
+                                    _tip, _rowEl, _effPageDef, table)) {
                                 if (Lib.settings.sa_enable_tooltip_debug) Lib.debug('tooltips', '[bigbox tooltip] rendered via tooltipColumns');
                             } else {
                                 if (Lib.settings.sa_enable_tooltip_debug) Lib.debug('tooltips', '[bigbox tooltip] using static fallback; ' +
