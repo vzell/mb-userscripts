@@ -1,5 +1,43 @@
 [
   {
+    "version": "9.99.464",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Sub-table filter input tooltip (createSubTableFilterContainer): appended \", use 'Ctrl+U' for unicode character map\" to filterInput.title, consistent with the same addition made to the global and column filter inputs in v9.99.463."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.463",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Filter input tooltips: appended \", use 'Ctrl+U' for unicode character map\" to both the global filter input title (filterInput.title) and the column filter input title (input.title) so users are reminded of the unicode character picker shortcut directly from the filter field tooltip."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.462",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bug 1 (filter-bar button tooltips, single-table): unhighlightAllBtn, clearColumnFiltersBtn, and clearAllFiltersBtn tooltip titles still mentioned 'ALL sub-tables' / 'ALL sub-table filters' on single-table pages. Fix: replaced each static string with a tableMode === 'multi' ternary — single-table pages now read 'global filter and ALL column filters', 'ALL column-specific filters', and 'global filter and ALL column filters' respectively; multi-table wording is unchanged.",
+          "Bug 2 (CAA/EAA toggle button tooltip, single-table): per-table toggle button title said '… for this sub-section' on single-table pages. Fix: replaced all three occurrence sites in _artCreateOrUpdateToggleButton (global handler sync, per-table click handler, initial title set) with tableMode === 'multi' ternaries that emit 'sub-section' on multi-table pages and 'section' on single-table pages.",
+          "Bug 3 (createSubTableFilterContainer — caseLabel / rxLabel tooltip, multi-table): title strings used single-quote delimiters so '${categoryName}' was emitted literally instead of being interpolated. Fix: switched both caseLabel.title and rxLabel.title from single-quoted strings to backtick template literals."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.461",
     "date": "2026-04-11",
     "sections": [

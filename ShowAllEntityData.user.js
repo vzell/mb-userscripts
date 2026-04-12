@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.461+2026-04-11
+// @version      9.99.464+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -15384,7 +15384,7 @@ a { color: #1565c0; }`;
     filterInput.placeholder = activeDefinition && activeDefinition.tableMode === 'multi'
         ? `Global Filter… works across all sub-tables`
         : `Global Filter…`;
-    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}')`;
+    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}', use 'Ctrl+U' for unicode character map)`;
     filterInput.style.cssText = uiGlobalFilterInputCSS();
 
     // ── Clear (✕) button — absolutely positioned inside the input ───────────
@@ -15589,7 +15589,9 @@ a { color: #1565c0; }`;
     unhighlightAllBtn.id = 'mb-toggle-filter-highlight-btn';
     unhighlightAllBtn.textContent = '🎨 Toggle ALL highlighting';
     unhighlightAllBtn.style.cssText = `${uiFilterBarBtnCSS()} transition:background-color 0.3s; display:none;`;
-    unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
+    unhighlightAllBtn.title = activeDefinition && activeDefinition.tableMode === 'multi'
+        ? 'Toggle filter string highlighting for the global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)'
+        : 'Toggle filter string highlighting for the global filter and ALL column filters (except the filter string when "Loading from Disk" was used)';
 
     /**
      * Update filter highlight button background color based on highlighting state
@@ -15655,7 +15657,9 @@ a { color: #1565c0; }`;
     clearColumnFiltersBtn.appendChild(document.createTextNode('Clear ALL COLUMN filters'));
     clearColumnFiltersBtn.id = 'mb-clear-column-filters-btn';
     clearColumnFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearColumnFiltersBtn.title = `Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')`;
+    clearColumnFiltersBtn.title = activeDefinition && activeDefinition.tableMode === 'multi'
+        ? `Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')`
+        : `Clear ALL column-specific filters (triggered by 'Shift+Esc')`;
     clearColumnFiltersBtn.onclick = () => {
         // Clear all column filters only
         document.querySelectorAll('.mb-col-filter-input').forEach(input => {
@@ -15686,7 +15690,9 @@ a { color: #1565c0; }`;
     clearAllFiltersBtn.appendChild(document.createTextNode('Clear ALL filters'));
     clearAllFiltersBtn.id = 'mb-clear-all-filters-btn';
     clearAllFiltersBtn.style.cssText = `${uiFilterBarBtnCSS()} display:none;`;
-    clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+    clearAllFiltersBtn.title = activeDefinition && activeDefinition.tableMode === 'multi'
+        ? `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`
+        : `Clear the global filter and ALL column filters (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
     clearAllFiltersBtn.onclick = () => {
         // filterClear.click() resets the global filter to prefix-only and runs the filter.
         filterClear.click();
@@ -20395,7 +20401,7 @@ a { color: #1565c0; }`;
             const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = '…';
-            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')}'`;
+            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')}', use 'Ctrl+U' for unicode character map`;
             input.className = 'mb-col-filter-input';
             input.dataset.colIdx = idx;
 
@@ -24245,7 +24251,7 @@ a { color: #1565c0; }`;
         filterInput.id = `${pfx}-input`;
         filterInput.type = 'text';
         filterInput.placeholder = `Filter "${categoryName}"… just in this sub-category`;
-        filterInput.title = `Filter rows in the "${categoryName}" sub-table`;
+        filterInput.title = `Filter rows in the "${categoryName}" sub-table, use 'Ctrl+U' for unicode character map`;
         const _stfW = (Lib.settings.sa_subtable_filter_initial_width ?? 320) + 'px';
         filterInput.style.cssText = `font-size:1em; padding:2px 28px 2px 6px; border:2px solid ${stfBorderIdle()}; border-right:none; border-radius:3px 0 0 3px; width:${_stfW}; height:24px; box-sizing:border-box; transition:box-shadow 0.2s; outline:none;`;
 
@@ -24306,7 +24312,7 @@ a { color: #1565c0; }`;
         const caseLabel = document.createElement('label');
         caseLabel.id = `${pfx}-case-label`;
         caseLabel.htmlFor = caseCheckbox.id;
-        caseLabel.title = 'Case Sensitive Filtering (filter for "${categoryName}" sub-table)';
+        caseLabel.title = `Case Sensitive Filtering (filter for "${categoryName}" sub-table)`;
         caseLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
         caseLabel.appendChild(caseCheckbox);
         caseLabel.appendChild(document.createTextNode('Cc'));
@@ -24320,7 +24326,7 @@ a { color: #1565c0; }`;
         const rxLabel = document.createElement('label');
         rxLabel.id = `${pfx}-rx-label`;
         rxLabel.htmlFor = rxCheckbox.id;
-        rxLabel.title = 'RegExp Filtering (filter for "${categoryName}" sub-table)';
+        rxLabel.title = `RegExp Filtering (filter for "${categoryName}" sub-table)`;
         rxLabel.style.cssText = 'font-size:0.8em; cursor:pointer; display:flex; align-items:center; margin:0; user-select:none; font-weight:normal; height:24px;';
         rxLabel.appendChild(rxCheckbox);
         rxLabel.appendChild(document.createTextNode('Rx'));
@@ -37694,7 +37700,10 @@ a { color: #1565c0; }`;
                     '.' + ctx.btnClass + ':not(#' + globalBtnId + ')'
                 );
                 liveSubBtns.forEach(sb => {
-                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
+                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel +
+                        (activeDefinition && activeDefinition.tableMode === 'multi'
+                            ? ' for this sub-section'
+                            : ' for this section');
                 });
 
                 // Update global button title.
@@ -38061,8 +38070,10 @@ a { color: #1565c0; }`;
                 liveBox.style.display        = nowVisible ? 'flex' : 'none';
                 liveBox.dataset[ctx.visAttr] = nowVisible ? 'true' : 'false';
                 btn.title = nowVisible
-                    ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
-                    : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+                    ? 'Hide ' + ctx.stripeLabel +
+                        (activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section')
+                    : 'Show ' + ctx.stripeLabel +
+                        (activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section');
                 Lib.debug(ctx.key, `${ctx.key} toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
             });
 
@@ -38109,8 +38120,10 @@ a { color: #1565c0; }`;
             ? liveBoxForTitle.dataset[ctx.visAttr] !== 'false'
             : false;
         btn.title = visible
-            ? 'Hide ' + ctx.stripeLabel + ' for this sub-section'
-            : 'Show ' + ctx.stripeLabel + ' for this sub-section';
+            ? 'Hide ' + ctx.stripeLabel +
+                (activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section')
+            : 'Show ' + ctx.stripeLabel +
+                (activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section');
 
         Lib.debug(ctx.key, `${ctx.key}CreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
         return btnId;

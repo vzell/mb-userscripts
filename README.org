@@ -71286,7 +71286,7 @@ Another bug
 
 
 
-* TODO rename tooltip for toggle CAA "single"-table button
+* DONE rename tooltip for toggle CAA "single"-table button
 ** DONE rename the tooltip title for the CAA/EAA toggle button in the case of "single"-table mode from
 
 rename the tooltip title for the CAA/EAA toggle button in the case of "single"-table mode from
@@ -71301,7 +71301,7 @@ to
         btn.title   = 'Retry loading all ' + ctx.toggleLabel + ' for this table (forces network reload)';
 #+end_example
 
-** rename
+** DONE rename
 
 1.)
 
@@ -71326,6 +71326,65 @@ for "single"-table pages to
 rename tooltip for the toggle CAA "single"-table button
 
 from
+
+#+begin_example
+                liveSubBtns.forEach(sb => {
+                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
+                });
+#+end_example
+
+to
+
+#+begin_example
+                liveSubBtns.forEach(sb => {
+                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
+                });
+#+end_example
+
+3.)
+
+on "multi"-table pages e.g. https://musicbrainz.org/release-group/af0c4ebb-3d9c-3159-8bce-322ca62744bb
+
+the "${categoryName}" in 
+
+#+begin_example
+        caseLabel.title = 'Case Sensitive Filtering (filter for "${categoryName}" sub-table)';
+#+end_example
+
+is rendered as is, but it should be the h3 header text before the '<span class="mb-row-count-stat"'
+
+** DONE rename
+
+rename
+
+#+begin_example
+            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')}'`;
+    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}')`;
+#+end_example
+
+to
+
+#+begin_example
+            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'}', use 'Ctrl+U' for unicode character map`;
+    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}', use 'Ctrl+U' for unicode character map)`;
+#+end_example
+
+** rename
+
+rename
+
+#+begin_example
+        filterInput.title = `Filter rows in the "${categoryName}" sub-table`;
+#+end_example
+
+to
+
+#+begin_example
+        filterInput.title = `Filter rows in the "${categoryName}" sub-table, use 'Ctrl+U' for unicode character map`;
+#+end_example
+
+
+* maybe later
 
 #+begin_example
   33529:                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
