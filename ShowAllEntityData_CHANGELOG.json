@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.465",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Post-render cleanup: MusicBrainz native div.filter bar (the 'Filter' button with img src containing 'filter-' and a.filter-button anchors) is now removed from the page after rendering, since the script's own filter UI replaces its function. Implemented as a querySelectorAll('div.filter') pass in finalCleanup, guarded by presence of a.filter-button or img[src*='filter-'] to avoid removing unrelated elements.",
+          "Global filter Cc/Rx/Ex label tooltips on single-table pages: removed the redundant '(ALL sub-tables)' suffix. Labels now read 'Case Sensitive Filtering', 'RegExp Filtering', and 'Exclude Matches' on single-table pages; multi-table pages retain the full '(ALL sub-tables)' qualifier via tableMode === 'multi' ternaries."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.464",
     "date": "2026-04-11",
     "sections": [

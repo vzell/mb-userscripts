@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.464+2026-04-11
+// @version      9.99.465+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -15446,7 +15446,9 @@ a { color: #1565c0; }`;
     caseCheckbox.style.cssText = uiCheckboxInputCSS();
     caseLabel.appendChild(caseCheckbox);
     caseLabel.appendChild(document.createTextNode('Cc'));
-    caseLabel.title = 'Case Sensitive Filtering (ALL sub-tables)';
+    caseLabel.title = activeDefinition && activeDefinition.tableMode === 'multi'
+        ? 'Case Sensitive Filtering (ALL sub-tables)'
+        : 'Case Sensitive Filtering';
 
     const regexpLabel = document.createElement('label');
     regexpLabel.id = 'mb-global-filter-rx-label';
@@ -15457,7 +15459,9 @@ a { color: #1565c0; }`;
     regexpCheckbox.style.cssText = uiCheckboxInputCSS();
     regexpLabel.appendChild(regexpCheckbox);
     regexpLabel.appendChild(document.createTextNode('Rx'));
-    regexpLabel.title = 'RegExp Filtering (ALL sub-tables)';
+    regexpLabel.title = activeDefinition && activeDefinition.tableMode === 'multi'
+        ? 'RegExp Filtering (ALL sub-tables)'
+        : 'RegExp Filtering';
 
     const excludeLabel = document.createElement('label');
     excludeLabel.id = 'mb-global-filter-exclude-label';
@@ -15468,7 +15472,9 @@ a { color: #1565c0; }`;
     excludeCheckbox.style.cssText = uiCheckboxInputCSS();
     excludeLabel.appendChild(excludeCheckbox);
     excludeLabel.appendChild(document.createTextNode('Ex'));
-    excludeLabel.title = 'Exclude Matches (ALL sub-tables)';
+    excludeLabel.title = activeDefinition && activeDefinition.tableMode === 'multi'
+        ? 'Exclude Matches (ALL sub-tables)'
+        : 'Exclude Matches';
 
     // ── History widget (Pin + History toggle + dropdown) ──────────────────────
     // Outer anchor is position:relative so the dropdown can be positioned below it.
@@ -29481,6 +29487,19 @@ a { color: #1565c0; }`;
                 Lib.debug('cleanup', `removeSelector: removed "${activeDefinition.features.removeSelector}".`);
             }
         }
+
+        // ── Remove MusicBrainz native filter bar (div.filter) ─────────────────
+        // MusicBrainz renders a "Filter" button bar (div.filter > div > a.filter-button)
+        // on many entity pages.  Once the script has rendered its own filter UI the
+        // native bar is redundant and visually clutters the page header.
+        // We match specifically on the presence of an img whose src contains
+        // "filter-" so we do not accidentally remove unrelated div.filter elements.
+        document.querySelectorAll('div.filter').forEach(_filterDiv => {
+            if (_filterDiv.querySelector('a.filter-button, img[src*="filter-"]')) {
+                _filterDiv.remove();
+                Lib.debug('cleanup', 'Removed native MB div.filter bar.');
+            }
+        });
 
         // Call the specific container removal again
         const sanojIds = ['load', 'load2', 'load3', 'load4', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6'];

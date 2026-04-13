@@ -70898,6 +70898,155 @@ the text of the second column in each "Table Details" sub-table show as
 
 but it should only be "Tag “country”" and NOT the whole icon etc. stuff
 
+* DONE rename tooltip for toggle CAA "single"-table button
+** DONE rename the tooltip title for the CAA/EAA toggle button in the case of "single"-table mode from
+
+rename the tooltip title for the CAA/EAA toggle button in the case of "single"-table mode from
+
+#+begin_example
+        btn.title   = 'Retry loading all ' + ctx.toggleLabel + ' for this sub-table (forces network reload)';
+#+end_example
+
+to
+
+#+begin_example
+        btn.title   = 'Retry loading all ' + ctx.toggleLabel + ' for this table (forces network reload)';
+#+end_example
+
+** DONE rename
+
+1.)
+
+rename the tooltip titles
+
+#+begin_example
+    unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
+    clearColumnFiltersBtn.title = `Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')`;
+    clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+    #+end_example
+
+for "single"-table pages to
+
+#+begin_example
+    unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter and ALL column filters (except the filter string when "Loading from Disk" was used)';
+    clearColumnFiltersBtn.title = `Clear ALL column-specific filters (triggered by 'Shift+Esc')`;
+    clearAllFiltersBtn.title = `Clear the global filter and ALL column filters (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+#+end_example
+
+2.)
+
+rename tooltip for the toggle CAA "single"-table button
+
+from
+
+#+begin_example
+                liveSubBtns.forEach(sb => {
+                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
+                });
+#+end_example
+
+to
+
+#+begin_example
+                liveSubBtns.forEach(sb => {
+                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
+                });
+#+end_example
+
+3.)
+
+on "multi"-table pages e.g. https://musicbrainz.org/release-group/af0c4ebb-3d9c-3159-8bce-322ca62744bb
+
+the "${categoryName}" in 
+
+#+begin_example
+        caseLabel.title = 'Case Sensitive Filtering (filter for "${categoryName}" sub-table)';
+#+end_example
+
+is rendered as is, but it should be the h3 header text before the '<span class="mb-row-count-stat"'
+
+** DONE rename
+
+rename
+
+#+begin_example
+            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')}'`;
+    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}')`;
+#+end_example
+
+to
+
+#+begin_example
+            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'}', use 'Ctrl+U' for unicode character map`;
+    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}', use 'Ctrl+U' for unicode character map)`;
+#+end_example
+
+** rename
+
+rename
+
+#+begin_example
+        filterInput.title = `Filter rows in the "${categoryName}" sub-table`;
+#+end_example
+
+to
+
+#+begin_example
+        filterInput.title = `Filter rows in the "${categoryName}" sub-table, use 'Ctrl+U' for unicode character map`;
+#+end_example
+
+* DONE single-table version of filtering checkboxes
+
+small enhancements
+
+1.)
+
+remove the following container (if present) from the final rendered page
+
+#+begin_example
+<div class="filter">
+  <div style="float:right;margin-top:-1.5em">
+    <a class="filter-button">
+      <img alt="" src="https://static.metabrainz.org/MB/filter-a7c3d16.png">
+    </a>
+    <a class="filter-button" href="#">Filter
+    </a>
+  </div>
+</div>
+#+end_example
+
+2.)
+
+on "single"-table pageTypes e.g. https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+
+change the tooltip texts from
+
+#+begin_example
+<label id="mb-global-filter-case-label" title="Case Sensitive Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+  <input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc
+</label>
+<label id="mb-global-filter-rx-label" title="RegExp Filtering (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+  <input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx
+</label>
+<label id="mb-global-filter-exclude-label" title="Exclude Matches (ALL sub-tables)" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+  <input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex
+</label>
+#+end_example
+
+to
+
+#+begin_example
+<label id="mb-global-filter-case-label" title="Case Sensitive Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+  <input id="mb-global-filter-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc
+</label>
+<label id="mb-global-filter-rx-label" title="RegExp Filtering" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+  <input id="mb-global-filter-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx
+</label>
+<label id="mb-global-filter-exclude-label" title="Exclude Matches" style="font-size: 0.8em; color: rgb(51, 51, 51); cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;">
+  <input id="mb-global-filter-exclude-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex
+</label>
+#+end_example
+
 
 * TODO fix Artist-Releasegroup pages
 ** DONE changes to do
@@ -71284,104 +71433,6 @@ Another bug
 - when switching back from the "merged" view to the "un-official" view, the h2 artwork count is wrong, it's the same as for the "merged" view, but the individell artwork counts in the h2 rows are OK 
 - when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
-
-
-* DONE rename tooltip for toggle CAA "single"-table button
-** DONE rename the tooltip title for the CAA/EAA toggle button in the case of "single"-table mode from
-
-rename the tooltip title for the CAA/EAA toggle button in the case of "single"-table mode from
-
-#+begin_example
-        btn.title   = 'Retry loading all ' + ctx.toggleLabel + ' for this sub-table (forces network reload)';
-#+end_example
-
-to
-
-#+begin_example
-        btn.title   = 'Retry loading all ' + ctx.toggleLabel + ' for this table (forces network reload)';
-#+end_example
-
-** DONE rename
-
-1.)
-
-rename the tooltip titles
-
-#+begin_example
-    unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter, ALL sub-table filters and ALL sub-table column filters in ALL sub-tables (except the filter string when "Loading from Disk" was used)';
-    clearColumnFiltersBtn.title = `Clear ALL column-specific filters in ALL sub-tables (triggered by 'Shift+Esc')`;
-    clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
-    #+end_example
-
-for "single"-table pages to
-
-#+begin_example
-    unhighlightAllBtn.title = 'Toggle filter string highlighting for the global filter and ALL column filters (except the filter string when "Loading from Disk" was used)';
-    clearColumnFiltersBtn.title = `Clear ALL column-specific filters (triggered by 'Shift+Esc')`;
-    clearAllFiltersBtn.title = `Clear the global filter and ALL column filters (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
-#+end_example
-
-2.)
-
-rename tooltip for the toggle CAA "single"-table button
-
-from
-
-#+begin_example
-                liveSubBtns.forEach(sb => {
-                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this sub-section';
-                });
-#+end_example
-
-to
-
-#+begin_example
-                liveSubBtns.forEach(sb => {
-                    sb.title = (makeVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + ' for this section';
-                });
-#+end_example
-
-3.)
-
-on "multi"-table pages e.g. https://musicbrainz.org/release-group/af0c4ebb-3d9c-3159-8bce-322ca62744bb
-
-the "${categoryName}" in 
-
-#+begin_example
-        caseLabel.title = 'Case Sensitive Filtering (filter for "${categoryName}" sub-table)';
-#+end_example
-
-is rendered as is, but it should be the h3 header text before the '<span class="mb-row-count-stat"'
-
-** DONE rename
-
-rename
-
-#+begin_example
-            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')}'`;
-    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}')`;
-#+end_example
-
-to
-
-#+begin_example
-            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'}', use 'Ctrl+U' for unicode character map`;
-    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}', use 'Ctrl+U' for unicode character map)`;
-#+end_example
-
-** rename
-
-rename
-
-#+begin_example
-        filterInput.title = `Filter rows in the "${categoryName}" sub-table`;
-#+end_example
-
-to
-
-#+begin_example
-        filterInput.title = `Filter rows in the "${categoryName}" sub-table, use 'Ctrl+U' for unicode character map`;
-#+end_example
 
 
 * maybe later
@@ -72425,5 +72476,4 @@ https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/
 
 
 * TODO https://musicbrainz.org/collection/3d73c67c-76c6-459d-ac8b-3145cb49d672 - for RGs add multi-table support
-
 
