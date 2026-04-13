@@ -72838,3 +72838,5 @@ https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/
                     ],
                     integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'B-DD', align: 'R'}, {sourceColumn: 'B-MM', align: 'R'}, {sourceColumn: 'B-YYYY', align: 'C'}, {sourceColumn: 'E-DD', align: 'R'}, {sourceColumn: 'E-MM', align: 'R'}, {sourceColumn: 'E-YYYY', align: 'C'} ],
 #+end_example
+
+* area-works - Date parts
