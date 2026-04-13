@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.465+2026-04-11
+// @version      9.99.468+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4358,13 +4358,14 @@
     // --- Configuration: Page Definitions ---
 
     // There are different types of MusicBrainz pages
-    // | Page type               | multiple tables           | paginated | table header                         |
-    // |-------------------------+---------------------------+-----------+--------------------------------------|
-    // | Artist-Releasegroups    | native                    | x         | h2, not repeating on paginated pages |
-    // | Releasegroup-Releases   | single table, subgrouping | x         | h2, repeating on paginated pages     |
-    // | Place-Performances, ... | single table, subgrouping |           | h2, repeating on single page         |
-    // | Events                  | single table              | x         | h3,                                  |
-    // | Search                  | single table              | x         | p.pageselector-results               |
+    // | Page type                    | multiple tables           | paginated | table header                         |
+    // |------------------------------+---------------------------+-----------+--------------------------------------|
+    // | Artist-Releasegroups         | native                    | x         | h3, not repeating on paginated pages |
+    // | Releasegroup-Releases        | single table, subgrouping | x         | h3, repeating on paginated pages     |
+    // | Collections-Releasegroups    | native                    | x         | h3, repeating on paginated pages     |
+    // | Place-Performances, ...      | single table, subgrouping |           | h3, repeating on single page         |
+    // | Events                       | single table              | x         | h3,                                  |
+    // | Search                       | single table              | x         | p.pageselector-results               |
 
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
@@ -4917,13 +4918,22 @@
                     columnExtractors: [
                         { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                     ],
-                    tooltipColumns: [ 'Title', 'Artist', '---', ['Type', 'Year', '(', 'Releases', ')'] ],
                     injectedColumns: [ 'Relationships' ],
-                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
+                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
                     collapsableColumns: [ 'CAA' ],
+                    tooltipColumns: [ 'Title', 'Artist', '---', ['Year', '(', 'Releases', ')'] ],
                     addCAA: 'Title',
                     extractMainColumn: 'Title',
-                    stickyColumn: 'Title'
+                    stickyColumn: 'Title',
+                    // Release-groups collection pages have native h3-grouped sub-tables
+                    // (one per release type, just like artist-releasegroups).  Setting
+                    // tableMode here overrides the collections-releases base 'single' so
+                    // the multi-table render path (renderGroupedTable) is used instead of
+                    // renderFinalTable.  columnHeaderErasers: ['▴/▾'] on the base
+                    // definition continues to apply per fetched page because it is read
+                    // from activeDefinition.columnHeaderErasers which is set at button-
+                    // click time from the (still-current) baseDef.
+                    tableMode: 'multi'
                 },
                 'Series': {
                     integerColumns: [ {sourceColumn: 'Number of entities', align: 'R'} ],
@@ -19048,6 +19058,27 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Returns true when the current fetch should use the artist-releasegroups
+     * h3-category scraping path.  This covers two cases:
+     *
+     *   1. The page is `artist-releasegroups` (always multi, native h3-grouped tables).
+     *   2. The page is `collections-releases` AND the resolved entityFeatures block
+     *      declared `tableMode: 'multi'` (currently only `'Release groups'`), meaning
+     *      the collection page contains native h3-grouped release-group sub-tables
+     *      identical to the artist-releasegroups layout.
+     *
+     * Using this predicate avoids repeating the same compound condition at every
+     * relevant guard site (fetch loop, clutter cleanup, sanojjonas removal).
+     *
+     * @returns {boolean}
+     */
+    function _isReleaseGroupsMultiMode() {
+        return pageType === 'artist-releasegroups' ||
+               (pageType === 'collections-releases' &&
+                activeDefinition && activeDefinition.tableMode === 'multi');
+    }
+
+    /**
      * Removes various clutter elements from the MusicBrainz page to prepare for consolidated view.
      */
     function performClutterCleanup() {
@@ -19098,7 +19129,7 @@ a { color: #1565c0; }`;
         });
         if (removedDetailsCount > 0) Lib.debug('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
 
-        if (pageType === 'events' || pageType === 'artist-releasegroups') {
+        if (pageType === 'events' || _isReleaseGroupsMultiMode()) {
             removeSanojjonasContainers();
         }
 
@@ -20888,7 +20919,7 @@ a { color: #1565c0; }`;
                 finalizeSplitAlignedColumns(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
                 finalizeRLCColumnWidths(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
             }
-            renderGroupedTable(filteredArray, pageType === 'artist-releasegroups', globalQuery || 're-run');
+            renderGroupedTable(filteredArray, _isReleaseGroupsMultiMode(), globalQuery || 're-run');
 
             /* Restore focus & scroll for column filters */
             if (__activeEl && __activeEl.classList.contains('mb-col-filter-input')) {
@@ -21875,6 +21906,21 @@ a { color: #1565c0; }`;
             features: mergedFeatures
         };
 
+        // Per-entity tableMode override: when the resolved entityFeatures block declares
+        // its own tableMode (e.g. 'Release groups' in collections-releases is 'multi'
+        // because the page renders native h3-grouped sub-tables like artist-releasegroups),
+        // promote it to the root of activeDefinition so the multi-table render path
+        // (renderGroupedTable) is selected instead of renderFinalTable.
+        // The base definition's tableMode ('single' for collections-releases) is the
+        // correct default for all other entity types on that page.
+        if (entitySpecificFeatures && entitySpecificFeatures.tableMode) {
+            activeDefinition = {
+                ...activeDefinition,
+                tableMode: entitySpecificFeatures.tableMode
+            };
+            Lib.debug('init', `resolveSeriesEntityFeatures: tableMode overridden to '${entitySpecificFeatures.tableMode}' from entityFeatures`);
+        }
+
         // Track the label of the last clicked button so saveTableDataToDisk can embed it
         // in the filename slug when the page has multiple buttons (multi-button pages).
         lastClickedButtonLabel = buttonConfig.label || null;
@@ -22271,7 +22317,7 @@ a { color: #1565c0; }`;
         // Run refactored clutter removal
         performClutterCleanup();
 
-        if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
+        if (pageType === 'events' || _isReleaseGroupsMultiMode()) removeSanojjonasContainers();
 
         // Update UI state
         activeBtn.disabled = true;
@@ -22586,7 +22632,7 @@ a { color: #1565c0; }`;
                 let rowsInThisPage = 0;
                 let pageCategoryMap = new Map();
 
-                if (pageType === 'artist-releasegroups') {
+                if (_isReleaseGroupsMultiMode()) {
                     doc.querySelectorAll('table.tbl').forEach(table => {
                         // Fetched XHR pages contain native MusicBrainz <h3> elements
                         // (e.g. "Album", "Single", "EP") that do NOT carry the
@@ -22594,6 +22640,16 @@ a { color: #1565c0; }`;
                         // findH3ForTable() requires that class and always returns null
                         // here, collapsing every group into "Other".  Use a plain
                         // backwards walk with no class restriction instead.
+                        //
+                        // For artist-releasegroups the h3 does NOT repeat across
+                        // paginated XHR pages — categories are seen at most once.
+                        //
+                        // For collections-release-groups (Release groups entity) the
+                        // h3 DOES repeat: each paginated XHR page begins with the
+                        // same h3 headers ("Album", "Single", …) followed by their
+                        // respective sub-tables.  The find-or-create logic below
+                        // merges all rows for a given category name into a single
+                        // groupedRows entry regardless of which page they came from.
                         let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
                         while (_prev && _steps < 5) {
                             if (_prev.tagName === 'H3') { _h3 = _prev; break; }
@@ -22602,13 +22658,16 @@ a { color: #1565c0; }`;
                         }
                         const category = _h3 ? _h3.textContent.trim() : 'Other';
 
-                        // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
-                        if (category !== lastCategorySeenAcrossPages) {
-                            Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
-                            groupedRows.push({ category: category, rows: [] });
-                            lastCategorySeenAcrossPages = category;
+                        // Find-or-create: if a group with this category already exists
+                        // (e.g. "Album" from a previous paginated page) append rows to
+                        // it rather than pushing a new duplicate group.
+                        let currentGroup = groupedRows.find(g => g.category === category);
+                        if (!currentGroup) {
+                            Lib.debug('fetch', `New category: "${category}". Rows so far: ${totalRowsAccumulated}`);
+                            currentGroup = { category: category, rows: [] };
+                            groupedRows.push(currentGroup);
                         }
-                        const currentGroup = groupedRows[groupedRows.length - 1];
+                        lastCategorySeenAcrossPages = category;
 
                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
                             if (row.cells.length > 1) {
@@ -23629,7 +23688,7 @@ a { color: #1565c0; }`;
                     finalizeSplitAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                     finalizeRLCColumnWidths(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                 }
-                await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+                await renderGroupedTable(groupedRows, _isReleaseGroupsMultiMode());
             } else {
                 originalAllRows = [...allRows];
                 // Finalize colon-aligned columns before render so colons line up
@@ -32090,7 +32149,7 @@ a { color: #1565c0; }`;
                         finalizeSplitAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                         finalizeRLCColumnWidths(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                     }
-                    await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
+                    await renderGroupedTable(groupedRows, _isReleaseGroupsMultiMode());
                 } else if (allRows.length > 0 || loadedRowCount === 0) {
                     // Finalize colon-aligned columns before render so colons line up
                     if (Lib.settings.sa_enable_numeric_alignment !== false) {

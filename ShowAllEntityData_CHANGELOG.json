@@ -1,5 +1,41 @@
 [
   {
+    "version": "9.99.468",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Reverted the H2-detection code added in v9.99.467 (incorrect: the heading on collections-release-group and releasegroup-releases pages is H3 throughout, not H2). The actual bug was in the group accumulation logic: the old code used 'if category !== lastCategorySeenAcrossPages → push new group' which created duplicate groupedRows entries when the same H3 category (e.g. 'Album') repeated on successive paginated XHR pages instead of appending to the existing group. Fix: replaced the push-on-change logic with a find-or-create pattern (groupedRows.find(g => g.category === category) || push new) so all rows for a given category are merged into one group regardless of how many paginated pages contribute them. artist-releasegroups is unaffected because its categories never repeat across pages (the find() always returns null on first occurrence, so the behavior is identical to the old push). Updated the documentation table: all heading levels corrected to 'h3'; artist-releasegroups 'not repeating', releasegroup-releases and collections-releasegroups 'repeating on paginated pages'."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.467",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "collections-releases 'Release groups' and artist-releasegroups: extended the _isReleaseGroupsMultiMode fetch-loop h3-backwards-walk to also detect H2 category headers. On collections-release-group pages (and on releasegroup-releases pages) MusicBrainz repeats the H2 heading (e.g. 'Album', 'Single') at the top of each fetched XHR page, but no H3 siblings precede the table. The old walk only looked for H3, so all tables on these pages collapsed to category 'Other'. Fix: the backwards walk now records both H3 and H2 hits; H3 takes precedence when found (preserving artist-releasegroups behaviour unchanged), with H2 as the fallback. The heading text is cleaned of sort glyphs (▴▾▼▲⇅) and count spans before being used as the group key. Updated the page-type documentation table to record 'Collections-Releasegroups' as a new row."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.466",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "✨ Feature / 🐛 Fix",
+        "items": [
+          "collections-releases 'Release groups': full support for native h3-grouped release-group collection pages. The entityFeatures 'Release groups' entry already carried tableMode:'multi', the correct integerColumns, tooltipColumns, and injectedColumns from v9.99.455. This version wires up the matching code paths: (1) New module-level predicate _isReleaseGroupsMultiMode() returns true for both artist-releasegroups and collections-releases when activeDefinition.tableMode === 'multi', avoiding repetition across call sites. (2) The fetch-loop h3-category scraping branch (native backwards-walk, no mb-toggle-h3 class restriction) now also fires for collections-releases Release-groups pages, populating groupedRows with the correct h3-derived category keys. (3) Both removeSanojjonasContainers() call sites extended to use the new predicate. (4) All three renderGroupedTable(…, isArtistMain) arguments updated from pageType === 'artist-releasegroups' to _isReleaseGroupsMultiMode(). The pre-fetch official-categories pass and post-render discography-view injection remain artist-releasegroups-only (collections pages don't have an Official/Non-official split). columnHeaderErasers: ['▴/▾'] continues to apply correctly because it is read from activeDefinition.columnHeaderErasers (spread from baseDef) which is unaffected by the entityFeatures tableMode override."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.465",
     "date": "2026-04-11",
     "sections": [
