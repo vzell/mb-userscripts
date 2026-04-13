@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.468+2026-04-11
+// @version      9.99.470+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -25806,6 +25806,27 @@ a { color: #1565c0; }`;
             });
             // Restore features to original base (no addCAA/addEAA).
             activeDefinition = { ...activeDefinition, features: _origFeaturesPreCaa };
+
+            // ── _isReleaseGroupsMultiMode inline thumbnails ────────────────────
+            // For collections-releases Release groups, activeDefinition.entityFeatures
+            // IS present (the full entity map has 'Release groups'.addCAA = 'Title'),
+            // so _tagHasEntityFeatureCaa = true and we are always in this branch.
+            // The per-group loop above is a no-op because groups carry no per-group
+            // entityFeatures (group.entityFeatures is undefined for all groups built
+            // by _isReleaseGroupsMultiMode).  After the restore above,
+            // activeDefinition.features still carries addCAA:'Title' (it was already
+            // present in _origFeaturesPreCaa via startFetchingProcess merge), so
+            // _artInitInlinePics can find the correct column.
+            if (_isReleaseGroupsMultiMode()) {
+                initCaaInlinePics();
+                initEaaInlinePics();
+            }
+        } else if (_isReleaseGroupsMultiMode()) {
+            // artist-releasegroups has no entityFeatures on its definition, so
+            // _tagHasEntityFeatureCaa is false and we reach here.  addCAA is already
+            // in activeDefinition.features (set directly in features:{} of the def).
+            initCaaInlinePics();
+            initEaaInlinePics();
         } else {
             // Standard single-feature pages.
             initCaaInlinePics();
@@ -32903,6 +32924,7 @@ a { color: #1565c0; }`;
         const mbid = MBID_REGEX.source;
         if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
         if (new RegExp(`^/recording/${mbid}$`).test(p)) return true;
+        if (new RegExp(`^/collection/${mbid}`).test(p)) return true;
         return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
     }
 

@@ -1,5 +1,30 @@
 [
   {
+    "version": "9.99.470",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "collections-releases 'Release groups': CAA inline thumbnails (mb-caa-inline-ph) still not rendered after v9.99.469. Root cause of that fix being ineffective: the else-if (_isReleaseGroupsMultiMode()) branch added in v9.99.469 was dead code for collections-releases. Because activeDefinition.entityFeatures exists on the collections-releases base definition (it holds the full entity map with 'Release groups'.addCAA='Title'), _tagHasEntityFeatureCaa is set to true and the if (_tagHasEntityFeatureCaa) branch is always entered — the else-if is never reached. The per-group loop inside that branch is a no-op (groups built by _isReleaseGroupsMultiMode have no group.entityFeatures). Features are then restored to _origFeaturesPreCaa which still contains addCAA:'Title' (it was present there all along, merged by startFetchingProcess). Fix: added an if (_isReleaseGroupsMultiMode()) call to initCaaInlinePics()/initEaaInlinePics() INSIDE the if (_tagHasEntityFeatureCaa) block, immediately after the feature restore, while addCAA:'Title' is back in activeDefinition.features. The else-if branch is retained for artist-releasegroups (which has no entityFeatures and still reaches it)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.469",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "collections-releases 'Release groups': ERG (▶ Toggle display of underlying entity page) buttons were not injected. Root cause: isExpandRGsPage() had no branch for /collection/ URLs, so initExpandRGsFeature() returned early. Fix: added 'if new RegExp(^/collection/<mbid>).test(p) return true' to isExpandRGsPage().",
+          "collections-releases 'Release groups': CAA inline thumbnails (mb-caa-inline-ph) were not rendered. Root cause: renderGroupedTable's inline-pic dispatch has a tag-page per-group entityFeatures path and a standard single-feature path, but no branch for _isReleaseGroupsMultiMode(). The tag-page branch fires (activeDefinition.entityFeatures exists on the base definition) but iterates group.entityFeatures which is always empty for _isReleaseGroupsMultiMode() groups — so every group was silently skipped, while addCAA:'Title' was already correctly set in activeDefinition.features. Fix: added an else-if (_isReleaseGroupsMultiMode()) branch that calls initCaaInlinePics() / initEaaInlinePics() directly using the already-merged activeDefinition.features."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.468",
     "date": "2026-04-11",
     "sections": [
