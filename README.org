@@ -60297,6 +60297,24 @@ so it should look like the following
 
 
 
+* DONE Rename button titles and tooltips
+** DONE initial
+1.)
+
+Change the text from
+
+#+begin_example
+clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+#+end_example
+
+to
+
+#+begin_example
+clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
+#+end_example
+
+* DONE change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
+
 
 * TODO add fetching to local db storage and reading from it
 ** initial
@@ -62881,24 +62899,6 @@ So when there is a '<span class="mb-caa-toggle-count">0' present, but on forcefu
 * TODO Make the "Tracks" column a multi-row cell column, "+" is the divider
 
 
-* TODO Rename button titles and tooltips
-** DONE initial
-1.)
-
-Change the text from
-
-#+begin_example
-clearAllFiltersBtn.title = `Clear global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
-#+end_example
-
-to
-
-#+begin_example
-clearAllFiltersBtn.title = `Clear the global filter, ALL sub-table filters and ALL column filters in All sub-tables (triggered by '${getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G')}')`;
-#+end_example
-
-* TODO change tooltip text depending on single or multi table pages - maybe use "Globally" versus "Sub-table"
-
 * TODO inform the user that the CSV exporter exports the first table in "multi"-table mode
 
 inform the user that the CSV exporter exports the first table in "multi"-table mode
@@ -62943,7 +62943,6 @@ comumn cell level accordingly)
 
 
 * TODO https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings - combine the two "Cell strucure" areas in the unique value pull-down menu
-
 
 * TODO counting and display wrong: actually with indexedDB cache
 * TODO test with final rendered page (so all are display)
