@@ -1,5 +1,54 @@
 [
   {
+    "version": "9.99.474",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "popular-tags: #mb-status-displays-wrapper and the intro <p> appeared after the last sub-table instead of between the <h1> and the new <h2>Popular tags</h2>. Root cause: applyInsertH2's new after-h1 fallback (v9.99.473) inserted the h2 immediately after <h1>, which is before the statusWrapper and p that the script had already inserted between <h1> and the original <h2>Genres</h2> at init time. Fix: changed the fallback insertion point from 'afterend of first h1' to 'beforebegin of first h3' in the content area. After renameH2ToH3 has run, the original section headings are h3 elements; inserting the new h2 immediately before the first h3 leaves all pre-existing sibling nodes (statusWrapper, p, etc.) above the h2, exactly where they should be. The 'after first h1' path is retained as a secondary fallback for pages with no h3 siblings.",
+          "popular-tags: removed the 'Show as a list/cloud instead.' toggle <a> link from the intro paragraph via removeSelector: 'a[href*=\"tags?show_list\"]'. The script's own action button replaces that navigation function."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.473",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "popular-tags: two remaining bugs after v9.99.472. Root cause of both: applyInsertH2 fell back to document.body.prepend() because the /tags page has neither div.tabs nor div#page (only div#content), placing <h2>Popular tags</h2> before all navigation — outside #content entirely. Bug 2 (h1 + action buttons rendered side-by-side with h2): the controlsContainer was appended to the misplaced h2 and makeH2sCollapsible rendered it inline at the top of body next to whatever browser chrome appeared there. Bug 1 (sorting/filtering broken): the filterContainer was also attached to the misplaced h2, and makeH2sCollapsible's contentNodes sweep captured the entire #content div as the h2's collapsible section, preventing the filter/sort machinery from correctly locating and interacting with the sub-tables. Fix: added a second-preference path to applyInsertH2 — when no div.tabs is found, insert afterend of the first <h1> inside #content (or #page/body). For /tags this places <h2>Popular tags</h2> immediately after <h1>Tags</h1> inside #content, before the renamed <h3>Genres</h3>, which is the correct position. The last-resort prepend fallback is preserved for structureless pages."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.472",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "popular-tags: no tables rendered after button click (groupedRows always empty). Three coordinated bugs identified from debug log: (1) Structure E in applyListToTable walked querySelectorAll('h3') only — on the fetched XHR doc renameH2ToH3 has not yet been applied so the original <h2>Genres</h2>/<h2>Other tags</h2> elements are still h2, not h3. Fix: changed to querySelectorAll('h3, h2') so Structure E creates tables correctly on both the live DOM (h3 after rename) and fetched docs (h2 not yet renamed). (2) listToTable multi-table branch backward walk only checked tagName === 'H3' — even if Structure E had created tables from h2-labelled sections, the category name could not be extracted from the preceding h2. Fix: added '|| _prev.tagName === 'H2'' to the backward walk check. (3) 'popular-tags' was missing from _singularPageTypes — category names like 'Genres'/'Other tags' would not be singularised to 'Genre'/'Other tag'. Fix: added 'popular-tags' to the set."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.471",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "✨ Feature",
+        "items": [
+          "Added support for the MusicBrainz Most Popular Tags page (/tags). (1) New @match directive: *://*.musicbrainz.org/tags* added after the user-tags match. (2) New pageType 'popular-tags': match=/^\/tags/, single button 'Show most popular tags' with params:{show_list:'1'}, features: renameH2ToH3:true (demotes the existing Genres/Other Tags h2s to h3), insertH2:'Popular tags' (creates the new section anchor h2), listToTable:[''] (triggers the new Structure E), integerColumns Tag count right-aligned, tableMode:'multi'. (3) Structure E in applyListToTable (sectionId='' dispatch): detected via _currentPath.match(/^\\/tags/). Walks every <h3> (after renameH2ToH3) and converts its next-sibling <ul class='tag-list top-tag-list'> into a 2-column <table class='tbl'> whose columns are singular(h3 text) (e.g. 'Genre', 'Other Tag') and 'Tag count', matching the Structure A/B layout used by user-tags pages. The table dataset.mbOriginalColName is set so renderGroupedTable can patch per-group cloned theads correctly."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.470",
     "date": "2026-04-11",
     "sections": [

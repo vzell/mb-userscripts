@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.470+2026-04-11
+// @version      9.99.474+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -20,6 +20,7 @@
 // @match        *://*.musicbrainz.org/user/*/subscribers
 // @match        *://*.musicbrainz.org/user/*/collections
 // @match        *://*.musicbrainz.org/user/*/tags*
+// @match        *://*.musicbrainz.org/tags*
 // @match        *://*.musicbrainz.org/user/*/tag/*
 // @match        *://*.musicbrainz.org/tag/*
 // @connect      raw.githubusercontent.com
@@ -3740,6 +3741,62 @@
                     return; // Structure D handled all h3+ul pairs for this entry
                 }
 
+
+                // ── Structure E: popular-tags /tags — h3+ul pairs (after renameH2ToH3) ──
+                // Triggered for the /tags page (pageType 'popular-tags').
+                // renameH2ToH3 has already demoted the original <h2> section headings
+                // ("Genres", "Other Tags") to <h3>.  Each <h3> is paired with the next
+                // sibling <ul class="tag-list top-tag-list"> and converted to a 2-column
+                // <table class="tbl"> (singular h3 text | Tag count), matching the
+                // Structure A/B layout used by user-tags pages.
+                const _isPopularTags = _currentPath.match(/^\/tags/);
+                if (_isPopularTags) {
+                    // Walk both h3 (live DOM, after renameH2ToH3) and h2 (fetched docs, not yet renamed).
+                    Array.from(_root.querySelectorAll('h3, h2')).forEach(_h3 => {
+                        let _next = _h3.nextElementSibling, _steps = 0, _ul = null;
+                        while (_next && _steps < 5) {
+                            if (_next.tagName === 'UL') { _ul = _next; break; }
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_ul) return;
+                        const _h3Text  = _h3.textContent.trim();
+                        const _colName = _toSingular(_h3Text);
+                        const _table   = docContext.createElement('table');
+                        _table.className = 'tbl';
+                        _table.dataset.mbOriginalColName = _colName;
+                        const _thead = docContext.createElement('thead');
+                        const _hr    = docContext.createElement('tr');
+                        [_colName, 'Tag count'].forEach(label => {
+                            const _th = docContext.createElement('th');
+                            _th.textContent = label;
+                            _hr.appendChild(_th);
+                        });
+                        _thead.appendChild(_hr);
+                        _table.appendChild(_thead);
+                        const _tbody = docContext.createElement('tbody');
+                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                            const _tr = docContext.createElement('tr');
+                            if (li.className) _tr.className = li.className;
+                            const _td1 = docContext.createElement('td');
+                            const _a   = li.querySelector('a');
+                            if (_a) _td1.appendChild(_a.cloneNode(true));
+                            _tr.appendChild(_td1);
+                            const _td2   = docContext.createElement('td');
+                            const _votes = li.querySelector('.tag-vote-buttons');
+                            if (_votes) _td2.appendChild(_votes.cloneNode(true));
+                            _tr.appendChild(_td2);
+                            _tbody.appendChild(_tr);
+                        });
+                        _table.appendChild(_tbody);
+                        _ul.parentNode.replaceChild(_table, _ul);
+                        Lib.debug('init',
+                            `applyListToTable: converted h3="${_h3Text}" ul \u2192 table` +
+                            ` (${_tbody.rows.length} rows, col="${_colName}", structure="popular-tags-h3-ul").`);
+                    });
+                    return; // Structure E handled all h3+ul pairs for this entry
+                }
+
                 Lib.debug('init', `applyListToTable: sectionId='' but path "${_currentPath}" matches no known structure — skipping.`);
                 return;
             }
@@ -3896,15 +3953,39 @@
         const _tabsDivs = document.querySelectorAll('div#page div.tabs, div#content div.tabs, div.tabs');
         if (_tabsDivs.length > 0) {
             const _tabs = _tabsDivs[_tabsDivs.length - 1];
-            // insertAdjacentElement places the new node as the next sibling.
             _tabs.insertAdjacentElement('afterend', _h2);
             Lib.debug('init', `applyInsertH2: inserted <h2>"${_text}"</h2> after <div class="tabs">.`);
-        } else {
-            // Fallback: prepend to div#page or body.
-            const _container = document.getElementById('page') || document.body;
-            _container.prepend(_h2);
-            Lib.debug('init', `applyInsertH2: inserted <h2>"${_text}"</h2> as first child of #page (fallback).`);
+            return;
         }
+
+        // Second preference: insert immediately before the first <h3> in the content
+        // area.  After renameH2ToH3() has run, the original section headings (e.g.
+        // "Genres", "Other Tags") are now <h3> elements.  Any script-injected nodes
+        // that sat between <h1> and those headings (e.g. #mb-status-displays-wrapper,
+        // an intro <p>) should remain ABOVE the new <h2> anchor — inserting
+        // beforebegin the first <h3> achieves this regardless of how many such nodes
+        // exist.  Falls through to the after-h1 path when no <h3> is present yet.
+        const _contentRoot = document.getElementById('content') ||
+                             document.getElementById('page') ||
+                             document.body;
+        const _firstH3 = _contentRoot.querySelector('h3');
+        if (_firstH3) {
+            _firstH3.insertAdjacentElement('beforebegin', _h2);
+            Lib.debug('init', `applyInsertH2: inserted <h2>"${_text}"</h2> before first <h3> in content area.`);
+            return;
+        }
+
+        // Third preference: after the first <h1> (no <h3> siblings yet).
+        const _firstH1 = _contentRoot.querySelector('h1');
+        if (_firstH1) {
+            _firstH1.insertAdjacentElement('afterend', _h2);
+            Lib.debug('init', `applyInsertH2: inserted <h2>"${_text}"</h2> after first <h1> in content area.`);
+            return;
+        }
+
+        // Last-resort fallback: prepend to content root.
+        _contentRoot.prepend(_h2);
+        Lib.debug('init', `applyInsertH2: inserted <h2>"${_text}"</h2> as first child of content root (last-resort fallback).`);
     }
 
     /**
@@ -4550,6 +4631,37 @@
                 // Remove the vote/sort form (style="margin-top:1em") after rendering
                 // since the two buttons above replace its function.
                 removeSelector: 'form[style*="margin-top"]'
+            },
+            tableMode: 'multi'
+        },
+        // Most popular tags in MusicBrainz (/tags)
+        // Page structure:
+        //   <h1>…</h1>
+        //   <p>…</p>
+        //   <h2>Genres</h2>  <ul class="tag-list top-tag-list">…</ul>
+        //   <h2>Other Tags</h2> <ul class="tag-list top-tag-list">…</ul>
+        //
+        // Processing pipeline:
+        //   1. renameH2ToH3 — demotes existing <h2> (Genres / Other Tags) to <h3>
+        //   2. insertH2     — inserts new <h2>Popular tags</h2> anchor
+        //   3. listToTable  — Structure E: walks <h3>+<ul> pairs, builds 2-col
+        //                     tables (singular(h3 text) | Tag count) from each
+        {
+            type: 'popular-tags',
+            match: (path, params) => path.match(/^\/tags/),
+            buttons: [
+                { label: 'Show most popular tags', params: { show_list: '1' } }
+            ],
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Popular tags',
+                listToTable: [ '' ],
+                integerColumns: [ { sourceColumn: 'Tag count', align: 'R' } ],
+                extractMainColumn: null,
+                stickyColumn: null,
+                // Remove the "Show as a list/cloud instead." link from the intro
+                // paragraph — the script's own button replaces that function.
+                removeSelector: 'a[href*="tags?show_list"]'
             },
             tableMode: 'multi'
         },
@@ -22900,15 +23012,20 @@ a { color: #1565c0; }`;
                     // text as the group/category name (fallback: 'Other'), then run
                     // the full shared row-processing pipeline.
                     tablesToProcess.forEach(table => {
-                        // Walk backwards to find the h3 that labels this table section.
+                        // Walk backwards to find the heading that labels this table section.
+                        // Accept both H3 (live DOM — h2s renamed by renameH2ToH3) and
+                        // H2 (fetched docs where renameH2ToH3 has not yet been applied,
+                        // e.g. popular-tags pages 2+, or any listToTable multi-page type).
                         let _prev = table.previousElementSibling;
                         let _steps = 0;
                         let _h3 = null;
                         while (_prev && _steps < 5) {
-                            if (_prev.tagName === 'H3') { _h3 = _prev; break; }
+                            if (_prev.tagName === 'H3' || _prev.tagName === 'H2') { _h3 = _prev; break; }
                             _prev = _prev.previousElementSibling;
                             _steps++;
                         }
+                        // Prefer dataset.mbOriginalColName when Structure D/E set it
+                        // (singularisation already applied); fall back to heading text.
                         const category = _h3 ? _h3.textContent.trim() : 'Other';
 
                         if (category !== lastCategorySeenAcrossPages) {
@@ -22920,7 +23037,7 @@ a { color: #1565c0; }`;
                             // entity/user-tags pages ("Genres" → "Genre", "Other tags" → "Other tag").
                             const _singularPageTypes = new Set([
                                 'tag-value', 'user-tag-value',
-                                'user-tags',
+                                'user-tags', 'popular-tags',
                                 'artist-tags', 'releasegroup-tags', 'release-tags',
                                 'recording-tags', 'work-tags', 'label-tags',
                                 'series-tags', 'place-tags', 'area-tags', 'instrument-tags'

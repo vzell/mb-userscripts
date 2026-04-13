@@ -71381,6 +71381,195 @@ groups':" (although the CAA thumbnails show up for the releases itself when the 
 </td>
 #+end_example
 
+* DONE Most popular tags in MusicBrainz
+** initial
+
+add most popular tags in MusicBrainz support:
+
+1.)
+
+add a new userscript "match" directive
+
+#+begin_example
+// @match        *://*.musicbrainz.org/tags*
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/user/*/tags*
+#+end_example
+
+2.)
+
+add a new pageType definition along the line of
+
+#+begin_example
+        // Most popular tags in MusicBrainz
+        {
+            type: 'popular-tags',
+            match: (path, params) => path.match(/\/tags/),
+            buttons: [
+                { label: 'Show most popular tags', params: { show_list: '1' } }
+            ],
+            renameH2ToH3: true,
+            insertH2: 'Popular tags',
+            features: {
+                listToTable: [ 'genres', 'tags' ]
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+after the pageType "type: 'user-tags'"
+
+
+3.)
+
+Adjust the pageType definition to what needs to be done to get the following implemented:
+
+The structure for this new pageType is
+
+#+begin_example
+<h1>
+<p>
+<h2>Genres</h2>
+<ul class="tag-list" top-tag-list">
+<h2>Other Tags</h2>
+<ul class="tag-list" top-tag-list">
+#+end_example
+
+Rename the H2 header lines first to H3 equivalents and add a new H2 headerline after the <p>.  Each list <ul> after each
+H3 header line should be converted to a one column table with the column name derived from the singular form of the h3
+header line in front of it.
+
+Then feed it in the standard rendering machinery for "multi"-table pageTypes.
+
+** bugs
+
+No tables get rendered. But there is a side by side rendering of an empty h2 line (left) and the h1 line + all the action button (rigth).
+Here the debug log
+
+#+begin_example
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.471+2026-04-11) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/tags 
+19:15:26.418 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/tags 
+19:15:26.418 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/tags 
+19:15:26.418 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /tags 
+19:15:26.418 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+19:15:26.418 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+19:15:26.419 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: popular-tags 
+19:15:26.419 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+19:15:26.419 [VZ-ShowAllEntityData: popular-tags] 🚀 Initializing script for path: /tags
+19:15:26.422 [VZ-ShowAllEntityData: popular-tags] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+19:15:26.436 [VZ-ShowAllEntityData: popular-tags] 🚀 Blurred #headerid-query input on page entry 
+19:15:26.437 [VZ-ShowAllEntityData: popular-tags] 📝 Changelog source: remote — replaced 0 local entries with 645 remote entries (fromCache=true) 
+19:15:35.083 [VZ-ShowAllEntityData: popular-tags] 🚀 integerColumns configured: ["Tag count"(R)] 
+19:15:35.084 [VZ-ShowAllEntityData: popular-tags] 🧹 Signalling other scripts to stop... 
+19:15:35.084 [VZ-ShowAllEntityData: popular-tags] 🚀 applyRenameH2ToH3: renamed 2 <h2> element(s) to <h3>. 
+19:15:35.084 [VZ-ShowAllEntityData: popular-tags] 🚀 applyInsertH2: inserted <h2>"Popular tags"</h2> as first child of #page (fallback). 
+19:15:35.085 [VZ-ShowAllEntityData: popular-tags] 🚀 applyListToTable: converted h3="Genres" ul → table (200 rows, col="Genre", structure="popular-tags-h3-ul"). 
+19:15:35.086 [VZ-ShowAllEntityData: popular-tags] 🚀 applyListToTable: converted h3="Other tags" ul → table (50 rows, col="Other tag", structure="popular-tags-h3-ul"). 
+19:15:35.086 [VZ-ShowAllEntityData: popular-tags] 📥 Starting fetch process... Object
+19:15:35.086 [VZ-ShowAllEntityData: popular-tags] 📥 Context: overrideParams detected. Fetching maxPage with overrides. Object
+19:15:35.086 [VZ-ShowAllEntityData: popular-tags] 📥 Fetching maxPage from: https://musicbrainz.org/tags?show_list=1&page=1 
+19:15:35.086 [VZ-ShowAllEntityData: popular-tags] 📥 Initiating fetch for URL: https://musicbrainz.org/tags?show_list=1&page=1 
+19:15:35.504 [VZ-ShowAllEntityData: popular-tags] ✅ Determined maxPage: 1 
+19:15:35.504 [VZ-ShowAllEntityData: popular-tags] 📥 Total pages to fetch: 1 
+19:15:35.504 [VZ-ShowAllEntityData: popular-tags] 🧹 Starting clutter element removal. 
+19:15:35.506 [VZ-ShowAllEntityData: popular-tags] 📥 Fetching URL for page 1: https://musicbrainz.org/tags?page=1&show_list=1 
+19:15:35.506 [VZ-ShowAllEntityData: popular-tags] 📥 Initiating fetch for URL: https://musicbrainz.org/tags?page=1&show_list=1 
+19:15:35.810 [VZ-ShowAllEntityData: popular-tags] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+19:15:35.810 [VZ-ShowAllEntityData: popular-tags] 📝 No targetHeader provided; returning all tables found in container. 
+19:15:35.810 [VZ-ShowAllEntityData: popular-tags] 📝 parseDocumentForTables: Found 0 total tables. Target header filter: "none" 
+19:15:35.810 [VZ-ShowAllEntityData: popular-tags] 📥 No tables found matching "null" on page 1 to parse. Skipping. 
+19:15:35.810 [VZ-ShowAllEntityData: popular-tags] 🎨 DOM rendering starting... 
+19:15:35.810 [VZ-ShowAllEntityData: popular-tags] 🎨 Starting updateH2Count: filtered=0, total=0, absoluteTotal=null 
+19:15:35.811 [VZ-ShowAllEntityData: popular-tags] 🎨 Searching for target H2. Current pageType: popular-tags 
+19:15:35.811 [VZ-ShowAllEntityData: popular-tags] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+19:15:35.811 [VZ-ShowAllEntityData: popular-tags] 🎨 Target element identified: "Popular tags..." 
+19:15:35.811 [VZ-ShowAllEntityData: popular-tags] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+19:15:35.811 [VZ-ShowAllEntityData: popular-tags] 🎨 Updated header/target Popular tags count: (0) 
+19:15:35.811 [VZ-ShowAllEntityData: popular-tags] 🎨 Starting renderGroupedTable with 0 categories. Query: "" 
+19:15:35.812 [VZ-ShowAllEntityData: popular-tags] 🎨 Cloning table head for template. 
+19:15:35.812 [VZ-ShowAllEntityData: popular-tags] 🧹 cleanupHeaders() called → existing headers=[Genre | Tag count] 
+19:15:35.812 [VZ-ShowAllEntityData: popular-tags] 🧹 No columns were matched for removal based on current settings. 
+19:15:35.812 [VZ-ShowAllEntityData: popular-tags] 🎨 Searching for target H2. Current pageType: popular-tags 
+19:15:35.812 [VZ-ShowAllEntityData: popular-tags] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+19:15:35.812 [VZ-ShowAllEntityData: popular-tags] 🎨 No query provided; performing initial cleanup of existing elements. 
+19:15:35.813 [VZ-ShowAllEntityData: popular-tags] 🎨  Injecting master toggle button and filter container after target header Popular tags(0). 
+19:15:35.813 [VZ-ShowAllEntityData: popular-tags] 📝 initBarcodeHighlight: no table.tbl found — skipping 
+19:15:35.813 [VZ-ShowAllEntityData: popular-tags] 📝 initCaaPics: request queue created (concurrency=4) 
+19:15:35.813 [VZ-ShowAllEntityData: popular-tags] 📝 initCAAPics: no table.tbl found — skipping 
+19:15:35.813 [VZ-ShowAllEntityData: popular-tags] 📝 initEAAPics: no table.tbl found — skipping 
+19:15:35.813 [VZ-ShowAllEntityData: popular-tags] 📝 initCAAInlinePics: no addCAA column configured for this page type — skipping 
+19:15:35.813 [VZ-ShowAllEntityData: popular-tags] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+19:15:35.814 [VZ-ShowAllEntityData: popular-tags] 🎨 Finished renderGroupedTable. 
+19:15:35.814 [VZ-ShowAllEntityData: popular-tags] 🧹 Running final cleanup... 
+19:15:35.814 [VZ-ShowAllEntityData: popular-tags] 🧹 No Sanojjonas elements found during final cleanup. 
+19:15:35.814 [VZ-ShowAllEntityData: popular-tags] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+19:15:35.814 [VZ-ShowAllEntityData: popular-tags] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+19:15:35.814 [VZ-ShowAllEntityData: popular-tags] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+19:15:35.814 [VZ-ShowAllEntityData: popular-tags] 🎨 Initializing collapsible H2 headers... 
+19:15:35.815 [VZ-ShowAllEntityData: popular-tags] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+19:15:35.815 [VZ-ShowAllEntityData: popular-tags] 🖥️ Auto-resize button added to controls 
+19:15:35.815 [VZ-ShowAllEntityData: popular-tags] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+19:15:35.815 [VZ-ShowAllEntityData: popular-tags] 🖥️ Density control button added to controls 
+19:15:35.816 [VZ-ShowAllEntityData: popular-tags] 🖥️ Statistics button added to controls 
+19:15:35.816 [VZ-ShowAllEntityData: popular-tags] 📝 Keyboard shortcuts initialized 
+19:15:35.816 [VZ-ShowAllEntityData: popular-tags] 🖥️ Shortcuts help button already exists, skipping 
+19:15:35.816 [VZ-ShowAllEntityData: popular-tags] 🖥️ Export button with dropdown menu added to controls 
+19:15:35.817 [VZ-ShowAllEntityData: popular-tags] 📝 initBarcodeHighlight: no table.tbl found — skipping 
+19:15:35.817 [VZ-ShowAllEntityData: popular-tags] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
+19:15:35.817 [VZ-ShowAllEntityData: popular-tags] 📝 Unicode character picker initialised 
+19:15:35.817 [VZ-ShowAllEntityData: popular-tags] 🎨 DOM rendering finished in 6.90ms 
+19:15:35.817 [VZ-ShowAllEntityData: popular-tags] ✅ Process complete. Final Row Count: 0. Total Time: 0.31s 
+19:15:35.833 [VZ-ShowAllEntityData: popular-tags] 📝 sa_auto_resize_columns: triggering auto-resize on load 
+19:15:37.088 [VZ-ShowAllEntityData: popular-tags] 📝 No tables found for auto-resize 
+19:15:37.091 [VZ-ShowAllEntityData: popular-tags] 🖥️ Auto-focused global filter input after final render 
+19:15:37.094 [VZ-ShowAllEntityData: popular-tags] 📝 _artOpenIdb: database opened successfully 
+19:15:37.267 [VZ-ShowAllEntityData: popular-tags] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
+#+end_example
+
+Also uploaded the initial HTML page "Tags.html" and the final rendered page "RenderedTags.html"
+
+** bugs
+
+still bugs:
+
+1.)
+
+although the tables do get renderrd now, the sorting and filtering doesn't work.
+
+2.)
+
+the h1 header line and action buttons are still rendered side by side to the h2 header line
+
+** glitch
+
+OK, tables get rendered and sorting/filtering works, BUT:
+
+1.)
+
+Now the "mb-status-displays-wrapper"
+
+#+begin_example
+<div id="mb-status-displays-wrapper" style="margin-top: 2px;"><span id="mb-status-sentinel" style="display: inline-block; width: 0px; height: 0px; overflow: hidden; vertical-align: middle;"></span><div id="mb-status-displays-container" style="display: inline-flex; align-items: center; gap: 8px; line-height: 1; vertical-align: middle; margin-left: 223.213px;"><span id="mb-global-status-display" style="font-size: 0.95em; color: rgb(153, 153, 153); font-weight: bold; vertical-align: middle;">Loaded 1 page (250 rows) from MusicBrainz, Fetching time: 0.20s, Rendering time: 0.03s</span><span id="mb-info-display" style="font-size: 0.95em; color: green; font-weight: bold; vertical-align: middle;">✓ Auto-resized 2 visible columns across 2 tables in 43ms (drag column edges to adjust)</span></div></div>
+#+end_example
+
+and the paragraph
+
+#+begin_example
+<p>These are the most popular tags in MusicBrainz, based on their total counts (upvotes minus downvotes).<!-- --> <a href="/tags?show_list=1">Show as a list instead.</a></p>
+#+end_example
+
+are rendered after the last table.
+
+Please fix and render them below the h1 headerline and before the first h2 header line.
+
+2.)
+
+Actually remove the '<!-- --> <a href="/tags?show_list=1">Show as a list instead.</a>' from the paragraph on the final rendered page.
+
 
 * TODO fix Artist-Releasegroup pages
 ** DONE changes to do
@@ -72485,176 +72674,6 @@ sticky column). The h3 sub-section headers should stay fixed and NOT scroll
 No, it's not working. Now not only the h3 header sections still move when scrolling horizontally, but also the sticky
 column feature on the tables itself is NOT working anymore
 
-
-
-* TODO Most popular tags in MusicBrainz
-** initial
-
-add most popular tags in MusicBrainz support:
-
-1.)
-
-add a new userscript "match" directive
-
-#+begin_example
-// @match        *://*.musicbrainz.org/tags*
-#+end_example
-
-after
-
-#+begin_example
-// @match        *://*.musicbrainz.org/user/*/tags*
-#+end_example
-
-2.)
-
-add a new pageType definition
-
-#+begin_example
-        // Most popular tags in MusicBrainz
-        {
-            type: 'popular-tags',
-            match: (path, params) => path.match(/\/tags/),
-            buttons: [
-                { label: 'Show most popular tags', params: { show_list: '1' } }
-            ],
-            features: {
-                listToTable: [ 'genres', 'tags' ]
-            },
-            tableMode: 'multi'
-        },
-#+end_example
-
-after the pageType "type: 'user-tags'"
-
-3.)
-
-the structure for this new pageType is
-
-#+begin_example
-h2
-ul
-h2
-ul
-#+end_example
-
-Add support for multiple H2 header lines where each section between consecutive H2 header lines has exactly one list
-which should be converted to a one column table with the colmn name dreived from the singulat from of the h2 header
-text.
-
-** wrong solution
-
-#+begin_example
-modified   ShowAllEntityData.user.js
-@@ -20,6 +20,7 @@
- // @match        *://*.musicbrainz.org/user/*/subscribers
- // @match        *://*.musicbrainz.org/user/*/collections
- // @match        *://*.musicbrainz.org/user/*/tags*
-+// @match        *://*.musicbrainz.org/tags*
- // @match        *://*.musicbrainz.org/user/*/tag/*
- // @match        *://*.musicbrainz.org/tag/*
- // @connect      raw.githubusercontent.com
-@@ -3740,6 +3741,71 @@
-                     return; // Structure D handled all h3+ul pairs for this entry
-                 }
- 
-+                // ── Structure E: multi-h2+ul (/tags — Most popular tags) ──────────
-+                // Triggered when the pageType is 'popular-tags'.
-+                // The /tags page has the structure:
-+                //   <h2>Genres</h2>  <ul>…</ul>
-+                //   <h2>Tags</h2>    <ul>…</ul>
-+                // Each <h2>+<ul> pair is converted to an <h3>+<table> so that
-+                // the existing multi-table <h3>-backward-walk machinery in the
-+                // fetch pipeline picks up the category labels automatically.
-+                // Column name: singular form of the <h2> text content.
-+                if (def?.type === 'popular-tags') {
-+                    Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
-+                        // Walk forward up to 5 siblings to find the sibling <ul>.
-+                        let _next  = _h2.nextElementSibling;
-+                        let _steps = 0;
-+                        let _ul    = null;
-+                        while (_next && _steps < 5) {
-+                            if (_next.tagName === 'UL') { _ul = _next; break; }
-+                            _next = _next.nextElementSibling;
-+                            _steps++;
-+                        }
-+                        if (!_ul) return;
-+
-+                        const _h2Text  = _h2.textContent.trim();
-+                        const _colName = _toSingular(_h2Text);
-+
-+                        // Replace <h2> with <h3> so the multi-table renderer
-+                        // finds the section label via its backward <h3> walk.
-+                        const _h3 = docContext.createElement('h3');
-+                        _h3.textContent = _h2Text;
-+                        _h2.parentNode.replaceChild(_h3, _h2);
-+
-+                        // Build the replacement <table class="tbl">.
-+                        const _table  = docContext.createElement('table');
-+                        _table.className = 'tbl';
-+                        _table.dataset.mbOriginalColName = _colName;
-+
-+                        // thead — single column, name derived from h2 text.
-+                        const _thead = docContext.createElement('thead');
-+                        const _hr    = docContext.createElement('tr');
-+                        const _th    = docContext.createElement('th');
-+                        _th.textContent = _colName;
-+                        _hr.appendChild(_th);
-+                        _thead.appendChild(_hr);
-+                        _table.appendChild(_thead);
-+
-+                        // tbody — one row per <li>, single <td> with full li content.
-+                        const _tbody = docContext.createElement('tbody');
-+                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
-+                            const _tr = docContext.createElement('tr');
-+                            if (li.className) _tr.className = li.className;
-+                            const _td = docContext.createElement('td');
-+                            Array.from(li.childNodes).forEach(n => _td.appendChild(n.cloneNode(true)));
-+                            _tr.appendChild(_td);
-+                            _tbody.appendChild(_tr);
-+                        });
-+                        _table.appendChild(_tbody);
-+
-+                        _ul.parentNode.replaceChild(_table, _ul);
-+                        Lib.debug('init',
-+                            `applyListToTable: converted h2="${_h2Text}" ul → table`
-+                            + ` (${_tbody.rows.length} rows, col="${_colName}", structure="h2-ul-multi").`);
-+                    });
-+                    return; // Structure E handled all h2+ul pairs for this entry
-+                }
-+
-                 Lib.debug('init', `applyListToTable: sectionId='' but path "${_currentPath}" matches no known structure — skipping.`);
-                 return;
-             }
-@@ -4552,6 +4618,18 @@
-             },
-             tableMode: 'multi'
-         },
-+        // Most popular tags in MusicBrainz (/tags)
-+        {
-+            type: 'popular-tags',
-+            match: (path, params) => path.match(/\/tags/),
-+            buttons: [
-+                { label: 'Show most popular tags', params: { show_list: '1' } }
-+            ],
-+            features: {
-+                listToTable: [ 'genres', 'tags' ]
-+            },
-+            tableMode: 'multi'
-+        },
-         // User tag value entity pages (/user/<username>/tag/<tag>/<entity>
-         // e.g. /user/vzell/tag/gig/event) — must come before user-tag-value
-         // (same /user/.*/tag/ prefix, but has an additional entity segment).
-@@ -22766,6 +22844,7 @@ a { color: #1565c0; }`;
-                             // entity/user-tags pages ("Genres" → "Genre", "Other tags" → "Other tag").
-                             const _singularPageTypes = new Set([
-                                 'tag-value', 'user-tag-value',
-+                                'popular-tags',
-                                 'user-tags',
-                                 'artist-tags', 'releasegroup-tags', 'release-tags',
-                                 'recording-tags', 'work-tags', 'label-tags',
-
-#+end_example
 
 
 * maybe
