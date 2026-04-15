@@ -71569,6 +71569,113 @@ Please fix and render them below the h1 headerline and before the first h2 heade
 
 Actually remove the '<!-- --> <a href="/tags?show_list=1">Show as a list instead.</a>' from the paragraph on the final rendered page.
 
+* DONE area-artists
+** initial
+
+some more changes to the pageType definitions:
+
+1.)
+
+for the pageType "type: 'area-artists'"
+
+change
+
+#+begin_example
+        {
+            type: 'area-artists',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
+            buttons: [ { label: 'Show all Artists for Area' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                ],
+                extractMainColumn: 'Artist',
+                stickyColumn: 'Artist'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'area-artists',
+            match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
+            buttons: [ { label: 'Show all Artists for Area' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                    { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
+                    { sourceColumn: 'Begin area', extractor: 'splitArea', syntheticColumns: ['MB-Begin area', 'Begin country'] },
+                    { sourceColumn: 'End area',   extractor: 'splitArea', syntheticColumns: ['MB-End area', 'End country'] },
+                    { sourceColumn: 'Begin',      extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End',        extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'B-DD', align: 'R'}, {sourceColumn: 'B-MM', align: 'R'}, {sourceColumn: 'B-YYYY', align: 'C'}, {sourceColumn: 'E-DD', align: 'R'}, {sourceColumn: 'E-MM', align: 'R'}, {sourceColumn: 'E-YYYY', align: 'C'} ],
+                extractMainColumn: 'Artist',
+                stickyColumn: 'Artist'
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+2.)
+
+To all pageTypes where an "extractor: 'dateParts'" is defined and the following definition is missing
+
+#+begin_example
+integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+#+end_example
+
+add it please
+
+** some more
+
+Add some more:
+
+1.)
+
+Add the
+
+#+begin_example
+integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ]
+#+end_example
+
+parameter to the following pageType definitons
+
+#+begin_example
+type: 'collections-releases' ==>  entityFeatures: 'Events':
+type: 'area-events'
+type: 'place-events'
+type: 'series-releases'      ==>  entityFeatures: 'Events'
+type: 'label-relationships-filtered'
+type: 'label-relationships'
+#+end_example
+
+2.)
+
+for the following two
+
+#+begin_example
+type: 'work-recordings-filtered'
+type: 'work-recordings'
+#+end_example
+
+extend the existing definition
+
+#+begin_example
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+#+end_example
+
+to
+
+#+begin_example
+		integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'} ]
+#+end_example
+
+
+
 
 * TODO fix Artist-Releasegroup pages
 ** DONE changes to do
@@ -72826,17 +72933,4 @@ https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly o
 https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/vzell/tag/gig/event
 #+end_example
 
-* TODO area-artists
 
-#+begin_example
-                    columnExtractors: [
-                        { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
-                        { sourceColumn: 'Begin area', extractor: 'splitArea', syntheticColumns: ['MB-Begin area', 'Begin country'] },
-                        { sourceColumn: 'End area',   extractor: 'splitArea', syntheticColumns: ['MB-End area', 'End country'] },
-                        { sourceColumn: 'Begin',      extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
-                        { sourceColumn: 'End',        extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
-                    ],
-                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'B-DD', align: 'R'}, {sourceColumn: 'B-MM', align: 'R'}, {sourceColumn: 'B-YYYY', align: 'C'}, {sourceColumn: 'E-DD', align: 'R'}, {sourceColumn: 'E-MM', align: 'R'}, {sourceColumn: 'E-YYYY', align: 'C'} ],
-#+end_example
-
-* area-works - Date parts

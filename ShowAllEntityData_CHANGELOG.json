@@ -1,5 +1,31 @@
 [
   {
+    "version": "9.99.476",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Added integerColumns DD(R)/MM(R)/YYYY(C) to 6 pageType definitions that used dateParts('Date') but were missing numeric alignment: collections-releases entityFeatures 'Events', area-events, place-events, series-releases entityFeatures 'Events', label-relationships-filtered, label-relationships.",
+          "work-recordings-filtered and work-recordings: extended existing integerColumns from [{Length:':'}] to [DD(R), MM(R), YYYY(C), {Length:':'}] to add date-part alignment alongside the existing colon-split length column."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.475",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "area-artists: extended columnExtractors from a single splitArea('Area') entry to the full artist-area breakdown: splitArea for 'Area', 'Begin area', 'End area'; dateParts for 'Begin' (B-DD/B-MM/B-YYYY/B-Day/B-Month) and 'End' (E-DD/E-MM/E-YYYY/E-Day/E-Month). Added integerColumns for all six B-/E- date part columns (R/R/C alignment). Matches the Artists entityFeature set in collections-releases.",
+          "artist-events: added missing integerColumns for DD (R), MM (R), YYYY (C) — the only pageType with dateParts('Date') that was lacking them (all others already had it)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.474",
     "date": "2026-04-11",
     "sections": [

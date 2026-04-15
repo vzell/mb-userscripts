@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.474+2026-04-11
+// @version      9.99.476+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4977,6 +4977,7 @@
                         { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                     ],
                     collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                     addEAA: 'Event',
                     extractMainColumn: 'Event',
@@ -5141,8 +5142,13 @@
             buttons: [ { label: 'Show all Artists for Area' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                    { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
+                    { sourceColumn: 'Begin area', extractor: 'splitArea', syntheticColumns: ['MB-Begin area', 'Begin country'] },
+                    { sourceColumn: 'End area',   extractor: 'splitArea', syntheticColumns: ['MB-End area', 'End country'] },
+                    { sourceColumn: 'Begin',      extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End',        extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
                 ],
+                integerColumns: [ {sourceColumn: 'B-DD', align: 'R'}, {sourceColumn: 'B-MM', align: 'R'}, {sourceColumn: 'B-YYYY', align: 'C'}, {sourceColumn: 'E-DD', align: 'R'}, {sourceColumn: 'E-MM', align: 'R'}, {sourceColumn: 'E-YYYY', align: 'C'} ],
                 extractMainColumn: 'Artist',
                 stickyColumn: 'Artist'
             },
@@ -5161,6 +5167,7 @@
                     { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                 addEAA: 'Event',
                 extractMainColumn: 'Event',
@@ -5344,6 +5351,7 @@
                     { sourceColumn: 'Date',  extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 collapsableColumns: [ 'Artists', 'EAA' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Artists', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                 addEAA: 'Event',
                 extractMainColumn: 'Event',
@@ -5440,6 +5448,7 @@
                         { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                     ],
                     collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                     addEAA: 'Event',
                     extractMainColumn: 'Event',
@@ -5490,6 +5499,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
@@ -5507,6 +5517,7 @@
                 columnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
@@ -5566,7 +5577,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
                 ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'} ],
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
@@ -5581,7 +5592,7 @@
                     { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] },
                     { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] }
                 ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'} ],
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
@@ -5868,6 +5879,7 @@
                     { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 collapsableColumns: [ 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Role', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                 addEAA: 'Event',
                 extractMainColumn: 'Event',
