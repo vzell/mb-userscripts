@@ -4,8 +4,8 @@ VZ: MusicBrainz — Show All Entity Data In A Consolidated View
 PURPOSE
 -------
 Consolidates paginated and non-paginated MusicBrainz table lists (Events,
-Recordings, Releases, Works, Artists, Labels, Release Groups, and more) into a
-single scrollable, filterable, sortable view.
+Recordings, Releases, Works, Artists, Labels, Release Groups, Tags, and more)
+into a single scrollable, filterable, sortable view.
 
 SUPPORTED PAGES
 ---------------
@@ -13,14 +13,21 @@ SUPPORTED PAGES
             Relationships (including filtered link_type_id pages)
 • Release Group, Release, Recording, Work, Label, Series, Place, Area,
   Instrument, Event pages — all supported sub-tabs
+• Collection pages (own collections, subscribed collections, entity sub-tabs
+  including Release groups with native h3-grouped sub-tables)
+• Tag pages — entity tag pages (/tag/<value>, /tag/<value>/<entity>),
+  user tag pages (/user/*/tags, /user/*/tag/*),
+  and the MusicBrainz Most Popular Tags page (/tags)
 • Search result pages (all entity types)
 
 GETTING STARTED
 ---------------
 1. Navigate to any supported MusicBrainz entity page (e.g. an Artist's
    Recordings tab).
-2. Click the "Show all …" action button in the controls bar to start fetching
-   all pages from the MusicBrainz database.
+2. Click the action button (labelled "Show all …", "🧮¹ Show all …", or a
+   page-specific label) in the controls bar to start fetching all pages from
+   the MusicBrainz database.  Action buttons carry a 🧮N superscript prefix
+   where N is the Ctrl-M prefix mnemonic index (1–9) for keyboard access.
 3. A real-time progress bar (light-red → orange → light-green) tracks the
    fetch.  Click "Stop" at any time to abort; or press the prefix key then "o"
    while the Stop button is visible.
@@ -60,6 +67,8 @@ FILTERING
 • Ctrl-G  — focus global filter field (configurable)
 • Ctrl-C  — focus first column filter; repeated presses cycle through tables
             (configurable)
+• Ctrl-U  — open Unicode character picker (when any text input is focused;
+            configurable) — insert special characters into filter strings
 • Ctrl-Shift-G — clear all active filters (configurable; also activates the
                 "✕ Clear ALL filters" button)
 • Shift-Esc    — clear all COLUMN filters only (global — works from anywhere)
@@ -97,7 +106,29 @@ When the field loses focus:
   #fff9c4), providing a visual overview of which columns have active filters.
 • If the field was cleared the background is removed entirely.
 Both colours and the prefix string are configurable in ⚙️ Settings →
-🎨 FILTER HIGHLIGHT COLORS.
+🎨 TABLE FILTER CONFIGURATION.
+
+FILTER HISTORY & PINNED FILTER LIST
+-------------------------------------
+Every filter expression entered in the global filter or the Load-from-Disk
+pre-filter is saved to an LRU history (configurable limit, default 50 entries).
+A ▼ dropdown toggle opens the history panel, which shows two sections:
+
+• 📌 Pinned — a persistent list of expressions that never age out.  Entries
+  can be added (★ pin button next to any LRU item), edited, and removed via
+  the "✎ Edit Pinned Filter List" button (Alt+E in the panel, or via ⚙️
+  Settings → 💾 LOAD AND SAVE DATA TO/FROM DISK → "Edit Pinned Filter List").
+
+• LRU History — the most recent N expressions (most recent first).  Clicking
+  any entry applies it immediately; the ★ button pins it permanently.
+
+UNICODE CHARACTER PICKER  (Ctrl+U when a text input is focused)
+----------------------------------------------------------------
+When any text input or textarea is focused, Ctrl+U (configurable) opens a
+small popup listing all configured Unicode glyphs.  Clicking a glyph inserts
+it at the cursor position in the focused field.  The mapping table (character
+→ name → examples) is fully configurable in ⚙️ Settings →
+🔤 UNICODE CHARACTER PICKER.
 
 UNIQUE-VALUES COLUMN DROPDOWN  (📊 button in every column header)
 ------------------------------------------------------------------
@@ -111,7 +142,7 @@ every distinct non-empty value currently visible in that column.
     (5678) value B
    (21345) value C
   Badge text and background colors are configurable in ⚙️ Settings →
-  🎨 FILTER HIGHLIGHT COLORS ("Unique-Values Count Badge" settings).
+  🎨 TABLE FILTER CONFIGURATION ("Unique-Values Count Badge" settings).
 • Quick-filter bar — a "Quick filter…" input at the top of the panel is
   auto-focused when the panel opens.  Type to narrow the item list in real
   time; matching substrings are highlighted (configurable colors).  A ×
@@ -226,6 +257,7 @@ PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
     h   Show App Help (this dialog)
     o   Activate Stop button (only while a fetch is running)
     1–9 / a–z  Trigger the corresponding action button by mnemonic index
+                (action buttons show 🧮N superscript to indicate their index)
 
   The prefix key can be changed in ⚙️ Settings → "🎹 KEYBOARD SHORTCUTS"
   to any combination such as "Ctrl+.", "Alt+X", "Ctrl+Shift+,".
@@ -297,6 +329,10 @@ COLUMN MANAGEMENT
                                     and area pages
     — "MB-Area" + "Country"     split from the "Area" cell on label, area,
                                 and recording pages
+    — "MB-Begin area" + "Begin country"  split from the "Begin area" cell on
+                                area-artists and similar pages
+    — "MB-End area" + "End country"      split from the "End area" cell on
+                                area-artists and similar pages
     — "Total Tracks"            computed from track-count data on release pages
     — "Format Types"            strips quantity prefixes (e.g. "8×") from
                                 the Format column on release-group, label, and
@@ -312,12 +348,68 @@ COLUMN MANAGEMENT
                                 name alongside its disambiguation comment
 • Derived columns (split from already-extracted columns):
     — "DD" + "MM" + "YYYY" + "Day" + "Month"  derived from the extracted "Date"
-                                column on release and label pages
+                                column on release, label, event, and work pages
+    — "B-DD" + "B-MM" + "B-YYYY" + "B-Day" + "B-Month"  derived from "Begin"
+                                date on artist, area-artist, and label pages
+    — "E-DD" + "E-MM" + "E-YYYY" + "E-Day" + "E-Month"  derived from "End"
+                                date on artist, area-artist, and label pages
     — "Event-Type" + "Event-Date" + "Event-Detail" + "Event-Venue" +
       "Event-Venue-Detail" + "Event-City" + "Event-State" + "Event-Country"
                                 derived from the extracted "Comment" column on
                                 Work-Recordings pages (requires "Enable Event
                                 Parts synthetic column extractor" setting)
+
+NUMERIC COLUMN ALIGNMENT  (🔢 NUMERIC COLUMN ALIGNMENT in ⚙️ Settings)
+------------------------------------------------------------------------
+Date-part columns (DD, MM, YYYY and their B-/E- prefixed variants) and other
+declared integer columns are right- or center-aligned with uniform
+inline-block wrapping so values line up vertically regardless of digit count.
+The "Length" column on recording pages uses colon-split alignment so the ":"
+separator lines up across all rows.  Numeric alignment can be disabled
+globally in ⚙️ Settings.
+
+CAA/EAA ILLUSTRATED DISCOGRAPHY  (🖼️ in ⚙️ Settings)
+------------------------------------------------------
+• Enable CAA/EAA Illustrated Discography — loads cover/event art thumbnails
+  after rendering.  Three display modes, all independently togglable:
+    — Small icon column — tiny thumbnail in the CAA/EAA column header cell
+    — Big picture strip — a horizontal scrollable strip of large images
+                          above each sub-table that has artwork
+    — Inline thumbnails — a 20×20 px thumbnail inside each Release/Title
+                          column cell next to the release-group/release name
+• Big picture strip — a 🖼️ toggle button in each h3/h2 header shows/hides
+  the strip per sub-table; a global toggle in the h2 header controls all
+  strips at once.  Retry buttons (⟳ and 🔗⟳) force a fresh network fetch
+  with IDB cache invalidation.
+• Inline thumbnails — display context-aware tooltips (driven by tooltipColumns
+  in the page definition) when hovering; tooltip shows name, comment, artist,
+  format, etc. depending on the page type.
+• Cache-hint indicators (🟢 memory / 🟡 network / 🔵 IDB / 🗄️ timed /
+  ⚠️ unknown) can be shown as overlays on big-strip images, inline thumbnails,
+  and the count badge in the icon column.  Configurable in ⚙️ Settings →
+  ⏱️ RESOURCE TIMING API.
+
+EXPAND RELEASE GROUPS  (🔍 in ⚙️ Settings)
+--------------------------------------------
+On Artist, Label, Release-Group, Series, Recording, and Collection pages,
+each release-group link cell receives an inline ▶/▼ toggle button.  Clicking
+it expands an inline sub-table showing all releases for that release group
+(title, format, track count, date, country, status).  Each release row also
+gets its own ▶/▼ button for expanding a track listing.  Clicking again
+collapses the sub-table.
+
+RELEASE EVENTS COLUMN  (📅 in ⚙️ Settings)
+--------------------------------------------
+On pages that declare injectedColumns:["Release events"] the script injects
+an extra "Release events" column and populates it asynchronously from the
+MusicBrainz Web Service (one WS2 call per release row).  The column shows
+release event dates and countries after the table renders.
+
+RELATIONSHIPS COLUMN  (🔗 in ⚙️ Settings)
+--------------------------------------------
+On pages that declare injectedColumns:["Relationships"] the script injects
+a "Relationships" column populated asynchronously from the MusicBrainz
+Web Service.  Relationship icons appear after the table renders.
 
 H1 ALIAS LINE
 -------------
@@ -326,6 +418,10 @@ inside the h1 title.  The script relocates that alias into a dedicated italic
 line immediately below the title: «Primary alias: …», keeping the title line
 and action buttons uncluttered.  Extra show-title text (when present alongside
 the alias in the same span) is preserved as a new comment span in the h1.
+Additional relocations (configurable):
+• Legal name paragraph — moved below the subheader on artist-releasegroups pages
+• Trailing h2 sections (e.g. "Relationships", "Related works") — moved before
+  the data table h2 for easier navigation
 
 DENSITY CONTROL
 ---------------
@@ -407,22 +503,35 @@ labels and descriptions.  Major setting groups:
 • 🔬 EXPERIMENTAL FEATURES
     — Collapsible sidebar
 
+• 🏷️ PAGE HEADER AND BODY CONFIGURATION
+    — Relocate H1 comment-span alias block on initial page (release-group /
+      event pages — moves alias <i> from h1 into a dedicated italic line)
+    — Relocate H1 comment-span alias block on final rendered page
+    — Relocate legal name below subheader (artist-releasegroups pages)
+    — Relocate trailing h2 sections before data table (final rendered page)
+
+• 💬 TOOLTIPS
+    — Enable rich row-count tooltips on h2/h3 count spans
+    — Row-count tooltip background and foreground colors
+
+• 🔢 NUMERIC COLUMN ALIGNMENT
+    — Enable / disable numeric column alignment globally
+
 • 🧮 OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE
-    — Remove Tagger, Rating, Relationships, Performance, or "Release events"
-      columns from the final rendered tables
+    — Remove Tagger, Rating, Checkbox-Cell columns from the final rendered tables
 
 • 🎹 KEYBOARD SHORTCUTS
     — Enable / disable keyboard shortcuts and prefix-mode tooltip overlay
     — Configure the prefix key (default: Ctrl+M)
-    — 20 configurable direct-chord shortcuts:
+    — 20+ configurable direct-chord shortcuts:
          Global: Save, Load, Resize, Visible, Density, Statistics, Export,
                  Settings, Global Filter, Column Filter, Clear Filters,
                  Toggle h2, Toggle h3, Unicode Character Picker
          Column-filter-focused: Sort Ascending, Sort Descending, Unsort,
                  Toggle Multi-Row Collapse, Unique-Values Dropdown,
-                 Toggle CAA/EAA Cover Art
+                 Toggle CAA/EAA Cover Art, Resize Sub-table, Visible Sub-table
 
-• 🎨 FILTER HIGHLIGHT COLORS
+• 🎨 TABLE FILTER CONFIGURATION
     — Pre-filter, global filter, and column filter highlight foreground and
       background colors
     — Column filter focus background and active background colors
@@ -448,10 +557,8 @@ labels and descriptions.  Major setting groups:
     — Enable / disable: Column Visibility Toggle, Table Density Control,
       Sticky Headers
 
-• 📊 STATISTICS PANEL
-    — Enable / disable the Statistics panel button
-    — Statistics panel max width (px, default 860)
-    — Statistics panel max height (vh, default 82)
+• 📌 TABLE STICKINESS
+    — Sticky column and sticky header configuration
 
 • 🖌️ ELEMENT UI STYLES
     — Action button base style (font size, padding, height, border radius)
@@ -468,6 +575,10 @@ labels and descriptions.  Major setting groups:
     — Derived column header background color (default #c8c8b0 warm sandy beige)
     — Row-count stat tooltip count text and background colors
 
+• 🔗 RELATIONSHIPS COLUMN
+    — Enable / disable the asynchronous Relationships column
+    — Related settings for entity types and tooltips
+
 • ↔️ COLUMN RESIZE FEATURE
     — Enable / disable column resizing and auto-resize on load
 
@@ -478,9 +589,52 @@ labels and descriptions.  Major setting groups:
     — Strip leading collapse glyphs from exported title column cells
     — Convert multi-row collapse icons to bracketed counts in exported cells
 
+• 📊 STATISTICS PANEL
+    — Enable / disable the Statistics panel button
+    — Statistics panel max width (px, default 860)
+    — Statistics panel max height (vh, default 82)
+
+• 💾 LOAD AND SAVE DATA TO/FROM DISK
+    — Edit Pinned Filter List (opens dialog to manage permanently pinned
+      filter expressions; these never age out of the filter history)
+
+• 🔍 EXPAND RELEASE GROUPS
+    — Enable / disable inline ▶/▼ release-group expand buttons
+
+• 🔖 BARCODE HIGHLIGHT
+    — Enable / disable identical-barcode highlighting in the Barcode column
+
+• 🎨 ARTIST ROLE COLOURS
+    — Main performer and guest performer role label colors (place-events
+      Artists column tooltip)
+
+• 🖼️ CAA/EAA ILLUSTRATED DISCOGRAPHY
+    — Enable / disable the full CAA/EAA artwork feature
+    — Enable small icon column thumbnails
+    — Enable big picture strip (with initial-collapsed option)
+    — Enable inline thumbnails in Release/Title column
+    — Small and big image fetch sizes (250 / 500 / 1200)
+    — Big image max display height (px)
+    — CAA/EAA hover highlight colour
+    — Request concurrency limit
+
 • 🗄️ ART ARCHIVE INDEXEDDB CACHE
     — Enable / disable the three-tier IDB artwork image cache
     — Cache TTL, max entries, store sizes
+
+• 📅 RELEASE EVENTS COLUMN
+    — Enable / disable the asynchronous Release events column
+
+• ⏱️ RESOURCE TIMING API
+    — Enable / disable cache-hint indicators (🟢/🟡/🔵/⚠️)
+    — Show cache-hint in CAA/EAA icon column
+    — Show cache-hint overlay on big-picture strip images
+    — Show cache-hint overlay on inline thumbnails
+
+• 🔤 UNICODE CHARACTER PICKER
+    — Enable / disable the Unicode character picker popup
+    — Shortcut key (default: Ctrl+U)
+    — Configure the glyph mapping table (character → name → examples)
 
 SETTINGS DIALOG SAFETY GUARDS
 ------------------------------
