@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.477",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "⚙️ Internal",
+        "items": [
+          "JSDoc audit: added missing JSDoc blocks to all 25 previously undocumented top-level functions. Functions covered: applyListToTable (full Structure A–E description), applyStickyColumn, _exportCleanHeaderText, exportTableToCSV, _buildExportMetaLines, addExportButton, uiActionBtnBaseCSS, gfBorderIdle / gfBorderActive / stfBorderIdle / stfBorderActive / filterBorderError (one-liner each), _getActiveArtCtx, showLoadFilterDialog (full three-phase description), normalizeAliasTable, getCleanColumnText (two-pass clone-and-strip approach documented), startFetchingProcess (full 8-step pipeline overview), initTreleasesObserver, renderFinalTable, makeTableSortableUnified, finalCleanup (all tasks listed), _relCreateRetryButtons, _relRetryTable, _relRetryAll, _openEditPinnedFilterListFromSettings. All 326 top-level functions now have JSDoc. No runtime behaviour changed."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.476",
     "date": "2026-04-11",
     "sections": [

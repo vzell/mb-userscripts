@@ -62448,6 +62448,22 @@ In the uploaded userscript "ShowAllEntityData.user.js" and library
 
 - check for all unused variables and function definitions, create a report and fix
 
+* TODO Check each function in the userscript if it has a proper JSDoc documentation
+
+Check each function in the userscript if it has a proper JSDoc documentation.
+
+1.)
+
+If a JSDoc is missing add onerror
+
+2.)
+
+If the current JSDoc doesn't match the actual implementation code, fix the documentation
+
+3.)
+
+add a changelog if necessary
+
 * TODO please check function documentations against it's implementation again and fix if necessary
 
 In the uploaded userscript "ShowAllEntityData.user.js" and library "VZ_MBLibrary.user.js"

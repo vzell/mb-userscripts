@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.476+2026-04-11
+// @version      9.99.477+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3596,6 +3596,31 @@
         return plural.replace(/s$/i, '');
     }
 
+    /**
+     * Converts `<ul>` list elements on the live page (or a fetched document) into
+     * `<table class="tbl">` elements so the standard fetch / filter / sort pipeline
+     * can process them.  Called for every entry in `features.listToTable`.
+     *
+     * Supports five distinct DOM structures, selected by path and sectionId:
+     *   A) div-wrapped  — `<div id="sectionId"><ul>…</ul></div>`
+     *   B) bare-ul      — `<ul class="<singular>-list">…</ul>`
+     *   C) h2+ul        — area-users, tag-value-entity, user-tag-value-entity, subscribers
+     *   D) h3+ul        — one-segment tag pages (/tag/VALUE, /user/USERNAME/tag/VALUE)
+     *   E) h3+ul (popular-tags) — /tags page after renameH2ToH3 has renamed the
+     *                              original h2 headings to h3
+     *
+     * Structures A and B produce two-column tables (Name | Tag count).
+     * Structures C, D, and E produce single-column tables whose header is the
+     * singular form of the section heading (via `_toSingular()`).
+     *
+     * Must run AFTER `applyRenameH2ToH3` / `applyInsertH2` and BEFORE maxPage
+     * determination so that `parseDocumentForTables` finds the resulting
+     * `<table class="tbl">` elements.
+     *
+     * @param {object}           def        - The active merged pageDefinition object.
+     * @param {Document|Element} [docContext=document] - DOM context to search; defaults
+     *   to the live document.  Pass a fetched document for paginated XHR pages.
+     */
     function applyListToTable(def, docContext = document) {
         const sections = def?.features?.listToTable;
         if (!Array.isArray(sections) || sections.length === 0) return;
@@ -6571,6 +6596,23 @@
         });
     }
 
+    /**
+     * Applies CSS `position:sticky; left:0` to one column of `table` so it remains
+     * visible while the user scrolls horizontally.
+     *
+     * The target column is determined from `activeDefinition.features.stickyColumn`
+     * (a column name string, e.g. `'Title'`).  When no configuration is found the
+     * first column (index 0) is used as the default.  The column name is matched
+     * against `th.dataset.colName` first, then against the stripped `th.textContent`.
+     *
+     * Both the `<th>` header cell and every `<td>` body cell in the target column
+     * receive `position:sticky` and a `z-index` that layers correctly with the sticky
+     * header row (header gets z-index 3, body cells get 1).  The `mb-sticky-col`
+     * class is added to every participating cell so downstream code (e.g. zebra
+     * striping, export) can identify them.
+     *
+     * @param {HTMLTableElement} table - The table to apply the sticky column to.
+     */
     function applyStickyColumn(table) {
         if (!table) return;
 
@@ -8394,6 +8436,20 @@
         return text;
     }
 
+    /**
+     * Produces a clean, export-ready string from a column `<th>` element.
+     *
+     * Strips injected UI elements (sort-icon buttons, unique-count badge, column
+     * resize handle) from a clone of the cell, then optionally appends:
+     *   - A unique-value count suffix `" (N)"` when `sa_export_include_uniq_counts`
+     *     is enabled and the badge is present.
+     *   - A sort-state glyph suffix `" ▲"` or `" ▼"` when
+     *     `sa_export_include_sort_state` is enabled and the column is actively sorted.
+     *
+     * @param   {HTMLTableCellElement} th - The header cell to clean.
+     * @returns {string}                    Clean header label, possibly with count
+     *                                      and/or sort-state suffix.
+     */
     function _exportCleanHeaderText(th) {
         const clone = th.cloneNode(true);
         const uniqSpan = clone.querySelector('.mb-col-uniq-count');
@@ -8481,6 +8537,22 @@
         return `Table ${idx + 1}`;
     }
 
+    /**
+     * Exports all currently visible table data as a CSV file and triggers a browser
+     * download.
+     *
+     * Iterates every `<table class="tbl">` on the page, skips hidden rows and hidden
+     * columns, and writes one CSV block per table separated by a blank line and an
+     * `# Table: <name>` comment.  A metadata header block (URL, page type, entity
+     * name, button label, script name, export timestamp) is prepended.
+     *
+     * Cell text is extracted via `_exportCleanCellText()`, which strips injected UI
+     * elements and CAA/EAA artwork.  Header labels are produced by
+     * `_exportCleanHeaderText()`, which optionally appends unique-value counts and
+     * sort-state glyphs according to settings.
+     *
+     * Triggers `showExportNotification()` on success.
+     */
     function exportTableToCSV() {
         const table = document.querySelector('table.tbl');
         if (!table) { alert('No table found to export'); Lib.error('export', 'No table found for CSV export'); return; }
@@ -9197,6 +9269,19 @@ ${sections.join('\n')}
         };
     }
 
+    /**
+     * Builds a multi-line metadata header string to prepend to exported files.
+     *
+     * Each line is prefixed with `prefix` (e.g. `"# "` for CSV/Org-Mode, `"// "`
+     * for JSON) and includes: export timestamp (local + ISO), current URL, page
+     * type, derived entity type, entity name, last-clicked button label, and
+     * script name.  A trailing blank line acts as a separator from the data body.
+     *
+     * @param   {string} prefix - String to prepend to every metadata line
+     *                            (e.g. `"# "` or `"// "`).
+     * @returns {string}          Newline-delimited metadata block ending with `
+`.
+     */
     function _buildExportMetaLines(prefix) {
         const now     = new Date();
         const lines   = [
@@ -9455,6 +9540,20 @@ ${sections.join('\n')}
     }
 
 
+    /**
+     * Injects the 💾 Export dropdown button into `#mb-show-all-controls-container`.
+     *
+     * The button opens a keyboard-navigable menu with three export formats:
+     *   — CSV       → `exportTableToCSV()`
+     *   — JSON      → `exportTableToJSON()`
+     *   — Org-Mode  → `exportTableToOrgMode()`
+     *
+     * Idempotent: if a button with id `mb-export-btn` already exists the function
+     * returns immediately without creating a duplicate.
+     *
+     * Keyboard shortcuts: Ctrl+E (configurable) and prefix-mode "e" both trigger
+     * the menu; ↑/↓ navigate items, Enter activates, Escape closes.
+     */
     function addExportButton() {
         const controlsContainer = document.getElementById('mb-show-all-controls-container');
         if (!controlsContainer) {
@@ -9739,6 +9838,15 @@ ${sections.join('\n')}
         return '<span>' + content + '</span>';
     }
 
+    /**
+     * Returns the base CSS string for all action buttons in the controls bar.
+     *
+     * Reads the condensed style string from `sa_ui_action_btn_style`
+     * (format: `"fontSize|padding|height|borderRadius"`) and expands it into a
+     * full inline CSS declaration suitable for `element.style.cssText`.
+     *
+     * @returns {string} CSS declaration string (no trailing semicolon on last property).
+     */
     function uiActionBtnBaseCSS() {
         const defaults = '0.8em|2px 8px|24px|6px';
         const [fontSize, padding, height, borderRadius] =
@@ -9843,6 +9951,7 @@ ${sections.join('\n')}
     }
 
     /** Border color when the global filter input is empty / idle. */
+    /** Border color for the global filter input when empty / idle. */
     function gfBorderIdle()      { return Lib.settings.sa_global_filter_border_idle   || '#000'; }
     /** Border color when the global filter input holds a valid filter string. */
     function gfBorderActive()    { return Lib.settings.sa_global_filter_border_active || 'orange'; }
@@ -17121,6 +17230,19 @@ a { color: #1565c0; }`;
     // Returns EAA_CTX for pages that use the Event Art Archive (addEAA feature),
     // CAA_CTX for all others.  Used by the statistics panel and snapshot capture
     // to ensure artwork counts and labels are correct for EAA-only pages.
+    /**
+     * Returns the active art context object (`CAA_CTX` or `EAA_CTX`) for the
+     * current page definition.
+     *
+     * Prefers `EAA_CTX` when `activeDefinition.features.addEAA` is set (i.e. the
+     * page primarily shows event artwork).  Falls back to `CAA_CTX` for all other
+     * pages (releases, release groups, etc.).
+     *
+     * Used by the Statistics panel and other modules that need to reference the
+     * active artwork context without hard-coding CAA vs EAA.
+     *
+     * @returns {ArtCtx} Either `CAA_CTX` or `EAA_CTX`.
+     */
     function _getActiveArtCtx() {
         if (activeDefinition &&
             activeDefinition.features &&
@@ -18072,6 +18194,32 @@ a { color: #1565c0; }`;
         eplQF.focus();
     }
 
+    /**
+     * Displays the three-phase Load-from-Disk dialog and returns a Promise that
+     * resolves when the dialog is closed (either by completing Phase 3 or by
+     * Escape / outside-click).
+     *
+     * Phase 1 — Load:   User picks a `.json.gz` or `.json` file; the file is
+     *                   read and parsed entirely into memory.  Row count and
+     *                   filename are reported in the status area.
+     *
+     * Phase 2 — Filter: User enters an optional pre-filter expression and
+     *                   optionally enables Cc / Rx / Ex toggles, then clicks
+     *                   "Filter Data".  Matching rows are counted in memory
+     *                   without touching the DOM.
+     *
+     * Phase 3 — Render: User clicks "Render Data"; the matched rows are passed
+     *                   to the standard render pipeline and the dialog closes.
+     *
+     * The last N expressions are persisted in GM storage (LRU list) and a
+     * separate persistent pinned list; both are accessible via the ▼ history
+     * dropdown.
+     *
+     * @param   {HTMLElement|null} [triggerButton=null] - The button that opened
+     *   the dialog; used to restore focus on close.  Pass `null` to skip focus
+     *   restoration.
+     * @returns {Promise<void>}
+     */
     async function showLoadFilterDialog(triggerButton = null) {
 
         const historyLimit       = Math.max(0, Math.round(+(Lib.settings.sa_load_history_limit       ?? 50)));
@@ -19118,6 +19266,24 @@ a { color: #1565c0; }`;
         cancelBtn.onclick = closeDialog;
     }
 
+    /**
+     * Normalises the structure of an alias `<table class="tbl">` fetched from a
+     * MusicBrainz aliases page so it is compatible with the script's row-processing
+     * pipeline.
+     *
+     * Two transformations are applied to every `<tbody tr>`:
+     *   1. The invisible `.actions` column cell (edit / remove links) is removed
+     *      from body rows.
+     *   2. When the first cell spans both "Alias" and "Sort name" columns (colspan 2),
+     *      it is split into two separate cells — one for the alias text and one for
+     *      the sort name — matching the two-column header structure so column indices
+     *      remain consistent across all rows.
+     *
+     * Operates on the live DOM element in-place.  Safe to call multiple times on
+     * the same table (idempotent via the colspan guard).
+     *
+     * @param {HTMLTableElement} table - The alias table to normalise.
+     */
     function normalizeAliasTable(table) {
         if (!table) return;
 
@@ -19934,6 +20100,29 @@ a { color: #1565c0; }`;
         '.mb-art-cache-hint-col,.mb-caa-count-badge,.mb-eaa-count-badge,' +
         '.mb-caa-art-li-image,.artwork-icon,.caa-icon,.icon';
 
+    /**
+     * Extracts visible text from `element` for column filtering, skipping
+     * decorative elements, script/style subtrees, and injected UI elements.
+     *
+     * Two-pass approach for robustness:
+     *   1. Clone-and-strip: physically removes all elements matching
+     *      `_CLEAN_STRIP_SEL` (inline thumbnails, cache-hint spans, count badges,
+     *      per-image art rows, icon spans) from the clone before any text walk.
+     *      This prevents cross-browser TreeWalker variance from leaking emoji
+     *      (🟢/🟡/🔵/⚠️) or counts into filter and sort keys.
+     *   2. TreeWalker: collects text nodes, skipping script/style/head subtrees
+     *      and known decorative elements by class name.
+     *
+     * The joined text is passed through `normalizeExtractedText()` which collapses
+     * whitespace, removes spurious bracket-interior spaces, and strips leading
+     * comma-separator spaces.
+     *
+     * Used by `runFilter()`, `makeTableSortableUnified()`, and the unique-values
+     * dropdown to ensure consistent matching and ordering across all filter levels.
+     *
+     * @param   {Element} element - DOM element to extract text from.
+     * @returns {string}            Normalised, filter-ready text content.
+     */
     function getCleanColumnText(element) {
         // ── Clone-and-strip: physically remove all decorative / cache-hint
         // elements from a clone before text extraction.  This is more robust
@@ -22002,6 +22191,39 @@ a { color: #1565c0; }`;
         return {};
     }
 
+    /**
+     * Main entry point for a data-fetch cycle.  Called by action button click
+     * handlers; orchestrates the complete pipeline from pre-processing through
+     * fetch, parse, render, and post-render cleanup.
+     *
+     * High-level steps:
+     *   1. Merge `baseDef.features`, resolved `entitySpecificFeatures`, and
+     *      `buttonConfig.features` into `activeDefinition`; promote any per-entity
+     *      `tableMode` override to the definition root.
+     *   2. Build all runtime active-descriptor lists (column extractors, erasers,
+     *      integer columns, injected columns, etc.).
+     *   3. Apply pre-processing DOM mutations: `renameH2ToH3`, `insertH2`,
+     *      `listToTable`, `showAllTags`.
+     *   4. Determine `maxPage` (from DOM pagination, override params, or
+     *      non-paginated assumption).
+     *   5. For `artist-releasegroups`: run a pre-fetch pass to collect the
+     *      official-category header array before the main fetch.
+     *   6. Paginated XHR fetch loop: for each page, apply `listToTable` on the
+     *      fetched document, scan for tables, walk rows, run the full
+     *      synthetic-column pipeline, accumulate into `groupedRows` / `allRows`.
+     *   7. Pass collected rows to `renderGroupedTable` (multi) or
+     *      `renderFinalTable` (single).
+     *   8. Post-render: `updateH2Count`, `makeH2sCollapsible`, `initCaaPics`,
+     *      `initRelationshipsColumn`, CAA/EAA inline pics, statistics snapshot,
+     *      `finalCleanup`.
+     *
+     * @param   {MouseEvent}  e            - The click event from the action button.
+     * @param   {object}      buttonConfig - The clicked button's definition object
+     *   (may carry `params`, `features`, `virtualPath`, `labelFromH2`, etc.).
+     * @param   {object}      baseDef      - The matched page definition object
+     *   (the base `activeDefinition` before button-specific overrides are applied).
+     * @returns {Promise<void>}
+     */
     async function startFetchingProcess(e, buttonConfig, baseDef) {
         // MERGE LOGIC: Combine base definition with button-specific overrides.
         // For page types that carry an `entityFeatures` map (e.g.
@@ -24249,6 +24471,18 @@ a { color: #1565c0; }`;
     }
 
     const _observedTbodies = new WeakSet();
+    /**
+     * Attaches a `MutationObserver` to every `<tbody>` of every `table.tbl`
+     * currently in the DOM to watch for jesus2099 "treleases" rows being injected.
+     *
+     * When a `<tr class="treleases">` row is added by the jesus2099 "mb. SUPER MIND"
+     * userscript, `_repairTreleasesTd()` is called immediately so the injected
+     * release row receives the correct number of `<td>` cells to match the script's
+     * synthetic column count.
+     *
+     * Observed tbodies are tracked in `_observedTbodies` (a `WeakSet`) so repeated
+     * calls (e.g. after a filter re-render) do not attach duplicate observers.
+     */
     function initTreleasesObserver() {
         document.querySelectorAll('table.tbl tbody').forEach(tbody => {
             if (_observedTbodies.has(tbody)) return;
@@ -24286,6 +24520,25 @@ a { color: #1565c0; }`;
         });
     }
 
+    /**
+     * Renders a flat array of collected data rows into the single `<table class="tbl">`
+     * on the page (single-table mode).
+     *
+     * Steps:
+     *   1. Clears the existing `<tbody>` content.
+     *   2. Applies multi-sort tints to each row (if a multi-sort is active).
+     *   3. Appends all rows to the tbody using a `DocumentFragment` for performance.
+     *   4. Re-wires the table for sorting via `makeTableSortableUnified`.
+     *   5. Re-applies column filter row and column visibility state.
+     *   6. Applies sticky headers and sticky column.
+     *   7. Updates the sub-table row-count stat tooltip.
+     *
+     * Called from `startFetchingProcess` (initial render), `runFilter` (single-table
+     * re-render after a filter change), and the Load-from-Disk pipeline.
+     *
+     * @param   {HTMLTableRowElement[]} rows - The fully assembled data rows to render.
+     * @returns {Promise<void>}
+     */
     async function renderFinalTable(rows) {
         const rowCount = Array.isArray(rows) ? rows.length : 0;
         Lib.debug('render', `Starting renderFinalTable with ${rowCount} rows.`);
@@ -28856,6 +29109,31 @@ a { color: #1565c0; }`;
         );
     }
 
+    /**
+     * Attaches click-based sort handlers to all `<th>` header cells of `table`.
+     *
+     * Supports both single-column and multi-column (Ctrl+Click) sorting.  State is
+     * stored in `multiTableSortStates` keyed by `sortKey`, so each sub-table on a
+     * multi-table page maintains its own independent sort chain.
+     *
+     * Sort cycle per column: ⇅ (original) → ▲ (ascending) → ▼ (descending) → ⇅.
+     * Ctrl+Click adds a column to the multi-sort chain without resetting others;
+     * a plain click clears the chain and sets the clicked column as the sole sort.
+     *
+     * For large row sets the sort is delegated to `sortLargeArray()` (async merge
+     * sort with a progress callback) when the row count exceeds the configured
+     * threshold.  Small sets are sorted synchronously with `Array.prototype.sort`.
+     *
+     * After sorting, rows are re-inserted into the tbody and `renderFinalTable` /
+     * `renderGroupedTable` is called (single / multi mode respectively) to refresh
+     * the view with the new order.
+     *
+     * @param {HTMLTableElement} table   - The table whose headers should receive
+     *   sort click handlers.
+     * @param {string}           sortKey - Unique key under which this table's sort
+     *   state is stored in `multiTableSortStates` (typically the category name or
+     *   a `"categoryName_index"` slug on multi-table pages).
+     */
     function makeTableSortableUnified(table, sortKey) {
         // Determine mode based on active definition
         const isMultiTable = activeDefinition && activeDefinition.tableMode === 'multi';
@@ -29569,6 +29847,27 @@ a { color: #1565c0; }`;
         }
     }
 
+    /**
+     * Runs a set of post-render DOM clean-up tasks after `renderGroupedTable` or
+     * `renderFinalTable` has completed.
+     *
+     * Tasks performed (order-dependent):
+     *   • search pages — relocates the injected "Searchform" h2 and native
+     *     `div.searchform` to sit immediately after `#mb-status-displays-wrapper`.
+     *   • Removes stale sanojjonas load-more containers (`#load`, `#load2`, …,
+     *     `#bottom1`–`#bottom6`) that may still be present after the fetch.
+     *   • Relocates trailing h2 sections (e.g. "Relationships", "Related works")
+     *     to before the main data h2 when `sa_relocate_trailing_h2_sections` is on.
+     *   • Applies the H1 comment-span alias relocation on the final rendered page
+     *     when `sa_enable_h1_comment_span_relocation_on_final_page` is on.
+     *   • Moves the "Legal name:" paragraph below the artist subheader on
+     *     artist-releasegroups pages when the setting is enabled.
+     *   • Removes the native MusicBrainz `div.filter` bar (redundant after the
+     *     script injects its own filter UI).
+     *   • Applies the page definition's `removeSelector` element removal.
+     *   • Removes any stale sanojjonas/jesus2099 container IDs still present.
+     *   • Removes consecutive `<br>` runs and logs the cleanup.
+     */
     function finalCleanup() {
         Lib.debug('cleanup', 'Running final cleanup...');
 
@@ -31712,6 +32011,22 @@ a { color: #1565c0; }`;
         initRelationshipsColumn();
         _relRetryActive = false;
     }
+    /**
+     * Creates and inserts Relationship retry buttons (🔗⟳) into the page header
+     * after the CAA/EAA art retry buttons.
+     *
+     * On multi-table pages (`tableMode === 'multi'`): creates a single global
+     * `#mb-rel-retry-global` button after the last `[id$="-global-retry"]` element
+     * (or after `h2 .mb-row-count-stat` as fallback) in the h2 header.
+     *
+     * On single-table pages: creates one per-table button `#mb-rel-retry-{i}` for
+     * each `table.tbl`, inserting it after the corresponding
+     * `#mb-caa-toggle-btn-retry-{i}` or `#mb-eaa-toggle-btn-retry-{i}` button.
+     *
+     * Idempotent — each button is created only if it does not yet exist.
+     * No-ops when `sa_enable_relationships_column` is disabled or no injected
+     * columns are active.
+     */
     function _relCreateRetryButtons() {
         if (!Lib.settings.sa_enable_relationships_column) return;
         if (!activeInjectedColumns.length) return;
@@ -31743,6 +32058,17 @@ a { color: #1565c0; }`;
         });
     }
 
+    /**
+     * Forces a cache-busted reload of Relationship icons for all rows in `table`.
+     *
+     * Collects the unique MBIDs from every `td.mb-rel-cell[data-mbid]` in the
+     * table, clears their current content, and re-runs `initRelationshipsColumn()`
+     * (via `_relRetryMbids`) with the `_relRetryActive` flag set so the pipeline
+     * treats them as fresh fetches.
+     *
+     * @param {HTMLTableElement} table - The sub-table whose relationship cells
+     *   should be refreshed.
+     */
     function _relRetryTable(table) {
         if (!Lib.settings.sa_enable_relationships_column) return;
         const { entityType, incOptions } = activeInjectedColumns[0] || {};
@@ -31753,6 +32079,13 @@ a { color: #1565c0; }`;
         )];
         _relRetryMbids(mbids, entityType, incOptions);
     }
+    /**
+     * Forces a cache-busted reload of Relationship icons for every row on the page.
+     *
+     * Same as `_relRetryTable` but scans all `td.mb-rel-cell[data-mbid]` across
+     * the entire document rather than a single table.  Used by the global
+     * `#mb-rel-retry-global` retry button on multi-table pages.
+     */
     function _relRetryAll() {
         if (!Lib.settings.sa_enable_relationships_column) return;
         const { entityType, incOptions } = activeInjectedColumns[0] || {};
@@ -31764,6 +32097,14 @@ a { color: #1565c0; }`;
         _relRetryMbids(mbids, entityType, incOptions);
     }
 
+    /**
+     * Opens the "Edit Pinned Filter List" dialog, pre-populated with the current
+     * persistent pinned filter entries from GM storage (`persistent-sa-hist-list`).
+     *
+     * On save, writes the updated list back to GM storage.  The dialog is launched
+     * without a trigger button (centres itself), intended for invocation from the
+     * ⚙️ Settings Manager action button rather than an in-page element.
+     */
     function _openEditPinnedFilterListFromSettings() {
         const currentList = GM_getValue('persistent-sa-hist-list', []);
         showEditPersistentListDialog(
