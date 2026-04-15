@@ -29528,6 +29528,25 @@ which is much to broad and also runs on
 https://musicbrainz.org/release/add
 #+end_example
 
+** change the local require to github
+
+1.)
+
+in the userscript header, change the line
+
+#+begin_example
+// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZ_MBLibrary.user.js
+#+end_example
+
+to
+
+#+begin_example
+// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
+#+end_example
+
+2.)
+
+bump the version number and write a changelog entry
 
 * DONE DOM rendering
 ** DONE timings and logging

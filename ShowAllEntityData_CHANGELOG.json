@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.478",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "⚙️ Internal",
+        "items": [
+          "@require URL for VZ_MBLibrary changed from local file:///V:/home/vzell/git/mb-userscripts/lib/VZ_MBLibrary.user.js to https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js so the script can be installed and run without a local development checkout."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.477",
     "date": "2026-04-11",
     "sections": [
