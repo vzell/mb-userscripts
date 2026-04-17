@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.478+2026-04-11
+// @version      9.99.479+2026-04-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22986,16 +22986,6 @@ a { color: #1565c0; }`;
                         // findH3ForTable() requires that class and always returns null
                         // here, collapsing every group into "Other".  Use a plain
                         // backwards walk with no class restriction instead.
-                        //
-                        // For artist-releasegroups the h3 does NOT repeat across
-                        // paginated XHR pages — categories are seen at most once.
-                        //
-                        // For collections-release-groups (Release groups entity) the
-                        // h3 DOES repeat: each paginated XHR page begins with the
-                        // same h3 headers ("Album", "Single", …) followed by their
-                        // respective sub-tables.  The find-or-create logic below
-                        // merges all rows for a given category name into a single
-                        // groupedRows entry regardless of which page they came from.
                         let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
                         while (_prev && _steps < 5) {
                             if (_prev.tagName === 'H3') { _h3 = _prev; break; }
@@ -23004,14 +22994,50 @@ a { color: #1565c0; }`;
                         }
                         const category = _h3 ? _h3.textContent.trim() : 'Other';
 
-                        // Find-or-create: if a group with this category already exists
-                        // (e.g. "Album" from a previous paginated page) append rows to
-                        // it rather than pushing a new duplicate group.
-                        let currentGroup = groupedRows.find(g => g.category === category);
-                        if (!currentGroup) {
-                            Lib.debug('fetch', `New category: "${category}". Rows so far: ${totalRowsAccumulated}`);
-                            currentGroup = { category: category, rows: [] };
-                            groupedRows.push(currentGroup);
+                        // ── Group accumulation strategy (differs by page type) ──────────────
+                        //
+                        // artist-releasegroups  (continuation / ordered-sequence model):
+                        //   MusicBrainz paginates the full discography in h3-order.  A category
+                        //   section (e.g. "Album + Live") that exceeds 100 entries spills across
+                        //   multiple consecutive XHR pages — every one of those continuation
+                        //   pages begins with the SAME h3 and rows that belong to the SAME
+                        //   section.  They must be appended to the existing group.
+                        //
+                        //   Later in the paginated stream the same h3 text can reappear for a
+                        //   completely DIFFERENT section — the Non-Official Discography contains
+                        //   identically named categories ("Album", "Single", …) as the Official
+                        //   one.  Those later occurrences MUST produce a NEW group so that the
+                        //   "Official Discography" / "Non-Official Discography" view-mode split
+                        //   (_injectDiscographyViewButtons) works correctly.
+                        //
+                        //   Decision rule: if the category equals the LAST SEEN category it is a
+                        //   continuation → append to the existing group.  Otherwise it is a
+                        //   section change → create a new group (even if a same-named group
+                        //   already exists earlier in groupedRows).
+                        //
+                        // collections-releases Release groups  (merge / idempotent model):
+                        //   Every paginated XHR page repeats the full set of h3 headers at its
+                        //   top.  The category sequence on page 2 is therefore identical to page
+                        //   1.  Using the lastCategorySeenAcrossPages rule would create duplicate
+                        //   groups on every page break.  Instead, a find-or-create lookup always
+                        //   routes rows into the one canonical group for that category.
+                        let currentGroup;
+                        if (pageType === 'artist-releasegroups') {
+                            // Continuation model: same-as-last → append; different → new group.
+                            if (category !== lastCategorySeenAcrossPages) {
+                                Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
+                                groupedRows.push({ category: category, rows: [] });
+                            }
+                            currentGroup = groupedRows[groupedRows.length - 1];
+                        } else {
+                            // Find-or-create model: merge all rows for this category regardless
+                            // of which paginated page they came from.
+                            currentGroup = groupedRows.find(g => g.category === category);
+                            if (!currentGroup) {
+                                Lib.debug('fetch', `New category: "${category}". Rows so far: ${totalRowsAccumulated}`);
+                                currentGroup = { category: category, rows: [] };
+                                groupedRows.push(currentGroup);
+                            }
                         }
                         lastCategorySeenAcrossPages = category;
 

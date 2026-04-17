@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.479",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Group accumulation in the _isReleaseGroupsMultiMode fetch branch: the v9.99.468 fix applied a global find-or-create (merge) strategy that was correct for collections-releases Release groups but broke artist-releasegroups. The two page types have fundamentally different pagination behaviours: (1) artist-releasegroups uses a continuation / ordered-sequence model — when a category like 'Album + Live' exceeds 100 entries it spills across consecutive XHR pages that all start with the same h3, and those continuation pages must append to the existing group; but when the same h3 text reappears much later in the paginated stream it signals a different section (Non-Official Discography), which must create a new group so that _injectDiscographyViewButtons can correctly split Official vs Non-Official views. (2) collections-releases Release groups uses a merge / idempotent model — every XHR page repeats all h3 headers at its top, so the lastCategorySeenAcrossPages continuation rule would create duplicate groups on every page break; find-or-create is the only correct approach. Fix: split the accumulation logic inside the _isReleaseGroupsMultiMode branch on pageType: artist-releasegroups gets the restored original 'same-as-last → continue, different → new group' rule; all other page types (collections-releases Release groups) get the find-or-create merge rule. Both branches are thoroughly documented in the surrounding comments."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.478",
     "date": "2026-04-11",
     "sections": [

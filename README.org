@@ -71711,6 +71711,570 @@ to
 
 
 
+* DONE fix h3 header grouping for RGs
+
+#+begin_example
+collection-release-groups-native-h3-grouped-tables f2e4ec579835dc4d15477ce6c1e943de8178fa67
+Author:     Dr. Volker Zell <vzell@volkerzell.de>
+AuthorDate: Mon Apr 13 20:01:38 2026 +0200
+Commit:     Dr. Volker Zell <vzell@volkerzell.de>
+CommitDate: Mon Apr 13 20:01:38 2026 +0200
+
+Parent:     cea8d81 tooltip fixes and native filter cleanup
+Contained:  master
+Follows:    collection-release-groups-native-h3-grouped-tables (0)
+
+collections-releases 'Release groups': full support for native h3-grouped release-group collection pages
+
+3 files changed, 244 insertions(+), 25 deletions(-)
+README.org                       | 128 ++++++++++++++++++++++++++++++++++++++-
+ShowAllEntityData.user.js        | 105 +++++++++++++++++++++++++-------
+ShowAllEntityData_CHANGELOG.json |  36 +++++++++++
+
+modified   README.org
+@@ -71047,6 +71047,132 @@ to
+ </label>
+ #+end_example
+ 
++* DONE https://musicbrainz.org/collection/3d73c67c-76c6-459d-ac8b-3145cb49d672 - for RGs add multi-table support
++** DONE initial
++
++add support for release groups collection pages:
++
++1.)
++
++for the pageType "type: 'collections-releases'," change the "entityFeatures" from
++
++#+begin_example
++                'Release groups': {
++                    columnExtractors: [
++                        { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
++                    ],
++                    tooltipColumns: [ 'Title', 'Artist', '---', ['Type', 'Year', '(', 'Releases', ')'] ],
++                    injectedColumns: [ 'Relationships' ],
++                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
++                    collapsableColumns: [ 'CAA' ],
++                    addCAA: 'Title',
++                    extractMainColumn: 'Title',
++                    stickyColumn: 'Title'
++                },
++#+end_example
++
++to
++
++#+begin_example
++                'Release groups': {
++                    columnExtractors: [
++                        { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
++                    ],
++                    injectedColumns: [ 'Relationships' ],
++                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
++                    collapsableColumns: [ 'CAA' ],
++                    tooltipColumns: [ 'Title', 'Artist', '---', ['Year', '(', 'Releases', ')'] ],
++                    addCAA: 'Title',
++                    extractMainColumn: 'Title',
++                    stickyColumn: 'Title',
++		    tableMode: 'multi' // native tables, h3 headers
++                },
++#+end_example
++
++Also special case the code path for entityFeatures "'Release groups':" as it's the same as the standard pageType "type: 'artist-releasegroups',"
++
++So it's actually "multi" tableMode, but it still needs the "columnHeaderErasers: [ '▴/▾' ]" applied for each fetched
++paginated page.
++
++** DONE bugs
++
++please extend the handling for the pageType "type: 'collections-releases'" and the entityFeatures "'Release groups':"
++to support the "h2, repeating on paginated pages" feature like it exists for the "Releasegroup-Releases" pageType "type: 'releasegroup-releases'".
++
++See the following documentation located before the "const pageDefinitions"
++
++#+begin_example
++    // There are different types of MusicBrainz pages
++    // | Page type               | multiple tables           | paginated | table header                         |
++    // |-------------------------+---------------------------+-----------+--------------------------------------|
++    // | Artist-Releasegroups    | native                    | x         | h2, not repeating on paginated pages |
++    // | Releasegroup-Releases   | single table, subgrouping | x         | h2, repeating on paginated pages     |
++
++NEW:
++    // | Collections-Releasegroups    | native                    | x         | h2, repeating on paginated pages |
++#+end_example
++
++Actually it wouldn't harm if the feature is also implemented for the "Artist-Releasegroups" case also its "not repeating on paginated pages" there
++
++** DONE bugs
++
++please revert the changes from the last session
++
++actually the comment should change from
++
++#+begin_example
++    // There are different types of MusicBrainz pages
++    // | Page type                    | multiple tables           | paginated | table header                         |
++    // |------------------------------+---------------------------+-----------+--------------------------------------|
++    // | Artist-Releasegroups         | native                    | x         | h3, h2 not repeating on paginated    |
++    // | Releasegroup-Releases        | single table, subgrouping | x         | h2, repeating on paginated pages     |
++    // | Collections-Releasegroups    | native                    | x         | h2, repeating on paginated pages     |
++    // | Place-Performances, ...      | single table, subgrouping |           | h2, repeating on single page         |
++    // | Events                       | single table              | x         | h3,                                  |
++    // | Search                       | single table              | x         | p.pageselector-results               |
++#+end_example
++
++to
++
++#+begin_example
++    // There are different types of MusicBrainz pages
++    // | Page type                    | multiple tables           | paginated | table header                         |
++    // |------------------------------+---------------------------+-----------+--------------------------------------|
++    // | Artist-Releasegroups         | native                    | x         | h3, not repeating on paginated pages |
++    // | Releasegroup-Releases        | single table, subgrouping | x         | h3, repeating on paginated pages     |
++    // | Collections-Releasegroups    | native                    | x         | h3, repeating on paginated pages     |
++    // | Place-Performances, ...      | single table, subgrouping |           | h3, repeating on single page         |
++    // | Events                       | single table              | x         | h3,                                  |
++    // | Search                       | single table              | x         | p.pageselector-results               |
++#+end_example
++
++On "type: 'collections-releases'" and the entityFeatures "'Release groups':" it's the h3 header which could repeat on
++each paginated page.  So there could be rows under the e.g. "Album" h2 header which represent the "Album" table on the
++final rendered page on multiple paginated fetched pages. But on the final rendered page ALL these rows from the h2
++headers (maybe from multipel paginated pages) should appear ONLY in one "Album" table. The same for other h2 headers like "Single", "Compilation" etc.
++
++** solution
++
++#+begin_example
++he user is clarifying that on collections-release-groups pages, the heading that repeats on paginated pages is actually H3 (not H2). So the fix from v9.99.467 was wrong in assuming H2 - it should be H3. Let me re-read the situation.
++The user says: "it's the h3 header which could repeat on each paginated page". So the current h3 backwards walk was actually correct! The issue was something else - or maybe the page structure uses H3 throughout, and the existing code (which only looks for H3) was already correct.
++Wait, but then why were all the rows collapsing to 'Other'? Let me re-think.
++Actually, I see it now - the comment in the code was just mislabeled as H2 when it should say H3. The real logic is already handling this correctly: when the same category (like "Album") appears across multiple paginated fetches, the existing check for whether the category changed prevents creating duplicate group entries, so all rows from that category get merged into a single table regardless of which paginated page they came from.
++Wait, but that's not quite right either. If page 2 starts with "Album" again after page 1 ended with "EP", the condition category !== lastCategorySeenAcrossPages would be true, and it would create a new "Album" group instead of appending to the existing one. So the current logic actually does create separate groups when a category repeats, which is the bug.
++The fix is to check if a group for that category already exists in the groupedRows array, and if it does, append to that existing group instead of creating a new one. That way, when "Album" appears again on page 2, it gets added to the same "Album" group from page 1.
++For the v9.99.467 changes, I need to revert the H2/H3 detection change and instead fix the actual grouping logic to handle repeating categories across paginated pages correctly. I see the issue now—the current logic treats each H3 heading as a new category boundary, so when "Album" appears again on page 2, it creates a duplicate group instead of merging with the existing one. I need to track which categories have already been seen and only push a new group if it's truly a new category, not just a repeat from pagination. Refactoring the grouping logic...
++The key insight is that artist-releasegroups don't repeat categories across pages since they're continuous, while collections-releasegroups do repeat them. So switching to a find-or-create approach using groupedRows.find() handles both cases safely—it'll work for non-repeating categories and correctly merge repeating ones.
++Now I need to revert the H2/H3 detection back to H3-only, update the documentation, and fix the merge logic for when categories repeat.
++#+end_example
++
++#+begin_example
++Now I have the full picture. The user is clarifying that it is H3 throughout (not H2), and the real bug is the grouping logic: when H3 categories repeat across paginated XHR pages, groupedRows.push() creates duplicate groups instead of merging into the existing one. The two fixes are:
++
++Revert the H2/H3 detection change back to H3-only
++Fix the group find-or-create logic so repeated H3 categories merge into one group
++Update the documentation comment correctly
++#+end_example
++
+ 
+ * TODO fix Artist-Releasegroup pages
+ ** DONE changes to do
+@@ -72475,5 +72601,3 @@ https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/
+ #+end_example
+ 
+ 
+-* TODO https://musicbrainz.org/collection/3d73c67c-76c6-459d-ac8b-3145cb49d672 - for RGs add multi-table support
+-
+modified   ShowAllEntityData.user.js
+@@ -1,7 +1,7 @@
+ // ==UserScript==
+ // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+ // @namespace    https://github.com/vzell/mb-userscripts
+-// @version      9.99.465+2026-04-11
++// @version      9.99.468+2026-04-11
+ // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+ // @author       vzell
+ // @tag          AI generated
+@@ -4358,13 +4358,14 @@
+     // --- Configuration: Page Definitions ---
+ 
+     // There are different types of MusicBrainz pages
+-    // | Page type               | multiple tables           | paginated | table header                         |
+-    // |-------------------------+---------------------------+-----------+--------------------------------------|
+-    // | Artist-Releasegroups    | native                    | x         | h2, not repeating on paginated pages |
+-    // | Releasegroup-Releases   | single table, subgrouping | x         | h2, repeating on paginated pages     |
+-    // | Place-Performances, ... | single table, subgrouping |           | h2, repeating on single page         |
+-    // | Events                  | single table              | x         | h3,                                  |
+-    // | Search                  | single table              | x         | p.pageselector-results               |
++    // | Page type                    | multiple tables           | paginated | table header                         |
++    // |------------------------------+---------------------------+-----------+--------------------------------------|
++    // | Artist-Releasegroups         | native                    | x         | h3, not repeating on paginated pages |
++    // | Releasegroup-Releases        | single table, subgrouping | x         | h3, repeating on paginated pages     |
++    // | Collections-Releasegroups    | native                    | x         | h3, repeating on paginated pages     |
++    // | Place-Performances, ...      | single table, subgrouping |           | h3, repeating on single page         |
++    // | Events                       | single table              | x         | h3,                                  |
++    // | Search                       | single table              | x         | p.pageselector-results               |
+ 
+     // Define all supported page types, their detection logic, and specific UI configurations here.
+     const pageDefinitions = [
+@@ -4917,13 +4918,22 @@
+                     columnExtractors: [
+                         { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                     ],
+-                    tooltipColumns: [ 'Title', 'Artist', '---', ['Type', 'Year', '(', 'Releases', ')'] ],
+                     injectedColumns: [ 'Relationships' ],
+-                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: '#', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
++                    integerColumns: [ {sourceColumn: 'Releases', align: 'R'}, {sourceColumn: 'Year', align: 'C'} ],
+                     collapsableColumns: [ 'CAA' ],
++                    tooltipColumns: [ 'Title', 'Artist', '---', ['Year', '(', 'Releases', ')'] ],
+                     addCAA: 'Title',
+                     extractMainColumn: 'Title',
+-                    stickyColumn: 'Title'
++                    stickyColumn: 'Title',
++                    // Release-groups collection pages have native h3-grouped sub-tables
++                    // (one per release type, just like artist-releasegroups).  Setting
++                    // tableMode here overrides the collections-releases base 'single' so
++                    // the multi-table render path (renderGroupedTable) is used instead of
++                    // renderFinalTable.  columnHeaderErasers: ['▴/▾'] on the base
++                    // definition continues to apply per fetched page because it is read
++                    // from activeDefinition.columnHeaderErasers which is set at button-
++                    // click time from the (still-current) baseDef.
++                    tableMode: 'multi'
+                 },
+                 'Series': {
+                     integerColumns: [ {sourceColumn: 'Number of entities', align: 'R'} ],
+@@ -19047,6 +19057,27 @@ a { color: #1565c0; }`;
+         return tablesToProcess;
+     }
+ 
++    /**
++     * Returns true when the current fetch should use the artist-releasegroups
++     * h3-category scraping path.  This covers two cases:
++     *
++     *   1. The page is `artist-releasegroups` (always multi, native h3-grouped tables).
++     *   2. The page is `collections-releases` AND the resolved entityFeatures block
++     *      declared `tableMode: 'multi'` (currently only `'Release groups'`), meaning
++     *      the collection page contains native h3-grouped release-group sub-tables
++     *      identical to the artist-releasegroups layout.
++     *
++     * Using this predicate avoids repeating the same compound condition at every
++     * relevant guard site (fetch loop, clutter cleanup, sanojjonas removal).
++     *
++     * @returns {boolean}
++     */
++    function _isReleaseGroupsMultiMode() {
++        return pageType === 'artist-releasegroups' ||
++               (pageType === 'collections-releases' &&
++                activeDefinition && activeDefinition.tableMode === 'multi');
++    }
++
+     /**
+      * Removes various clutter elements from the MusicBrainz page to prepare for consolidated view.
+      */
+@@ -19098,7 +19129,7 @@ a { color: #1565c0; }`;
+         });
+         if (removedDetailsCount > 0) Lib.debug('cleanup', `Removed ${removedDetailsCount} gallery/details blocks.`);
+ 
+-        if (pageType === 'events' || pageType === 'artist-releasegroups') {
++        if (pageType === 'events' || _isReleaseGroupsMultiMode()) {
+             removeSanojjonasContainers();
+         }
+ 
+@@ -20888,7 +20919,7 @@ a { color: #1565c0; }`;
+                 finalizeSplitAlignedColumns(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
+                 finalizeRLCColumnWidths(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
+             }
+-            renderGroupedTable(filteredArray, pageType === 'artist-releasegroups', globalQuery || 're-run');
++            renderGroupedTable(filteredArray, _isReleaseGroupsMultiMode(), globalQuery || 're-run');
+ 
+             /* Restore focus & scroll for column filters */
+             if (__activeEl && __activeEl.classList.contains('mb-col-filter-input')) {
+@@ -21875,6 +21906,21 @@ a { color: #1565c0; }`;
+             features: mergedFeatures
+         };
+ 
++        // Per-entity tableMode override: when the resolved entityFeatures block declares
++        // its own tableMode (e.g. 'Release groups' in collections-releases is 'multi'
++        // because the page renders native h3-grouped sub-tables like artist-releasegroups),
++        // promote it to the root of activeDefinition so the multi-table render path
++        // (renderGroupedTable) is selected instead of renderFinalTable.
++        // The base definition's tableMode ('single' for collections-releases) is the
++        // correct default for all other entity types on that page.
++        if (entitySpecificFeatures && entitySpecificFeatures.tableMode) {
++            activeDefinition = {
++                ...activeDefinition,
++                tableMode: entitySpecificFeatures.tableMode
++            };
++            Lib.debug('init', `resolveSeriesEntityFeatures: tableMode overridden to '${entitySpecificFeatures.tableMode}' from entityFeatures`);
++        }
++
+         // Track the label of the last clicked button so saveTableDataToDisk can embed it
+         // in the filename slug when the page has multiple buttons (multi-button pages).
+         lastClickedButtonLabel = buttonConfig.label || null;
+@@ -22271,7 +22317,7 @@ a { color: #1565c0; }`;
+         // Run refactored clutter removal
+         performClutterCleanup();
+ 
+-        if (pageType === 'events' || pageType === 'artist-releasegroups') removeSanojjonasContainers();
++        if (pageType === 'events' || _isReleaseGroupsMultiMode()) removeSanojjonasContainers();
+ 
+         // Update UI state
+         activeBtn.disabled = true;
+@@ -22586,7 +22632,7 @@ a { color: #1565c0; }`;
+                 let rowsInThisPage = 0;
+                 let pageCategoryMap = new Map();
+ 
+-                if (pageType === 'artist-releasegroups') {
++                if (_isReleaseGroupsMultiMode()) {
+                     doc.querySelectorAll('table.tbl').forEach(table => {
+                         // Fetched XHR pages contain native MusicBrainz <h3> elements
+                         // (e.g. "Album", "Single", "EP") that do NOT carry the
+@@ -22594,6 +22640,16 @@ a { color: #1565c0; }`;
+                         // findH3ForTable() requires that class and always returns null
+                         // here, collapsing every group into "Other".  Use a plain
+                         // backwards walk with no class restriction instead.
++                        //
++                        // For artist-releasegroups the h3 does NOT repeat across
++                        // paginated XHR pages — categories are seen at most once.
++                        //
++                        // For collections-release-groups (Release groups entity) the
++                        // h3 DOES repeat: each paginated XHR page begins with the
++                        // same h3 headers ("Album", "Single", …) followed by their
++                        // respective sub-tables.  The find-or-create logic below
++                        // merges all rows for a given category name into a single
++                        // groupedRows entry regardless of which page they came from.
+                         let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
+                         while (_prev && _steps < 5) {
+                             if (_prev.tagName === 'H3') { _h3 = _prev; break; }
+@@ -22602,13 +22658,16 @@ a { color: #1565c0; }`;
+                         }
+                         const category = _h3 ? _h3.textContent.trim() : 'Other';
+ 
+-                        // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
+-                        if (category !== lastCategorySeenAcrossPages) {
+-                            Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
+-                            groupedRows.push({ category: category, rows: [] });
+-                            lastCategorySeenAcrossPages = category;
++                        // Find-or-create: if a group with this category already exists
++                        // (e.g. "Album" from a previous paginated page) append rows to
++                        // it rather than pushing a new duplicate group.
++                        let currentGroup = groupedRows.find(g => g.category === category);
++                        if (!currentGroup) {
++                            Lib.debug('fetch', `New category: "${category}". Rows so far: ${totalRowsAccumulated}`);
++                            currentGroup = { category: category, rows: [] };
++                            groupedRows.push(currentGroup);
+                         }
+-                        const currentGroup = groupedRows[groupedRows.length - 1];
++                        lastCategorySeenAcrossPages = category;
+ 
+                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
+                             if (row.cells.length > 1) {
+@@ -23629,7 +23688,7 @@ a { color: #1565c0; }`;
+                     finalizeSplitAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
+                     finalizeRLCColumnWidths(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
+                 }
+-                await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
++                await renderGroupedTable(groupedRows, _isReleaseGroupsMultiMode());
+             } else {
+                 originalAllRows = [...allRows];
+                 // Finalize colon-aligned columns before render so colons line up
+@@ -32090,7 +32149,7 @@ a { color: #1565c0; }`;
+                         finalizeSplitAlignedColumns(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
+                         finalizeRLCColumnWidths(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
+                     }
+-                    await renderGroupedTable(groupedRows, pageType === 'artist-releasegroups');
++                    await renderGroupedTable(groupedRows, _isReleaseGroupsMultiMode());
+                 } else if (allRows.length > 0 || loadedRowCount === 0) {
+                     // Finalize colon-aligned columns before render so colons line up
+                     if (Lib.settings.sa_enable_numeric_alignment !== false) {
+modified   ShowAllEntityData_CHANGELOG.json
+@@ -1,4 +1,40 @@
+ [
++  {
++    "version": "9.99.468",
++    "date": "2026-04-11",
++    "sections": [
++      {
++        "label": "🐛 Fix",
++        "items": [
++          "Reverted the H2-detection code added in v9.99.467 (incorrect: the heading on collections-release-group and releasegroup-releases pages is H3 throughout, not H2). The actual bug was in the group accumulation logic: the old code used 'if category !== lastCategorySeenAcrossPages → push new group' which created duplicate groupedRows entries when the same H3 category (e.g. 'Album') repeated on successive paginated XHR pages instead of appending to the existing group. Fix: replaced the push-on-change logic with a find-or-create pattern (groupedRows.find(g => g.category === category) || push new) so all rows for a given category are merged into one group regardless of how many paginated pages contribute them. artist-releasegroups is unaffected because its categories never repeat across pages (the find() always returns null on first occurrence, so the behavior is identical to the old push). Updated the documentation table: all heading levels corrected to 'h3'; artist-releasegroups 'not repeating', releasegroup-releases and collections-releasegroups 'repeating on paginated pages'."
++        ]
++      }
++    ]
++  },
++  {
++    "version": "9.99.467",
++    "date": "2026-04-11",
++    "sections": [
++      {
++        "label": "✨ Feature",
++        "items": [
++          "collections-releases 'Release groups' and artist-releasegroups: extended the _isReleaseGroupsMultiMode fetch-loop h3-backwards-walk to also detect H2 category headers. On collections-release-group pages (and on releasegroup-releases pages) MusicBrainz repeats the H2 heading (e.g. 'Album', 'Single') at the top of each fetched XHR page, but no H3 siblings precede the table. The old walk only looked for H3, so all tables on these pages collapsed to category 'Other'. Fix: the backwards walk now records both H3 and H2 hits; H3 takes precedence when found (preserving artist-releasegroups behaviour unchanged), with H2 as the fallback. The heading text is cleaned of sort glyphs (▴▾▼▲⇅) and count spans before being used as the group key. Updated the page-type documentation table to record 'Collections-Releasegroups' as a new row."
++        ]
++      }
++    ]
++  },
++  {
++    "version": "9.99.466",
++    "date": "2026-04-11",
++    "sections": [
++      {
++        "label": "✨ Feature / 🐛 Fix",
++        "items": [
++          "collections-releases 'Release groups': full support for native h3-grouped release-group collection pages. The entityFeatures 'Release groups' entry already carried tableMode:'multi', the correct integerColumns, tooltipColumns, and injectedColumns from v9.99.455. This version wires up the matching code paths: (1) New module-level predicate _isReleaseGroupsMultiMode() returns true for both artist-releasegroups and collections-releases when activeDefinition.tableMode === 'multi', avoiding repetition across call sites. (2) The fetch-loop h3-category scraping branch (native backwards-walk, no mb-toggle-h3 class restriction) now also fires for collections-releases Release-groups pages, populating groupedRows with the correct h3-derived category keys. (3) Both removeSanojjonasContainers() call sites extended to use the new predicate. (4) All three renderGroupedTable(…, isArtistMain) arguments updated from pageType === 'artist-releasegroups' to _isReleaseGroupsMultiMode(). The pre-fetch official-categories pass and post-render discography-view injection remain artist-releasegroups-only (collections pages don't have an Official/Non-official split). columnHeaderErasers: ['▴/▾'] continues to apply correctly because it is read from activeDefinition.columnHeaderErasers (spread from baseDef) which is unaffected by the entityFeatures tableMode override."
++        ]
++      }
++    ]
++  },
+   {
+     "version": "9.99.465",
+     "date": "2026-04-11",
+
+#+end_example
+
+** question
+
+In the following change
+
+#+begin_example
+  {
+    "version": "9.99.468",
+    "date": "2026-04-11",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Reverted the H2-detection code added in v9.99.467 (incorrect: the heading on collections-release-group and releasegroup-releases pages is H3 throughout, not H2). The actual bug was in the group accumulation logic: the old code used 'if category !== lastCategorySeenAcrossPages → push new group' which created duplicate groupedRows entries when the same H3 category (e.g. 'Album') repeated on successive paginated XHR pages instead of appending to the existing group. Fix: replaced the push-on-change logic with a find-or-create pattern (groupedRows.find(g => g.category === category) || push new) so all rows for a given category are merged into one group regardless of how many paginated pages contribute them. artist-releasegroups is unaffected because its categories never repeat across pages (the find() always returns null on first occurrence, so the behavior is identical to the old push). Updated the documentation table: all heading levels corrected to 'h3'; artist-releasegroups 'not repeating', releasegroup-releases and collections-releasegroups 'repeating on paginated pages'."
+        ]
+      }
+    ]
+  },
+#+end_example
+
+the following code changes have been produced
+
+#+begin_example
+@@ -22586,7 +22632,7 @@ a { color: #1565c0; }`;
+                 let rowsInThisPage = 0;
+                 let pageCategoryMap = new Map();
+ 
+-                if (pageType === 'artist-releasegroups') {
++                if (_isReleaseGroupsMultiMode()) {
+                     doc.querySelectorAll('table.tbl').forEach(table => {
+                         // Fetched XHR pages contain native MusicBrainz <h3> elements
+                         // (e.g. "Album", "Single", "EP") that do NOT carry the
+@@ -22594,6 +22640,16 @@ a { color: #1565c0; }`;
+                         // findH3ForTable() requires that class and always returns null
+                         // here, collapsing every group into "Other".  Use a plain
+                         // backwards walk with no class restriction instead.
++                        //
++                        // For artist-releasegroups the h3 does NOT repeat across
++                        // paginated XHR pages — categories are seen at most once.
++                        //
++                        // For collections-release-groups (Release groups entity) the
++                        // h3 DOES repeat: each paginated XHR page begins with the
++                        // same h3 headers ("Album", "Single", …) followed by their
++                        // respective sub-tables.  The find-or-create logic below
++                        // merges all rows for a given category name into a single
++                        // groupedRows entry regardless of which page they came from.
+                         let _prev = table.previousElementSibling, _steps = 0, _h3 = null;
+                         while (_prev && _steps < 5) {
+                             if (_prev.tagName === 'H3') { _h3 = _prev; break; }
+@@ -22602,13 +22658,16 @@ a { color: #1565c0; }`;
+                         }
+                         const category = _h3 ? _h3.textContent.trim() : 'Other';
+ 
+-                        // Logic to handle grouped data and repeating headers over multiple paginated pages (e.g. "Album + Live")
+-                        if (category !== lastCategorySeenAcrossPages) {
+-                            Lib.debug('fetch', `Type Change: "${category}". Rows so far: ${totalRowsAccumulated}`);
+-                            groupedRows.push({ category: category, rows: [] });
+-                            lastCategorySeenAcrossPages = category;
++                        // Find-or-create: if a group with this category already exists
++                        // (e.g. "Album" from a previous paginated page) append rows to
++                        // it rather than pushing a new duplicate group.
++                        let currentGroup = groupedRows.find(g => g.category === category);
++                        if (!currentGroup) {
++                            Lib.debug('fetch', `New category: "${category}". Rows so far: ${totalRowsAccumulated}`);
++                            currentGroup = { category: category, rows: [] };
++                            groupedRows.push(currentGroup);
+                         }
+-                        const currentGroup = groupedRows[groupedRows.length - 1];
++                        lastCategorySeenAcrossPages = category;
+ 
+                         table.querySelectorAll('tbody tr:not(.explanation)').forEach(row => {
+                             if (row.cells.length > 1) {
+#+end_example
+
+which are not quite right.
+
+1.)
+
+They work perfectly for the pageType "type: 'collections-releases'," and the "entityFeatures" ==> 'Release groups'.
+"collections-releasegroups" repeat categories across pages, so repeated H3 categories should be merged into one group.
+
+2.)
+
+For the standard pageType "type: 'artist-releasegroups'" the original code path was actually OK and should be restored.
+
+"artist-releasegroups" actually COULD repeat categories across pages at least ONCE:
+
+a.)
+
+The first occurence of a category e.g. "Album + Live" on a specific downloaded paginated page internally ALWAYS
+corresponds to rows (release groups) of the "Official Discography" type, although it could extend over multiple
+consecutive pagined pages if there are lots of entries for that section, as MusciBee only allows 100 entries per
+page. In that case all fetched rows should go in the same current category.
+
+b.)
+
+If on a later fetched paginated page (after h3 header sections have changed in between), the same already detected
+category e.g. "Album + Live" shows up again, these rows (release groups) internally ALWAYS correspond to the
+"Non-Official Discography" type and SHOULD go into a same named new category.
+
+c.)
+
+We already have code for handling and displaying these accumulated doubled sections for "artist-releasegroups" pages
+
+#+begin_example
+    /**
+     * Injects four discography view-mode buttons into controlsContainer for
+     * artist-releasegroups pages after the combined (all:'1') render completes
+     * and the h3 category arrays have been built.
+     *
+     * Button order (left → right, before the Save/Load divider):
+     *   ① 📋 Complete Discography          — shows ALL h3/table pairs (default)
+     *   ② 📀 Official Discography          — shows only official h3/table pairs
+     *   ③ 📼 Non-Official Discography      — shows only non-official h3/table pairs
+     *   ④ 🗂️ Complete Discography (merged) — deduplicates same-name categories,
+     *                                          combining their rows into one sub-table
+     *
+     * Button ① starts with the active (green) tint because the initial render
+     * shows all categories.  The tint always follows the last-clicked button.
+     *
+     * Idempotent: removes any previously injected buttons/divider before
+     * re-creating them, so a second button press (page reload) starts clean.
+     *
+     * Called from: startFetchingProcess() after the main fetch pipeline completes.
+     */
+    function _injectDiscographyViewButtons() {
+#+end_example
+
+Please fix, thouroughly document the changed code and apply an appropriate changelog entry
+
+** solution
+
+#+begin_example
+v9.99.479+2026-04-11 — one block rewritten, _isReleaseGroupsMultiMode fetch branch
+The group-accumulation logic is now split on pageType with full inline documentation of the reasoning:
+if (pageType === 'artist-releasegroups') {
+    // Continuation model (restored from original):
+    // same-as-last → append to existing group
+    // different     → new group (even if name already appeared earlier)
+    if (category !== lastCategorySeenAcrossPages) { ... push new }
+    currentGroup = groupedRows[groupedRows.length - 1];
+} else {
+    // Find-or-create model (for collections-releases Release groups):
+    // all rows for a category always merge into the one canonical group
+    currentGroup = groupedRows.find(...) || push new;
+}
+Why artist-releasegroups needs the continuation model:
+
+Section > 100 entries → same h3 on consecutive XHR pages → must append (not create duplicate)
+Later, Non-Official Discography has identical h3 names → same name but different position in stream → must create new group
+lastCategorySeenAcrossPages captures position-in-stream; find() (by name) cannot distinguish these two cases
+_injectDiscographyViewButtons relies on the resulting separate groups to power the Official/Non-Official/Merged view buttons
+
+Why collections-releases needs find-or-create:
+
+Every XHR page starts with ALL h3 headers → position-in-stream test would always see a "different" category on page boundaries → creates M×N duplicate groups instead of M canonical ones
+#+end_example
+
 
 * TODO fix Artist-Releasegroup pages
 ** DONE changes to do
@@ -72097,6 +72661,179 @@ Another bug
 - when switching back from the "merged" view to the "un-official" view, the h2 artwork count is wrong, it's the same as for the "merged" view, but the individell artwork counts in the h2 rows are OK 
 - when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
+** wrong CAA count when switching between discography views
+
+bug with wrong CAA count when switching between discography views:
+
+A.)
+
+This is my observation for e.g. the category "Album" which is the FIRST section on the final renderded page.
+
+1.)
+
+When starting on the final rendered page in the "Complete Discography" mode, the following counts apply:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Official        |                     21 |                                         21 |                                           21 |
+| Non-Official    |                      2 |                                          2 |                                            2 |
+
+This is OK.
+
+2.)
+
+When switching to the "Official Discography" view by clicking the "mb-disc-official-btn"-button:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Official        |                     21 |                                         21 |                                           21 |
+
+The "Non-Official" album section is gone.
+
+This is OK.
+
+3.)
+
+When switching to the "Non-Official Discography" view by clicking the "mb-disc-nonofficial-btn"-button:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Non-Official    |                      2 |                                          2 |                                            2 |
+
+The "Official" album section is gone.
+
+This is OK.
+
+4.)
+
+When switching back to the "Official Discography" view by clicking the "mb-disc-official-btn"-button:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Official        |                     21 |                                         21 |                                           21 |
+
+The "Non-Official" album section is gone.
+
+This is OK.
+
+5.)
+
+When switching back to the "Complete Discography" view by clicking the "mb-disc-complete-btn"-button:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Official        |                     21 |                                         21 |                                           21 |
+| Non-Official    |                      2 |                                          2 |                                            2 |
+
+This is OK.
+
+6.)
+
+Repeatingly switching between the views "Complete Discography", "Official Discography" and "Non-Official Discography"
+views in any order works as expected, ALL counts are OK.
+
+7.)
+
+Now the bug, when switching to the "Complete Discography (merged)" view by clicking the "mb-disc-merged-btn"-button:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Merged          |                     23 |                                         23 |                                           85 |
+
+The "mb-caa-toggle-count" from h3 header section count should actually be 23, but it shows 85. When uncollapsing the big
+picture stripe by clicking the "mb-caa-toggle-thumb"-button, I see that besides the 23 expected images there are also
+images shown for the release groups coming from mostly from the official "Single" category", but strangly also one from
+the official "EP" section.
+
+8.)
+
+When switching again to the "Non-Official Discography" view by clicking the "mb-disc-nonofficial-btn"-button:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Non-Official    |                      2 |                                          2 |                                            2 |
+
+The "Official" album section is gone.
+
+This is OK again.
+
+9.)
+
+Now again the bug, when switching to the "Complete Discography (merged)" view by clicking the "mb-disc-merged-btn"-button:
+
+When switching back to the "Official Discography" view by clicking the "mb-disc-official-btn"-button:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Official        |                     21 |                                         21 |                                           83 |
+
+The "Non-Official" album section is gone.
+
+10.)
+
+Again the bug, when switching back to the "Complete Discography" view by clicking the "mb-disc-complete-btn"-button:
+
+| "Album" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|-----------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Official        |                     21 |                                         21 |                                           83 |
+| Non-Official    |                      2 |                                          2 |                                            2 |
+
+The "Official" album section list's buggy counts
+The "Non-Official" album section is OK.
+
+11.)
+
+From now on, when switching views the counts stay as described for the "Album" section
+
+
+B.)
+
+This is my observation for e.g. the category "EP" which is the NOT FIRST section on the final renderded page.
+
+1.)
+
+When starting on the final rendered page in the "Complete Discography" mode, the following counts apply:
+
+| "EP" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|--------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Official     |                      5 |                                          5 |                                            5 |
+| Non-Official |                      3 |                                          3 |                                            3 |
+
+This is OK.
+
+2.)
+
+When switching to the "Official Discography" view by clicking the "mb-disc-official-btn"-button:
+
+| "EP" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|--------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Official     |                      5 |                                          5 |                                            5 |
+
+The "Non-Official" album section is gone.
+
+This is OK.
+
+3.)
+
+When switching to the "Non-Official Discography" view by clicking the "mb-disc-nonofficial-btn"-button:
+
+| "EP" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|--------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Non-Official |                      3 |                                          3 |                                            3 |
+
+The "Official" album section is gone.
+
+This is OK.
+
+4.)
+
+When switching to the "Complete Discography (merged)" view by clicking the "mb-disc-merged-btn"-button:
+
+| "EP" section | actual table row count | "mb-row-count-stat" from h3 header section | "mb-caa-toggle-count" from h3 header section |
+|--------------+------------------------+--------------------------------------------+----------------------------------------------|
+| Merged       |                      8 |                                          8 |                                           10 |
+
+There are two additional release groups shown in the big picture stripe besides the 8 expected images coming from the official "Album" section.
 
 
 * maybe later
