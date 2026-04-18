@@ -71709,8 +71709,6 @@ to
 		integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'} ]
 #+end_example
 
-
-
 * DONE fix h3 header grouping for RGs
 
 #+begin_example
@@ -72275,8 +72273,7 @@ Why collections-releases needs find-or-create:
 Every XHR page starts with ALL h3 headers → position-in-stream test would always see a "different" category on page boundaries → creates M×N duplicate groups instead of M canonical ones
 #+end_example
 
-
-* TODO fix Artist-Releasegroup pages
+* DONE fix Artist-Releasegroup pages
 ** DONE changes to do
 
 Change the code blocks
@@ -72661,7 +72658,7 @@ Another bug
 - when switching back from the "merged" view to the "un-official" view, the h2 artwork count is wrong, it's the same as for the "merged" view, but the individell artwork counts in the h2 rows are OK 
 - when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
-** wrong CAA count when switching between discography views
+** DONE wrong CAA count when switching between discography views
 *** initial
 
 bug with wrong CAA count when switching between discography views:
@@ -72841,8 +72838,12 @@ There are two additional release groups shown in the big picture stripe besides 
 Still the same problem, switching from the "Complete Discography (merged)" view
 to the "Official Discography" or the "Complete Discography" view then the h3 CAA counts are wrong although the table row count is OK
 
+** DONE bug
 
-
+when clicking "Save to Disk" on a pageType of "type: 'artist-releasegroups'" and loading the data back in from the
+filesystem via "Load from Disk" the buttons to switch the different views "Complete Discography", "Official
+Discography", "Non-Official Discography" and "Complete Discography (merged)" are gone. They should be restored after
+loading from disk too.
 
 
 * maybe later

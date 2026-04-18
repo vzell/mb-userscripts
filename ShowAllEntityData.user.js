@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.484+2026-04-18
+// @version      9.99.485+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -25651,6 +25651,35 @@ a { color: #1565c0; }`;
                 h3.style.cursor = 'pointer';
                 h3.style.userSelect = 'none';
 
+                // ── Stamp mbDiscSection for artist-releasegroups pages ─────────
+                // When the discography category arrays are populated (from the live
+                // fetch pre-pass OR restored from a disk-load save file), compute
+                // the section tag for this group's index using the same sequence-match
+                // algorithm used in startFetchingProcess.  Stamping here instead of
+                // only in the post-render pass at startFetchingProcess means every
+                // re-render (runFilter, disk-load, view switch) automatically keeps
+                // the correct data-mb-disc-section attribute on the fresh h3/table.
+                if (h3_official_category_header_array.length > 0 &&
+                        h3_all_category_header_array.length > 0) {
+                    let _offPtr3 = 0, _nonOffStarted3 = false, _secTag3 = 'official';
+                    for (let _i3 = 0; _i3 <= index; _i3++) {
+                        const _c3 = h3_all_category_header_array[_i3];
+                        if (!_nonOffStarted3) {
+                            if (_offPtr3 < h3_official_category_header_array.length &&
+                                    _c3 === h3_official_category_header_array[_offPtr3]) {
+                                _offPtr3++;
+                                _secTag3 = 'official';
+                            } else {
+                                _nonOffStarted3 = true;
+                                _secTag3 = 'non-official';
+                            }
+                        } else {
+                            _secTag3 = 'non-official';
+                        }
+                    }
+                    h3.dataset.mbDiscSection = _secTag3;
+                }
+
                 // Note: Sub-table controls will be added later in the if (!query) block
                 // when h3.innerHTML is set, to avoid being wiped out
 
@@ -25929,6 +25958,11 @@ a { color: #1565c0; }`;
                 } else {
                     container.appendChild(h3);
                     container.appendChild(table);
+                }
+                // Propagate the disc-section stamp to the table element so
+                // _applyDiscographyViewFilter can read it from either h3 or table.
+                if (h3.dataset.mbDiscSection) {
+                    table.dataset.mbDiscSection = h3.dataset.mbDiscSection;
                 }
                 // Set initial tooltip on the count-stat span now that h3 and table
                 // are in the live DOM (findH3ForTable requires both to be connected).
@@ -32252,7 +32286,14 @@ a { color: #1565c0; }`;
                 rowCount: 0,
                 headers: null,
                 rows: null,
-                groups: null
+                groups: null,
+                // Persisted for artist-releasegroups pages so Load from Disk can
+                // reconstruct the discography view-mode buttons (Official / Non-Official
+                // / Complete / Merged).  Null for all other page types.
+                discOfficialCategories: (pageType === 'artist-releasegroups' &&
+                    h3_official_category_header_array.length > 0)
+                    ? h3_official_category_header_array.slice()
+                    : null,
             };
 
             // Serialize table headers (exclude the filter row)
@@ -32717,6 +32758,44 @@ a { color: #1565c0; }`;
                     }
                 }
 
+                // ── Artist-Releasegroups: restore discography category arrays ─────
+                // When a save file from an artist-releasegroups page includes the
+                // pre-fetch category list (discOfficialCategories), restore all three
+                // h3 category arrays BEFORE calling renderGroupedTable so that the
+                // in-loop mbDiscSection stamping (added to renderGroupedTable) fires
+                // correctly on every h3 that is created during the render — including
+                // subsequent re-renders triggered by runFilter() below.
+                if (pageType === 'artist-releasegroups' &&
+                        Array.isArray(data.discOfficialCategories) &&
+                        data.discOfficialCategories.length > 0) {
+                    h3_official_category_header_array = data.discOfficialCategories.slice();
+                    h3_all_category_header_array      = groupedRows.map(g => g.category || 'Other');
+
+                    // Rebuild non-official via the same sequence-match algorithm used
+                    // in startFetchingProcess (lines 24127-24148).
+                    h3_non_official_category_header_array = [];
+                    let _dOffIdx = 0, _dNonOffStarted = false;
+                    for (const _dCat of h3_all_category_header_array) {
+                        if (!_dNonOffStarted) {
+                            if (_dOffIdx < h3_official_category_header_array.length &&
+                                    _dCat === h3_official_category_header_array[_dOffIdx]) {
+                                _dOffIdx++;
+                            } else {
+                                _dNonOffStarted = true;
+                                if (!h3_non_official_category_header_array.includes(_dCat))
+                                    h3_non_official_category_header_array.push(_dCat);
+                            }
+                        } else {
+                            if (!h3_non_official_category_header_array.includes(_dCat))
+                                h3_non_official_category_header_array.push(_dCat);
+                        }
+                    }
+                    Lib.debug('cache',
+                        `disk-load: restored discography arrays — official=${h3_official_category_header_array.length}` +
+                        ` all=${h3_all_category_header_array.length}` +
+                        ` non-official=${h3_non_official_category_header_array.length}`);
+                }
+
                 // Render
                 if (activeDefinition.tableMode === 'multi' && groupedRows.length > 0) {
                     // Finalize colon-aligned columns before render so colons line up
@@ -32766,6 +32845,17 @@ a { color: #1565c0; }`;
                 initNavigationGuard();
 
                 makeH2sCollapsible();
+
+                // ── Artist-Releasegroups: inject discography view buttons ─────────
+                // Mirror the equivalent block in startFetchingProcess (lines
+                // 24109-24201).  The h3_official_category_header_array was already
+                // restored and the h3 elements were stamped with mbDiscSection by the
+                // modified renderGroupedTable.  We only need to inject the buttons.
+                if (pageType === 'artist-releasegroups' &&
+                        h3_official_category_header_array.length > 0) {
+                    _injectDiscographyViewButtons();
+                    Lib.debug('cache', 'disk-load: discography view buttons injected');
+                }
 
                 // Reset global filter to a clean state after every disk load.
                 // If the page was already rendered with an active filter before the load,

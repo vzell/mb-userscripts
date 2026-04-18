@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.485",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Discography view-mode buttons (Complete Discography / Official Discography / Non-Official Discography / Complete Discography (merged)) missing after Load from Disk on artist-releasegroups pages. Root cause: saveTableDataToDisk did not persist h3_official_category_header_array (which comes from the pre-fetch pass) so on load the array was empty, the guard h3_official_category_header_array.length > 0 always failed, and _injectDiscographyViewButtons() was never called. Three coordinated changes: (1) saveTableDataToDisk now saves h3_official_category_header_array as discOfficialCategories in the JSON file for artist-releasegroups pages. (2) renderGroupedTable now stamps h3.dataset.mbDiscSection / table.dataset.mbDiscSection on every newly created h3/table pair using the category arrays if they are populated — this means every re-render (runFilter, view switch, disk-load) automatically keeps the correct section tag on fresh h3 elements, not just the initial post-fetch pass. (3) loadTableDataFromDisk now restores h3_official_category_header_array from data.discOfficialCategories (when present), rebuilds h3_all_category_header_array and h3_non_official_category_header_array from groupedRows using the same sequence-match algorithm as startFetchingProcess, and calls _injectDiscographyViewButtons() after makeH2sCollapsible(). Files saved before this version lack discOfficialCategories and silently skip button injection (no regression)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.484",
     "date": "2026-04-18",
     "sections": [
