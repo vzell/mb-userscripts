@@ -29370,7 +29370,7 @@ The HTML structure is:
 
 I want them to be individually collapsable. 
 
-** edit recording comments
+** DONE edit recording comments
 
 When clicking on the "Edit recording comments" button 
 
@@ -29384,6 +29384,24 @@ actually vanishes from the final rendered page.
 Running just the userscript "GenerateRecordingCommentForRelease.user.js" alone it's functionality works as expected
 
 Please fix, or should the functionaliyt from "GenerateRecordingCommentForRelease.user.js" included in "MB_PageEnhancer.user.js"
+
+** TODO bug with h2 inside "Annotation"
+** TODO Always emulate click on "Show more..." inside "Annotation"
+
+emulate a click on "Show more..." inside "Annotation"
+
+#+begin_example
+<p>
+  <a class="annotation-toggle" href="#">Show more...
+  </a>
+</p>
+#+end_example
+
+Afterwards remove the following container
+
+#+begin_example
+<p><a class="annotation-toggle" href="#">Show less...</a></p>
+#+end_example
 
 * filter (funnel) icon from chrome console
 
