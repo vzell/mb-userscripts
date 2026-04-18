@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - MB Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0.3+2026-04-18
+// @version      1.0.4+2026-04-18
 // @description  Enhances MusicBrainz pages with additional features
 // @author       vzell
 // @tag          AI generated
@@ -230,6 +230,13 @@
         h2.title = makeTooltip(sectionLabel, startCollapsed);
 
         h2.addEventListener("click", (event) => {
+            // Ignore clicks that bubbled up from an interactive descendant (button, anchor,
+            // input, select, textarea).  Other userscripts (e.g. GenerateRecordingCommentForRelease)
+            // legitimately append controls *inside* an h2; without this guard their clicks would
+            // also fire the collapse/expand logic and hide the section unexpectedly.
+            if (event.target !== h2 && event.target.closest('button, a, input, select, textarea')) {
+                return;
+            }
             if (event.ctrlKey) {
                 // Ctrl+Click: collapse or expand ALL script-managed sections together,
                 // driven by the current state of the clicked header's section.

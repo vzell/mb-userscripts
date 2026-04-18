@@ -29370,6 +29370,20 @@ The HTML structure is:
 
 I want them to be individually collapsable. 
 
+** edit recording comments
+
+When clicking on the "Edit recording comments" button 
+
+#+begin_example
+<button class="work-button-style">Edit recording comments</button>
+#+end_example
+
+injected from the uploaded user script "GenerateRecordingCommentForRelease.user.js" the tracklist table '<table class="tbl medium">'
+actually vanishes from the final rendered page.
+
+Running just the userscript "GenerateRecordingCommentForRelease.user.js" alone it's functionality works as expected
+
+Please fix, or should the functionaliyt from "GenerateRecordingCommentForRelease.user.js" included in "MB_PageEnhancer.user.js"
 
 * filter (funnel) icon from chrome console
 
@@ -72893,6 +72907,19 @@ loading from disk too.
 
 ** TODO ghost images when switching from merged view to unofficial
 
+Scenario: On the pageType "type: 'artist-releasegroups'", when clicking on the "Complete Discography (merged)"-button and then
+toggling the display of the CAA big image stripes by clicking
+
+#+begin_example
+<img class="mb-caa-toggle-thumb" src="//coverartarchive.org/release-group/301d5ef1-1cde-4ca5-9069-8d9890e7fa17/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;">
+#+end_example
+
+There is a rendering bug when switching to the "Non-Official Discography" view by clicking the "mb-disc-nonofficial-btn"-button:
+
+All CAA images which actually belong to the "Official Discography" (but were of course renderded in the merged view)
+show up as CAA stripes directly rendered below the h2 "Non-Official Discography" header line and before the first h3
+header line present only in the "Non-Official Discography"
+
 * TODO taglookup
 ** DONE initial
 
@@ -73001,6 +73028,61 @@ Adjust the function
 to support additionally the pageType "type: 'taglookup'"
 
 A typical URL looks like https://musicbrainz.org/taglookup/index?tag-lookup.artist=Bruce+Springsteen&tag-lookup.release=The+Rising&tag-lookup.tracknum=&tag-lookup.track=&tag-lookup.duration=&tag-lookup.filename=
+
+** bug
+
+on the pageType "type: 'taglookup'" the data cells still do NOT have the 
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+e.g.
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col" data-caa-inline-done="1">
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="10 images found for this release / release-group">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/1c09c764-88fc-48df-bc5a-a5905a6fdb91">
+    <span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+    </span>
+  </span>
+  <a href="/release/f799b836-a1bd-367a-b89e-32e5023396c4">
+    <bdi>The Rising
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Japan, vinyl replica edition for the european market
+    </bdi>)
+  </span>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+</td>
+#+end_example
+
+And here an example of the pageType "artist-releases"
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col" data-erg-injected="1" data-caa-inline-done="1">
+  <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="3 images found for this release / release-group">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/f00cdad4-b799-4427-9f37-048c6f67d359">
+    <span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+    </span>
+  </span>
+  <a class="wrap-anywhere" href="/release/2461b144-2e31-48c6-884f-155a072c530e">
+    <bdi>It’s Hard to Be a Saint in the City
+    </bdi>
+  </a>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+</td>
+#+end_example
+
+** bug
+
+I tested v9.99.496 and the ▶ button still doesn't appear on taglookup.
+
 
 * TODO search pages
 ** DONE initial

@@ -1,5 +1,17 @@
 [
   {
+    "version": "1.0.4",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fixed event-bubbling clash with GenerateRecordingCommentForRelease (and any other userscript that appends interactive controls inside a native MB h2). Root cause: attachHeaderBehavior() installed a click listener on the h2 element; because the 'Edit recording comments' button is appended *inside* h2.tracklist via .appendTo($header), clicking it caused the click event to bubble up to the h2 and trigger the collapse/expand logic, which hid the wrapper div containing the tracklist table. Fix: added an early-return guard at the top of the h2 click handler — if the event originated from an interactive descendant (button, a, input, select, or textarea) and the event target is not the h2 itself, the handler returns immediately without toggling the section."
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.0.3",
     "date": "2026-04-18",
     "sections": [
