@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.488",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "✨ New",
+        "items": [
+          "Added support for TagLookup pages (/taglookup*). New @match header. New 'taglookup' pageType (single-table, button label 'Show all Releases for Tags') with: caa extractor on Name producing CAA column; splitCountryDate on Country/Date; sumTracks on Tracks producing Total Tracks; extractFormatTypes on Format; dateParts on Date producing DD/MM/YYYY/Day/Month; injectedColumns Relationships; integerColumns DD(R)/MM(R)/YYYY(C)/Total Tracks(R); renderMultiRowCell Label/Catalog#; collapsableColumns Country/Date, Country, Date, Label, Catalog#, CAA; tooltipColumns MB-Name / italic:Comment / Artist / divider / [Format (Tracks)] / Country/Date / [Label - Catalog#] / Barcode / Language / Type / Status; addCAA on Name; extractMainColumn Name; stickyColumn Name; insertH2 Releases; insertPrependH2 Searchform. finalCleanup now relocates div.searchform immediately after the injected Searchform h2 for taglookup pages so the collapsible-section infrastructure wraps the search form together with its heading."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.487",
     "date": "2026-04-18",
     "sections": [

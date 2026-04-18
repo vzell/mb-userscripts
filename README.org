@@ -72845,6 +72845,122 @@ filesystem via "Load from Disk" the buttons to switch the different views "Compl
 Discography", "Non-Official Discography" and "Complete Discography (merged)" are gone. They should be restored after
 loading from disk too.
 
+* DONE taglookup
+
+Add support for TagLookup pages on MusicBrainz:
+
+1.)
+
+Add the following new userscript header
+
+#+begin_example
+// @match        *://*.musicbrainz.org/taglookup*
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/cdtoc/*
+#+end_example
+
+2.)
+
+add the following new pageType definition
+
+#+begin_example
+        // TagLookup pages
+        {
+            type: 'taglookup',
+            match: (path) => path.includes('/taglookup'),
+            buttons: [ { label: 'Show all Releases for Tags' } ],
+            tableMode: 'single',
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name',         extractor: 'caa',                syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate',   syntheticColumns: ['Country', 'Date'] },
+                    { sourceColumn: 'Tracks',       extractor: 'sumTracks',          syntheticColumns: ['Total Tracks'] },
+                    { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode', 'Language', 'Type', 'Status' ],
+                addCAA: 'Name',
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name',
+                insertH2: 'Releases',
+                // Inject a "Searchform" h2 before the existing (single) h2 on the page
+                // so the collapsible-section infrastructure can wrap the search form.
+		insertPrependH2: 'Searchform'
+            }
+        },
+#+end_example
+
+before the pageType "type: 'cdtoc'"
+
+3.)
+
+On the final rendered page, relocate the "searchform" container
+
+#+begin_example
+<div class="searchform" style="">
+#+end_example
+
+below the h2 header named 'Searchform' inserted because of the "insertPrependH2: 'Searchform'" configuration directive.
+
+Do this in the "function finalCleanup()"
+
+* DONE search pages
+
+Adjust the following code, executed for pageType "type: 'search'"
+
+#+begin_example
+        if (targetH2) {
+            // Transformation logic for non-H2 targets (e.g. search results paragraph)
+            if (activeDefinition.features?.transformToH2 && targetH2.tagName !== 'H2') {
+
+                // Get the method value from the URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const methodValue = urlParams.get('method'); // e.g., "direct"
+
+                let prefix = ""; // Initialize prefix as empty string
+                if (pageType === 'search' && methodValue) {
+                    // Format the string (Capitalize first letter + " search: ")
+                    prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
+                    Lib.debug('render', `Search method identified: "${prefix}..."`);
+                }
+
+                Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
+                const newH2 = document.createElement('h2');
+
+                // Prepend the prefix to the original content
+                newH2.innerHTML = prefix + targetH2.innerHTML;
+
+                targetH2.replaceWith(newH2);
+                targetH2 = newH2; // Update reference for subsequent operations
+            }
+#+end_example
+
+to also extract the 'entity type' from the "type" query parameter and append the value blank separated to the already
+extracted value for the "method" query parameter.
+
+So e.g. for the URL https://musicbrainz.org/search?query=Zell&type=artist&limit=25&method=advanced the "prefix" to
+prepend to the original H2 content should be:
+
+#+begin_example
+Advanced artist
+#+end_example
+
+instead of just
+
+#+begin_example
+Advanced
+#+end_example
+
 
 * maybe later
 
@@ -74097,122 +74213,6 @@ but NOT anymore on the final rendered page
 #+end_example
 
 
-* TODO taglookup
-
-Add support for TagLookup pages on MusicBrainz:
-
-1.)
-
-Add the following new userscript header
-
-#+begin_example
-// @match        *://*.musicbrainz.org/taglookup*
-#+end_example
-
-after
-
-#+begin_example
-// @match        *://*.musicbrainz.org/cdtoc/*
-#+end_example
-
-2.)
-
-add the following new pageType definition
-
-#+begin_example
-        // TagLookup pages
-        {
-            type: 'taglookup',
-            match: (path) => path.includes('/taglookup'),
-            buttons: [ { label: 'Show all Releases for Tags' } ],
-            tableMode: 'single',
-            features: {
-                columnExtractors: [
-                    { sourceColumn: 'Name',         extractor: 'caa',                syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate',   syntheticColumns: ['Country', 'Date'] },
-                    { sourceColumn: 'Tracks',       extractor: 'sumTracks',          syntheticColumns: ['Total Tracks'] },
-                    { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
-                ],
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                injectedColumns: [ 'Relationships' ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
-                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode', 'Language', 'Type', 'Status' ],
-                addCAA: 'Name',
-                extractMainColumn: 'Name',
-                stickyColumn: 'Name',
-                insertH2: 'Releases',
-                // Inject a "Searchform" h2 before the existing (single) h2 on the page
-                // so the collapsible-section infrastructure can wrap the search form.
-		insertPrependH2: 'Searchform'
-            }
-        },
-#+end_example
-
-before the pageType "type: 'cdtoc'"
-
-3.)
-
-On the final rendered page, relocate the "searchform" container
-
-#+begin_example
-<div class="searchform" style="">
-#+end_example
-
-below the h2 header named 'Searchform' inserted because of the "insertPrependH2: 'Searchform'" configuration directive.
-
-Do this in the "function finalCleanup()"
-
-
-* DONE search pages
-
-Adjust the following code, executed for pageType "type: 'search'"
-
-#+begin_example
-        if (targetH2) {
-            // Transformation logic for non-H2 targets (e.g. search results paragraph)
-            if (activeDefinition.features?.transformToH2 && targetH2.tagName !== 'H2') {
-
-                // Get the method value from the URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const methodValue = urlParams.get('method'); // e.g., "direct"
-
-                let prefix = ""; // Initialize prefix as empty string
-                if (pageType === 'search' && methodValue) {
-                    // Format the string (Capitalize first letter + " search: ")
-                    prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
-                    Lib.debug('render', `Search method identified: "${prefix}..."`);
-                }
-
-                Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
-                const newH2 = document.createElement('h2');
-
-                // Prepend the prefix to the original content
-                newH2.innerHTML = prefix + targetH2.innerHTML;
-
-                targetH2.replaceWith(newH2);
-                targetH2 = newH2; // Update reference for subsequent operations
-            }
-#+end_example
-
-to also extract the 'entity type' from the "type" query parameter and append the value blank separated to the already
-extracted value for the "method" query parameter.
-
-So e.g. for the URL https://musicbrainz.org/search?query=Zell&type=artist&limit=25&method=advanced the "prefix" to
-prepend to the original H2 content should be:
-
-#+begin_example
-Advanced artist
-#+end_example
-
-instead of just
-
-#+begin_example
-Advanced
-#+end_example
 
 
 

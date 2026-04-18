@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.487+2026-04-18
+// @version      9.99.488+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -24,6 +24,7 @@
 // @match        *://*.musicbrainz.org/user/*/tag/*
 // @match        *://*.musicbrainz.org/tag/*
 // @match        *://*.musicbrainz.org/cdtoc/*
+// @match        *://*.musicbrainz.org/taglookup*
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
 // @connect      eventartarchive.org
@@ -4476,6 +4477,36 @@
 
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
+        // TagLookup pages
+        {
+            type: 'taglookup',
+            match: (path) => path.includes('/taglookup'),
+            buttons: [ { label: 'Show all Releases for Tags' } ],
+            tableMode: 'single',
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name',         extractor: 'caa',                syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate',   syntheticColumns: ['Country', 'Date'] },
+                    { sourceColumn: 'Tracks',       extractor: 'sumTracks',          syntheticColumns: ['Total Tracks'] },
+                    { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode', 'Language', 'Type', 'Status' ],
+                addCAA: 'Name',
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name',
+                insertH2: 'Releases',
+                // Inject a "Searchform" h2 before the existing (single) h2 on the page
+                // so the collapsible-section infrastructure can wrap the search form.
+                insertPrependH2: 'Searchform'
+            }
+        },
         // CDtoc pages
         {
             type: 'cdtoc',
@@ -30041,6 +30072,29 @@ a { color: #1565c0; }`;
                 // h2 not found — move just the form.
                 _anchor.insertAdjacentElement('afterend', _form);
                 Lib.debug('cleanup', 'search: moved div.searchform after #mb-status-displays-wrapper (no Searchform h2 found).');
+            }
+        }
+
+        // ── taglookup: relocate div.searchform below the injected "Searchform" h2 ──
+        // applyInsertPrependH2 has already injected an <h2>Searchform</h2> before
+        // the page's own first h2.  Move the native MusicBrainz tag-lookup search
+        // form (div.searchform) to sit immediately after that h2 so the collapsible-
+        // section infrastructure wraps both the heading and the form together.
+        // Final DOM order (inside #content):
+        //   h2 "Searchform"     ← injected by insertPrependH2
+        //   div.searchform      ← moved here from its original position
+        //   h2 "Releases"       ← from insertH2
+        //   table.tbl           ← rendered table
+        if (pageType === 'taglookup') {
+            const _tlH2 = Array.from(document.querySelectorAll('h2'))
+                .find(h => h.textContent.replace(/[▼▲]/g, '').trim() === 'Searchform');
+            const _tlForm = document.querySelector('div.searchform');
+            if (_tlH2 && _tlForm) {
+                _tlH2.insertAdjacentElement('afterend', _tlForm);
+                Lib.debug('cleanup', 'taglookup: moved div.searchform immediately after "Searchform" h2.');
+            } else {
+                Lib.debug('cleanup',
+                    `taglookup: searchform relocation skipped (h2 found=${!!_tlH2}, form found=${!!_tlForm}).`);
             }
         }
 
