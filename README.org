@@ -72973,7 +72973,7 @@ Why is the "data-erg-btn"
 
 not present on pageTypes of "type: 'taglookup'"
 
-** function isExpandRGsPage()
+** TODO function isExpandRGsPage()
 
 Adjust the function
 
@@ -73053,7 +73053,7 @@ Advanced
 ** add entity features
 
 
-* TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
+* DONE Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
 ** initial
 
 Include the functionality of the uploaded userscript "mb-magic-tagger-button.user.js" in our userscript:
@@ -73206,7 +73206,7 @@ Bug 1 (column mismatch on Load from Disk) is still there
 
 Bug 1 (column mismatch on Load from Disk) is still there, but ONLY in "single"-table mode
 
-** fix picard URL
+** DONE fix picard URL
 
 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Sending to Picard: http://127.0.0.1:8000/?id=f3a174fd-5a0e-4004-a16c-34e03bb339de&v=2&resource=https%3A%2F%2Fmusicbrainz.org%2Frelease%2Ff3a174fd-5a0e-4004-a16c-34e03bb339de
 
@@ -73215,8 +73215,9 @@ http://127.0.0.1:8000/?id=f3a174fd-5a0e-4004-a16c-34e03bb339de&v=2&resource=http
 http://127.0.0.1:8000/openalbum?id=f3a174fd-5a0e-4004-a16c-34e03bb339de&v=2&resource=https%3A%2F%2Fmusicbrainz.org%2Frelease%2Ff3a174fd-5a0e-4004-a16c-34e03bb339de
 
 http://127.0.0.1:8000/openalbum?id=3168f405-b1a2-4be7-888c-a71240c2ee8d
+** DONE picard URL
 
-** picard URL
+some fixes to apply:
 
 1.)
 
@@ -73266,6 +73267,7 @@ Now that we have our own picard tagger implementation, remove the configuration
 
 and adjust the "const removalMapAlways" to always include 'Tagger' and remove it from "const removalMap" throughout the
 code base
+
 
 * maybe later
 

@@ -1,5 +1,19 @@
 [
   {
+    "version": "9.99.495",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "✨ Improvement",
+        "items": [
+          "Picard tagger: corrected tagger URL endpoint from /?id= to /openalbum?id= so clicks are routed to Picard's correct browser-integration handler.",
+          "Picard tagger: changed idle button icon from green (#4a9e50) to yellow (#f0b429) to distinguish it from the success state.",
+          "Removed sa_remove_tagger setting (Remove Tagger column checkbox) — the native MusicBrainz Tagger column is now always removed unconditionally since the script's own Picard column replaces it. Moved 'Tagger' from the setting-gated removalMap to removalMapAlways in both column-removal passes."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.494",
     "date": "2026-04-18",
     "sections": [

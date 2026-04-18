@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.494+2026-04-18
+// @version      9.99.495+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -234,13 +234,6 @@
         divider_column_removal: {
             type: 'divider',
             label: '🧮 OPTIONAL COLUMN REMOVAL FROM FINAL RENDERED PAGE'
-        },
-
-        sa_remove_tagger: {
-            label: "Remove Tagger column",
-            type: "checkbox",
-            default: false,
-            description: "Remove the Tagger column from the final rendered tables"
         },
 
         sa_remove_rating: {
@@ -21771,7 +21764,7 @@ a { color: #1565c0; }`;
      *
      *   1. **Column removal** — removes columns whose header text prefix matches
      *      an entry in `removalMap` and whose corresponding setting is enabled
-     *      (e.g. sa_remove_rating, sa_remove_tagger, …); foreign userscript columns
+     *      (e.g. sa_remove_rating, …); foreign userscript columns
      *
      *   2. **Column origin stamping** — stamps each surviving original <th> with
      *      the CSS class `mb-original-column`.  Idempotent: already-stamped cells
@@ -21817,11 +21810,11 @@ a { color: #1565c0; }`;
         const removalMapAlways = new Set([
             'Relationships',
             'Performance Attributes',
-            'Release events'
+            'Release events',
+            'Tagger'          // always removed — our Picard column replaces the native MB tagger column
         ]);
         const removalMapSetting = {
-            'Rating': 'sa_remove_rating',
-            'Tagger': 'sa_remove_tagger'
+            'Rating': 'sa_remove_rating'
         };
 
         headers.forEach((th, idx) => {
@@ -21836,7 +21829,7 @@ a { color: #1565c0; }`;
                 }
             }
 
-            // Setting-gated columns (Rating, Tagger)
+            // Setting-gated columns (Rating)
             for (const [headerPrefix, settingKey] of Object.entries(removalMapSetting)) {
                 if (txt.startsWith(headerPrefix)) {
                     const isEnabled = Lib.settings[settingKey];
@@ -22953,15 +22946,16 @@ a { color: #1565c0; }`;
 
                 if (referenceTable) {
                     // Columns always excluded from index tracking (foreign userscript columns).
-                    // 'Rating' and 'Tagger' remain setting-gated.
+                    // 'Rating' remains setting-gated. 'Tagger' is now always removed because
+                    // our own Picard column replaces the native MB tagger column.
                     const removalMapAlways = new Set([
                         'Relationships',
                         'Performance Attributes',
-                        'Release events'
+                        'Release events',
+                        'Tagger'          // always removed — replaced by our Picard column
                     ]);
                     const removalMap = {
-                        'Rating': 'sa_remove_rating',
-                        'Tagger': 'sa_remove_tagger'
+                        'Rating': 'sa_remove_rating'
                     };
 
                     // Reset column indices for all active extractors before scanning each page.
@@ -22999,7 +22993,7 @@ a { color: #1565c0; }`;
                                 break;
                             }
                         }
-                        // Setting-gated exclusions (Rating, Tagger)
+                        // Setting-gated exclusions (Rating)
                         for (const [headerPrefix, settingKey] of Object.entries(removalMap)) {
                             if (txt.startsWith(headerPrefix) && Lib.settings[settingKey]) {
                                 indicesToExclude.push(idx);
@@ -40554,18 +40548,18 @@ a { color: #1565c0; }`;
      * @returns {string}  Full http://… URL for the tagger endpoint.
      */
     function _picardBuildTaggerUrl(host, port, entityType, guid) {
-        return `http://${host}:${port}/?id=${guid}&v=2&resource=${encodeURIComponent(
+        return `http://${host}:${port}/openalbum?id=${guid}&v=2&resource=${encodeURIComponent(
             `https://musicbrainz.org/${entityType}/${guid}`
         )}`;
     }
 
     /**
      * SVG icon for the Picard button in its idle state.
-     * A compact green music-note derived from the MusicBrainz Picard icon palette.
+     * A compact yellow music-note derived from the MusicBrainz Picard icon palette.
      */
     const _PICARD_ICON_IDLE = 'data:image/svg+xml;utf8,' + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">' +
-        '<circle cx="8" cy="8" r="8" fill="#4a9e50"/>' +
+        '<circle cx="8" cy="8" r="8" fill="#f0b429"/>' +
         '<text x="8" y="12" text-anchor="middle" font-size="11" font-family="sans-serif" fill="white">♪</text>' +
         '</svg>'
     );
