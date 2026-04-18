@@ -73160,6 +73160,52 @@ The "Bug 1 — scroll-on-click after sort/filter" is still present
 When loading from disk, the "Picard" column before the "Relationships" column is gone, but the contents of the
 "Relationships" column are still the green picard icons and the last "Picard" column still holds the relationship icons
 
+** load from disk
+
+bugs still present:
+
+1.)
+
+When loading from disk, the "Picard" column before the "Relationships" column is gone, but the contents of the
+"Relationships" column are still the green picard icons and the last "Picard" column still holds the relationship icons
+
+So the "Bug 2 — column misalignment (Relationships ↔ Picard)" is not fixed, when using the load from disk path
+
+2.)
+
+On "multi"-table pages, clicking the picard icon changes i to the red icon and produces the following console output,
+which is OK because picard is not running
+
+#+begin_example
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Button clicked but Picard not detected (guid=376baba4-79cd-4f43-a0c3-9b12f60e8ec9) 
+#+end_example
+
+On "single"-table pages when clicking the picard icon, the native browser dialog pops up with the text
+
+#+begin_example
+You are about to leave this page.
+
+All loaded data, filters, sorting, column resizing and other
+customisations will be lost.
+
+Do you want to continue?
+#+end_example
+
+and the following output is created when clicking the "OK" buttin in the dialog
+
+#+begin_example
+19:41:11.803 [VZ-ShowAllEntityData: artist-releases] 📝 Guard triggered: merge-form button "merge form" 
+19:41:13.644 [VZ-ShowAllEntityData: artist-releases] 📝 Button clicked but Picard not detected (guid=5d3b793a-5853-44c0-9821-e2c2bb79ae5d) 
+#+end_example
+
+** still
+
+Bug 1 (column mismatch on Load from Disk) is still there
+
+** DONE still there
+
+Bug 1 (column mismatch on Load from Disk) is still there, but ONLY in "single"-table mode
+
 ** fix picard URL
 
 [VZ-ShowAllEntityData: releasegroup-releases] 📝 Sending to Picard: http://127.0.0.1:8000/?id=f3a174fd-5a0e-4004-a16c-34e03bb339de&v=2&resource=https%3A%2F%2Fmusicbrainz.org%2Frelease%2Ff3a174fd-5a0e-4004-a16c-34e03bb339de
@@ -73220,53 +73266,6 @@ Now that we have our own picard tagger implementation, remove the configuration
 
 and adjust the "const removalMapAlways" to always include 'Tagger' and remove it from "const removalMap" throughout the
 code base
-
-** load from disk
-
-bugs still present:
-
-1.)
-
-When loading from disk, the "Picard" column before the "Relationships" column is gone, but the contents of the
-"Relationships" column are still the green picard icons and the last "Picard" column still holds the relationship icons
-
-So the "Bug 2 — column misalignment (Relationships ↔ Picard)" is not fixed, when using the load from disk path
-
-2.)
-
-On "multi"-table pages, clicking the picard icon changes i to the red icon and produces the following console output,
-which is OK because picard is not running
-
-#+begin_example
-[VZ-ShowAllEntityData: releasegroup-releases] 📝 Button clicked but Picard not detected (guid=376baba4-79cd-4f43-a0c3-9b12f60e8ec9) 
-#+end_example
-
-On "single"-table pages when clicking the picard icon, the native browser dialog pops up with the text
-
-#+begin_example
-You are about to leave this page.
-
-All loaded data, filters, sorting, column resizing and other
-customisations will be lost.
-
-Do you want to continue?
-#+end_example
-
-and the following output is created when clicking the "OK" buttin in the dialog
-
-#+begin_example
-19:41:11.803 [VZ-ShowAllEntityData: artist-releases] 📝 Guard triggered: merge-form button "merge form" 
-19:41:13.644 [VZ-ShowAllEntityData: artist-releases] 📝 Button clicked but Picard not detected (guid=5d3b793a-5853-44c0-9821-e2c2bb79ae5d) 
-#+end_example
-
-** still
-
-Bug 1 (column mismatch on Load from Disk) is still there
-
-** still there
-
-Bug 1 (column mismatch on Load from Disk) is still there, but ONLY in "single"-table mode
-
 
 * maybe later
 

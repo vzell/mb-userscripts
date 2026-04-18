@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.488+2026-04-18
+// @version      9.99.494+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1747,6 +1747,54 @@
                          'The cursor is always placed after the first character of a pair (e.g. between ' +
                          '\u201C and \u201D so the user can type inside the quotes). ' +
                          'Populates SA_UNICODE_CHARS. Changes take effect after saving and reloading.'
+        },
+
+        // ============================================================
+        // PICARD TAGGER SECTION
+        // ============================================================
+        // The Picard tagger integration in this section is based on the
+        // "MusicBrainz Magic Tagger Button" userscript by Philipp Wolfer
+        // (https://github.com/phw/musicbrainz-magic-tagger-button, MIT licence).
+        divider_picard_tagger: {
+            type: 'divider',
+            label: '🎵 PICARD TAGGER'
+        },
+
+        sa_enable_picard_tagger: {
+            label: 'Enable Picard Tagger column',
+            type: 'checkbox',
+            default: true,
+            description: 'Inject a "Picard" column into every rendered table that lets you send ' +
+                         'individual releases or release-groups directly to MusicBrainz Picard with ' +
+                         'one click.  The column is only visible on pages whose URL matches the ' +
+                         'supported page types (releases, release-groups, recordings, series, ' +
+                         'collections, cdtoc, taglookup, search, artist/*/releases). ' +
+                         'Picard must be running locally with browser integration enabled. ' +
+                         'Based on the "MusicBrainz Magic Tagger Button" userscript by Philipp Wolfer.'
+        },
+
+        sa_picard_tagger_default_port: {
+            label: 'Picard default port',
+            type: 'number',
+            default: 8000,
+            description: 'The port Picard listens on by default (usually 8000). ' +
+                         'The script probes ports from this value up to the max port below.'
+        },
+
+        sa_picard_tagger_max_port: {
+            label: 'Picard max probe port',
+            type: 'number',
+            default: 8010,
+            description: 'Upper bound for port probing.  Set equal to the default port to ' +
+                         'suppress range probing and only try the single default port.'
+        },
+
+        sa_picard_tagger_host: {
+            label: 'Picard host',
+            type: 'text',
+            default: '127.0.0.1',
+            description: 'IP address or hostname where Picard is running.  Change this if ' +
+                         'Picard runs on a different machine on your local network.'
         }
 
     };
@@ -21321,6 +21369,16 @@ a { color: #1565c0; }`;
             // After subtable filters ran, recalculate h2 count to reflect the
             // 3-tier (locally / globally / absolute-total) format when needed.
             updateH2CountFromSubtables();
+
+            // Re-wire Picard tagger click handlers on the freshly rendered sub-table rows.
+            // Source rows carry picard_td (appended after rel_td during the initial render);
+            // cloneNode(true) copies the td but strips its event listeners.  This call
+            // only re-attaches them — it does NOT append new tds so column order is safe.
+            // Called here (after updateH2CountFromSubtables) rather than right after
+            // renderGroupedTable to avoid running during the load-from-disk sequence,
+            // where runFilter fires BEFORE initRelationshipsColumn — in that case source
+            // rows have no picard_td yet and inserting it here would create wrong order.
+            initPicardTaggerColumn(/* rewireOnly */ true);
         } else {
             const totalAbsolute = allRows.length;
             matchCtx.colFilters = getColFilters(document.querySelector('table.tbl'), isCaseSensitive, isRegExp);
@@ -21378,7 +21436,13 @@ a { color: #1565c0; }`;
             // Re-apply barcode highlights after every filter / sort re-render.
             initBarcodeHighlight();
 
-            // Re-apply CAA/EAA illustrated discography after every filter / sort re-render.
+            // Refresh the Picard tagger column after every filter / sort re-render.
+            // rewireOnly=true: only re-attach listeners on existing picard cells;
+            // never append new tds.  During load-from-disk runFilter fires before
+            // initRelationshipsColumn — full injection there would append picard_td
+            // before rel_td, corrupting column order.  After the initial render,
+            // allRows source rows already carry picard_td so rewire-only is sufficient.
+            initPicardTaggerColumn(/* rewireOnly */ true);
             // initCaaPics() MUST run before initEaaPics() and initCaaInlinePics() /
             // initEaaInlinePics() — it creates _caaQueue used by all three.
             initCaaPics();
@@ -24366,6 +24430,11 @@ a { color: #1565c0; }`;
             // Populate Relationships column cells via async WS2 fetches (if configured).
             if (activeInjectedColumns.length) initRelationshipsColumn();
 
+            // Inject Picard tagger column AFTER Relationships so Picard is always the
+            // rightmost column (injectedColumns like Relationships append to the row end;
+            // Picard must come last so its td aligns with the Picard th).
+            initPicardTaggerColumn();
+
             // CAA / EAA initialisation — split by tableMode:
             //
             //   multi  → renderGroupedTable() already called initCaaPics / initEaaPics /
@@ -26242,6 +26311,12 @@ a { color: #1565c0; }`;
 
         // Re-apply barcode highlights across all freshly rendered sub-table rows.
         initBarcodeHighlight();
+
+        // NOTE: initPicardTaggerColumn() is intentionally NOT called here.
+        // It is called from each external call site (startFetchingProcess,
+        // runFilter multi-table, loadTableDataFromDisk) AFTER initRelationshipsColumn,
+        // ensuring the Picard td is always appended after the Relationships td so
+        // the column order matches the thead order.
 
         // Re-apply CAA/EAA illustrated discography across all freshly rendered sub-table rows.
         // initCaaPics() MUST run before initEaaPics() and the inline variants —
@@ -29953,6 +30028,9 @@ a { color: #1565c0; }`;
             const btn = e.target.closest('button');
             if (!btn) return;
 
+            // Exempt Picard tagger buttons — they never submit a form
+            if (btn.classList.contains('mb-picard-btn')) return;
+
             // The button must be inside a <form> that contains a merge-buttons container
             const form = btn.closest('form');
             if (!form) return;
@@ -32385,7 +32463,9 @@ a { color: #1565c0; }`;
                 const headerRows = Array.from(firstTable.tHead.querySelectorAll('tr'))
                     .filter(row => !row.classList.contains('mb-col-filter-row')); // Exclude filter row
                 dataToSave.headers = headerRows.map(row => {
-                    return Array.from(row.cells).map(cell => ({
+                    return Array.from(row.cells)
+                        .filter(cell => !cell.classList.contains('mb-picard-th'))
+                        .map(cell => ({
                         html: cell.innerHTML,
                         colSpan: cell.colSpan || 1,
                         rowSpan: cell.rowSpan || 1,
@@ -32407,7 +32487,8 @@ a { color: #1565c0; }`;
                     rows: group.rows.map(row => {
                         return Array.from(row.cells)
                             .filter(cell => !cell.classList.contains('mb-rel-cell') &&
-                                            !cell.classList.contains('mb-re-cell'))
+                                            !cell.classList.contains('mb-re-cell') &&
+                                            !cell.classList.contains('mb-picard-cell'))
                             .map(cell => ({
                             html: getCleanCellHtml(cell),
                             colSpan: cell.colSpan || 1,
@@ -32424,7 +32505,8 @@ a { color: #1565c0; }`;
                 dataToSave.rows = allRows.map(row => {
                     return Array.from(row.cells)
                         .filter(cell => !cell.classList.contains('mb-rel-cell') &&
-                                        !cell.classList.contains('mb-re-cell'))
+                                        !cell.classList.contains('mb-re-cell') &&
+                                        !cell.classList.contains('mb-picard-cell'))
                         .map(cell => ({
                         html: getCleanCellHtml(cell),
                         colSpan: cell.colSpan || 1,
@@ -33058,6 +33140,11 @@ a { color: #1565c0; }`;
                 // Populate Relationships column cells via async WS2 fetches (if configured).
                 if (activeInjectedColumns.length) initRelationshipsColumn();
                 setTimeout(_relCreateRetryButtons, 200);
+
+                // Inject Picard tagger column AFTER Relationships so Picard is always
+                // the rightmost column (Relationships td is appended first; Picard td
+                // must come after so column order matches the thead).
+                initPicardTaggerColumn();
 
                 // CAA / EAA art thumbnails and big-pic strip:
                 // Do NOT call initCaaPics / initEaaPics / initCaaInlinePics /
@@ -40289,6 +40376,395 @@ a { color: #1565c0; }`;
     }
 
     // ── end Art Archive (CAA / EAA) shared feature engine ─────────────────────
+
+    // ==========================================================================
+    // Picard Tagger feature
+    //
+    // Adds a "Picard" column to every rendered table on supported page types,
+    // giving one-click "send to Picard" buttons keyed to each row's entity MBID.
+    //
+    // Based on the "MusicBrainz Magic Tagger Button" userscript by Philipp Wolfer
+    // (https://github.com/phw/musicbrainz-magic-tagger-button, MIT licence).
+    // ==========================================================================
+
+    /**
+     * URL path patterns for page types where the Picard column should appear.
+     * Mirrors the @match directives from the original Magic Tagger Button script.
+     *
+     * @type {RegExp[]}
+     */
+    const _PICARD_PAGE_PATTERNS = [
+        /\/cdtoc\//,
+        /\/collection\//,
+        /\/recording\//,
+        /\/release-group\//,
+        /\/release\//,
+        /\/series\//,
+        /\/taglookup/,
+        /\/search/,
+        /\/artist\/[a-f0-9-]{36}\/releases/,
+    ];
+
+    /**
+     * Checks whether the current page URL matches one of the supported tagger
+     * page patterns, and additionally excludes search pages whose `type`
+     * parameter is neither 'release' nor 'recording' (mirroring the original
+     * script's `checkCurrentPageExcluded` logic).
+     *
+     * @returns {boolean}  true when the Picard column should be shown.
+     */
+    function _picardPageIsSupported() {
+        const _path = window.location.pathname;
+        if (!_PICARD_PAGE_PATTERNS.some(re => re.test(_path))) return false;
+        // Exclude search pages for non-release / non-recording entity types.
+        if (_path === '/search') {
+            const _t = new URLSearchParams(window.location.search).get('type');
+            if (_t && _t !== 'release' && _t !== 'recording') return false;
+        }
+        return true;
+    }
+
+    /**
+     * Sends an HTTP GET to `url` with a short timeout, resolving with the
+     * response object or rejecting on network / timeout errors.
+     *
+     * Uses GM.xmlHttpRequest when available (required to reach 127.0.0.1 from
+     * a browser content-script context); falls back to native XMLHttpRequest.
+     *
+     * @param   {string}  url
+     * @param   {number}  [timeout=250]  Timeout in milliseconds.
+     * @returns {Promise<{status:number, responseText:string}>}
+     */
+    function _picardRequest(url, timeout = 250) {
+        return new Promise((resolve, reject) => {
+            const _ok  = (r) => resolve({ status: r.status, responseText: r.responseText || '' });
+            const _err = (r) => reject(new Error(`Picard request failed: ${r.status}`));
+
+            if (typeof GM !== 'undefined' && typeof GM.xmlHttpRequest === 'function') {
+                GM.xmlHttpRequest({ method: 'GET', url, timeout, onload: _ok, onerror: _err, ontimeout: _err });
+            } else {
+                const xhr = new XMLHttpRequest();
+                xhr.timeout = timeout;
+                xhr.open('GET', url);
+                xhr.onload  = () => _ok(xhr);
+                xhr.onerror = () => _err(xhr);
+                xhr.ontimeout = () => _err(xhr);
+                xhr.send();
+            }
+        });
+    }
+
+    /**
+     * Probes a single port to confirm Picard is listening there.
+     *
+     * @param   {string} host
+     * @param   {number} port
+     * @returns {Promise<boolean>}
+     */
+    async function _picardProbePort(host, port) {
+        try {
+            const r = await _picardRequest(`http://${host}:${port}`, 250);
+            return /MusicBrainz-Picard|Nothing to see here/.test(r.responseText);
+        } catch (_) {
+            return false;
+        }
+    }
+
+    /**
+     * Scans ports from `defaultPort` to `maxPort` and returns the first one
+     * on which Picard responds, or `null` if none are found.
+     *
+     * @param   {string} host
+     * @param   {number} defaultPort
+     * @param   {number} maxPort
+     * @returns {Promise<number|null>}
+     */
+    async function _picardDetectPort(host, defaultPort, maxPort) {
+        for (let p = defaultPort; p <= maxPort; p++) {
+            if (await _picardProbePort(host, p)) return p;
+        }
+        return null;
+    }
+
+    // Module-level state for the detected Picard port.
+    // null = not yet probed; 0 = probed but not found; N = found on port N.
+    let _picardDetectedPort = null;
+
+    /**
+     * Returns the currently detected Picard port, running port detection once
+     * if it has not been performed yet in this page session.
+     *
+     * @returns {Promise<number|null>}  port number, or null when Picard is not found.
+     */
+    async function _picardGetPort() {
+        if (_picardDetectedPort === null) {
+            const _host = Lib.settings.sa_picard_tagger_host || '127.0.0.1';
+            const _def  = Math.max(1, Math.min(65535,
+                parseInt(Lib.settings.sa_picard_tagger_default_port, 10) || 8000));
+            const _max  = Math.max(_def, Math.min(65535,
+                parseInt(Lib.settings.sa_picard_tagger_max_port, 10) || 8010));
+            _picardDetectedPort = (await _picardDetectPort(_host, _def, _max)) || 0;
+            Lib.debug('picard',
+                _picardDetectedPort
+                    ? `Picard detected on port ${_picardDetectedPort}`
+                    : 'Picard not found on any probed port');
+        }
+        return _picardDetectedPort || null;
+    }
+
+    /**
+     * Extracts the MusicBrainz GUID and entity type from a table row's primary
+     * anchor element.
+     *
+     * Searches for the first `<a href>` matching:
+     *   /release-group/<guid>   →  entity type 'release-group'
+     *   /release/<guid>         →  entity type 'release'
+     *   /recording/<guid>       →  entity type 'recording'
+     *
+     * The search intentionally skips `.mb-sticky-col` and `.mb-rel-cell` cells,
+     * which contain duplicate or unrelated hrefs.
+     *
+     * @param   {HTMLTableRowElement} tr
+     * @returns {{ guid: string, entityType: string }|null}
+     */
+    function _picardExtractRowEntity(tr) {
+        const _GUID_RE = /\/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/;
+        const _TYPES   = ['release-group', 'release', 'recording'];
+
+        for (const td of tr.querySelectorAll(
+            'td:not(.mb-sticky-col):not(.mb-rel-cell) a[href]'
+        )) {
+            const href = td.getAttribute('href');
+            for (const t of _TYPES) {
+                if (!href.includes('/' + t + '/')) continue;
+                const m = href.match(_GUID_RE);
+                if (m) return { guid: m[1], entityType: t };
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Builds the Picard tagger URL for a given entity.
+     *
+     * @param   {string} host
+     * @param   {number} port
+     * @param   {string} entityType  e.g. 'release', 'release-group', 'recording'
+     * @param   {string} guid        MBID of the entity
+     * @returns {string}  Full http://… URL for the tagger endpoint.
+     */
+    function _picardBuildTaggerUrl(host, port, entityType, guid) {
+        return `http://${host}:${port}/?id=${guid}&v=2&resource=${encodeURIComponent(
+            `https://musicbrainz.org/${entityType}/${guid}`
+        )}`;
+    }
+
+    /**
+     * SVG icon for the Picard button in its idle state.
+     * A compact green music-note derived from the MusicBrainz Picard icon palette.
+     */
+    const _PICARD_ICON_IDLE = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">' +
+        '<circle cx="8" cy="8" r="8" fill="#4a9e50"/>' +
+        '<text x="8" y="12" text-anchor="middle" font-size="11" font-family="sans-serif" fill="white">♪</text>' +
+        '</svg>'
+    );
+
+    /** SVG icon shown after a successful tagger request. */
+    const _PICARD_ICON_OK = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">' +
+        '<circle cx="8" cy="8" r="8" fill="#2e7d32"/>' +
+        '<text x="8" y="12" text-anchor="middle" font-size="11" font-family="sans-serif" fill="white">✓</text>' +
+        '</svg>'
+    );
+
+    /** SVG icon shown after a failed tagger request. */
+    const _PICARD_ICON_ERR = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">' +
+        '<circle cx="8" cy="8" r="8" fill="#c62828"/>' +
+        '<text x="8" y="12" text-anchor="middle" font-size="11" font-family="sans-serif" fill="white">✕</text>' +
+        '</svg>'
+    );
+
+    /**
+     * Creates a single Picard tagger button `<button>` element wired to a click
+     * handler that sends a GET request to Picard's local browser-integration
+     * endpoint for the given entity.
+     *
+     * Using `<button type="button">` instead of `<a href="#">` prevents the browser's
+     * default `href="#"` scroll-to-top behaviour when event listeners are absent
+     * (e.g. after cloneNode(true) strips them during filter/sort re-renders).
+     *
+     * Visual states:
+     *   idle  — green ♪ circle
+     *   ok    — darker green ✓ circle (shown after successful send)
+     *   err   — red ✕ circle (shown after Picard returns an error / is unreachable)
+     *
+     * @param   {string} entityType
+     * @param   {string} guid
+     * @returns {HTMLButtonElement}
+     */
+    function _picardCreateButton(entityType, guid) {
+        const _btn = document.createElement('button');
+        _btn.type       = 'button';
+        _btn.className  = 'mb-picard-btn';
+        _btn.title      = `Send to Picard (${entityType} ${guid.slice(0, 8)}…)`;
+        _btn.style.cssText =
+            'display:inline-flex; align-items:center; justify-content:center;' +
+            ' width:18px; height:18px; cursor:pointer; background:none; border:none;' +
+            ' padding:0; border-radius:50%; vertical-align:middle;';
+
+        const _img = document.createElement('img');
+        _img.src    = _PICARD_ICON_IDLE;
+        _img.alt    = '♪';
+        _img.style.cssText = 'width:16px; height:16px; display:block;';
+        _btn.appendChild(_img);
+
+        _btn.addEventListener('click', async (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const _host = Lib.settings.sa_picard_tagger_host || '127.0.0.1';
+            const _port = await _picardGetPort();
+            if (!_port) {
+                _img.src   = _PICARD_ICON_ERR;
+                _btn.title = 'Picard not found. Is it running with browser integration enabled?';
+                Lib.debug('picard', `Button clicked but Picard not detected (guid=${guid})`);
+                return;
+            }
+            const _url = _picardBuildTaggerUrl(_host, _port, entityType, guid);
+            Lib.debug('picard', `Sending to Picard: ${_url}`);
+            try {
+                const r = await _picardRequest(_url, 3000);
+                if (r.status >= 200 && r.status < 400) {
+                    _img.src   = _PICARD_ICON_OK;
+                    _btn.title = `Sent to Picard ✓ (${entityType} ${guid.slice(0, 8)}…)`;
+                    Lib.debug('picard', `Tagger request successful: ${r.responseText}`);
+                } else {
+                    _img.src   = _PICARD_ICON_ERR;
+                    _btn.title = `Picard returned HTTP ${r.status}. Is browser integration active?`;
+                    Lib.debug('picard', `Tagger request HTTP ${r.status}`);
+                }
+            } catch (_e) {
+                _img.src   = _PICARD_ICON_ERR;
+                _btn.title = `Picard request failed: ${_e.message}`;
+                Lib.debug('picard', `Tagger request error: ${_e.message}`);
+            }
+        });
+
+        return _btn;
+    }
+
+    /**
+     * Injects a "Picard" column into every `table.tbl` currently in the
+     * document, appended as the last column.
+     *
+     * Idempotency: the `<th>Picard</th>` header is only injected once per table
+     * (guarded by `data-picard-th-injected`).  The tbody is always re-processed
+     * on every call so that rows replaced by filter/sort re-renders (which use
+     * `cloneNode(true)` and therefore strip event listeners) always receive
+     * freshly wired buttons.
+     *
+     * Column header: `<th class="mb-picard-th">Picard</th>`
+     * Per-row cell:  `<td class="mb-picard-cell">` containing an icon button
+     *                wired to the row's primary entity MBID, or empty when no
+     *                matching MBID can be found in the row.
+     *
+     * Guards:
+     *   - `Lib.settings.sa_enable_picard_tagger` must be true.
+     *   - Current page URL must match `_picardPageIsSupported()`.
+     *
+     * Port detection runs asynchronously in the background the first time any
+     * button is clicked; injecting the column itself is fully synchronous.
+     *
+     * Based on the "MusicBrainz Magic Tagger Button" userscript by
+     * Philipp Wolfer (https://github.com/phw/musicbrainz-magic-tagger-button).
+     *
+     * Called from:
+     *   - The main fetch pipeline after `initBarcodeHighlight()`.
+     *   - `runFilter()` single-table branch after `initBarcodeHighlight()`.
+     *   - `renderGroupedTable()` after `initBarcodeHighlight()` (multi-table re-renders).
+     *   - The load-from-disk pipeline after `initBarcodeHighlight()`.
+     */
+    /**
+     * Injects or re-wires the "Picard" column in every `table.tbl`.
+     *
+     * @param {boolean} [rewireOnly=false]
+     *   When false (default): full mode — inject the <th> header (once, guarded
+     *   by data-picard-th-injected) and append a new <td class="mb-picard-cell">
+     *   to every row that does not already have one.
+     *
+     *   When true: re-wire mode — only re-attach click handlers to existing
+     *   td.mb-picard-cell elements; never append new tds.  Used by runFilter()'s
+     *   multi-table path so that filter/sort re-renders refresh listeners without
+     *   accidentally inserting picard_td before rel_td (which would happen if
+     *   runFilter fires before initRelationshipsColumn, e.g. during load-from-disk).
+     */
+    function initPicardTaggerColumn(rewireOnly = false) {
+        if (!Lib.settings.sa_enable_picard_tagger) return;
+        if (!_picardPageIsSupported()) return;
+
+        const _tables = document.querySelectorAll('table.tbl');
+        if (!_tables.length) {
+            Lib.debug('picard', 'initPicardTaggerColumn: no table.tbl found — skipping');
+            return;
+        }
+
+        _tables.forEach(table => {
+            // ── Add header cell (once per table, full mode only) ─────────────
+            if (!rewireOnly && table.dataset.picardThInjected !== 'true') {
+                table.dataset.picardThInjected = 'true';
+
+                const _thead = table.querySelector('thead tr:first-child');
+                if (_thead) {
+                    const _th = document.createElement('th');
+                    _th.className   = 'mb-picard-th';
+                    _th.textContent = 'Picard';
+                    _th.style.cssText =
+                        'text-align:center; white-space:nowrap; padding:2px 6px;' +
+                        ' font-size:0.85em; color:#555;';
+                    _thead.appendChild(_th);
+                }
+
+                // Empty th in secondary header rows (filter row etc.)
+                table.querySelectorAll('thead tr:not(:first-child)').forEach(_hr => {
+                    const _th2 = document.createElement('th');
+                    _th2.className = 'mb-picard-th';
+                    _hr.appendChild(_th2);
+                });
+            }
+
+            // ── Wire tbody rows ──────────────────────────────────────────────
+            // For each tbody row:
+            //   • If it already has a .mb-picard-cell td, replace its button
+            //     (re-attaches event listeners stripped by cloneNode(true)).
+            //   • Otherwise, in full mode, append a new .mb-picard-cell td.
+            //     In rewire-only mode, skip rows that have no picard cell yet
+            //     so column order is not disturbed.
+            table.querySelectorAll('tbody tr').forEach(tr => {
+                const _entity = _picardExtractRowEntity(tr);
+                let _td = tr.querySelector('td.mb-picard-cell');
+
+                if (_td) {
+                    // Re-wire path: row was cloned — replace stale button.
+                    _td.innerHTML = '';
+                    if (_entity) _td.appendChild(_picardCreateButton(_entity.entityType, _entity.guid));
+                } else if (!rewireOnly) {
+                    // Full mode only: append new cell as the last column.
+                    _td = document.createElement('td');
+                    _td.className = 'mb-picard-cell';
+                    _td.style.cssText = 'text-align:center; vertical-align:middle; padding:2px 4px;';
+                    if (_entity) _td.appendChild(_picardCreateButton(_entity.entityType, _entity.guid));
+                    tr.appendChild(_td);
+                }
+            });
+
+            Lib.debug('picard',
+                `initPicardTaggerColumn: ${rewireOnly ? 'rewired' : 'injected'} Picard column ` +
+                `(th-injected=${table.dataset.picardThInjected})`);
+        });
+    }
+
+    // ── end Picard Tagger feature ─────────────────────────────────────────────
 
     /**
      * Entry point for the Barcode Highlight feature.

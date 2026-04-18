@@ -1,5 +1,77 @@
 [
   {
+    "version": "9.99.494",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Picard tagger column (v9.99.493): column mismatch on Load from Disk still present in single-table mode. Root cause identical to the multi-table case: runFilter()'s single-table path also calls initPicardTaggerColumn() (full mode) which appended picard_td before rel_td during the load-from-disk runFilter pass. Fix: changed the runFilter single-table call to initPicardTaggerColumn(rewireOnly=true), matching the multi-table path. Both runFilter paths now pass rewireOnly=true; only the main pipeline and load-from-disk external call sites (both of which run after initRelationshipsColumn) pass the default false."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.493",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Picard tagger column (v9.99.492): Bug 1 column mismatch on Load from Disk still present. Root cause: the runFilter multi-table path called initPicardTaggerColumn() (without rewireOnly flag) after updateH2CountFromSubtables, which entered the 'append new td' branch because source rows had no picard_td yet (load-from-disk calls runFilter BEFORE initRelationshipsColumn). This appended picard_td before rel_td on the DOM rows. Fix: added a rewireOnly parameter to initPicardTaggerColumn(rewireOnly=false). When rewireOnly=true the function only re-wires event listeners on existing td.mb-picard-cell elements and never appends new tds. The runFilter multi-table path now calls initPicardTaggerColumn(true); all other call sites (main pipeline, load-from-disk, runFilter single-table) pass false (full mode) and always run after initRelationshipsColumn so column order is correct."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.492",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Picard tagger column (v9.99.491): two remaining bugs fixed. Bug 1 — column misalignment on Load from Disk still present. Root cause: loadTableDataFromDisk calls runFilter() at line 33029 (to reset the filter state) BEFORE it calls initRelationshipsColumn and initPicardTaggerColumn. runFilter's multi-table path triggered initPicardTaggerColumn() immediately after renderGroupedTable, appending picard_td before rel_td was added by the subsequent initRelationshipsColumn call. Fix: moved initPicardTaggerColumn() in runFilter's multi-table branch to run after updateH2CountFromSubtables (the very end of the multi-table block), where source rows already carry both rel_td and picard_td from the initial render. During the load-from-disk sequence those source rows have neither td yet, but initPicardTaggerColumn finds no existing picard_td and therefore does nothing — the correct injection then happens in the explicit initRelationshipsColumn → initPicardTaggerColumn sequence at the bottom of loadTableDataFromDisk. Bug 2 — navigation guard dialog on single-table pages when clicking the Picard icon. Root cause: the Picard button is a <button> element; on artist-releases pages a <form> containing a div.list-merge-buttons-row-container wraps the table area. Guard 3 (merge-form submit-button guard) matched any button click whose closest form contains that container — including the Picard button. Fix: added an early return for buttons with class mb-picard-btn in the Guard 3 click handler."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.491",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Picard tagger column (v9.99.489/490): two remaining bugs fixed. Bug 1 — scroll-to-top on click in multi-table mode. Root cause: the button was an <a href='#'> element. Clicking a <a href='#'> without a live event listener (listeners are stripped by cloneNode(true) during sort/filter re-renders) scrolls the page to the top via the browser's default href='#' behaviour. Changing the element from <a> to <button type='button'> eliminates the default action entirely — a button with no handler silently does nothing. Bug 2 — Relationships column showing Picard icons and Picard column showing relationship icons after Load from Disk. Root cause: initPicardTaggerColumn() was called BEFORE initRelationshipsColumn() in the main fetch pipeline and load-from-disk pipeline, so the Picard td was appended to each row before the Relationships td; this misaligned data cells with header cells. Fix: (a) removed initPicardTaggerColumn() from renderGroupedTable()'s tail entirely and added it to runFilter()'s multi-table path after renderGroupedTable() returns; (b) moved initPicardTaggerColumn() to run after initRelationshipsColumn() in the main fetch pipeline and load-from-disk pipeline. Picard is now consistently the rightmost column in all render paths."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.490",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Picard tagger column (v9.99.489): two bugs fixed. Bug 1 — clicking the Picard icon after sorting or filtering caused the page to scroll to top-left instead of sending to Picard. Root cause: runFilter single-table branch calls row.cloneNode(true) to rebuild the tbody, which strips event listeners. The old data-picard-col-injected guard on the table then prevented re-injection on the clones, leaving <a href='#'> buttons with no click handler so the default browser href='#' scroll fired. Fix: separated thead idempotency (data-picard-th-injected, set once) from tbody wiring (now always re-processed on every initPicardTaggerColumn call). When a row already has a td.mb-picard-cell, its button is replaced with a fresh one; when it does not, a new cell is appended. Bug 2 — Load from Disk incorrectly serialized and reloaded the Picard column: the <th> was saved in headers, the <td> cells in row data, producing a duplicate Picard column and a displaced Relationships column on load. Fix: saveTableDataToDisk now filters out cells with class mb-picard-th from header rows and mb-picard-cell from data rows in both multi-table and single-table serialization paths, mirroring the existing mb-rel-cell / mb-re-cell exclusions."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.489",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "✨ New",
+        "items": [
+          "Picard Tagger column: injects a 'Picard' column as the last column in every rendered table on supported page types (releases, release-groups, recordings, series, collections, cdtoc, taglookup, search, artist/*/releases). Each row cell contains a green ♪ icon button; clicking it sends that row's release/release-group/recording to MusicBrainz Picard via its local browser-integration HTTP endpoint. Visual feedback: green ✓ on success, red ✕ on error. Port is auto-detected by probing the configured range (default 8000–8010). Controlled by four new settings in a PICARD TAGGER section: sa_enable_picard_tagger (on/off, default true), sa_picard_tagger_default_port (default 8000), sa_picard_tagger_max_port (default 8010), sa_picard_tagger_host (default 127.0.0.1). The idempotency guard (data-picard-col-injected) prevents the column from being duplicated on filter/sort re-renders. Based on the 'MusicBrainz Magic Tagger Button' userscript by Philipp Wolfer (https://github.com/phw/musicbrainz-magic-tagger-button, MIT licence)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.488",
     "date": "2026-04-18",
     "sections": [
