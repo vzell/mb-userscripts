@@ -1,5 +1,65 @@
 [
   {
+    "version": "9.99.484",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "CAA/EAA per-subtable badge count wrong after switching between discography views (merged → official / complete): badge showed e.g. 84 instead of 21. Root cause identified via targeted debug logging (v9.99.482-dbg / v9.99.483-dbg): _artCountLinks and _artInitBigPics scan 'tbody td a[href]' to find unique entity links for bigbox image loading and badge counting. On the first render (gen=1) this is correct because only the title column contains matching /release-group/GUID hrefs. However, two features inject additional matching hrefs into the rows asynchronously after gen=1: (1) applyStickyColumn adds a td.mb-sticky-col clone of the title column to every row, duplicating the title link; (2) the Relationships column (td.mb-rel-cell) injects related release-group anchors. On every subsequent initCaaPics()/initEaaPics() call triggered by a view switch, these columns are already present, causing seen.size to be 4× the row count for affected tables. Fix: changed the selector in both _artCountLinks and _artInitBigPics from 'tbody td a[href]' to 'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href]', excluding the sticky-column duplicate and the relationships column from the entity-link scan. Also removed all temporary debug console.log statements added in v9.99.482-dbg and v9.99.483-dbg."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.483-dbg",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🔬 Debug",
+        "items": [
+          "Second debug build refining the CAA count diagnosis. v9.99.482-dbg confirmed the shape of the bug: at gen=1 (initial render) seen.size equals tbody_rows (1 link/row), but after the merged → official round-trip seen.size is 4× tbody_rows for affected tables (e.g. tbl-0: 21 rows → 84 links). Added targeted [ART-HREF] log inside the seen.add path in _artInitBigPics that records: table index, column index (cellIndex), entity type matched, full href, and parent element tag+class. This will identify which column the 3 extra hrefs per row come from and whether they are /release-group/GUID or /release/GUID paths. Log fires once per unique matched href per _artInitBigPics call. With debug logging enabled (Settings > Enable debug logging) filter console to [ART-HREF] for gen=1 and gen=3 passes on tbl-0 to spot the new hrefs and their column."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.482-dbg",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🔬 Debug",
+        "items": [
+          "Temporary debug build to diagnose persisting CAA count corruption on discography view switches. Added 7 console.log statements (tagged [DISC-DBG] / [ART-DBG]) to _applyDiscographyViewFilter (entry, drain decision with table row counts), _artInitBigPics (entry with domIdx cross-check, gen advance, final seen.size/box.id), and _onBigLoaded (stale-callback skip with myRenderGen vs btn.gen). Debug logs should be removed once root cause is confirmed."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.481",
+    "date": "2026-04-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "CAA/EAA per-subtable badge counts still wrong when switching from 'Complete Discography (merged)' back to 'Official Discography' or 'Complete Discography' (v9.99.480 fix was incomplete). Root cause: _artRebuildBigPicsForTable enqueues new tasks into the SHARED _caaQueue that already holds in-flight tasks from every previous _artInitBigPics call (initial render, earlier view switches). Even though the per-button render-generation counter (data-art-render-gen) should invalidate stale callbacks, the tasks themselves never leave the queue and keep consuming concurrency slots; IDB cache hits can fire synchronously inside the task body and advance shared state before the caller expects, making the gen-counter invalidation unreliable. Fix: replace the _tablesToRebuild drain in _applyDiscographyViewFilter with a conditional call to initCaaPics()/initEaaPics() whenever any table tbody was replaced (_tablesToRebuild.length > 0). initCaaPics() creates a BRAND-NEW _caaQueue, abandoning all pending tasks at the queue level (the old pending[] array is unreferenced and GC'd) and advancing all per-table gen counters in one clean pass. Running tasks from the old queue still complete but their _onBigLoaded callbacks fail the gen-check and become no-ops. initCaaPics/initEaaPics also call _artCreateOrUpdateGlobalToggleButton internally, so the separate call is now skipped in the rebuild branch. Pure visibility switches (all/official/non-official with no merged content) still take the fast path that only refreshes the global badge."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.480",
+    "date": "2026-04-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "CAA/EAA mb-caa-toggle-count wrong after switching to 'Complete Discography (merged)' view on artist-releasegroups pages (e.g. Album shows 85 instead of 23, and subsequent view switches corrupt the count for that section permanently). Root cause: two interacting races in _applyDiscographyViewFilter. Race A (wrong _tblIdx): _artRebuildBigPicsForTable resolves a table's DOM index via querySelectorAll('table.tbl').indexOf(table); when called inline inside the restore/merged forEach loops, subsequent bigbox insertBefore moves shift that index between calls so different tables accidentally share a btn-N/box-N ID pair and artwork from one section's strip increments another section's badge. Race B (async _onBigLoaded against stale mbDiscHidden): the guard _owningH3.dataset.mbDiscHidden === 'true' in each img.onload closure is evaluated at async-callback time, which may be before later forEach iterations have stamped their h3s; if _artInitBigPics starts IDB/network requests for table-0 while the h3 for table-1 still lacks mbDiscHidden='true', callbacks for table-0's images inflate the global badge by table-1's artwork count. Fix: converted both inline _artRebuildBigPicsForTable calls to push into a _tablesToRebuild[] queue, then drain the queue in a single pass after the full visibility forEach has completed. This guarantees (1) all mbDiscHidden flags are settled before any async requests begin, (2) the DOM table order is final before any querySelectorAll index lookup, and (3) _artCreateOrUpdateGlobalToggleButton sees freshly-zeroed per-table badges when it runs immediately after the drain."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.479",
     "date": "2026-04-11",
     "sections": [

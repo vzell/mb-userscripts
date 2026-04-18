@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.479+2026-04-11
+// @version      9.99.484+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -26493,6 +26493,34 @@ a { color: #1565c0; }`;
         const _container = document.getElementById('content') || document.body;
         const _allH3s = Array.from(_container.querySelectorAll('h3.mb-toggle-h3'));
 
+        // ── Bigbox rebuild queue ─────────────────────────────────────────────────
+        // All _artRebuildBigPicsForTable calls are deferred: tables are collected here
+        // and rebuilt in a single drain pass AFTER the full visibility loop has
+        // completed.  This fixes the CAA count corruption on merged ↔ other-view
+        // switches caused by two interacting races:
+        //
+        //  Race A (wrong _tblIdx): _artRebuildBigPicsForTable resolves a table's DOM
+        //  index via querySelectorAll('table.tbl').indexOf(table).  When called inline
+        //  inside a forEach that also hides/shows other sections, subsequent
+        //  insertBefore moves (bigbox repositioning) can shift that index between calls,
+        //  so different tables accidentally share a btn-N / box-N ID pair.
+        //
+        //  Race B (async _onBigLoaded against stale mbDiscHidden): the guard
+        //  `_owningH3.dataset.mbDiscHidden === 'true'` in the img.onload closure is
+        //  evaluated at async-callback time, which may be BEFORE later forEach
+        //  iterations have stamped their h3s.  If _artInitBigPics is triggered for
+        //  table-0 while the h3 for table-1 still lacks mbDiscHidden='true', callbacks
+        //  for table-0's images can inflate the global badge by table-1's count.
+        //
+        //  Deferring to after the visibility loop ensures:
+        //   (1) All h3.dataset.mbDiscHidden flags are set before any IDB/network
+        //       requests begin — no transitional state visible to async callbacks.
+        //   (2) The DOM table order read by _artRebuildBigPicsForTable is the final
+        //       settled order — no further bigbox insertBefore moves occur later.
+        //   (3) _artCreateOrUpdateGlobalToggleButton sees per-table badges freshly
+        //       reset to 0, giving a consistent baseline for async increments.
+        const _tablesToRebuild = [];
+
         // ── Restore any tables that were modified by a previous 'merged' pass ──
         // The merged pass replaces each first-occurrence table's <tbody> with
         // combined rows (cloneNode copies).  This leaves the DOM out of sync with
@@ -26522,8 +26550,9 @@ a { color: #1565c0; }`;
                     // Restore h3 count stat to the group's own row count
                     const _cStat = _h3.querySelector('.mb-row-count-stat');
                     if (_cStat) _cStat.textContent = `(${groupedRows[_idx].rows.length})`;
-                    // Rebuild the CAA/EAA bigbox to reflect the restored row set.
-                    _artRebuildBigPicsForTable(_walkerR);
+                    // Queue the CAA/EAA bigbox rebuild — deferred until all h3
+                    // visibility flags are settled (see _tablesToRebuild above).
+                    _tablesToRebuild.push(_walkerR);
                 }
             });
         }
@@ -26664,9 +26693,9 @@ a { color: #1565c0; }`;
                     const _countStat = _h3.querySelector('.mb-row-count-stat');
                     if (_countStat) _countStat.textContent = `(${_srcRows.length})`;
 
-                    // Rebuild the CAA/EAA bigbox for this table so the artwork
-                    // strip and toggle-button badge reflect the combined row set.
-                    _artRebuildBigPicsForTable(_tbl);
+                    // Queue the CAA/EAA bigbox rebuild — deferred until all h3
+                    // visibility flags are settled (see _tablesToRebuild above).
+                    _tablesToRebuild.push(_tbl);
 
                     _sectionRowTotal += _srcRows.length;
                 }
@@ -26708,14 +26737,43 @@ a { color: #1565c0; }`;
             }
         });
 
-        // ── Refresh global CAA/EAA artwork badge counts ───────────────────────
-        // _artCreateOrUpdateGlobalToggleButton aggregates counts from per-sub-table
-        // toggle buttons that have style.display !== 'none'.  After changing h3
-        // visibility we explicitly set those buttons' display above; calling the
-        // update function now makes the global badge reflect only visible sections.
-        if (typeof _artCreateOrUpdateGlobalToggleButton === 'function') {
-            try { _artCreateOrUpdateGlobalToggleButton(CAA_CTX); } catch (_e) { /* guard */ }
-            try { _artCreateOrUpdateGlobalToggleButton(EAA_CTX); } catch (_e) { /* guard */ }
+        // ── Drain the deferred bigbox rebuild queue ───────────────────────────
+        // When one or more tables had their tbody content replaced (merged fill or
+        // restore-from-merged), we must rebuild their CAA/EAA bigboxes.
+        //
+        // We intentionally use initCaaPics()/initEaaPics() rather than calling
+        // _artRebuildBigPicsForTable() for each table individually.  The reason:
+        //
+        //   _artRebuildBigPicsForTable enqueues new tasks into the SHARED _caaQueue,
+        //   which already holds in-flight tasks from every previous _artInitBigPics
+        //   call (initial render, earlier view switches, …).  Even though the per-
+        //   button render-generation counter (data-art-render-gen) should invalidate
+        //   stale callbacks, the tasks themselves never leave the queue — they keep
+        //   running, consuming concurrency slots, and can interact with new tasks in
+        //   unexpected ways (e.g. IDB cache hits fire synchronously inside the task
+        //   body, advancing state before the caller expects it).
+        //
+        //   initCaaPics() creates a BRAND-NEW _caaQueue.  The old queue object is
+        //   abandoned: pending tasks are never started (the old pending[] array is
+        //   unreferenced and GC'd), and the few tasks that are already running will
+        //   complete but their _onBigLoaded callbacks will fail the gen-check and
+        //   become no-ops.  This is a much stronger guarantee than the gen counter
+        //   alone.
+        //
+        //   initCaaPics()/initEaaPics() also call _artCreateOrUpdateGlobalToggleButton
+        //   internally, so we skip the separate call in this branch.
+        if (_tablesToRebuild.length > 0) {
+            initCaaPics();
+            initEaaPics();
+        } else {
+            // ── Refresh global CAA/EAA artwork badge counts ───────────────────
+            // Pure visibility switch (no tbody content was replaced) — bigboxes are
+            // still valid; only the global badge aggregation needs refreshing so it
+            // reflects the now-visible subset of per-sub-table toggle buttons.
+            if (typeof _artCreateOrUpdateGlobalToggleButton === 'function') {
+                try { _artCreateOrUpdateGlobalToggleButton(CAA_CTX); } catch (_e) { /* guard */ }
+                try { _artCreateOrUpdateGlobalToggleButton(EAA_CTX); } catch (_e) { /* guard */ }
+            }
         }
 
         // ── Rename h2 header and update row-count-stat ───────────────────────
@@ -37336,7 +37394,13 @@ a { color: #1565c0; }`;
         const seen = new Set();
         let firstImgUrl = null;
 
-        table.querySelectorAll('tbody td a[href]').forEach(a => {
+        // Exclude mb-sticky-col cells (visual duplicate of the title column, added
+        // asynchronously by applyStickyColumn — would double-count every title link)
+        // and mb-rel-cell cells (Relationships column, whose entity links belong to
+        // related entities rather than the row's own cover art).
+        table.querySelectorAll(
+            'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href]'
+        ).forEach(a => {
             const href = a.getAttribute('href');
             for (const type of ctx.entityTypes) {
                 const m = href.match(
@@ -37480,10 +37544,16 @@ a { color: #1565c0; }`;
         }
 
         // ── 2. Collect unique entity links ────────────────────────────────────
+        // Exclude mb-sticky-col cells (visual duplicate of the title column injected
+        // asynchronously by applyStickyColumn — would double-count every title link)
+        // and mb-rel-cell cells (Relationships column — entity links there belong to
+        // related entities, not to the row's own cover-art subject).
         const seen        = new Set();
         let   firstImgUrl = null;
 
-        table.querySelectorAll('tbody td a[href]').forEach(a => {
+        table.querySelectorAll(
+            'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href]'
+        ).forEach(a => {
             const href = a.getAttribute('href');
             for (const type of ctx.entityTypes) {
                 const m = href.match(
@@ -37569,17 +37639,10 @@ a { color: #1565c0; }`;
                     };
 
                     // Collect extra tooltip fields from sibling columns.
-                    // DEBUG: log what _rowCellText finds for each field at build time
                     const _tipArtist  = _rowCellText('Artist');
                     const _tipFormat  = _rowCellText('Format');
                     const _tipTracks  = _rowCellText('Tracks');
                     const _tipCD      = _rowCellText('Country/Date');
-                    console.log('[bigbox build] _td=' + !!_td +
-                        ' _td.closest(tr)=' + !!(_td && _td.closest('tr')) +
-                        ' Artist="' + _tipArtist + '"' +
-                        ' Format="' + _tipFormat + '"' +
-                        ' Tracks="' + _tipTracks + '"' +
-                        ' CD="' + _tipCD + '"');
                     const _tipLabel   = (() => {
                         // Strip any trailing comment in parens so only the label name is shown,
                         // e.g. "Columbia" rather than "Columbia (some distribution note)".

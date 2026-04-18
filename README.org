@@ -72662,6 +72662,7 @@ Another bug
 - when switching back from the "merged" view to any other than the "un-official" view, the h2 artwork count is OK
 
 ** wrong CAA count when switching between discography views
+*** initial
 
 bug with wrong CAA count when switching between discography views:
 
@@ -72834,6 +72835,14 @@ When switching to the "Complete Discography (merged)" view by clicking the "mb-d
 | Merged       |                      8 |                                          8 |                                           10 |
 
 There are two additional release groups shown in the big picture stripe besides the 8 expected images coming from the official "Album" section.
+
+*** bugs
+
+Still the same problem, switching from the "Complete Discography (merged)" view
+to the "Official Discography" or the "Complete Discography" view then the h3 CAA counts are wrong although the table row count is OK
+
+
+
 
 
 * maybe later
