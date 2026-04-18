@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.486",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "✨ New",
+        "items": [
+          "Added support for CDtoc pages (/cdtoc/*). New @match header covers all MusicBrainz cdtoc URLs. New 'cdtoc' pageType (single-table, button label 'Show all CDToc attached to Releases') with: splitCountryDate extractor on Country/Date producing Country and Date synthetic columns; dateParts extractor on Date producing DD/MM/YYYY/Day/Month; injectedColumns Relationships; integerColumns DD(R)/MM(R)/YYYY(C); renderMultiRowCell for Label and Catalog#; collapsableColumns Country/Date, Country, Date, Label, Catalog#; tooltipColumns MB-Name / italic:Comment / Artist / divider / Format / Country/Date / [Label - Catalog#] / Barcode; addCAA on Title column; extractMainColumn Title; stickyColumn Title."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.485",
     "date": "2026-04-18",
     "sections": [

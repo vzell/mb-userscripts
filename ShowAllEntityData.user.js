@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.485+2026-04-18
+// @version      9.99.486+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -23,6 +23,7 @@
 // @match        *://*.musicbrainz.org/tags*
 // @match        *://*.musicbrainz.org/user/*/tag/*
 // @match        *://*.musicbrainz.org/tag/*
+// @match        *://*.musicbrainz.org/cdtoc/*
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
 // @connect      eventartarchive.org
@@ -4475,6 +4476,29 @@
 
     // Define all supported page types, their detection logic, and specific UI configurations here.
     const pageDefinitions = [
+        // CDtoc pages
+        {
+            type: 'cdtoc',
+            match: (path) => path.includes('/cdtoc'),
+            buttons: [ { label: 'Show all CDToc attached to Releases' } ],
+            tableMode: 'single',
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'Label', 'Catalog#' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', 'Format', 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            }
+        },
         // Subscriptions pages — a single consolidated type with per-button
         // virtualPath values that replace the last URL path segment on click,
         // allowing all five subscription types from one unified page definition.
