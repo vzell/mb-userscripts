@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.487",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "✨ Improvement",
+        "items": [
+          "Search page H2 prefix now includes the entity type from the 'type' URL query parameter in addition to the search method. Previously the prefix was e.g. 'Advanced search: '; it is now 'Advanced artist search: ' for ?method=advanced&type=artist. When the type parameter is absent the output is unchanged."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.486",
     "date": "2026-04-18",
     "sections": [

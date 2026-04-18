@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.486+2026-04-18
+// @version      9.99.487+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -19846,15 +19846,20 @@ a { color: #1565c0; }`;
             // Transformation logic for non-H2 targets (e.g. search results paragraph)
             if (activeDefinition.features?.transformToH2 && targetH2.tagName !== 'H2') {
 
-                // Get the method value from the URL
+                // Get the method and entity-type values from the URL
                 const urlParams = new URLSearchParams(window.location.search);
-                const methodValue = urlParams.get('method'); // e.g., "direct"
+                const methodValue = urlParams.get('method'); // e.g., "advanced"
+                const typeValue   = urlParams.get('type');   // e.g., "artist"
 
                 let prefix = ""; // Initialize prefix as empty string
                 if (pageType === 'search' && methodValue) {
-                    // Format the string (Capitalize first letter + " search: ")
-                    prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
-                    Lib.debug('render', `Search method identified: "${prefix}..."`);
+                    // Capitalize first letter of method, then append entity type if present.
+                    // e.g. method="advanced" + type="artist"  → "Advanced artist search: "
+                    //      method="direct"   + no type        → "Direct search: "
+                    const methodPart = methodValue.charAt(0).toUpperCase() + methodValue.slice(1);
+                    const typePart   = typeValue ? ' ' + typeValue : '';
+                    prefix = methodPart + typePart + ' search: ';
+                    Lib.debug('render', `Search method/type identified: "${prefix}..."`);
                 }
 
                 Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);

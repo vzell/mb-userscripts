@@ -73494,6 +73494,50 @@ and either
 
 * TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
 
+Include the functionality of the uploaded userscript "mb-magic-tagger-button.user.js" in our userscript:
+
+1.)
+
+add a new configuration section
+
+#+begin_example
+        // ============================================================
+        // PICARD TAGGER SECTION
+        // ============================================================
+#+end_example
+
+under "const configSchema"
+
+2.)
+
+add a boolean variable for enabling the new picard tagger functionality (which will be implemented shortly) with a
+default value of "true" to this section
+
+3.)
+
+add new variables to the new section which correspond to the following definitions in the uploaded userscript
+
+#+begin_example
+// You can change the default port below if you have running Picard on a
+// different port then the default 8000.
+const TAGGER_DEFAULT_PORT = 8000
+
+// As Picard can end up running on a higher port if the configured port is in
+// use, this script probes a range of ports up to TAGGER_MAX_PORT. You can
+// lower this value or even set it to TAGGER_DEFAULT_PORT to reduce the amount
+// of probing requests.
+const TAGGER_MAX_PORT = 8010
+
+// Usually Picard will listen on your local device only. You might want to
+// set this to a different IP address in your local network if Picard is
+// running on a different computer then your browser.
+const TAGGER_HOST = '127.0.0.1'
+#+end_example
+
+4.)
+
+reimplement the functionality from the uploaded userscript "mb-magic-tagger-button.user.js" as functions in our
+userscript.
 
 * TODO make zebra striping configurable
 
@@ -73714,6 +73758,7 @@ https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly o
 #+begin_example
 https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/vzell/tag/gig/event
 #+end_example
+
 
 * TODO cdtoc
 ** DONE initial
@@ -74050,3 +74095,125 @@ but NOT anymore on the final rendered page
 
     }
 #+end_example
+
+
+* TODO taglookup
+
+Add support for TagLookup pages on MusicBrainz:
+
+1.)
+
+Add the following new userscript header
+
+#+begin_example
+// @match        *://*.musicbrainz.org/taglookup*
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/cdtoc/*
+#+end_example
+
+2.)
+
+add the following new pageType definition
+
+#+begin_example
+        // TagLookup pages
+        {
+            type: 'taglookup',
+            match: (path) => path.includes('/taglookup'),
+            buttons: [ { label: 'Show all Releases for Tags' } ],
+            tableMode: 'single',
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name',         extractor: 'caa',                syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate',   syntheticColumns: ['Country', 'Date'] },
+                    { sourceColumn: 'Tracks',       extractor: 'sumTracks',          syntheticColumns: ['Total Tracks'] },
+                    { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode', 'Language', 'Type', 'Status' ],
+                addCAA: 'Name',
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name',
+                insertH2: 'Releases',
+                // Inject a "Searchform" h2 before the existing (single) h2 on the page
+                // so the collapsible-section infrastructure can wrap the search form.
+		insertPrependH2: 'Searchform'
+            }
+        },
+#+end_example
+
+before the pageType "type: 'cdtoc'"
+
+3.)
+
+On the final rendered page, relocate the "searchform" container
+
+#+begin_example
+<div class="searchform" style="">
+#+end_example
+
+below the h2 header named 'Searchform' inserted because of the "insertPrependH2: 'Searchform'" configuration directive.
+
+Do this in the "function finalCleanup()"
+
+
+* DONE search pages
+
+Adjust the following code, executed for pageType "type: 'search'"
+
+#+begin_example
+        if (targetH2) {
+            // Transformation logic for non-H2 targets (e.g. search results paragraph)
+            if (activeDefinition.features?.transformToH2 && targetH2.tagName !== 'H2') {
+
+                // Get the method value from the URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const methodValue = urlParams.get('method'); // e.g., "direct"
+
+                let prefix = ""; // Initialize prefix as empty string
+                if (pageType === 'search' && methodValue) {
+                    // Format the string (Capitalize first letter + " search: ")
+                    prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
+                    Lib.debug('render', `Search method identified: "${prefix}..."`);
+                }
+
+                Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
+                const newH2 = document.createElement('h2');
+
+                // Prepend the prefix to the original content
+                newH2.innerHTML = prefix + targetH2.innerHTML;
+
+                targetH2.replaceWith(newH2);
+                targetH2 = newH2; // Update reference for subsequent operations
+            }
+#+end_example
+
+to also extract the 'entity type' from the "type" query parameter and append the value blank separated to the already
+extracted value for the "method" query parameter.
+
+So e.g. for the URL https://musicbrainz.org/search?query=Zell&type=artist&limit=25&method=advanced the "prefix" to
+prepend to the original H2 content should be:
+
+#+begin_example
+Advanced artist
+#+end_example
+
+instead of just
+
+#+begin_example
+Advanced
+#+end_example
+
+
+
+
