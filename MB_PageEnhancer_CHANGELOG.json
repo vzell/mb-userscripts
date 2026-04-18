@@ -1,5 +1,31 @@
 [
   {
+    "version": "1.0.3",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fixed a bug in initPageHeaders() where clicking a section header (e.g. 'Tracklist') would also collapse a logically independent sibling section (e.g. 'Credits') whose h2 lived inside a wrapper div rather than directly in the same parent. Root cause: the sibling-collection while-loop only stopped at a direct h2 sibling (el.tagName === 'H2'), so a wrapper element such as div#bottom-credits — which contains its own h2 — was swept wholesale into the outer section's collapsible div. Fix: extended the loop guard to also stop when the current sibling contains a descendant h2 (!el.querySelector('h2')), ensuring wrapper elements that house their own section headers are never included in another section's collapsible group and remain independently collapsible."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.2",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "⚙️ Internal",
+        "items": [
+          "Added visual BEGIN/END block comments around every function group that implements a specific configuration section. The three groups are now each enclosed in matching '// BEGIN: <SECTION NAME>' / '// END: <SECTION NAME>' banner comments: SHARED UTILITIES (isOverviewTabActive, ART_HEADER_CLASS / ART_GALLERY_CLASS constants), SECTION TOGGLING (makeTooltip, applyGalleryState, attachHeaderBehavior, initPageHeaders — controlled by pe_enable_section_toggling), and CAA / EAA ILLUSTRATED DISCOGRAPHY (displayArtGallery — controlled by pe_enable_caa_eaa / pe_image_size / pe_collapsed_by_default). Each banner also lists the config keys and function names it owns.",
+          "Reordered functions to match logical config-section grouping: initPageHeaders() moved before displayArtGallery() so that all SECTION TOGGLING functions (makeTooltip, applyGalleryState, attachHeaderBehavior, initPageHeaders) are contiguous within their BEGIN/END block, followed by the CAA / EAA ILLUSTRATED DISCOGRAPHY block (displayArtGallery).",
+          "Labeled the two execution steps in the main dispatch block with 'STEP 1/2 — SECTION TOGGLING' and 'STEP 2/2 — CAA / EAA ILLUSTRATED DISCOGRAPHY' inline comments, making it immediately clear which feature is running at each point and repeating the relevant feature-flag guard for quick reference."
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.0.1",
     "date": "2026-03-23",
     "sections": [

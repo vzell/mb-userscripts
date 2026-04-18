@@ -29148,8 +29148,7 @@ where "<art image>" is either "CAA" or "EAA"
 Actually there are usually more h2 header lines in a musicbrainz release or event page, beside the cover/event art what
 we introduced. Please extend the background and click/Ctrl-click functionality to all of them in a page
 
-** TODO on "Event" pages the h2 headerline form sanojjaans "Event Schedule" is not clickable/No background
-** TODO On "Release" pages, the "Credits" section after the "Tracklist" (with table data) is not visible when the "Tracklist" section is collapsed
+** TODO on "Event" pages the h2 headerline from sanojjaans "Event Schedule" is not clickable/No background
 ** TODO Optionally collapse/uncollapse + background for the h2 headers on the right side of the sidebar
 ** DONE rewrite to use modern library
 *** DONE initial
@@ -29325,7 +29324,53 @@ create a new section "section toggling" and a boolean with which the h2 header t
 
 add a changelog entry to the uploaded changelog file "MB_PageEnhancer_CHANGELOG.json"
 
- 
+** DONE restructure comments
+
+In the uploaded userscript "MB_PageEnhancer.user.js" clearly separate in the code, functions which logically belong to a
+specific configuration section like
+
+#+begin_example
+        // ============================================================
+        // SECTION TOGGLING
+        // ============================================================
+#+end_example
+
+or
+
+#+begin_example
+        // ============================================================
+        // CAA / EAA ILLUSTRATED SECTION
+        // ============================================================
+#+end_example
+
+visually with comment sections which show the begin and end of function definitions which implement the specific
+configuration sections.
+
+Also clearly mark in the execution section which functionality is currently executing.
+
+Finally add a changelog entry to the uploaded file "MB_PageEnhancer_CHANGELOG.json" 
+
+** DONE On "Release" pages, the "Credits" section after the "Tracklist" (with table data) is not visible when the "Tracklist" section is collapsed
+
+There is a bug when collapsing h2 headers. When clicking on the h2 "Tracklist" header, the h2 "Credits" header is collapsed with it.
+
+The HTML structure is:
+
+#+begin_example
+<div class="annotation">
+  <h2 class="annotation">..</h2>
+</div>
+<div class="tracklist-and-credits">
+  <h2 class="tracklist">...</h2>
+  <div id="bottom-credits>
+    <h2>Credits<button title="Copy all URL relationships" class="url-copy-button"></h2>
+  </div>
+</div>
+#+end_example
+
+I want them to be individually collapsable. 
+
+
 * filter (funnel) icon from chrome console
 
 #+begin_example
@@ -29547,6 +29592,7 @@ to
 2.)
 
 bump the version number and write a changelog entry
+
 
 * DONE DOM rendering
 ** DONE timings and logging
@@ -72273,7 +72319,7 @@ Why collections-releases needs find-or-create:
 Every XHR page starts with ALL h3 headers → position-in-stream test would always see a "different" category on page boundaries → creates M×N duplicate groups instead of M canonical ones
 #+end_example
 
-* DONE fix Artist-Releasegroup pages
+* TODO fix Artist-Releasegroup pages
 ** DONE changes to do
 
 Change the code blocks
@@ -72845,7 +72891,10 @@ filesystem via "Load from Disk" the buttons to switch the different views "Compl
 Discography", "Non-Official Discography" and "Complete Discography (merged)" are gone. They should be restored after
 loading from disk too.
 
-* DONE taglookup
+** TODO ghost images when switching from merged view to unofficial
+
+* TODO taglookup
+** DONE initial
 
 Add support for TagLookup pages on MusicBrainz:
 
@@ -72914,7 +72963,47 @@ below the h2 header named 'Searchform' inserted because of the "insertPrependH2:
 
 Do this in the "function finalCleanup()"
 
-* DONE search pages
+** TODO bug
+
+Why is the "data-erg-btn" 
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+not present on pageTypes of "type: 'taglookup'"
+
+** function isExpandRGsPage()
+
+Adjust the function
+
+#+begin_example
+    /**
+     * Returns true when the current page matches the expandRGs @match / @exclude criteria:
+     *   artist/*                             (all artist sub-pages, no exclusions)
+     *   label/<UUID>                         (root label page only)
+     *   release-group/<UUID>                 (root release-group page only)
+     *   series/<UUID>                        (root series page only)
+     *   recording/<UUID>                     (root recording page only — "Appears on" releases table)
+     *
+     * @returns {boolean}
+     */
+    function isExpandRGsPage() {
+        const p    = window.location.pathname;
+        const mbid = MBID_REGEX.source;
+        if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
+        if (new RegExp(`^/recording/${mbid}$`).test(p)) return true;
+        if (new RegExp(`^/collection/${mbid}`).test(p)) return true;
+        return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
+    }
+#+end_example
+
+to support additionally the pageType "type: 'taglookup'"
+
+A typical URL looks like https://musicbrainz.org/taglookup/index?tag-lookup.artist=Bruce+Springsteen&tag-lookup.release=The+Rising&tag-lookup.tracknum=&tag-lookup.track=&tag-lookup.duration=&tag-lookup.filename=
+
+* TODO search pages
+** DONE initial
 
 Adjust the following code, executed for pageType "type: 'search'"
 
@@ -72960,6 +73049,223 @@ instead of just
 #+begin_example
 Advanced
 #+end_example
+
+** add entity features
+
+
+* TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
+** initial
+
+Include the functionality of the uploaded userscript "mb-magic-tagger-button.user.js" in our userscript:
+
+1.)
+
+add a new configuration section
+
+#+begin_example
+        // ============================================================
+        // PICARD TAGGER SECTION
+        // ============================================================
+#+end_example
+
+under "const configSchema"
+
+2.)
+
+add a boolean variable for enabling the new picard tagger functionality (which will be implemented shortly) with a
+default value of "true" to this section
+
+3.)
+
+add new variables to the new section which correspond to the following definitions in the uploaded userscript
+
+#+begin_example
+// You can change the default port below if you have running Picard on a
+// different port then the default 8000.
+const TAGGER_DEFAULT_PORT = 8000
+
+// As Picard can end up running on a higher port if the configured port is in
+// use, this script probes a range of ports up to TAGGER_MAX_PORT. You can
+// lower this value or even set it to TAGGER_DEFAULT_PORT to reduce the amount
+// of probing requests.
+const TAGGER_MAX_PORT = 8010
+
+// Usually Picard will listen on your local device only. You might want to
+// set this to a different IP address in your local network if Picard is
+// running on a different computer then your browser.
+const TAGGER_HOST = '127.0.0.1'
+#+end_example
+
+4.)
+
+reimplement the functionality from the uploaded userscript "mb-magic-tagger-button.user.js" as functions in our
+userscript.
+
+The new functionality should run on pages which map to the following "match" directives from the uploaded userscript
+
+#+begin_example
+// @match         https://*.musicbrainz.org/cdtoc/*
+// @match         https://*.musicbrainz.org/collection/*
+// @match         https://*.musicbrainz.org/recording/*
+// @match         https://*.musicbrainz.org/release-group/*
+// @match         https://*.musicbrainz.org/release/*
+// @match         https://*.musicbrainz.org/series/*
+// @match         https://*.musicbrainz.org/taglookup*
+// @match         https://*.musicbrainz.org/search*
+// @match         https://*.musicbrainz.org/artist/*/releases*
+#+end_example
+
+and should inject a new synthetic column named "Picard" as the last column in each table/sub-table
+
+5.)
+
+mention in a comment and also in the boolean variable desscription for enabling the new picard tagger functionality that
+the new code is based on the userscript by "Philipp Wolfer"
+
+#+begin_example
+// @name          MusicBrainz Magic Tagger Button
+// @author        Philipp Wolfer
+#+end_example
+
+** bugs
+
+Two bugs:
+
+1.)
+
+The clicking on the picard tagger icon in the "Picard" column works on the final rendered page, but only if no sorting
+or filtering is performed on the tables. After sorting or filtering when clicking the picard icon the only action which
+gets performed is that the page horizontally scrolls to the left and upwards.
+
+2.)
+
+There is a bug when clicking the "Load from Disk"-button:
+
+- There is now an additional sortable "Picard" column before the "Relationships" column whith the saved picard icon state. 
+- the "Relationships" column now has the green Picard icons instead of the relationships icons
+- the last column is again the non-sortable "Picard" column, but with the relationships icons
+
+Please fix
+
+** bugs
+
+two bugs:
+
+1.)
+
+The "Bug 1 — scroll-on-click after sort/filter" is still present
+
+2.)
+
+When loading from disk, the "Picard" column before the "Relationships" column is gone, but the contents of the
+"Relationships" column are still the green picard icons and the last "Picard" column still holds the relationship icons
+
+** fix picard URL
+
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Sending to Picard: http://127.0.0.1:8000/?id=f3a174fd-5a0e-4004-a16c-34e03bb339de&v=2&resource=https%3A%2F%2Fmusicbrainz.org%2Frelease%2Ff3a174fd-5a0e-4004-a16c-34e03bb339de
+
+http://127.0.0.1:8000/?id=f3a174fd-5a0e-4004-a16c-34e03bb339de&v=2&resource=https%3A%2F%2Fmusicbrainz.org%2Frelease%2Ff3a174fd-5a0e-4004-a16c-34e03bb339de
+
+http://127.0.0.1:8000/openalbum?id=f3a174fd-5a0e-4004-a16c-34e03bb339de&v=2&resource=https%3A%2F%2Fmusicbrainz.org%2Frelease%2Ff3a174fd-5a0e-4004-a16c-34e03bb339de
+
+http://127.0.0.1:8000/openalbum?id=3168f405-b1a2-4be7-888c-a71240c2ee8d
+
+** picard URL
+
+1.)
+
+Change the URL in
+
+#+begin_example
+    function _picardBuildTaggerUrl(host, port, entityType, guid) {
+        return `http://${host}:${port}/openalbum?id=${guid}&v=2&resource=${encodeURIComponent(
+            `https://musicbrainz.org/${entityType}/${guid}`
+        )}`;
+#+end_example
+
+to
+
+#+begin_example
+    function _picardBuildTaggerUrl(host, port, entityType, guid) {
+        return `http://${host}:${port}/openalbum?id=${guid}&v=2&resource=${encodeURIComponent(
+            `https://musicbrainz.org/${entityType}/${guid}`
+        )}`;
+#+end_example
+
+2.)
+
+Change the idle state picard icon from green to yellow
+
+#+begin_example
+    /**
+     * SVG icon for the Picard button in its idle state.
+     * A compact green music-note derived from the MusicBrainz Picard icon palette.
+     */
+    const _PICARD_ICON_IDLE
+#+end_example
+
+3.)
+
+Now that we have our own picard tagger implementation, remove the configuration
+
+#+begin_example
+        sa_remove_tagger: {
+            label: "Remove Tagger column",
+            type: "checkbox",
+            default: false,
+            description: "Remove the Tagger column from the final rendered tables"
+        },
+
+#+end_example
+
+and adjust the "const removalMapAlways" to always include 'Tagger' and remove it from "const removalMap" throughout the
+code base
+
+** load from disk
+
+bugs still present:
+
+1.)
+
+When loading from disk, the "Picard" column before the "Relationships" column is gone, but the contents of the
+"Relationships" column are still the green picard icons and the last "Picard" column still holds the relationship icons
+
+So the "Bug 2 — column misalignment (Relationships ↔ Picard)" is not fixed, when using the load from disk path
+
+2.)
+
+On "multi"-table pages, clicking the picard icon changes i to the red icon and produces the following console output,
+which is OK because picard is not running
+
+#+begin_example
+[VZ-ShowAllEntityData: releasegroup-releases] 📝 Button clicked but Picard not detected (guid=376baba4-79cd-4f43-a0c3-9b12f60e8ec9) 
+#+end_example
+
+On "single"-table pages when clicking the picard icon, the native browser dialog pops up with the text
+
+#+begin_example
+You are about to leave this page.
+
+All loaded data, filters, sorting, column resizing and other
+customisations will be lost.
+
+Do you want to continue?
+#+end_example
+
+and the following output is created when clicking the "OK" buttin in the dialog
+
+#+begin_example
+19:41:11.803 [VZ-ShowAllEntityData: artist-releases] 📝 Guard triggered: merge-form button "merge form" 
+19:41:13.644 [VZ-ShowAllEntityData: artist-releases] 📝 Button clicked but Picard not detected (guid=5d3b793a-5853-44c0-9821-e2c2bb79ae5d) 
+#+end_example
+
+** still
+
+Bug 1 (column mismatch on Load from Disk) is still there
+
+** still there
+
+Bug 1 (column mismatch on Load from Disk) is still there, but ONLY in "single"-table mode
 
 
 * maybe later
@@ -73608,53 +73914,6 @@ and either
 #+end_example
 
 
-* TODO Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
-
-Include the functionality of the uploaded userscript "mb-magic-tagger-button.user.js" in our userscript:
-
-1.)
-
-add a new configuration section
-
-#+begin_example
-        // ============================================================
-        // PICARD TAGGER SECTION
-        // ============================================================
-#+end_example
-
-under "const configSchema"
-
-2.)
-
-add a boolean variable for enabling the new picard tagger functionality (which will be implemented shortly) with a
-default value of "true" to this section
-
-3.)
-
-add new variables to the new section which correspond to the following definitions in the uploaded userscript
-
-#+begin_example
-// You can change the default port below if you have running Picard on a
-// different port then the default 8000.
-const TAGGER_DEFAULT_PORT = 8000
-
-// As Picard can end up running on a higher port if the configured port is in
-// use, this script probes a range of ports up to TAGGER_MAX_PORT. You can
-// lower this value or even set it to TAGGER_DEFAULT_PORT to reduce the amount
-// of probing requests.
-const TAGGER_MAX_PORT = 8010
-
-// Usually Picard will listen on your local device only. You might want to
-// set this to a different IP address in your local network if Picard is
-// running on a different computer then your browser.
-const TAGGER_HOST = '127.0.0.1'
-#+end_example
-
-4.)
-
-reimplement the functionality from the uploaded userscript "mb-magic-tagger-button.user.js" as functions in our
-userscript.
-
 * TODO make zebra striping configurable
 
 #+begin_example
@@ -73873,6 +74132,28 @@ https://musicbrainz.org/tags?show_list=1       - multiple H2 (each has exactly o
 
 #+begin_example
 https://musicbrainz.org/user/<user name>/tag/<tag value>/<entity type>  # /user/vzell/tag/gig/event
+#+end_example
+
+
+* TODO tag pages vote buttons
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+Why is clicking on the vote buttons "tag-vote tag-upvote" and "tag-vote tag-downvote"
+
+working on the initial page on pageType "type: '<entity>-tags'" e.g. https://musicbrainz.org/release/e9ea9065-b530-4f52-a6f7-77e27d3dd3db/tags
+
+but NOT anymore on the final rendered page
+
+#+begin_example
+<span class="tag-vote-buttons tag-upvoted">
+  <button class="tag-vote tag-upvote" disabled="" title="You’ve upvoted this tag" type="button">+
+  </button>
+  <button class="tag-vote tag-downvote" title="Withdraw vote" type="button">−
+  </button>
+  <span class="tag-count">1
+  </span>
+</span>
 #+end_example
 
 

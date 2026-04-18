@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - MB Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0.1+2026-03-23
+// @version      1.0.3+2026-04-18
 // @description  Enhances MusicBrainz pages with additional features
 // @author       vzell
 // @tag          AI generated
@@ -152,6 +152,15 @@
 
     Lib.info('init', `Script v${scriptVersion} loaded (lib v${libVersion}).`);
 
+    // ============================================================
+    // BEGIN: SHARED UTILITIES
+    // Helpers used by more than one config section.
+    // ============================================================
+
+    /**
+     * Return true when the MusicBrainz "Overview" tab is the currently selected tab.
+     * @returns {boolean}
+     */
     const isOverviewTabActive = () => {
         const activeTab = document.querySelector("ul.tabs li.sel");
         return activeTab && activeTab.textContent.includes("Overview");
@@ -160,6 +169,17 @@
     // CSS classes used to locate all script-managed headers/galleries (e.g. for Ctrl+Click all-toggle)
     const ART_HEADER_CLASS  = `${SCRIPT_ID}-art-header`;
     const ART_GALLERY_CLASS = `${SCRIPT_ID}-art-gallery`;
+
+    // ============================================================
+    // END: SHARED UTILITIES
+    // ============================================================
+
+
+    // ============================================================
+    // BEGIN: SECTION TOGGLING
+    // Config key : pe_enable_section_toggling
+    // Functions  : makeTooltip, applyGalleryState, attachHeaderBehavior, initPageHeaders
+    // ============================================================
 
     /**
      * Build the tooltip text for a collapsible header.
@@ -191,9 +211,9 @@
     /**
      * Apply collapsible header styling and click behaviour to an h2 element.
      * Works for both script-created art gallery headers and native MusicBrainz h2 headers.
-     * @param {Element} h2           - The h2 element to enhance.
-     * @param {Element} contentEl    - The content div that this h2 controls.
-     * @param {string}  sectionLabel - Label used in tooltips, e.g. "CAA Art Images" or "Track listing section".
+     * @param {Element} h2             - The h2 element to enhance.
+     * @param {Element} contentEl      - The content div that this h2 controls.
+     * @param {string}  sectionLabel   - Label used in tooltips, e.g. "CAA Art Images" or "Track listing section".
      * @param {boolean} startCollapsed - Initial collapsed state.
      */
     function attachHeaderBehavior(h2, contentEl, sectionLabel, startCollapsed) {
@@ -227,6 +247,86 @@
             }
         });
     }
+
+    /**
+     * Extend collapsible header behaviour to all native MusicBrainz h2 elements on the page.
+     * Controlled by the pe_enable_section_toggling setting; exits immediately if disabled.
+     * For each h2 not already managed by this script, all following sibling elements (up to the
+     * next h2, the next sibling that contains a descendant h2, or end of parent) are wrapped in
+     * a collapsible div and the h2 gets the shared background + Click / Ctrl+Click toggle behaviour.
+     */
+    function initPageHeaders() {
+        // Feature-flag guard
+        if (!Lib.settings.pe_enable_section_toggling) {
+            Lib.debug('init', `🚫 [initPageHeaders] Section toggling is disabled via pe_enable_section_toggling setting — skipping.`);
+            return;
+        }
+
+        Lib.debug('init', `🔍 [initPageHeaders] Scanning page for native MusicBrainz h2 headers to enhance …`);
+
+        const contentArea = document.querySelector("#content") || document.body;
+        const nativeH2s = Array.from(contentArea.querySelectorAll("h2"))
+            .filter(h2 => !h2.classList.contains(ART_HEADER_CLASS));
+
+        Lib.debug('init', `📋 [initPageHeaders] Found ${nativeH2s.length} native h2 header(s) (excluding script-managed ones).`);
+
+        let count   = 0;
+        let skipped = 0;
+        nativeH2s.forEach(h2 => {
+            const headerText = h2.textContent.trim();
+
+            // Collect all following siblings within the same parent until:
+            //   a) the next sibling IS an h2, OR
+            //   b) the next sibling CONTAINS a descendant h2 (e.g. a wrapper div such as
+            //      div#bottom-credits that houses its own h2 section header).
+            // Stopping at case (b) is critical: including such a wrapper would make two
+            // logically independent sections collapse together, because the nested h2 and
+            // its content would be hidden as part of the outer section's collapsible div.
+            const siblings = [];
+            let el = h2.nextElementSibling;
+            while (el && el.tagName !== "H2" && !el.querySelector("h2")) {
+                siblings.push(el);
+                el = el.nextElementSibling;
+            }
+
+            if (siblings.length === 0) {
+                Lib.debug('init', `⏭️  [initPageHeaders] Skipping h2 "${headerText}" — no collapsible content siblings found.`);
+                skipped++;
+                return;
+            }
+
+            // Wrap the collected siblings in a single collapsible container
+            const wrapper = document.createElement("div");
+            wrapper.classList.add(ART_GALLERY_CLASS);
+            Object.assign(wrapper.style, {
+                overflow: "hidden",
+                transition: "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease",
+                maxHeight: "5000px", opacity: "1", marginBottom: "20px", marginTop: "20px"
+            });
+            // Insert wrapper before the first sibling, then move all siblings into it
+            h2.parentNode.insertBefore(wrapper, siblings[0]);
+            siblings.forEach(s => wrapper.appendChild(s));
+
+            const sectionLabel = `"${headerText}" section`;
+            attachHeaderBehavior(h2, wrapper, sectionLabel, false);
+            count++;
+
+            Lib.debug('init', `🏷️  [initPageHeaders] Enhanced h2 "${headerText}" — wrapped ${siblings.length} sibling element(s).`);
+        });
+
+        Lib.info('init', `✅ [initPageHeaders] Section toggling applied to ${count} h2 header(s)${skipped > 0 ? `, ${skipped} skipped (no siblings)` : ""}.`);
+    }
+
+    // ============================================================
+    // END: SECTION TOGGLING
+    // ============================================================
+
+
+    // ============================================================
+    // BEGIN: CAA / EAA ILLUSTRATED DISCOGRAPHY
+    // Config keys: pe_enable_caa_eaa, pe_image_size, pe_collapsed_by_default
+    // Functions  : displayArtGallery
+    // ============================================================
 
     /**
      * Fetch and render the cover/event art gallery inserted by this script.
@@ -341,69 +441,17 @@
         }
     }
 
-    /**
-     * Extend collapsible header behaviour to all native MusicBrainz h2 elements on the page.
-     * Controlled by the pe_enable_section_toggling setting; exits immediately if disabled.
-     * For each h2 not already managed by this script, all following sibling elements (up to the
-     * next h2 or end of parent) are wrapped in a collapsible div and the h2 gets the shared
-     * background + Click / Ctrl+Click toggle behaviour.
-     */
-    function initPageHeaders() {
-        // Feature-flag guard
-        if (!Lib.settings.pe_enable_section_toggling) {
-            Lib.debug('init', `🚫 [initPageHeaders] Section toggling is disabled via pe_enable_section_toggling setting — skipping.`);
-            return;
-        }
+    // ============================================================
+    // END: CAA / EAA ILLUSTRATED DISCOGRAPHY
+    // ============================================================
 
-        Lib.debug('init', `🔍 [initPageHeaders] Scanning page for native MusicBrainz h2 headers to enhance …`);
 
-        const contentArea = document.querySelector("#content") || document.body;
-        const nativeH2s = Array.from(contentArea.querySelectorAll("h2"))
-            .filter(h2 => !h2.classList.contains(ART_HEADER_CLASS));
+    // ============================================================
+    // EXECUTION
+    // Entry point: validates URL/DOM preconditions, then dispatches
+    // each feature section in order.
+    // ============================================================
 
-        Lib.debug('init', `📋 [initPageHeaders] Found ${nativeH2s.length} native h2 header(s) (excluding script-managed ones).`);
-
-        let count   = 0;
-        let skipped = 0;
-        nativeH2s.forEach(h2 => {
-            const headerText = h2.textContent.trim();
-
-            // Collect all following siblings within the same parent until the next h2
-            const siblings = [];
-            let el = h2.nextElementSibling;
-            while (el && el.tagName !== "H2") {
-                siblings.push(el);
-                el = el.nextElementSibling;
-            }
-            if (siblings.length === 0) {
-                Lib.debug('init', `⏭️  [initPageHeaders] Skipping h2 "${headerText}" — no collapsible content siblings found.`);
-                skipped++;
-                return;
-            }
-
-            // Wrap the collected siblings in a single collapsible container
-            const wrapper = document.createElement("div");
-            wrapper.classList.add(ART_GALLERY_CLASS);
-            Object.assign(wrapper.style, {
-                overflow: "hidden",
-                transition: "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease",
-                maxHeight: "5000px", opacity: "1", marginBottom: "20px", marginTop: "20px"
-            });
-            // Insert wrapper before the first sibling, then move all siblings into it
-            h2.parentNode.insertBefore(wrapper, siblings[0]);
-            siblings.forEach(s => wrapper.appendChild(s));
-
-            const sectionLabel = `"${headerText}" section`;
-            attachHeaderBehavior(h2, wrapper, sectionLabel, false);
-            count++;
-
-            Lib.debug('init', `🏷️  [initPageHeaders] Enhanced h2 "${headerText}" — wrapped ${siblings.length} sibling element(s).`);
-        });
-
-        Lib.info('init', `✅ [initPageHeaders] Section toggling applied to ${count} h2 header(s)${skipped > 0 ? `, ${skipped} skipped (no siblings)` : ""}.`);
-    }
-
-    // --- Start Execution ---
     Lib.debug('init', `🚀 [main] Starting page enhancement for: ${location.pathname}`);
 
     const mbidMatch = location.pathname.match(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/i);
@@ -415,8 +463,11 @@
         if (isOverviewTabActive()) {
             Lib.debug('init', `📄 [main] Overview tab is active — proceeding with page enhancements.`);
 
-            // Enhance all existing native MB h2 headers first (synchronous).
-            // Guard is inside initPageHeaders() via pe_enable_section_toggling.
+            // --------------------------------------------------------
+            // STEP 1/2 — SECTION TOGGLING
+            // Enhance all existing native MB h2 headers (synchronous).
+            // Feature-flag guard: pe_enable_section_toggling (inside initPageHeaders).
+            // --------------------------------------------------------
             initPageHeaders();
 
             const mbid          = mbidMatch[0];
@@ -429,10 +480,14 @@
             Lib.debug('init', `🗂️  [main] Page type: ${isEventPage ? "event" : "release"}, MBID: ${mbid}`);
             Lib.debug('init', `🌐 [main] Archive URL resolved to: ${archiveUrl}`);
 
-            // Fetch and inject the art gallery. Wrapped in an async IIFE so that
-            // Lib.timeEnd() fires only *after* the async gallery rendering resolves,
-            // giving an accurate wall-clock measurement of the full fetch+render cycle.
-            // Guard is inside displayArtGallery() via pe_enable_caa_eaa.
+            // --------------------------------------------------------
+            // STEP 2/2 — CAA / EAA ILLUSTRATED DISCOGRAPHY
+            // Fetch and inject the art gallery (asynchronous).
+            // Wrapped in an async IIFE so that Lib.timeEnd() fires only
+            // *after* the async gallery rendering resolves, giving an
+            // accurate wall-clock measurement of the full fetch+render cycle.
+            // Feature-flag guard: pe_enable_caa_eaa (inside displayArtGallery).
+            // --------------------------------------------------------
             (async () => {
                 Lib.time(timerLabel);
                 await displayArtGallery(mbid, tabsContainer, archiveUrl, artLabel, artShortLabel);
