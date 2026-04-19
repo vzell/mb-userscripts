@@ -72940,24 +72940,23 @@ All CAA images which actually belong to the "Official Discography" (but were of 
 show up as CAA stripes directly rendered below the h2 "Non-Official Discography" header line and before the first h3
 header line present only in the "Non-Official Discography"
 
-
-* TODO taglookup
+* DONE cdtoc
 ** DONE initial
 
-Add support for TagLookup pages on MusicBrainz:
+Add support for CDtoc pages on MusicBrainz:
 
 1.)
 
 Add the following new userscript header
 
 #+begin_example
-// @match        *://*.musicbrainz.org/taglookup*
+// @match        *://*.musicbrainz.org/cdtoc/*
 #+end_example
 
 after
 
 #+begin_example
-// @match        *://*.musicbrainz.org/cdtoc/*
+// @match        *://*.musicbrainz.org/tag/*
 #+end_example
 
 2.)
@@ -72965,196 +72964,331 @@ after
 add the following new pageType definition
 
 #+begin_example
-        // TagLookup pages
+        // CDtoc pages
         {
-            type: 'taglookup',
-            match: (path) => path.includes('/taglookup'),
-            buttons: [ { label: 'Show all Releases for Tags' } ],
+            type: 'cdtoc',
+            match: (path) => path.includes('/cdtoc'),
+            buttons: [ { label: 'Show all CDToc attached to Releases' } ],
             tableMode: 'single',
             features: {
-                columnExtractors: [
-                    { sourceColumn: 'Name',         extractor: 'caa',                syntheticColumns: ['CAA'] },
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate',   syntheticColumns: ['Country', 'Date'] },
-                    { sourceColumn: 'Tracks',       extractor: 'sumTracks',          syntheticColumns: ['Total Tracks'] },
-                    { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
-                ],
-                syntheticColumnExtractors: [
-                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-                ],
-                injectedColumns: [ 'Relationships' ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
-                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode', 'Language', 'Type', 'Status' ],
-                addCAA: 'Name',
-                extractMainColumn: 'Name',
-                stickyColumn: 'Name',
-                insertH2: 'Releases',
-                // Inject a "Searchform" h2 before the existing (single) h2 on the page
-                // so the collapsible-section infrastructure can wrap the search form.
-		insertPrependH2: 'Searchform'
+              columnExtractors: [
+                  { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+              ],
+              syntheticColumnExtractors: [
+                  { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+              ],
+              injectedColumns: [ 'Relationships' ],
+              integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+              renderMultiRowCell: [ 'Label', 'Catalog#' ],
+              collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+              tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', 'Format', 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
+              addCAA: 'Title',
+              extractMainColumn: 'Title',
+              stickyColumn: 'Title'
             }
         },
 #+end_example
 
-before the pageType "type: 'cdtoc'"
+before the pageType "type: 'user-subscriptions'"
 
-3.)
+** DONE bugs
 
-On the final rendered page, relocate the "searchform" container
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+1.)
+
+Why do I get the following warnings on pageTypes "type: 'cdtoc'"
 
 #+begin_example
-<div class="searchform" style="">
+[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: colIdx 5 out of range for column "Label" (row has 2 cells) 
+[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: colIdx 6 out of range for column "Catalog#" (row has 2 cells) 
+[VZ-ShowAllEntityData: cdtoc] 📝 colIdx 4 out of range for extractor "splitCountryDate" (row has 2 cells) 
 #+end_example
 
-below the h2 header named 'Searchform' inserted because of the "insertPrependH2: 'Searchform'" configuration directive.
-
-Do this in the "function finalCleanup()"
-
-** TODO bug
-
-Why is the "data-erg-btn" 
+Here the complete console debug log
 
 #+begin_example
-<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.486+2026-04-18) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0- 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0- 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0- 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0- 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: cdtoc 
+[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
+[VZ-ShowAllEntityData: cdtoc] 🚀 Initializing script for path: /cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0-
+[VZ-ShowAllEntityData: cdtoc] 🚀 Cached entity name at init time: "7TW7y89up6f9JPBxSn6VY3IKSy0- Disc ID “ ” (" 
+[VZ-ShowAllEntityData: cdtoc] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+[VZ-ShowAllEntityData: cdtoc] 🚀 Blurred #headerid-query input on page entry 
+[VZ-ShowAllEntityData: cdtoc] 📝 Changelog source: remote — replaced 0 local entries with 660 remote entries (fromCache=true) 
+[VZ-ShowAllEntityData: cdtoc] 🚀 syntheticColumnExtractors configured: "dateParts"("Date") → [DD, MM, YYYY, Day, Month] 
+[VZ-ShowAllEntityData: cdtoc] 🚀 injectedColumns: ["Relationships"(release)] 
+[VZ-ShowAllEntityData: cdtoc] 🚀 renderMultiRowCell configured: ["Label", "Catalog#"] 
+[VZ-ShowAllEntityData: cdtoc] 🚀 integerColumns configured: ["DD"(R), "MM"(R), "YYYY"(C)] 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Signalling other scripts to stop... 
+[VZ-ShowAllEntityData: cdtoc] 📥 Starting fetch process... null
+[VZ-ShowAllEntityData: cdtoc] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
+[VZ-ShowAllEntityData: cdtoc] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
+[VZ-ShowAllEntityData: cdtoc] 📥 Total pages to fetch: 1 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Starting clutter element removal. 
+[VZ-ShowAllEntityData: cdtoc] 📥 Page 1 is current page. Using existing document. 
+[VZ-ShowAllEntityData: cdtoc] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+[VZ-ShowAllEntityData: cdtoc] 📝 No targetHeader provided; returning all tables found in container. 
+[VZ-ShowAllEntityData: cdtoc] 📝 parseDocumentForTables: Found 2 total tables. Target header filter: "none" 
+[VZ-ShowAllEntityData: cdtoc] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+[VZ-ShowAllEntityData: cdtoc] 📝 Detected indices → mainColIdx=1 (Title), extractors=[splitCountryDate("Country/Date"@4)], syntheticExtractors=[dateParts("Date"→[DD,MM,YYYY,Day,Month])], erasers=[none], renderMultiRow=["Label"@5, "Catalog#"@6], integerColumns=["DD"(R)@11, "MM"(R)@12, "YYYY"(C)@13], excluded=[] for pageType: cdtoc 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table body found. Processing child nodes. Total nodes: 2 
+[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: column "Label" (colIdx=5) — wrapped into 1 li row(s) 
+[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: column "Catalog#" (colIdx=6) — wrapped into 1 li row(s) 
+[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: colIdx 5 out of range for column "Label" (row has 2 cells) 
+[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: colIdx 6 out of range for column "Catalog#" (row has 2 cells) 
+[VZ-ShowAllEntityData: cdtoc] 📝 colIdx 4 out of range for extractor "splitCountryDate" (row has 2 cells) 
+[VZ-ShowAllEntityData: cdtoc] 📥 Page 1/1 processed in 0.00s. Rows on page: 2. Total: 2 
+[VZ-ShowAllEntityData: cdtoc] 🎨 DOM rendering starting... 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Starting updateH2Count: filtered=2, total=2, absoluteTotal=null 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Searching for target H2. Current pageType: cdtoc 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Target element identified: "Attached to releases..." 
+[VZ-ShowAllEntityData: cdtoc] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Appending filterContainer to targetH2. 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Updated header/target Attached to releases count: (2) 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Starting renderFinalTable with 2 rows. 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Final table structure → headers=9, rowCells=19 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Fast render: Injected 2 rows into DOM. 
+[VZ-ShowAllEntityData: cdtoc] 🎨 initTreleasesObserver: watching tbody (childList+attributes) 
+[VZ-ShowAllEntityData: cdtoc] 🧹 cleanupHeaders() called → existing headers=[Position | Title | Artist | Format | Country/Date | Label | Catalog# | Barcode | Edit] 
+[VZ-ShowAllEntityData: cdtoc] 🧹 No columns were matched for removal based on current settings. 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Country (via extractor: splitCountryDate) 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Date (via extractor: splitCountryDate) 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: DD (via synthetic extractor: dateParts) 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: MM (via synthetic extractor: dateParts) 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: YYYY (via synthetic extractor: dateParts) 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Day (via synthetic extractor: dateParts) 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Month (via synthetic extractor: dateParts) 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: MB-Name 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Comment 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting injected-column header: Relationships (release) 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: columns=[Country/Date, Country, Date, Label, Catalog#] 
+[VZ-ShowAllEntityData: cdtoc] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Country/Date" (col 4) — no multi-row cells found, skipping. 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Country" (col 9) — no multi-row cells found, skipping. 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Date" (col 10) — no multi-row cells found, skipping. 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Label" (col 5) — no multi-row cells found, skipping. 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Catalog#" (col 6) — no multi-row cells found, skipping. 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: done — 5 declared, 0 with multi-row cells. 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Running final cleanup... 
+[VZ-ShowAllEntityData: cdtoc] 🧹 No Sanojjonas elements found during final cleanup. 
+[VZ-ShowAllEntityData: cdtoc] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+[VZ-ShowAllEntityData: cdtoc] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+[VZ-ShowAllEntityData: cdtoc] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+[VZ-ShowAllEntityData: cdtoc] 🎨 Initializing collapsible H2 headers... 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Auto-resize button added to controls 
+[VZ-ShowAllEntityData: cdtoc] 📝 Made 19 columns resizable 
+[VZ-ShowAllEntityData: cdtoc] 📝 Made 0 columns resizable 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ applyStickyColumn: idx=1 left=0px table=(no-id) 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Column visibility toggle added to controls 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Barcode highlight toggle button added to controls 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Density control button added to controls 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Statistics button added to controls 
+[VZ-ShowAllEntityData: cdtoc] 📝 Keyboard shortcuts initialized 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Shortcuts help button already exists, skipping 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Export button with dropdown menu added to controls 
+[VZ-ShowAllEntityData: cdtoc] 📝 initBarcodeHighlight: processed table 0 
+[VZ-ShowAllEntityData: cdtoc] 📝 initBarcodeHighlight: processed table 1 
+[VZ-ShowAllEntityData: cdtoc] 📝 _initRelMappings: REL_* tables refreshed 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCaaPics: request queue created (concurrency=4) 
+[VZ-ShowAllEntityData: cdtoc] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-0 (1 link(s)) 
+[VZ-ShowAllEntityData: cdtoc] 📝 _artCreateOrUpdateRetryButton: created retry btn mb-caa-toggle-btn-retry-0 
+[VZ-ShowAllEntityData: cdtoc] 📝 created rel retry btn mb-rel-retry-0 
+[VZ-ShowAllEntityData: cdtoc] 📝 caaInitBigPics: built bigbox for table 0 with 1 image(s), initially hidden 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAPics: table 1 — no release-group/release links found, skipping bigbox 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAPics: processed 1 table(s) with CAA column 
+[VZ-ShowAllEntityData: cdtoc] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
+[VZ-ShowAllEntityData: cdtoc] 📝 initEAAPics: table 1 has no EAA column and no addEAA feature — skipping 
+[VZ-ShowAllEntityData: cdtoc] 📝 initEAAPics: processed 0 table(s) with EAA column 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: addCAA column = "Title" 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: processing table 0, column "Title" at index 1 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/7840e80b-f42b-4ade-99df-dd722210485a/front-250 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: no entity link found in "Title" cell — skipping 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: column "Title" not found in table 1 — skipping table 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: done — injected=1 enqueued=1 skipped(done=0 noLink=10 noGuid=0) column="Title" (queue: 2 running, 0 pending) 
+[VZ-ShowAllEntityData: cdtoc] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
+[VZ-ShowAllEntityData: cdtoc] 📝 Stats snapshot: 20 rows, 0 CAA links, 9 original + 4 extracted + 5 derived + 1 injected cols 
+[VZ-ShowAllEntityData: cdtoc] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
+[VZ-ShowAllEntityData: cdtoc] 📝 Unicode character picker initialised 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ applyStickyColumn: idx=1 left=0px table=(no-id) 
+[VZ-ShowAllEntityData: cdtoc] 🎨 DOM rendering finished in 17.70ms 
+[VZ-ShowAllEntityData: cdtoc] ✅ Process complete. Final Row Count: 2. Total Time: 0.02s 
+[VZ-ShowAllEntityData: cdtoc] 📝 sa_auto_resize_columns: triggering auto-resize on load 
+[VZ-ShowAllEntityData: cdtoc] 📝 Auto-resizing 2 table(s)... 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 0: "Position ⇅▲▼1📊" = 122px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 1: "Title ⇅▲▼1📊" = 100px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 2: "Artist ⇅▲▼1📊" = 107px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 3: "Format ⇅▲▼1📊" = 116px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 4: "Country/Date ⇅▲▼1📊" = 157px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 5: "Label ⇅▲▼1📊" = 106px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 6: "Catalog# ⇅▲▼1📊" = 128px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 7: "Barcode ⇅▲▼1📊" = 122px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 8: "Edit ⇅▲▼1📊" = 97px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 9: "Country ⇅▲▼1📊" = 121px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 10: "Date ⇅▲▼1📊" = 101px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 11: "DD ⇅▲▼📊" = 85px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 12: "MM ⇅▲▼📊" = 88px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 13: "YYYY ⇅▲▼📊" = 99px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 14: "Day ⇅▲▼📊" = 91px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 15: "Month ⇅▲▼📊" = 105px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 16: "MB-Name ⇅▲▼1📊" = 132px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 17: "Comment ⇅▲▼📊" = 125px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Header 18: "Relationships ⇅▲▼📊" = 150px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 0: 142px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 1: 254px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 2: 140px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 3: 136px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 4: 190px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 5: 879px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 6: 184px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 7: 142px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 8: 240px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 9: 154px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 10: 121px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 11: 105px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 12: 108px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 13: 119px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 14: 111px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 15: 125px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 16: 231px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 17: 145px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 18: 170px min-width (visible) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Made 19 columns resizable 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 0: Resized 19 columns, total width: 3696px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 1, Column 0: 0px (hidden) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 1, Column 1: 0px (hidden) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 1, Column 2: 0px (hidden) 
+[VZ-ShowAllEntityData: cdtoc] 📝 Made 0 columns resizable 
+[VZ-ShowAllEntityData: cdtoc] 📝 Table 1: Resized 3 columns, total width: 0px 
+[VZ-ShowAllEntityData: cdtoc] 📝 Auto-resize complete: 19 visible columns across 1 table(s) in 13ms 
+[VZ-ShowAllEntityData: cdtoc] 📝 _artOpenIdb: database opened successfully 
+[VZ-ShowAllEntityData: cdtoc] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/7840e80b-f42b-4ade-99df-dd722210485a/front-250 
+[VZ-ShowAllEntityData: cdtoc] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/7840e80b-f42b-4ade-99df-dd722210485a/front-250 
+[VZ-ShowAllEntityData: cdtoc] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: loaded OK (idb=true memory=false) — //coverartarchive.org/release/7840e80b-f42b-4ade-99df-dd722210485a/front-250 
+[VZ-ShowAllEntityData: cdtoc] 🖥️ Auto-focused global filter input after final render 
+[VZ-ShowAllEntityData: cdtoc] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
 #+end_example
 
-not present on pageTypes of "type: 'taglookup'"
+2.)
 
-** TODO function isExpandRGsPage()
-
-Adjust the function
+Why is clicking on the toggle link "show tracklist"
 
 #+begin_example
-    /**
-     * Returns true when the current page matches the expandRGs @match / @exclude criteria:
-     *   artist/*                             (all artist sub-pages, no exclusions)
-     *   label/<UUID>                         (root label page only)
-     *   release-group/<UUID>                 (root release-group page only)
-     *   series/<UUID>                        (root series page only)
-     *   recording/<UUID>                     (root recording page only — "Appears on" releases table)
-     *
-     * @returns {boolean}
-     */
-    function isExpandRGsPage() {
-        const p    = window.location.pathname;
-        const mbid = MBID_REGEX.source;
-        if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
-        if (new RegExp(`^/recording/${mbid}$`).test(p)) return true;
-        if (new RegExp(`^/collection/${mbid}`).test(p)) return true;
-        return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
+<td>1/1
+  <!-- -->
+  <small>(
+    <a class="toggle" style="cursor:pointer">show tracklist
+    </a>)
+  </small>
+</td>
+#+end_example
+
+working on the initial page https://musicbrainz.org/cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0-
+
+but NOT anymore on the final rendered page.
+
+Is it possible to implement this ?
+
+** ChatGPT
+
+#+begin_example
+    async function renderFinalTable(rows) {
+        const rowCount = Array.isArray(rows) ? rows.length : 0;
+        Lib.debug('render', `Starting renderFinalTable with ${rowCount} rows.`);
+
+        const tbody = document.querySelector('table.tbl tbody');
+        if (!tbody) {
+            Lib.error('render', 'Abort: #tbody container not found.');
+            return;
+        }
+
+        tbody.innerHTML = '';
+
+        const table = tbody.closest('table');
+        const thCount = table?.querySelectorAll('thead th')?.length || 0;
+        const tdCount = rows[0]?.cells?.length || 0;
+
+        Lib.debug(
+            'render',
+            `Final table structure → headers=${thCount}, rowCells=${tdCount}`
+        );
+
+        if (rowCount === 0) {
+            Lib.error('render', 'No rows provided to renderFinalTable.');
+            return;
+        }
+
+        // Use threshold setting for when to enable chunked rendering
+        const chunkThreshold = Lib.settings.sa_chunked_render_threshold || 1000;
+
+        // For small datasets, use fast simple append
+        if (chunkThreshold === 0 || rowCount < chunkThreshold) {
+            rows.forEach(r => tbody.appendChild(r));
+            Lib.debug('render', `Fast render: Injected ${rowCount} rows into DOM.`);
+        } else {
+            // For large datasets, use chunked async rendering with progress
+            await renderRowsChunked(tbody, rows, 'single');
+        }
+
+        // Show the save button now that data is rendered
+        if (Lib.settings.sa_enable_save_load) {
+            saveToDiskBtn.style.display = 'inline-block';
+        }
+
+        // Re-apply multi-sort column tints if a multi-sort is active for this table.
+        // renderFinalTable replaces all tbody content with fresh clones that carry no tint
+        // classes, so tints must be repainted after every render.
+        const tintEntry = multiSortTintRegistry.get('main_table');
+        if (tintEntry) tintEntry.applyTints();
+
+        // Install (or re-confirm) the MutationObserver that strips jesus2099 treleases
+        // nodes from Length cells the instant they are injected into the live tbody.
+        if (Lib.settings.sa_enable_numeric_alignment !== false) {
+            initTreleasesObserver();
+        }
+
+        // --- rebind tracklist toggle (event delegation) ---
+        document.addEventListener('click', function (e) {
+            const toggle = e.target.closest('a.toggle');
+            if (!toggle) return;
+    
+            // prevent any default navigation behavior
+            e.preventDefault();
+    
+            const tr = toggle.closest('tr');
+            if (!tr) return;
+    
+            const next = tr.nextElementSibling;
+            if (!next) return;
+    
+            // MusicBrainz uses hidden rows for tracklists
+            const isHidden = next.style.display === 'none' || getComputedStyle(next).display === 'none';
+    
+            next.style.display = isHidden ? '' : 'none';
+        }, true);
+
     }
 #+end_example
+** DONE bug
 
-to support additionally the pageType "type: 'taglookup'"
+It is NOT working at all. Please add debug statements and check the uploaded HTML file from the initial page
 
-A typical URL looks like https://musicbrainz.org/taglookup/index?tag-lookup.artist=Bruce+Springsteen&tag-lookup.release=The+Rising&tag-lookup.tracknum=&tag-lookup.track=&tag-lookup.duration=&tag-lookup.filename=
+** DONE bug
 
-** bug
-
-on the pageType "type: 'taglookup'" the data cells still do NOT have the 
-
-#+begin_example
-<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
-#+end_example
-
-e.g.
+when showing the tracklist everything gets renderd under the first column "Position" only. Each character of a
+tracktitle is rendered in a new row in the same data cell. It's not using colspan at all
 
 #+begin_example
-<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col" data-caa-inline-done="1">
-  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="10 images found for this release / release-group">
-    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/1c09c764-88fc-48df-bc5a-a5905a6fdb91">
-    <span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
-    </span>
-  </span>
-  <a href="/release/f799b836-a1bd-367a-b89e-32e5023396c4">
-    <bdi>The Rising
-    </bdi>
-  </a>
-  <span class="comment">(
-    <bdi>Japan, vinyl replica edition for the european market
-    </bdi>)
-  </span>
-  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
-  </span>
-</td>
+<tr class="odd" id="d0cf2b18-4de7-4b72-91ad-215e3b93f9b4"><td class="pos t"><span style="display:none">1</span>1</td><td class="wrap-anywhere mb-sticky-col" style="position: sticky; left: 0px; z-index: 1; background: rgb(242, 242, 242);"><a href="/recording/7cafa219-936c-45d0-9673-af298ad1589e"><bdi>Born in the U.S.A.</bdi></a></td><td style="">4:40</td><td class="mb-picard-cell" style="text-align: center; vertical-align: middle; padding: 2px 4px;"><button type="button" class="mb-picard-btn" title="Send to Picard (recording 7cafa219…)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; cursor: pointer; background: none; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; padding: 0px; border-radius: 50%; vertical-align: middle;"><img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%228%22%20r%3D%228%22%20fill%3D%22%23f0b429%22%2F%3E%3Ctext%20x%3D%228%22%20y%3D%2212%22%20text-anchor%3D%22middle%22%20font-size%3D%2211%22%20font-family%3D%22sans-serif%22%20fill%3D%22white%22%3E%E2%99%AA%3C%2Ftext%3E%3C%2Fsvg%3E" alt="♪" style="width: 16px; height: 16px; display: block;"></button></td></tr>
 #+end_example
-
-And here an example of the pageType "artist-releases"
-
-#+begin_example
-<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col" data-erg-injected="1" data-caa-inline-done="1">
-  <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
-  </span>
-  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="3 images found for this release / release-group">
-    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/f00cdad4-b799-4427-9f37-048c6f67d359">
-    <span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
-    </span>
-  </span>
-  <a class="wrap-anywhere" href="/release/2461b144-2e31-48c6-884f-155a072c530e">
-    <bdi>It’s Hard to Be a Saint in the City
-    </bdi>
-  </a>
-  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
-  </span>
-</td>
-#+end_example
-
-** bug
-
-I tested v9.99.496 and the ▶ button still doesn't appear on taglookup.
-
-
-* TODO search pages
-** DONE initial
-
-Adjust the following code, executed for pageType "type: 'search'"
-
-#+begin_example
-        if (targetH2) {
-            // Transformation logic for non-H2 targets (e.g. search results paragraph)
-            if (activeDefinition.features?.transformToH2 && targetH2.tagName !== 'H2') {
-
-                // Get the method value from the URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const methodValue = urlParams.get('method'); // e.g., "direct"
-
-                let prefix = ""; // Initialize prefix as empty string
-                if (pageType === 'search' && methodValue) {
-                    // Format the string (Capitalize first letter + " search: ")
-                    prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
-                    Lib.debug('render', `Search method identified: "${prefix}..."`);
-                }
-
-                Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
-                const newH2 = document.createElement('h2');
-
-                // Prepend the prefix to the original content
-                newH2.innerHTML = prefix + targetH2.innerHTML;
-
-                targetH2.replaceWith(newH2);
-                targetH2 = newH2; // Update reference for subsequent operations
-            }
-#+end_example
-
-to also extract the 'entity type' from the "type" query parameter and append the value blank separated to the already
-extracted value for the "method" query parameter.
-
-So e.g. for the URL https://musicbrainz.org/search?query=Zell&type=artist&limit=25&method=advanced the "prefix" to
-prepend to the original H2 content should be:
-
-#+begin_example
-Advanced artist
-#+end_example
-
-instead of just
-
-#+begin_example
-Advanced
-#+end_example
-
-** add entity features
-
 
 * DONE Either implement the "Tagger" userscript in our script or make the "a href" call not leaveing the current page
 ** initial
@@ -73370,6 +73504,221 @@ Now that we have our own picard tagger implementation, remove the configuration
 
 and adjust the "const removalMapAlways" to always include 'Tagger' and remove it from "const removalMap" throughout the
 code base
+
+
+* TODO taglookup
+** DONE initial
+
+Add support for TagLookup pages on MusicBrainz:
+
+1.)
+
+Add the following new userscript header
+
+#+begin_example
+// @match        *://*.musicbrainz.org/taglookup*
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/cdtoc/*
+#+end_example
+
+2.)
+
+add the following new pageType definition
+
+#+begin_example
+        // TagLookup pages
+        {
+            type: 'taglookup',
+            match: (path) => path.includes('/taglookup'),
+            buttons: [ { label: 'Show all Releases for Tags' } ],
+            tableMode: 'single',
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name',         extractor: 'caa',                syntheticColumns: ['CAA'] },
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate',   syntheticColumns: ['Country', 'Date'] },
+                    { sourceColumn: 'Tracks',       extractor: 'sumTracks',          syntheticColumns: ['Total Tracks'] },
+                    { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                ],
+                syntheticColumnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
+                tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode', 'Language', 'Type', 'Status' ],
+                addCAA: 'Name',
+                extractMainColumn: 'Name',
+                stickyColumn: 'Name',
+                insertH2: 'Releases',
+                // Inject a "Searchform" h2 before the existing (single) h2 on the page
+                // so the collapsible-section infrastructure can wrap the search form.
+		insertPrependH2: 'Searchform'
+            }
+        },
+#+end_example
+
+before the pageType "type: 'cdtoc'"
+
+3.)
+
+On the final rendered page, relocate the "searchform" container
+
+#+begin_example
+<div class="searchform" style="">
+#+end_example
+
+below the h2 header named 'Searchform' inserted because of the "insertPrependH2: 'Searchform'" configuration directive.
+
+Do this in the "function finalCleanup()"
+
+** TODO bug
+
+Why is the "data-erg-btn" 
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+not present on pageTypes of "type: 'taglookup'"
+
+** TODO function isExpandRGsPage()
+
+Adjust the function
+
+#+begin_example
+    /**
+     * Returns true when the current page matches the expandRGs @match / @exclude criteria:
+     *   artist/*                             (all artist sub-pages, no exclusions)
+     *   label/<UUID>                         (root label page only)
+     *   release-group/<UUID>                 (root release-group page only)
+     *   series/<UUID>                        (root series page only)
+     *   recording/<UUID>                     (root recording page only — "Appears on" releases table)
+     *
+     * @returns {boolean}
+     */
+    function isExpandRGsPage() {
+        const p    = window.location.pathname;
+        const mbid = MBID_REGEX.source;
+        if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
+        if (new RegExp(`^/recording/${mbid}$`).test(p)) return true;
+        if (new RegExp(`^/collection/${mbid}`).test(p)) return true;
+        return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
+    }
+#+end_example
+
+to support additionally the pageType "type: 'taglookup'"
+
+A typical URL looks like https://musicbrainz.org/taglookup/index?tag-lookup.artist=Bruce+Springsteen&tag-lookup.release=The+Rising&tag-lookup.tracknum=&tag-lookup.track=&tag-lookup.duration=&tag-lookup.filename=
+
+** bug
+
+on the pageType "type: 'taglookup'" the data cells still do NOT have the 
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+e.g.
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col" data-caa-inline-done="1">
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="10 images found for this release / release-group">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/1c09c764-88fc-48df-bc5a-a5905a6fdb91">
+    <span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+    </span>
+  </span>
+  <a href="/release/f799b836-a1bd-367a-b89e-32e5023396c4">
+    <bdi>The Rising
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Japan, vinyl replica edition for the european market
+    </bdi>)
+  </span>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+</td>
+#+end_example
+
+And here an example of the pageType "artist-releases"
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col" data-erg-injected="1" data-caa-inline-done="1">
+  <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="3 images found for this release / release-group">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/f00cdad4-b799-4427-9f37-048c6f67d359">
+    <span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+    </span>
+  </span>
+  <a class="wrap-anywhere" href="/release/2461b144-2e31-48c6-884f-155a072c530e">
+    <bdi>It’s Hard to Be a Saint in the City
+    </bdi>
+  </a>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+</td>
+#+end_example
+
+** bug
+
+I tested v9.99.496 and the ▶ button still doesn't appear on taglookup.
+
+
+* TODO search pages
+** DONE initial
+
+Adjust the following code, executed for pageType "type: 'search'"
+
+#+begin_example
+        if (targetH2) {
+            // Transformation logic for non-H2 targets (e.g. search results paragraph)
+            if (activeDefinition.features?.transformToH2 && targetH2.tagName !== 'H2') {
+
+                // Get the method value from the URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const methodValue = urlParams.get('method'); // e.g., "direct"
+
+                let prefix = ""; // Initialize prefix as empty string
+                if (pageType === 'search' && methodValue) {
+                    // Format the string (Capitalize first letter + " search: ")
+                    prefix = methodValue.charAt(0).toUpperCase() + methodValue.slice(1) + " search: ";
+                    Lib.debug('render', `Search method identified: "${prefix}..."`);
+                }
+
+                Lib.debug('render', `Transforming ${targetH2.tagName} to H2 per configuration.`);
+                const newH2 = document.createElement('h2');
+
+                // Prepend the prefix to the original content
+                newH2.innerHTML = prefix + targetH2.innerHTML;
+
+                targetH2.replaceWith(newH2);
+                targetH2 = newH2; // Update reference for subsequent operations
+            }
+#+end_example
+
+to also extract the 'entity type' from the "type" query parameter and append the value blank separated to the already
+extracted value for the "method" query parameter.
+
+So e.g. for the URL https://musicbrainz.org/search?query=Zell&type=artist&limit=25&method=advanced the "prefix" to
+prepend to the original H2 content should be:
+
+#+begin_example
+Advanced artist
+#+end_example
+
+instead of just
+
+#+begin_example
+Advanced
+#+end_example
+
+** add entity features
 
 
 * maybe later
@@ -74017,6 +74366,14 @@ and either
      */
 #+end_example
 
+**
+
+#+begin_example
++    /** the consolidated
+ * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
+ * data-table h2 to immediately before it, preserving their original order.
+#+end_example
+
 
 * TODO make zebra striping configurable
 
@@ -74259,346 +74616,5 @@ but NOT anymore on the final rendered page
   </span>
 </span>
 #+end_example
-
-
-* TODO cdtoc
-** DONE initial
-
-Add support for CDtoc pages on MusicBrainz:
-
-1.)
-
-Add the following new userscript header
-
-#+begin_example
-// @match        *://*.musicbrainz.org/cdtoc/*
-#+end_example
-
-after
-
-#+begin_example
-// @match        *://*.musicbrainz.org/tag/*
-#+end_example
-
-2.)
-
-add the following new pageType definition
-
-#+begin_example
-        // CDtoc pages
-        {
-            type: 'cdtoc',
-            match: (path) => path.includes('/cdtoc'),
-            buttons: [ { label: 'Show all CDToc attached to Releases' } ],
-            tableMode: 'single',
-            features: {
-              columnExtractors: [
-                  { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
-              ],
-              syntheticColumnExtractors: [
-                  { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
-              ],
-              injectedColumns: [ 'Relationships' ],
-              integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
-              renderMultiRowCell: [ 'Label', 'Catalog#' ],
-              collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
-              tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', 'Format', 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
-              addCAA: 'Title',
-              extractMainColumn: 'Title',
-              stickyColumn: 'Title'
-            }
-        },
-#+end_example
-
-before the pageType "type: 'user-subscriptions'"
-
-** bugs
-
-In the uploaded userscript "ShowAllEntityData.user.js"
-
-1.)
-
-Why do I get the following warnings on pageTypes "type: 'cdtoc'"
-
-#+begin_example
-[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: colIdx 5 out of range for column "Label" (row has 2 cells) 
-[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: colIdx 6 out of range for column "Catalog#" (row has 2 cells) 
-[VZ-ShowAllEntityData: cdtoc] 📝 colIdx 4 out of range for extractor "splitCountryDate" (row has 2 cells) 
-#+end_example
-
-Here the complete console debug log
-
-#+begin_example
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.486+2026-04-18) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0- 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0- 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0- 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0- 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: cdtoc 
-[VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: single 
-[VZ-ShowAllEntityData: cdtoc] 🚀 Initializing script for path: /cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0-
-[VZ-ShowAllEntityData: cdtoc] 🚀 Cached entity name at init time: "7TW7y89up6f9JPBxSn6VY3IKSy0- Disc ID “ ” (" 
-[VZ-ShowAllEntityData: cdtoc] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
-[VZ-ShowAllEntityData: cdtoc] 🚀 Blurred #headerid-query input on page entry 
-[VZ-ShowAllEntityData: cdtoc] 📝 Changelog source: remote — replaced 0 local entries with 660 remote entries (fromCache=true) 
-[VZ-ShowAllEntityData: cdtoc] 🚀 syntheticColumnExtractors configured: "dateParts"("Date") → [DD, MM, YYYY, Day, Month] 
-[VZ-ShowAllEntityData: cdtoc] 🚀 injectedColumns: ["Relationships"(release)] 
-[VZ-ShowAllEntityData: cdtoc] 🚀 renderMultiRowCell configured: ["Label", "Catalog#"] 
-[VZ-ShowAllEntityData: cdtoc] 🚀 integerColumns configured: ["DD"(R), "MM"(R), "YYYY"(C)] 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Signalling other scripts to stop... 
-[VZ-ShowAllEntityData: cdtoc] 📥 Starting fetch process... null
-[VZ-ShowAllEntityData: cdtoc] 📥 Context: Paginated page definition. Fetching maxPage from DOM. 
-[VZ-ShowAllEntityData: cdtoc] 📥 Context: Standard pagination. Parsing "ul.pagination" from current page. 
-[VZ-ShowAllEntityData: cdtoc] 📥 Total pages to fetch: 1 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Starting clutter element removal. 
-[VZ-ShowAllEntityData: cdtoc] 📥 Page 1 is current page. Using existing document. 
-[VZ-ShowAllEntityData: cdtoc] 📝 Page 1: No li.show-all elements found — nothing to expand. 
-[VZ-ShowAllEntityData: cdtoc] 📝 No targetHeader provided; returning all tables found in container. 
-[VZ-ShowAllEntityData: cdtoc] 📝 parseDocumentForTables: Found 2 total tables. Target header filter: "none" 
-[VZ-ShowAllEntityData: cdtoc] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
-[VZ-ShowAllEntityData: cdtoc] 📝 Detected indices → mainColIdx=1 (Title), extractors=[splitCountryDate("Country/Date"@4)], syntheticExtractors=[dateParts("Date"→[DD,MM,YYYY,Day,Month])], erasers=[none], renderMultiRow=["Label"@5, "Catalog#"@6], integerColumns=["DD"(R)@11, "MM"(R)@12, "YYYY"(C)@13], excluded=[] for pageType: cdtoc 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table body found. Processing child nodes. Total nodes: 2 
-[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: column "Label" (colIdx=5) — wrapped into 1 li row(s) 
-[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: column "Catalog#" (colIdx=6) — wrapped into 1 li row(s) 
-[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: colIdx 5 out of range for column "Label" (row has 2 cells) 
-[VZ-ShowAllEntityData: cdtoc] 📝 renderMultiRowCell: colIdx 6 out of range for column "Catalog#" (row has 2 cells) 
-[VZ-ShowAllEntityData: cdtoc] 📝 colIdx 4 out of range for extractor "splitCountryDate" (row has 2 cells) 
-[VZ-ShowAllEntityData: cdtoc] 📥 Page 1/1 processed in 0.00s. Rows on page: 2. Total: 2 
-[VZ-ShowAllEntityData: cdtoc] 🎨 DOM rendering starting... 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Starting updateH2Count: filtered=2, total=2, absoluteTotal=null 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Searching for target H2. Current pageType: cdtoc 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Target H2 not found by specific type, falling back to document position logic. 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Target element identified: "Attached to releases..." 
-[VZ-ShowAllEntityData: cdtoc] 🎨 No valid referenceNode found inside targetH2; appending count span to end. 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Appending filterContainer to targetH2. 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Updated header/target Attached to releases count: (2) 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Starting renderFinalTable with 2 rows. 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Final table structure → headers=9, rowCells=19 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Fast render: Injected 2 rows into DOM. 
-[VZ-ShowAllEntityData: cdtoc] 🎨 initTreleasesObserver: watching tbody (childList+attributes) 
-[VZ-ShowAllEntityData: cdtoc] 🧹 cleanupHeaders() called → existing headers=[Position | Title | Artist | Format | Country/Date | Label | Catalog# | Barcode | Edit] 
-[VZ-ShowAllEntityData: cdtoc] 🧹 No columns were matched for removal based on current settings. 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Country (via extractor: splitCountryDate) 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Date (via extractor: splitCountryDate) 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: DD (via synthetic extractor: dateParts) 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: MM (via synthetic extractor: dateParts) 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: YYYY (via synthetic extractor: dateParts) 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Day (via synthetic extractor: dateParts) 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Month (via synthetic extractor: dateParts) 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: MB-Name 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting synthetic header: Comment 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Injecting injected-column header: Relationships (release) 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: columns=[Country/Date, Country, Date, Label, Catalog#] 
-[VZ-ShowAllEntityData: cdtoc] 📝 ensureCollapseDelegate: delegation listener installed on tbody. 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Country/Date" (col 4) — no multi-row cells found, skipping. 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Country" (col 9) — no multi-row cells found, skipping. 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Date" (col 10) — no multi-row cells found, skipping. 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Label" (col 5) — no multi-row cells found, skipping. 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: "Catalog#" (col 6) — no multi-row cells found, skipping. 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCollapsableColumns: done — 5 declared, 0 with multi-row cells. 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Running final cleanup... 
-[VZ-ShowAllEntityData: cdtoc] 🧹 No Sanojjonas elements found during final cleanup. 
-[VZ-ShowAllEntityData: cdtoc] 🧹 Final cleanup complete: No consecutive <br> tags found. 
-[VZ-ShowAllEntityData: cdtoc] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
-[VZ-ShowAllEntityData: cdtoc] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
-[VZ-ShowAllEntityData: cdtoc] 🎨 Initializing collapsible H2 headers... 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Auto-resize button added to controls 
-[VZ-ShowAllEntityData: cdtoc] 📝 Made 19 columns resizable 
-[VZ-ShowAllEntityData: cdtoc] 📝 Made 0 columns resizable 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ applyStickyColumn: idx=1 left=0px table=(no-id) 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Column visibility toggle added to controls 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Barcode highlight toggle button added to controls 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Density control button added to controls 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Statistics button added to controls 
-[VZ-ShowAllEntityData: cdtoc] 📝 Keyboard shortcuts initialized 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Shortcuts help button already exists, skipping 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Export button with dropdown menu added to controls 
-[VZ-ShowAllEntityData: cdtoc] 📝 initBarcodeHighlight: processed table 0 
-[VZ-ShowAllEntityData: cdtoc] 📝 initBarcodeHighlight: processed table 1 
-[VZ-ShowAllEntityData: cdtoc] 📝 _initRelMappings: REL_* tables refreshed 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCaaPics: request queue created (concurrency=4) 
-[VZ-ShowAllEntityData: cdtoc] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-0 (1 link(s)) 
-[VZ-ShowAllEntityData: cdtoc] 📝 _artCreateOrUpdateRetryButton: created retry btn mb-caa-toggle-btn-retry-0 
-[VZ-ShowAllEntityData: cdtoc] 📝 created rel retry btn mb-rel-retry-0 
-[VZ-ShowAllEntityData: cdtoc] 📝 caaInitBigPics: built bigbox for table 0 with 1 image(s), initially hidden 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAPics: table 1 — no release-group/release links found, skipping bigbox 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAPics: processed 1 table(s) with CAA column 
-[VZ-ShowAllEntityData: cdtoc] 📝 initEAAPics: table 0 has no EAA column and no addEAA feature — skipping 
-[VZ-ShowAllEntityData: cdtoc] 📝 initEAAPics: table 1 has no EAA column and no addEAA feature — skipping 
-[VZ-ShowAllEntityData: cdtoc] 📝 initEAAPics: processed 0 table(s) with EAA column 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: addCAA column = "Title" 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: processing table 0, column "Title" at index 1 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/7840e80b-f42b-4ade-99df-dd722210485a/front-250 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: no entity link found in "Title" cell — skipping 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: column "Title" not found in table 1 — skipping table 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: done — injected=1 enqueued=1 skipped(done=0 noLink=10 noGuid=0) column="Title" (queue: 2 running, 0 pending) 
-[VZ-ShowAllEntityData: cdtoc] 📝 initEAAInlinePics: no addEAA column configured for this page type — skipping 
-[VZ-ShowAllEntityData: cdtoc] 📝 Stats snapshot: 20 rows, 0 CAA links, 9 original + 4 extracted + 5 derived + 1 injected cols 
-[VZ-ShowAllEntityData: cdtoc] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
-[VZ-ShowAllEntityData: cdtoc] 📝 Unicode character picker initialised 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ applyStickyColumn: idx=1 left=0px table=(no-id) 
-[VZ-ShowAllEntityData: cdtoc] 🎨 DOM rendering finished in 17.70ms 
-[VZ-ShowAllEntityData: cdtoc] ✅ Process complete. Final Row Count: 2. Total Time: 0.02s 
-[VZ-ShowAllEntityData: cdtoc] 📝 sa_auto_resize_columns: triggering auto-resize on load 
-[VZ-ShowAllEntityData: cdtoc] 📝 Auto-resizing 2 table(s)... 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 0: "Position ⇅▲▼1📊" = 122px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 1: "Title ⇅▲▼1📊" = 100px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 2: "Artist ⇅▲▼1📊" = 107px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 3: "Format ⇅▲▼1📊" = 116px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 4: "Country/Date ⇅▲▼1📊" = 157px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 5: "Label ⇅▲▼1📊" = 106px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 6: "Catalog# ⇅▲▼1📊" = 128px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 7: "Barcode ⇅▲▼1📊" = 122px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 8: "Edit ⇅▲▼1📊" = 97px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 9: "Country ⇅▲▼1📊" = 121px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 10: "Date ⇅▲▼1📊" = 101px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 11: "DD ⇅▲▼📊" = 85px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 12: "MM ⇅▲▼📊" = 88px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 13: "YYYY ⇅▲▼📊" = 99px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 14: "Day ⇅▲▼📊" = 91px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 15: "Month ⇅▲▼📊" = 105px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 16: "MB-Name ⇅▲▼1📊" = 132px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 17: "Comment ⇅▲▼📊" = 125px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Header 18: "Relationships ⇅▲▼📊" = 150px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 0: 142px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 1: 254px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 2: 140px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 3: 136px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 4: 190px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 5: 879px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 6: 184px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 7: 142px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 8: 240px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 9: 154px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 10: 121px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 11: 105px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 12: 108px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 13: 119px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 14: 111px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 15: 125px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 16: 231px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 17: 145px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0, Column 18: 170px min-width (visible) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Made 19 columns resizable 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 0: Resized 19 columns, total width: 3696px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 1, Column 0: 0px (hidden) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 1, Column 1: 0px (hidden) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 1, Column 2: 0px (hidden) 
-[VZ-ShowAllEntityData: cdtoc] 📝 Made 0 columns resizable 
-[VZ-ShowAllEntityData: cdtoc] 📝 Table 1: Resized 3 columns, total width: 0px 
-[VZ-ShowAllEntityData: cdtoc] 📝 Auto-resize complete: 19 visible columns across 1 table(s) in 13ms 
-[VZ-ShowAllEntityData: cdtoc] 📝 _artOpenIdb: database opened successfully 
-[VZ-ShowAllEntityData: cdtoc] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/7840e80b-f42b-4ade-99df-dd722210485a/front-250 
-[VZ-ShowAllEntityData: cdtoc] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/7840e80b-f42b-4ade-99df-dd722210485a/front-250 
-[VZ-ShowAllEntityData: cdtoc] 📝 _artSetInlineSortKey: td → caa-inline-yes 
-[VZ-ShowAllEntityData: cdtoc] 📝 initCAAInlinePics: loaded OK (idb=true memory=false) — //coverartarchive.org/release/7840e80b-f42b-4ade-99df-dd722210485a/front-250 
-[VZ-ShowAllEntityData: cdtoc] 🖥️ Auto-focused global filter input after final render 
-[VZ-ShowAllEntityData: cdtoc] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
-#+end_example
-
-2.)
-
-Why is clicking on the toggle link "show tracklist"
-
-#+begin_example
-<td>1/1
-  <!-- -->
-  <small>(
-    <a class="toggle" style="cursor:pointer">show tracklist
-    </a>)
-  </small>
-</td>
-#+end_example
-
-working on the initial page https://musicbrainz.org/cdtoc/7TW7y89up6f9JPBxSn6VY3IKSy0-
-
-but NOT anymore on the final rendered page
-
-** ChatGPT
-
-#+begin_example
-    async function renderFinalTable(rows) {
-        const rowCount = Array.isArray(rows) ? rows.length : 0;
-        Lib.debug('render', `Starting renderFinalTable with ${rowCount} rows.`);
-
-        const tbody = document.querySelector('table.tbl tbody');
-        if (!tbody) {
-            Lib.error('render', 'Abort: #tbody container not found.');
-            return;
-        }
-
-        tbody.innerHTML = '';
-
-        const table = tbody.closest('table');
-        const thCount = table?.querySelectorAll('thead th')?.length || 0;
-        const tdCount = rows[0]?.cells?.length || 0;
-
-        Lib.debug(
-            'render',
-            `Final table structure → headers=${thCount}, rowCells=${tdCount}`
-        );
-
-        if (rowCount === 0) {
-            Lib.error('render', 'No rows provided to renderFinalTable.');
-            return;
-        }
-
-        // Use threshold setting for when to enable chunked rendering
-        const chunkThreshold = Lib.settings.sa_chunked_render_threshold || 1000;
-
-        // For small datasets, use fast simple append
-        if (chunkThreshold === 0 || rowCount < chunkThreshold) {
-            rows.forEach(r => tbody.appendChild(r));
-            Lib.debug('render', `Fast render: Injected ${rowCount} rows into DOM.`);
-        } else {
-            // For large datasets, use chunked async rendering with progress
-            await renderRowsChunked(tbody, rows, 'single');
-        }
-
-        // Show the save button now that data is rendered
-        if (Lib.settings.sa_enable_save_load) {
-            saveToDiskBtn.style.display = 'inline-block';
-        }
-
-        // Re-apply multi-sort column tints if a multi-sort is active for this table.
-        // renderFinalTable replaces all tbody content with fresh clones that carry no tint
-        // classes, so tints must be repainted after every render.
-        const tintEntry = multiSortTintRegistry.get('main_table');
-        if (tintEntry) tintEntry.applyTints();
-
-        // Install (or re-confirm) the MutationObserver that strips jesus2099 treleases
-        // nodes from Length cells the instant they are injected into the live tbody.
-        if (Lib.settings.sa_enable_numeric_alignment !== false) {
-            initTreleasesObserver();
-        }
-
-        // --- rebind tracklist toggle (event delegation) ---
-        document.addEventListener('click', function (e) {
-            const toggle = e.target.closest('a.toggle');
-            if (!toggle) return;
-    
-            // prevent any default navigation behavior
-            e.preventDefault();
-    
-            const tr = toggle.closest('tr');
-            if (!tr) return;
-    
-            const next = tr.nextElementSibling;
-            if (!next) return;
-    
-            // MusicBrainz uses hidden rows for tracklists
-            const isHidden = next.style.display === 'none' || getComputedStyle(next).display === 'none';
-    
-            next.style.display = isHidden ? '' : 'none';
-        }, true);
-
-    }
-#+end_example
-
-
-
-
 
 

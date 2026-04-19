@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.497+2026-04-18
+// @version      9.99.499+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -21429,6 +21429,10 @@ a { color: #1565c0; }`;
             // Re-apply barcode highlights after every filter / sort re-render.
             initBarcodeHighlight();
 
+            // CDtoc: re-inject tracklist sub-rows and re-wire toggle links after
+            // every re-render (cloneNode(true) strips event listeners).
+            _cdtocInitTracklistToggles();
+
             // Refresh the Picard tagger column after every filter / sort re-render.
             // rewireOnly=true: only re-attach listeners on existing picard cells;
             // never append new tds.  During load-from-disk runFilter fires before
@@ -23706,6 +23710,39 @@ a { color: #1565c0; }`;
                                     if ((activeDefinition.tableMode === 'multi') && currentStatus !== lastCategorySeenAcrossPages) {
                                         Lib.debug('fetch', `Subgroup Change/Type: "${currentStatus}". Rows so far: ${totalRowsAccumulated}`);
                                     }
+                                } else if (node.classList.contains('tracklist')) {
+                                    // ── CDtoc: tracklist sub-row ─────────────────────────────────
+                                    // MusicBrainz renders one <tr class="tracklist"> per data row,
+                                    // containing a nested track table.  The row has 2 cells:
+                                    //   [0] empty td (positional spacer)
+                                    //   [1] td colspan="6" with the track listing table
+                                    //
+                                    // This row would otherwise pass the cells.length > 1 data-row
+                                    // check and be extracted as a garbage row.  We intercept it here
+                                    // to: (a) skip it from allRows, and (b) attach its content to the
+                                    // preceding data row via data-cdtoc-tracklist-html so that
+                                    // _cdtocInitTracklistToggles() can reconstruct it after rendering.
+                                    if (pageType === 'cdtoc') {
+                                        const _lastDataRow = (activeDefinition.tableMode === 'multi')
+                                            ? (groupedRows.length > 0
+                                                ? groupedRows[groupedRows.length - 1].rows[groupedRows[groupedRows.length - 1].rows.length - 1]
+                                                : null)
+                                            : (allRows.length > 0 ? allRows[allRows.length - 1] : null);
+
+                                        if (_lastDataRow) {
+                                            // Find the content cell (the one with colSpan or non-empty content)
+                                            const _contentCell = Array.from(node.cells)
+                                                .find(td => td.colSpan > 1 || td.innerHTML.trim()) || null;
+                                            if (_contentCell) {
+                                                _lastDataRow.dataset.cdtocTracklistHtml = _contentCell.innerHTML;
+                                                // Track initial visibility: '' or no style = visible; display:none = hidden
+                                                _lastDataRow.dataset.cdtocTracklistVisible =
+                                                    (node.style.display === 'none') ? 'false' : 'true';
+                                                Lib.debug('fetch', `CDtoc: captured tracklist for row idx=${_lastDataRow.dataset.mbRowIdx}, visible=${_lastDataRow.dataset.cdtocTracklistVisible}`);
+                                            }
+                                        }
+                                    }
+                                    // Skip — do not add to allRows / groupedRows
                                 } else if (
                                     (node.cells.length > 1 ||
                                      // Allow single-cell rows only when the cell does NOT span multiple
@@ -30050,8 +30087,83 @@ a { color: #1565c0; }`;
         Lib.debug('navigation', 'Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt).');
     }
 
+    // ── CDtoc tracklist toggle feature ───────────────────────────────────────
+
     /**
-     * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
+     * For cdtoc pages: injects a hidden tracklist sub-row after each data row
+     * that carries `data-cdtoc-tracklist-html` (captured from the original page
+     * during fetch), and wires the `<a class="toggle">` link to show/hide it.
+     *
+     * Idempotent: any previously injected `.mb-cdtoc-tracklist-row` is removed
+     * before re-injection so that filter/sort re-renders start clean.
+     *
+     * The `data-cdtoc-tracklist-html` attribute is preserved by `cloneNode(true)`
+     * (used by `runFilter`) so toggling works correctly after every re-render.
+     * It is NOT serialised to disk (saveTableDataToDisk saves cell HTML from
+     * individual `<td>` elements, not TR-level dataset attributes).
+     *
+     * Called from:
+     *   - `finalCleanup()` for cdtoc pages (covers the initial render).
+     *   - `runFilter()` single-table path after `initBarcodeHighlight()`.
+     *   - `loadTableDataFromDisk()` after render (silently no-ops when
+     *     `data-cdtoc-tracklist-html` is absent, since the attr is not saved).
+     */
+    function _cdtocInitTracklistToggles() {
+        if (pageType !== 'cdtoc') return;
+
+        const _tbody = document.querySelector('table.tbl tbody');
+        if (!_tbody) return;
+
+        Array.from(_tbody.querySelectorAll('tr[data-cdtoc-tracklist-html]')).forEach(tr => {
+            const _tlHtml = tr.dataset.cdtocTracklistHtml;
+            if (!_tlHtml) return;
+
+            // Determine initial visibility from captured state.
+            // 'true' = tracklist was visible on the original page (toggle says "hide tracklist").
+            // 'false' or missing = tracklist was hidden (toggle says "show tracklist").
+            const _initiallyVisible = tr.dataset.cdtocTracklistVisible === 'true';
+
+            // Remove any stale sub-row from a previous render/filter pass.
+            const _existing = tr.nextElementSibling;
+            if (_existing && _existing.classList.contains('mb-cdtoc-tracklist-row')) {
+                _existing.remove();
+            }
+
+            // Build fresh sub-row.
+            const _subRow = document.createElement('tr');
+            _subRow.className = 'mb-cdtoc-tracklist-row';
+            _subRow.style.display = _initiallyVisible ? '' : 'none';
+            const _subTd = document.createElement('td');
+            _subTd.colSpan = tr.cells.length;
+            _subTd.style.cssText = 'padding: 0 0 0.5em 1em;';
+            _subTd.innerHTML = _tlHtml;
+            _subRow.appendChild(_subTd);
+            tr.after(_subRow);
+
+            // Wire the toggle link.  cloneNode(true) in runFilter strips listeners,
+            // so we replace the anchor with a fresh clone before attaching.
+            const _oldLink = tr.querySelector('a.toggle');
+            if (_oldLink) {
+                const _link = _oldLink.cloneNode(true);
+                // Sync the label text with actual current state.
+                _link.textContent = _initiallyVisible ? 'hide tracklist' : 'show tracklist';
+                _oldLink.replaceWith(_link);
+                _link.style.cursor = 'pointer';
+                _link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const _isHidden = _subRow.style.display === 'none';
+                    _subRow.style.display = _isHidden ? '' : 'none';
+                    _link.textContent = _isHidden ? 'hide tracklist' : 'show tracklist';
+                });
+            }
+
+            Lib.debug('cdtoc', `_cdtocInitTracklistToggles: wired tracklist for row idx=${tr.dataset.mbRowIdx} (initiallyVisible=${_initiallyVisible})`);
+        });
+    }
+
+    // ── end CDtoc tracklist toggle feature ───────────────────────────────────
+
+    /** the consolidated
      * data-table h2 to immediately before it, preserving their original order.
      *
      * Idempotent: sections that are already before the data h2 are skipped.
@@ -30169,6 +30281,9 @@ a { color: #1565c0; }`;
                     `taglookup: searchform relocation skipped (h2 found=${!!_tlH2}, form found=${!!_tlForm}).`);
             }
         }
+
+        // ── cdtoc: inject tracklist sub-rows and wire toggle links ─────────────
+        _cdtocInitTracklistToggles();
 
         // ── user-subscriptions: remove the subscription type navigation paragraph ─
         // The page renders a <p>[ Artist subscriptions | Collection subscriptions |
@@ -33127,6 +33242,10 @@ a { color: #1565c0; }`;
 
                 // Highlight identical barcodes in Barcode columns (post-render)
                 initBarcodeHighlight();
+
+                // CDtoc: attempt to re-wire tracklist toggles (no-op when
+                // data-cdtoc-tracklist-html is absent — attr is not saved to disk).
+                _cdtocInitTracklistToggles();
 
                 // Populate Release events column.
                 if (activeReleaseEventColumns.length) initReleaseEventsColumn();

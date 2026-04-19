@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.499",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "cdtoc tracklist toggle (v9.99.498 completely broken — three bugs). Bug 1: detection check used style.display==='none' but the saved HTML shows the tracklist row has class='tracklist' and style='' when visible or style='display:none' when hidden — style alone is unreliable for detection. Bug 2: the check required cells.length===1 but the tracklist row has two cells (empty td + td with colspan=6). Bug 3: the tracklist row passed the generic data-row check (cells.length > 1 = 2) and was extracted into allRows as a garbage row with a nested table instead of being skipped and captured. Fix: added an explicit class='tracklist' interception branch in the tableBody.childNodes.forEach loop, BEFORE the generic data-row else-if. This branch (a) skips the row from allRows entirely, (b) finds the content cell (colspan>1 or non-empty), (c) stores its innerHTML in dataset.cdtocTracklistHtml on the preceding data row, and (d) records the initial visibility in dataset.cdtocTracklistVisible ('true'=visible/hide, 'false'=hidden/show). _cdtocInitTracklistToggles updated to use cdtocTracklistVisible for the sub-row's initial display state and to sync the toggle link label accordingly."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.498",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "✨ New",
+        "items": [
+          "cdtoc pages: the 'show tracklist' toggle link now works on the final rendered page. On the original MB CDtoc page each data row is followed by a hidden <tr> (display:none, single cell with a high colSpan) containing the release tracklist table. The generic row-skip rule excluded these from allRows. Fix: during the fetch loop, when processing a cdtoc data row, the inner HTML of the immediately following hidden sibling <tr> is captured and stored in newRow.dataset.cdtocTracklistHtml. After every render, the new _cdtocInitTracklistToggles() function injects a fresh .mb-cdtoc-tracklist-row after each data row that carries this attribute, and wires the <a class='toggle'> link to show/hide it (toggling the text between 'show tracklist' and 'hide tracklist'). The attribute survives cloneNode(true) used by runFilter so the toggle re-wires correctly after filter and sort re-renders. The attribute is not serialized by saveTableDataToDisk (TR-level dataset attrs are not saved), so the toggle silently does nothing on Load from Disk. Called from finalCleanup(), runFilter() single-table path, and loadTableDataFromDisk()."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.497",
     "date": "2026-04-18",
     "sections": [
