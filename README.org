@@ -72351,7 +72351,7 @@ Why collections-releases needs find-or-create:
 Every XHR page starts with ALL h3 headers → position-in-stream test would always see a "different" category on page boundaries → creates M×N duplicate groups instead of M canonical ones
 #+end_example
 
-* TODO fix Artist-Releasegroup pages
+* DONE fix Artist-Releasegroup pages
 ** DONE changes to do
 
 Change the code blocks
@@ -72923,9 +72923,11 @@ filesystem via "Load from Disk" the buttons to switch the different views "Compl
 Discography", "Non-Official Discography" and "Complete Discography (merged)" are gone. They should be restored after
 loading from disk too.
 
-** TODO ghost images when switching from merged view to unofficial
+** DONE ghost images when switching from merged view to unofficial
 
-Scenario: On the pageType "type: 'artist-releasegroups'", when clicking on the "Complete Discography (merged)"-button and then
+Stop investigating further here. Instead focus on the next scenario:
+
+On the pageType "type: 'artist-releasegroups'", when clicking on the "Complete Discography (merged)"-button and then
 toggling the display of the CAA big image stripes by clicking
 
 #+begin_example
@@ -72937,6 +72939,7 @@ There is a rendering bug when switching to the "Non-Official Discography" view b
 All CAA images which actually belong to the "Official Discography" (but were of course renderded in the merged view)
 show up as CAA stripes directly rendered below the h2 "Non-Official Discography" header line and before the first h3
 header line present only in the "Non-Official Discography"
+
 
 * TODO taglookup
 ** DONE initial

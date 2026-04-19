@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.495+2026-04-18
+// @version      9.99.497+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -33724,6 +33724,7 @@ a { color: #1565c0; }`;
      *   release-group/<UUID>                 (root release-group page only)
      *   series/<UUID>                        (root series page only)
      *   recording/<UUID>                     (root recording page only — "Appears on" releases table)
+     *   taglookup/*                          (tag lookup pages, e.g. /taglookup/index?…)
      *
      * @returns {boolean}
      */
@@ -33733,6 +33734,7 @@ a { color: #1565c0; }`;
         if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
         if (new RegExp(`^/recording/${mbid}$`).test(p)) return true;
         if (new RegExp(`^/collection/${mbid}`).test(p)) return true;
+        if (p.startsWith('/taglookup')) return true;
         return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
     }
 
@@ -37761,6 +37763,28 @@ a { color: #1565c0; }`;
         box.style.cssText       = 'display:' + (currentlyVisible ? 'flex' : 'none') +
                                    '; flex-wrap:wrap; gap:4px; padding:4px 0 4px 0; min-height:0;';
         box.dataset[ctx.visAttr] = currentlyVisible ? 'true' : 'false';
+
+        // ── Discography-view guard ────────────────────────────────────────────
+        // When _applyDiscographyViewFilter hides a section (official / non-official),
+        // it sets h3.dataset.mbDiscHidden = 'true' and forces the bigbox to
+        // display:none.  However the drain pass at the end of that function calls
+        // initCaaPics() / initEaaPics() for tables whose tbody was just restored from
+        // a merged-view pass.  That triggers _artInitBigPics, which reads the stored
+        // caaVisible / eaaVisible attribute ('true' because the user had expanded the
+        // bigbox in merged view) and sets display:flex — overriding the hide that the
+        // visibility loop had already applied.  The result: bigboxes from hidden
+        // official-section tables appear floating above the first non-official h3.
+        //
+        // Fix: after computing currentlyVisible and applying it, check whether the
+        // owning h3 is disc-view-hidden.  If so, force display:none.  The stored
+        // dataset attribute is intentionally kept as-is ('true') so that switching
+        // back to a view that shows this table restores the user's preference.
+        {
+            const _discH3 = findH3ForTable(table);
+            if (_discH3 && _discH3.dataset.mbDiscHidden === 'true') {
+                box.style.display = 'none';
+            }
+        }
 
         // ── Reset the toggle button badge atomically with the box rebuild ─────
         // Must happen before any img.src is set so badge increments start from 0.

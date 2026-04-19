@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.497",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "artist-releasegroups: CAA image stripes from official-section tables leaked into the Non-Official Discography view after toggling the bigbox visible in merged view and then switching sections. Root cause: the drain pass at the end of _applyDiscographyViewFilter calls initCaaPics() to rebuild bigboxes for tables whose tbody was just restored from merged. _artInitBigPics read the stored caaVisible='true' attribute (set when the user expanded the bigbox in merged view) and applied display:flex, overriding the display:none that the visibility loop had already set on official-section bigboxes. Fix: in _artInitBigPics, after applying the initial display style, check whether the owning h3 has dataset.mbDiscHidden='true' (set by _applyDiscographyViewFilter for every hidden section) and if so force the bigbox to display:none. The stored caaVisible attribute is deliberately preserved so switching back to a view where the table is visible correctly restores the user's expansion preference."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.496",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "✨ Improvement",
+        "items": [
+          "isExpandRGsPage: added taglookup pages (/taglookup/*) to the set of pages where the expand release-groups feature is active, matching URLs like /taglookup/index?tag-lookup.artist=…"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.495",
     "date": "2026-04-18",
     "sections": [
