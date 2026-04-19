@@ -1,5 +1,20 @@
 [
   {
+    "version": "9.99.510",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "🐛 Fix / ✨ New",
+        "items": [
+          "Picard: merged double JSDoc on initPicardTaggerColumn into a single combined comment with @param documented.",
+          "Picard: excluded /release/<mbid>/collections and /release-group/<mbid>/collections from _picardPageIsSupported() — these pages list collection memberships, not entities to queue in Picard.",
+          "Picard: added /area/<mbid> and /label/<mbid> to _PICARD_PAGE_PATTERNS so area-releases and label pages now show the Picard column.",
+          "Picard: added a tooltip to the 'Picard' column header (cursor:help) explaining that clicking the ♪ icon loads the entity into Picard, and that Picard must be running locally with the Browser Integration plugin enabled."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.509",
     "date": "2026-04-19",
     "sections": [

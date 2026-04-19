@@ -73945,7 +73945,6 @@ And here an example of the pageType "artist-releases"
 
 I tested v9.99.496 and the ▶ button still doesn't appear on taglookup.
 
-
 * DONE function isExpandRGsPage
 ** initial
 
@@ -74072,6 +74071,106 @@ There is NO output for e.g.
 https://musicbrainz.org/user/vzell/tag/missing_artwork_koenboone/release
 https://musicbrainz.org/taglookup/index?tag-lookup.artist=Bruce+Springsteen&tag-lookup.release=The+Rising&tag-lookup.tracknum=&tag-lookup.track=&tag-lookup.duration=&tag-lookup.filename=
 
+* DONE do not add "Picard" column to some URLs
+
+some picard fixes:
+
+1.)
+
+Please fix the following double JS-Doc comment
+
+#+begin_example
+    /**
+     * Injects a "Picard" column into every `table.tbl` currently in the
+     * document, appended as the last column.
+     *
+     * Idempotency: the `<th>Picard</th>` header is only injected once per table
+     * (guarded by `data-picard-th-injected`).  The tbody is always re-processed
+     * on every call so that rows replaced by filter/sort re-renders (which use
+     * `cloneNode(true)` and therefore strip event listeners) always receive
+     * freshly wired buttons.
+     *
+     * Column header: `<th class="mb-picard-th">Picard</th>`
+     * Per-row cell:  `<td class="mb-picard-cell">` containing an icon button
+     *                wired to the row's primary entity MBID, or empty when no
+     *                matching MBID can be found in the row.
+     *
+     * Guards:
+     *   - `Lib.settings.sa_enable_picard_tagger` must be true.
+     *   - Current page URL must match `_picardPageIsSupported()`.
+     *
+     * Port detection runs asynchronously in the background the first time any
+     * button is clicked; injecting the column itself is fully synchronous.
+     *
+     * Based on the "MusicBrainz Magic Tagger Button" userscript by
+     * Philipp Wolfer (https://github.com/phw/musicbrainz-magic-tagger-button).
+     *
+     * Called from:
+     *   - The main fetch pipeline after `initBarcodeHighlight()`.
+     *   - `runFilter()` single-table branch after `initBarcodeHighlight()`.
+     *   - `renderGroupedTable()` after `initBarcodeHighlight()` (multi-table re-renders).
+     *   - The load-from-disk pipeline after `initBarcodeHighlight()`.
+     */
+    /**
+     * Injects or re-wires the "Picard" column in every `table.tbl`.
+     *
+     * @param {boolean} [rewireOnly=false]
+     *   When false (default): full mode — inject the <th> header (once, guarded
+     *   by data-picard-th-injected) and append a new <td class="mb-picard-cell">
+     *   to every row that does not already have one.
+     *
+     *   When true: re-wire mode — only re-attach click handlers to existing
+     *   td.mb-picard-cell elements; never append new tds.  Used by runFilter()'s
+     *   multi-table path so that filter/sort re-renders refresh listeners without
+     *   accidentally inserting picard_td before rel_td (which would happen if
+     *   runFilter fires before initRelationshipsColumn, e.g. during load-from-disk).
+     */
+    function initPicardTaggerColumn(rewireOnly = false) {
+#+end_example
+
+2.)
+
+the following definition
+
+#+begin_example
+    const _PICARD_PAGE_PATTERNS = [
+        /\/cdtoc\//,
+        /\/collection\//,
+        /\/recording\//,
+        /\/release-group\//,
+        /\/release\//,
+        /\/series\//,
+        /\/taglookup/,
+        /\/search/,
+        /\/artist\/[a-f0-9-]{36}\/releases/,
+    ];
+#+end_example
+
+has to be refined
+
+a.)
+
+do not add "Picard" column to the following URLs
+
+#+begin_example
+https://musicbrainz.org/release/abd5b4b0-485d-4729-a9dc-13ba79110553/collections
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23/collections
+
+#+end_example
+
+3.)
+
+these URLs are actually missing the "Picard column
+
+#+begin_example
+https://musicbrainz.org/area/75e398a3-5f3f-4224-9cd8-0fe44715bc95/releases
+https://musicbrainz.org/label/f90d5be7-ef39-4e6d-90c2-060cdf3343d8
+#+end_example
+
+4.)
+
+Set a tooltip when hovering the "Picard" column explaining what needs to be done for using the "Send to Picard" icons in
+the column cells
 
 
 * TODO search pages
@@ -74847,7 +74946,6 @@ No, it's not working. Now not only the h3 header sections still move when scroll
 column feature on the tables itself is NOT working anymore
 
 
-
 * maybe
 
 https://musicbrainz.org/user/vzell/collections - multiple H2 (each has multiple H3 based tables)
@@ -75021,25 +75119,6 @@ but NOT anymore on the final rendered page
 </span>
 #+end_example
 
-* TODO do not add "Picard" column to some URLs
-
-1.)
-
-do not add "Picard" column to the following URLs
-
-#+begin_example
-https://musicbrainz.org/release/abd5b4b0-485d-4729-a9dc-13ba79110553/collections
-https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23/collections
-
-#+end_example
-
-2.)
-
-these URLs are actually missing the "Picard column
-
-#+begin_example
-https://musicbrainz.org/area/75e398a3-5f3f-4224-9cd8-0fe44715bc95/releases
-#+end_example
 
 * TODO latest fixes
 ** erg

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.509+2026-04-19
+// @version      9.99.510+2026-04-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -40711,11 +40711,18 @@ a { color: #1565c0; }`;
      * URL path patterns for page types where the Picard column should appear.
      * Mirrors the @match directives from the original Magic Tagger Button script.
      *
+     * Exclusions handled in `_picardPageIsSupported()`:
+     *   - `/release/<mbid>/collections` and `/release-group/<mbid>/collections`
+     *     — these pages list collections, not releases/recordings to queue.
+     *   - Search pages with a `type` parameter other than 'release' or 'recording'.
+     *
      * @type {RegExp[]}
      */
     const _PICARD_PAGE_PATTERNS = [
+        /\/area\/[a-f0-9-]{36}/,
         /\/cdtoc\//,
         /\/collection\//,
+        /\/label\/[a-f0-9-]{36}/,
         /\/recording\//,
         /\/release-group\//,
         /\/release\//,
@@ -40727,15 +40734,23 @@ a { color: #1565c0; }`;
 
     /**
      * Checks whether the current page URL matches one of the supported tagger
-     * page patterns, and additionally excludes search pages whose `type`
-     * parameter is neither 'release' nor 'recording' (mirroring the original
-     * script's `checkCurrentPageExcluded` logic).
+     * page patterns, and additionally excludes pages where no release/recording
+     * entities are shown (mirroring the original script's `checkCurrentPageExcluded`
+     * logic).
+     *
+     * Explicit exclusions:
+     *   - `/release/<mbid>/collections` and `/release-group/<mbid>/collections`
+     *     — these pages list collection memberships, not entities to queue in Picard.
+     *   - Search pages with a `type` parameter other than 'release' or 'recording'.
      *
      * @returns {boolean}  true when the Picard column should be shown.
      */
     function _picardPageIsSupported() {
         const _path = window.location.pathname;
         if (!_PICARD_PAGE_PATTERNS.some(re => re.test(_path))) return false;
+        // Exclude entity /collections sub-pages — they show collection memberships,
+        // not release/recording entities that can be queued in Picard.
+        if (_path.match(/\/(?:release|release-group)\/[a-f0-9-]{36}\/collections/)) return false;
         // Exclude search pages for non-release / non-recording entity types.
         if (_path === '/search') {
             const _t = new URLSearchParams(window.location.search).get('type');
@@ -40975,8 +40990,7 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Injects a "Picard" column into every `table.tbl` currently in the
-     * document, appended as the last column.
+     * Injects or re-wires the "Picard" column in every `table.tbl`.
      *
      * Idempotency: the `<th>Picard</th>` header is only injected once per table
      * (guarded by `data-picard-th-injected`).  The tbody is always re-processed
@@ -40988,6 +41002,17 @@ a { color: #1565c0; }`;
      * Per-row cell:  `<td class="mb-picard-cell">` containing an icon button
      *                wired to the row's primary entity MBID, or empty when no
      *                matching MBID can be found in the row.
+     *
+     * @param {boolean} [rewireOnly=false]
+     *   When false (default): full mode — inject the <th> header (once, guarded
+     *   by data-picard-th-injected) and append a new <td class="mb-picard-cell">
+     *   to every row that does not already have one.
+     *
+     *   When true: re-wire mode — only re-attach click handlers to existing
+     *   td.mb-picard-cell elements; never append new tds.  Used by runFilter()'s
+     *   multi-table path so that filter/sort re-renders refresh listeners without
+     *   accidentally inserting picard_td before rel_td (which would happen if
+     *   runFilter fires before initRelationshipsColumn, e.g. during load-from-disk).
      *
      * Guards:
      *   - `Lib.settings.sa_enable_picard_tagger` must be true.
@@ -41004,20 +41029,6 @@ a { color: #1565c0; }`;
      *   - `runFilter()` single-table branch after `initBarcodeHighlight()`.
      *   - `renderGroupedTable()` after `initBarcodeHighlight()` (multi-table re-renders).
      *   - The load-from-disk pipeline after `initBarcodeHighlight()`.
-     */
-    /**
-     * Injects or re-wires the "Picard" column in every `table.tbl`.
-     *
-     * @param {boolean} [rewireOnly=false]
-     *   When false (default): full mode — inject the <th> header (once, guarded
-     *   by data-picard-th-injected) and append a new <td class="mb-picard-cell">
-     *   to every row that does not already have one.
-     *
-     *   When true: re-wire mode — only re-attach click handlers to existing
-     *   td.mb-picard-cell elements; never append new tds.  Used by runFilter()'s
-     *   multi-table path so that filter/sort re-renders refresh listeners without
-     *   accidentally inserting picard_td before rel_td (which would happen if
-     *   runFilter fires before initRelationshipsColumn, e.g. during load-from-disk).
      */
     function initPicardTaggerColumn(rewireOnly = false) {
         if (!Lib.settings.sa_enable_picard_tagger) return;
@@ -41039,9 +41050,14 @@ a { color: #1565c0; }`;
                     const _th = document.createElement('th');
                     _th.className   = 'mb-picard-th';
                     _th.textContent = 'Picard';
+                    _th.title = 'MusicBrainz Picard tagger integration.\n' +
+                        'Click the ♪ icon in a row to load that release or release group\n' +
+                        'into Picard. Requires Picard to be running locally with the\n' +
+                        'browser integration plugin enabled\n' +
+                        '(Picard → Preferences → Plugins → Browser Integration).';
                     _th.style.cssText =
                         'text-align:center; white-space:nowrap; padding:2px 6px;' +
-                        ' font-size:0.85em; color:#555;';
+                        ' font-size:0.85em; color:#555; cursor:help;';
                     _thead.appendChild(_th);
                 }
 
