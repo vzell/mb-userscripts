@@ -75040,3 +75040,34 @@ these URLs are actually missing the "Picard column
 #+begin_example
 https://musicbrainz.org/area/75e398a3-5f3f-4224-9cd8-0fe44715bc95/releases
 #+end_example
+
+* TODO latest fixes
+** erg
+
+#+begin_example
+            Lib.debug('erg', 'initExpandRGsFeature: no release/release-group links found in table — skipping');
+#+end_example
+
+** musicbrainz.org
+
+#+begin_example
+    function initExpandRGsFeature() {
+        if (!Lib.settings.sa_enable_expand_rgs) return;
+        if (!isExpandRGsPage()) return;
+
+        // Match both relative (/release/...) and absolute (https://musicbrainz.org/release/...) hrefs.
+        // The two-part selector covers:
+        //   a[href^="/release"]                    — relative URLs (most pages)
+        //   a[href*="musicbrainz.org/release"]     — absolute URLs (some pages, e.g. taglookup)
+        // :is(#content,#page) covers both the standard div#content wrapper and the
+        // div#page wrapper used on cdtoc, taglookup, and user-tag pages.
+        const SELECTOR =
+            ':is(#content,#page) table.tbl > tbody > tr > td a[href^="/release"],' +
+            ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.org/release"]';
+        const links    = document.querySelectorAll(SELECTOR);
+
+        if (!links.length) {
+            Lib.debug('erg', 'initExpandRGsFeature: no release/release-group links found in table — skipping');
+            return;
+        }
+#+end_example
