@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.502+2026-04-19
+// @version      9.99.509+2026-04-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -33997,17 +33997,39 @@ a { color: #1565c0; }`;
      *   series/<UUID>                        (root series page only)
      *   recording/<UUID>                     (root recording page only — "Appears on" releases table)
      *   taglookup/*                          (tag lookup pages, e.g. /taglookup/index?…)
+     *   tag-value pages, user-tag-value pages, area-releases, and any other page type
+     *   whose rendered table contains /release/ or /release-group/ links.
+     *
+     * Instead of maintaining a URL whitelist, we check dynamically whether the
+     * rendered table actually contains qualifying release/release-group links.
+     * This covers all current and future page types without requiring individual
+     * entries, including tag pages, user-tag pages, area-releases, taglookup, etc.
      *
      * @returns {boolean}
      */
     function isExpandRGsPage() {
-        const p    = window.location.pathname;
-        const mbid = MBID_REGEX.source;
-        if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
-        if (new RegExp(`^/recording/${mbid}$`).test(p)) return true;
-        if (new RegExp(`^/collection/${mbid}`).test(p)) return true;
-        if (p.startsWith('/taglookup')) return true;
-        return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
+        // Fast-reject: page must be loaded (isLoaded) and the script must be active.
+        // Before isLoaded the table doesn't exist yet so there is nothing to check.
+        if (!isLoaded) {
+            // Fall back to URL-based check for the initial-render call path
+            // (isLoaded is set to true before initExpandRGsFeature() runs, so this
+            // branch is only reached if called speculatively before render completes).
+            const p    = window.location.pathname;
+            const mbid = MBID_REGEX.source;
+            if (new RegExp(`^/artist/${mbid}`).test(p)) return true;
+            if (new RegExp(`^/recording/${mbid}$`).test(p)) return true;
+            if (new RegExp(`^/collection/${mbid}`).test(p)) return true;
+            if (p.startsWith('/taglookup')) return true;
+            if (p.match(/\/tag\//)) return true;
+            if (p.match(/\/area\/[a-f0-9-]{36}\//)) return true;
+            return new RegExp(`^/(label|release-group|series)/${mbid}$`).test(p);
+        }
+        // When the table is rendered, check whether it actually contains qualifying
+        // release or release-group links (excluding cover-art links).
+        const _relSel = ':is(#content,#page) table.tbl > tbody > tr > td a[href^="/release"]:not([href*="/cover-art"])';
+        const _absSel = ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.org/release"]:not([href*="/cover-art"])';
+        const _found = !!document.querySelector(_relSel) || !!document.querySelector(_absSel);
+        return _found;
     }
 
     /**
@@ -34584,7 +34606,15 @@ a { color: #1565c0; }`;
         if (!Lib.settings.sa_enable_expand_rgs) return;
         if (!isExpandRGsPage()) return;
 
-        const SELECTOR = '#content table.tbl > tbody > tr > td a[href^="/release"]';
+        // Match both relative (/release/...) and absolute (https://musicbrainz.org/release/...) hrefs.
+        // The two-part selector covers:
+        //   a[href^="/release"]                    — relative URLs (most pages)
+        //   a[href*="musicbrainz.org/release"]     — absolute URLs (some pages, e.g. taglookup)
+        // :is(#content,#page) covers both the standard div#content wrapper and the
+        // div#page wrapper used on cdtoc, taglookup, and user-tag pages.
+        const SELECTOR =
+            ':is(#content,#page) table.tbl > tbody > tr > td a[href^="/release"],' +
+            ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.org/release"]';
         const links    = document.querySelectorAll(SELECTOR);
 
         if (!links.length) {
@@ -34622,7 +34652,7 @@ a { color: #1565c0; }`;
                 injected++;
             }
         }
-        Lib.debug('erg', `initExpandRGsFeature: injected ${injected} expand button(s)`);
+        Lib.debug('render', `initExpandRGsFeature: injected ${injected} expand button(s)`);
     }
 
     // ── end Expand Release Groups feature ────────────────────────────────────

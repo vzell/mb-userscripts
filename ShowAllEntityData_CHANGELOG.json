@@ -1,5 +1,89 @@
 [
   {
+    "version": "9.99.509",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "🧹 Cleanup",
+        "items": [
+          "Removed all temporary diagnostic markers added during the ▶ button investigation (v9.99.505–9.99.508): pipeline checkpoints A–G, finalCleanup ENTER/EXIT, runFilter reached, main pipeline reached, initExpandRGsFeature ENTERED/found/injected, isExpandRGsPage no-links/first-href. Restored the erg debug category for the remaining permanent log lines in initExpandRGsFeature."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.508",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "▶ expand button missing on cdtoc, taglookup, user-tag-value-entity pages and any other page that uses div#page instead of div#content. Root cause: the selectors in isExpandRGsPage() and initExpandRGsFeature() were anchored to '#content table.tbl'. Checking the saved cdtoc HTML confirmed the page uses id='page' not id='content', so '#content table.tbl' found nothing — and consequently document.querySelector('#content table.tbl > tbody > tr > td a[href]') returned null, explaining the absent first-link diagnostic in the log. The taglookup and user-tag-value-entity pages almost certainly have the same structure. Fixed by replacing '#content' with ':is(#content,#page)' in all three selector strings."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.507",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "🔍 Debug",
+        "items": [
+          "From the cdtoc debug log: all pipeline checkpoints A-G and all finalCleanup ENTER/EXIT markers were completely absent (neither shown nor error), while DOM rendering finished and Process complete both appeared normally. Root cause: the 'erg' debug category is disabled in this session, making all Lib.debug('erg',...) calls silent no-ops. The code runs but produces no output. Changed all diagnostic debug calls from category 'erg' to category 'render' (confirmed enabled — 'DOM rendering finished' uses this category and appears in every log). All checkpoints A-G, finalCleanup ENTER/EXIT, main pipeline reached, runFilter reached, and initExpandRGsFeature ENTERED/found/injected messages will now appear as 🎨 render-category entries."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.506",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "🔍 Debug",
+        "items": [
+          "From the uploaded debug log: 'DOM rendering finished' and 'Process complete' appear consecutively with no erg markers in between, confirming that an uncaught exception is thrown somewhere between line 24466 (after the column-resizing block) and line 24519 (initExpandRGsFeature). The exception is caught by the outer try/catch at line 24606, which calls Lib.error('fetch',...) — invisible when filtering for 'initExpandRGsFeature'. Added fine-grained debug checkpoints A-G between addColumnVisibilityToggle and isLoaded=true so the last checkpoint visible before the jump to 'DOM rendering finished' pinpoints the exact throwing function."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.505",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "🔍 Debug",
+        "items": [
+          "Added diagnostic markers (all under Lib.debug 'erg' channel) to narrow down why initExpandRGsFeature() is never reached on taglookup and user-tag-value-entity pages: (1) entry log at the very start of initExpandRGsFeature before all guards, (2) 'reached call site' log in the main pipeline at line 24518, (3) 'reached call site' log in the runFilter single-table path, (4) ENTER/EXIT logs around finalCleanup() so a missing EXIT reveals which block inside finalCleanup throws. If 'main pipeline: reached call site' is absent but 'finalCleanup: ENTER' is present and 'finalCleanup: EXIT' is absent, the exception is inside finalCleanup."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.504",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "▶ expand button still missing on taglookup and user-tag-value-entity (/user/<n>/tag/<v>/release) pages. Root cause: MusicBrainz renders absolute hrefs (https://musicbrainz.org/release/GUID) on some pages (confirmed by diagnostic logging). The selector a[href^='/release'] only matches relative URLs starting with '/release'; it silently finds zero links on pages with absolute hrefs. Fixed by extending the selector in both isExpandRGsPage() and initExpandRGsFeature() to cover both patterns: a[href^='/release'] (relative) and a[href*='musicbrainz.org/release'] (absolute). The cover-art and cover-art path exclusions are preserved. Also added a diagnostic debug log that prints the first td link href when no links are found, to aid future diagnosis."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.503",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "▶ expand button missing on many page types (tag pages /tag/<value>, user-tag pages /user/<name>/tag/<v>/release, area-releases, taglookup, and others). Root cause: isExpandRGsPage() was a URL-pattern whitelist that only covered artist/*, label/<uuid>, release-group/<uuid>, series/<uuid>, recording/<uuid>, collection/<uuid>, and taglookup — all other page types with release links were excluded even when the rendered table contained qualifying /release/ or /release-group/ links. Fix: replaced the whitelist with a dynamic DOM check — when isLoaded is true (the table exists), the function returns true iff the rendered table contains at least one a[href^='/release']:not([href*='/cover-art']) in a tbody td. When isLoaded is false (speculative call before render), an extended URL check covers the common cases including /tag/, /area/, and the original whitelist entries. This approach automatically handles all current and future page types without requiring individual entries."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.502",
     "date": "2026-04-19",
     "sections": [

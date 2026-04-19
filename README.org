@@ -73946,7 +73946,8 @@ And here an example of the pageType "artist-releases"
 I tested v9.99.496 and the ▶ button still doesn't appear on taglookup.
 
 
-* TODO function isExpandRGsPage
+* DONE function isExpandRGsPage
+** initial
 
 bug with "Toggle display of underlying entity page":
 
@@ -74017,6 +74018,60 @@ And here an example of the pageType "artist-releases" where it works
   </span>
 </td>
 #+end_example
+
+** still bugs
+
+after the latest changes, it is now working for
+
+#+begin_example
+https://musicbrainz.org/area/75e398a3-5f3f-4224-9cd8-0fe44715bc95/releases when clicking the "Show all Release Relationships for Area"-button
+https://musicbrainz.org/tag/country
+  "Release group" column in "Release groups" sub-table
+  "Release"       column in "Releases"       sub-table
+#+end_example
+
+but still not for
+
+#+begin_example
+https://musicbrainz.org/user/vzell/tag/missing_artwork_koenboone/release
+  "Release" column 
+type: 'taglookup'
+#+end_example
+
+** bugs
+
+when filtering for
+
+#+begin_example
+initExpandRGsFeature
+#+end_example
+
+1.)
+
+here is the debug log for
+
+#+begin_example
+https://musicbrainz.org/area/75e398a3-5f3f-4224-9cd8-0fe44715bc95/releases when clicking the "Show all Release Relationships for Area"-button
+#+end_example
+
+where it works:
+
+#+begin_example
+13:40:24.894 [VZ-ShowAllEntityData: area-releases] 📝 initExpandRGsFeature: found 4 release links. First href="/release/ef989d9e-f209-4549-b1b1-b49bf27df44d" 
+13:40:24.895 [VZ-ShowAllEntityData: area-releases] 📝 initExpandRGsFeature: injected 4 expand button(s) 
+13:40:24.960 [VZ-ShowAllEntityData: area-releases] 📝 initExpandRGsFeature: found 4 release links. First href="/release/ef989d9e-f209-4549-b1b1-b49bf27df44d" 
+13:40:24.961 [VZ-ShowAllEntityData: area-releases] 📝 initExpandRGsFeature: injected 4 expand button(s) 
+#+end_example
+
+2.)
+
+Now the bug:
+
+There is NO output for e.g.
+
+https://musicbrainz.org/user/vzell/tag/missing_artwork_koenboone/release
+https://musicbrainz.org/taglookup/index?tag-lookup.artist=Bruce+Springsteen&tag-lookup.release=The+Rising&tag-lookup.tracknum=&tag-lookup.track=&tag-lookup.duration=&tag-lookup.filename=
+
 
 
 * TODO search pages
@@ -74966,10 +75021,22 @@ but NOT anymore on the final rendered page
 </span>
 #+end_example
 
-* do not add "Picard" column to some URLs
+* TODO do not add "Picard" column to some URLs
+
+1.)
+
+do not add "Picard" column to the following URLs
 
 #+begin_example
 https://musicbrainz.org/release/abd5b4b0-485d-4729-a9dc-13ba79110553/collections
 https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23/collections
 
+#+end_example
+
+2.)
+
+these URLs are actually missing the "Picard column
+
+#+begin_example
+https://musicbrainz.org/area/75e398a3-5f3f-4224-9cd8-0fe44715bc95/releases
 #+end_example
