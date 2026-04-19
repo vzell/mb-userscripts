@@ -74698,3 +74698,45 @@ to
         },
 #+end_example
 
+check the following code
+
+#+begin_example
+                const _isSubscribers        = _currentPath.includes('/subscribers');
+
+                // ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>,
+                //                       /user/.../tag/<v>/<entity>, /subscribers) ─
+                if (_isAreaUsers || _isTagValueEntity || _isUserTagValueEntity || _isSubscribers) {
+                    Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
+                        let _next  = _h2.nextElementSibling;
+                        let _steps = 0;
+                        let _ul    = null;
+                        while (_next && _steps < 5) {
+                            if (_next.tagName === 'UL') { _ul = _next; break; }
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_ul) return;
+
+                        // Column name derivation:
+                        //   area-users:       full h2 text (e.g. "Users")
+                        //   tag-value-entity: first word before "tagged" in the h2 text
+                        //                     e.g. "Labels tagged as «country»" → "Labels"
+                        const _h2Text = _h2.textContent.trim();
+                        let _colName;
+                        if (_isUserTagValueEntity) {
+                            // e.g. "Release groups vzell tagged as «gig»"
+                            // → take everything before "tagged", strip the trailing
+                            //   username, then singularise: "Release groups" → "Release group".
+                            const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
+                            const _words        = _beforeTagged.split(/\s+/);
+                            const _plural = (_words.length > 1 ? _words.slice(0, -1) : _words).join(' ') || _h2Text;
+                            _colName = _toSingular(_plural);
+                        } else if (_isTagValueEntity) {
+                            // e.g. "Release groups tagged as «gig»"
+                            // → everything before "tagged", then singularise: "Release groups" → "Release group".
+                            const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
+                            _colName = _toSingular(_beforeTagged || _h2Text);
+                        } else {
+                            _colName = _h2Text;
+                        }
+#+end_example
