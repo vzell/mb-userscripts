@@ -1,8 +1,3 @@
-* support@metabrainz.org
-
-If you are blocked, send an email to support@metabrainz.org with your public IPs (IPv4 & IPv6) so we can check and eventually unblock.
-
-
 * Claude
 
 https://claude.ai/referral/0po2z2N-xQ
