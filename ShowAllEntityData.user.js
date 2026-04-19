@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.500+2026-04-18
+// @version      9.99.502+2026-04-19
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14,7 +14,7 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js
 // @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users)(?:\?.*)?$/
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections)(?:\?.*)?$/
 // @match        *://*.musicbrainz.org/search?query=*
 // @match        *://*.musicbrainz.org/user/*/subscriptions/*
 // @match        *://*.musicbrainz.org/user/*/subscribers
@@ -2892,6 +2892,39 @@
             }
 
             return [tdName, tdComment, tdArtists];
+        },
+
+        /**
+         * Collection_Editor — splits a release-collections cell of the form
+         *   <a href="/collection/GUID"><bdi>Collection Name</bdi></a> by
+         *   <a href="/user/NAME"><img …><bdi>EditorName</bdi></a>
+         * into two separate cells: Collection (the collection link) and Editor
+         * (the editor avatar + username link).
+         *
+         * Synthetic columns: ['Collection', 'Editor']
+         */
+        Collection_Editor(sourceCell) {
+            const tdCollection = document.createElement('td');
+            const tdEditor     = document.createElement('td');
+
+            if (sourceCell) {
+                // All anchors in the cell: [0] = collection link, [1] = editor link
+                const _links = Array.from(sourceCell.querySelectorAll('a[href]'));
+
+                // Collection link: href contains /collection/
+                const _collLink = _links.find(a => a.getAttribute('href')?.includes('/collection/'));
+                if (_collLink) {
+                    tdCollection.appendChild(_collLink.cloneNode(true));
+                }
+
+                // Editor link: href contains /user/
+                const _editorLink = _links.find(a => a.getAttribute('href')?.includes('/user/'));
+                if (_editorLink) {
+                    tdEditor.appendChild(_editorLink.cloneNode(true));
+                }
+            }
+
+            return [tdCollection, tdEditor];
         }
     };
 
@@ -3684,10 +3717,12 @@
                 const _isUserTagValueEntity = _currentPath.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/); // /user/.../tag/<v>/<entity>
                 const _isTagValue           = !_isTagValueEntity && _currentPath.match(/\/tag\//); // one-segment only
                 const _isSubscribers        = _currentPath.includes('/subscribers');
+                const _isEntityCollections  = _currentPath.match(/\/(?:release|release-group)\/[a-f0-9-]{36}\/collections/);
 
                 // ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>,
-                //                       /user/.../tag/<v>/<entity>, /subscribers) ─
-                if (_isAreaUsers || _isTagValueEntity || _isUserTagValueEntity || _isSubscribers) {
+                //                       /user/.../tag/<v>/<entity>, /subscribers,
+                //                       /release|release-group/<mbid>/collections) ─
+                if (_isAreaUsers || _isTagValueEntity || _isUserTagValueEntity || _isSubscribers || _isEntityCollections) {
                     Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
                         let _next  = _h2.nextElementSibling;
                         let _steps = 0;
@@ -5037,8 +5072,8 @@
         },
         // Collections pages
         {
-            type: 'collections',
-            match: (path) => path.includes('/collections'),
+            type: 'user-collections',
+            match: (path) => path.match(/\/user\/.*\/collections/),
             buttons: [ { label: 'Show all Collections for User' } ],
             tableMode: 'multi',
             features: {
@@ -5049,6 +5084,38 @@
                 // instead of using the single-table generic else-branch.
                 groupByH3: true
             }
+        },
+        {
+            type: 'release-collections',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/collections/),
+            buttons: [ { label: 'Show all Collections for Release' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Collections").
+                listToTable: [ '' ],
+                // Split the combined "CollectionName by Editor" cell into two columns.
+                columnExtractors: [
+                    { sourceColumn: 'Collections', extractor: 'Collection_Editor', syntheticColumns: ['Collection', 'Editor'] }
+                ]
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'releasegroup-collections',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/collections/),
+            buttons: [ { label: 'Show all Collections for Release Group' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Collections").
+                listToTable: [ '' ],
+                // Split the combined "CollectionName by Editor" cell into two columns.
+                columnExtractors: [
+                    { sourceColumn: 'Collections', extractor: 'Collection_Editor', syntheticColumns: ['Collection', 'Editor'] }
+                ]
+            },
+            tableMode: 'single'
         },
         {
             type: 'collections-releases',
@@ -30317,6 +30384,80 @@ a { color: #1565c0; }`;
         //   4. Rewrite the preceding <p> as
         //      "There are currently <b>R</b> real and <b>N</b> anonymous users
         //       subscribed to edits that you make:" where R = total - N.
+        // ── release-collections / releasegroup-collections: rewrite intro paragraph ─
+        // Pattern: "<EntityName> has been added to N collections:"
+        // Last row:  "plus M other private collections"
+        // Result:    "<b><i>EntityName</i></b> has been added to <b>N</b> collections
+        //             and <b>M</b> other private collections"
+        //            (last row removed from table)
+        if (pageType === 'release-collections' || pageType === 'releasegroup-collections') {
+            const _tbl = document.querySelector('table.tbl');
+            let _privateCount = 0;
+            let _lastRow      = null;
+
+            if (_tbl) {
+                const _rows = _tbl.querySelectorAll('tbody tr');
+                if (_rows.length > 0) {
+                    const _candidate = _rows[_rows.length - 1];
+                    const _m = _candidate.textContent.trim()
+                        .match(/plus\s+([\d,]+)\s+other private/i);
+                    if (_m) {
+                        _privateCount = parseInt(_m[1].replace(/,/g, ''), 10) || 0;
+                        _lastRow      = _candidate;
+                        Lib.debug('cleanup',
+                            `${pageType}: found ${_privateCount} private collections in last row.`);
+                    }
+                }
+            }
+
+            if (_privateCount > 0 && _lastRow) {
+                _lastRow.remove();
+                // Patch count stat.
+                if (_tbl) {
+                    const _newCount = _tbl.querySelectorAll('tbody tr').length;
+                    _tbl.dataset.mbTotalRows = String(_newCount);
+                    const _stat = document.querySelector('h2 .mb-row-count-stat');
+                    if (_stat) {
+                        _stat.textContent = `(${_newCount})`;
+                        _stat.removeAttribute('data-mbtt');
+                    }
+                }
+            }
+
+            // Rewrite the intro paragraph regardless of whether private rows exist.
+            document.querySelectorAll('p').forEach(_p => {
+                // Match: "SomeName has been added to 97 collections:"
+                const _pm = _p.textContent.match(
+                    /^(.+?)\s+has been added to\s+([\d,]+)\s+collections[:\s]*$/i
+                );
+                if (!_pm) return;
+                const _entityName  = _pm[1].trim();
+                const _totalCount  = parseInt(_pm[2].replace(/,/g, ''), 10) || 0;
+
+                _p.textContent = '';
+                const _bi = document.createElement('b');
+                const _i  = document.createElement('i');
+                _i.textContent = _entityName;
+                _bi.appendChild(_i);
+                _p.appendChild(_bi);
+                _p.append(' has been added to ');
+                const _bTotal = document.createElement('b');
+                _bTotal.textContent = String(_totalCount);
+                _p.appendChild(_bTotal);
+                _p.append(' collections');
+                if (_privateCount > 0) {
+                    _p.append(' and ');
+                    const _bPriv = document.createElement('b');
+                    _bPriv.textContent = String(_privateCount);
+                    _p.appendChild(_bPriv);
+                    _p.append(' other private collections');
+                }
+                Lib.debug('cleanup',
+                    `${pageType}: patched paragraph ` +
+                    `(entity="${_entityName}", total=${_totalCount}, private=${_privateCount}).`);
+            });
+        }
+
         if (pageType === 'editor-subscribers') {
             const _tbl = document.querySelector('table.tbl');
             let _anonCount = 0;

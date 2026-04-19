@@ -73500,8 +73500,289 @@ Now that we have our own picard tagger implementation, remove the configuration
 and adjust the "const removalMapAlways" to always include 'Tagger' and remove it from "const removalMap" throughout the
 code base
 
+* DONE entity-collections
+** initial
 
-* TODO taglookup
+#+begin_example
+https://musicbrainz.org/release/180b9945-d38e-3570-aac3-8e81808cf5ab/collections
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23/collections
+#+end_example
+
+Add support for <entity>-collection pagetypes:
+
+1.)
+
+in the userscript header change
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users)(?:\?.*)?$/
+#+end_example
+
+to
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections)(?:\?.*)?$/
+#+end_example
+
+2.)
+
+change the following pageType
+
+#+begin_example
+        {
+            type: 'collections',
+            match: (path) => path.includes('/collections'),
+            buttons: [ { label: 'Show all Collections for User' } ],
+            tableMode: 'multi',
+            features: {
+                // The user-collections page has multiple <h3>-headed <table.tbl> siblings
+                // (one per collection category, e.g. "Own collections", "Subscribed
+                // collections").  groupByH3 tells the fetch loop to iterate all tables
+                // in tablesToProcess and walk backwards for each table's <h3> label
+                // instead of using the single-table generic else-branch.
+                groupByH3: true
+            }
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'user-collections',
+            match: (path) => path.match(/\/user\/.*\/collections/),
+            buttons: [ { label: 'Show all Collections for User' } ],
+            tableMode: 'multi',
+            features: {
+                // The user-collections page has multiple <h3>-headed <table.tbl> siblings
+                // (one per collection category, e.g. "Own collections", "Subscribed
+                // collections").  groupByH3 tells the fetch loop to iterate all tables
+                // in tablesToProcess and walk backwards for each table's <h3> label
+                // instead of using the single-table generic else-branch.
+                groupByH3: true
+            }
+        },
+#+end_example
+
+3.)
+
+add the following two new pageTypes
+
+#+begin_example
+        {
+            type: 'release-collections',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/collections/),
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Collections").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'releasegroup-collections',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/collections/),
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Collections").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+after the just renamed pageType "type: 'user-collections'"
+
+4.)
+
+the new pageTypes "type: 'release-collections'" and "type: 'releasegroup-collections'" are similar to the pageType "type: 'editor-subscribers'"
+
+See also the two uploaded HTML files for the differences:
+
+#+begin_example
+'Release “Born in the U.S.A.” by Bruce Springsteen - Collections - MusicBrainz.html' ==> pageType "type: 'release-collections'"
+'Editor “vzell” - Subscribers - MusicBrainz.html' ==> pageType "type: 'editor-subscribers'"
+#+end_example
+
+5.)
+
+the following code
+
+#+begin_example
+                const _isSubscribers        = _currentPath.includes('/subscribers');
+
+                // ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>,
+                //                       /user/.../tag/<v>/<entity>, /subscribers) ─
+                if (_isAreaUsers || _isTagValueEntity || _isUserTagValueEntity || _isSubscribers) {
+#+end_example
+
+should probably be extended for the new pageTypes.
+
+6.)
+
+a.)
+
+The following code for the "pageType === 'editor-subscribers'"
+
+#+begin_example
+        // The rendered table may contain a trailing row "Plus N other anonymous
+        // users".  When found:
+        //   1. Parse N from the row text.
+        //   2. Remove the row from the table.
+        //   3. Patch the h2 row-count stat to reflect the reduced row count.
+        //   4. Rewrite the preceding <p> as
+        //      "There are currently <b>R</b> real and <b>N</b> anonymous users
+        //       subscribed to edits that you make:" where R = total - N.
+        if (pageType === 'editor-subscribers') {
+#+end_example
+
+translates
+
+#+begin_example
+There are currently 8 users subscribed to edits that you make:
+#+end_example
+
+and the last list element
+
+#+begin_example
+Plus 2 other anonymous users
+#+end_example
+
+to
+
+#+begin_example
+There are currently 6 real and 2 anonymous users subscribed to edits that you make:
+#+end_example
+
+and remove the last list element.
+
+b.)
+
+for the newly introduced pageTypes we need something similar, e.g.
+
+#+begin_example
+<entity-name, e.g "Born in the U.S.A."> has been added to 9 collections:
+#+end_example
+
+and the last list element
+
+#+begin_example
+plus 6 other private collections
+#+end_example
+
+should translate to
+
+#+begin_example
+<entity-name, e.g "Born in the U.S.A."> has been added to 9 collections and 6 other private collections
+#+end_example
+
+the numbers (e.g. 9 and 6) should be rendered in bold and the <entity-name, e.g "Born in the U.S.A."> in bold italic.
+
+The last list element
+
+#+begin_example
+plus 6 other private collections
+#+end_example
+
+should also be removed from the final rendered page
+
+** add column extractor
+
+1.)
+
+change the following two new pageTypes
+
+#+begin_example
+        {
+            type: 'release-collections',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/collections/),
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Collections").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'releasegroup-collections',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/collections/),
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Collections").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'release-collections',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/collections/),
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Collections").
+                listToTable: [ '' ],
+                columnExtractors: [ { sourceColumn: 'Collection', extractor: 'Collection_Editor', syntheticColumns: ['Collection', 'Editor'] } ]
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'releasegroup-collections',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/collections/),
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Collections").
+                listToTable: [ '' ],
+                columnExtractors: [ { sourceColumn: 'Collection', extractor: 'Collection_Editor', syntheticColumns: ['Collection', 'Editor'] } ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
+2.)
+
+add a new extractor 'Collection_Editor'
+
+which extracts from the following type of structure
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col">
+  <a href="/collection/307d70fa-50b8-424e-946a-7088e07f19bf">
+    <bdi>Bruce Springsteen
+    </bdi>
+  </a> by
+  <a href="/user/acampos">
+    <img alt="" class="avatar no-avatar" height="15" src="https://static.metabrainz.org/MB/editor-b055e61.svg" width="15">
+    <bdi>acampos
+    </bdi>
+  </a>
+</td>
+#+end_example
+
+the "Collection" e.g. "Bruce Springsteen" and the "Editor" (user) "acampos" from the bdi containers, similar to the extractor
+
+#+begin_example
+        /**
+         * Name_Comment_Artists — extracts Name, Comment and Artists from a
+         * tag-value Releases/Release groups/Recordings cell.
+         * Mirrors tagCount_Name_Comment_Artists without Tag count.
+         * Synthetic columns: ['Name', 'Comment', 'Artists']
+         */
+        Name_Comment_Artists(sourceCell) {
+#+end_example
+
+but without the comment
+
+* DONE taglookup
 ** DONE initial
 
 Add support for TagLookup pages on MusicBrainz:
@@ -73663,6 +73944,79 @@ And here an example of the pageType "artist-releases"
 ** bug
 
 I tested v9.99.496 and the ▶ button still doesn't appear on taglookup.
+
+
+* TODO function isExpandRGsPage
+
+bug with "Toggle display of underlying entity page":
+
+the "data-erg-btn" toggle button
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+is missing on lots of pageTypes:
+
+#+begin_example
+https://musicbrainz.org/tag/country
+  "Release group" column in "Release groups" sub-table
+  "Release"       column in "Releases"       sub-table
+https://musicbrainz.org/user/vzell/tag/missing_artwork_koenboone/release
+  "Release" column 
+https://musicbrainz.org/area/75e398a3-5f3f-4224-9cd8-0fe44715bc95/releases when clicking the "Show all Release Relationships for Area"-button
+type: 'taglookup'
+#+end_example
+
+For example
+
+on the pageType "type: 'taglookup'" the data cells in the "Name" column still do NOT have the 
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+#+end_example
+
+e.g.
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col" data-caa-inline-done="1">
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="10 images found for this release / release-group">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/1c09c764-88fc-48df-bc5a-a5905a6fdb91">
+    <span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+    </span>
+  </span>
+  <a href="/release/f799b836-a1bd-367a-b89e-32e5023396c4">
+    <bdi>The Rising
+    </bdi>
+  </a>
+  <span class="comment">(
+    <bdi>Japan, vinyl replica edition for the european market
+    </bdi>)
+  </span>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+</td>
+#+end_example
+
+And here an example of the pageType "artist-releases" where it works
+
+#+begin_example
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" class="mb-sticky-col" data-erg-injected="1" data-caa-inline-done="1">
+  <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+  </span>
+  <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="3 images found for this release / release-group">
+    <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/f00cdad4-b799-4427-9f37-048c6f67d359">
+    <span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+    </span>
+  </span>
+  <a class="wrap-anywhere" href="/release/2461b144-2e31-48c6-884f-155a072c530e">
+    <bdi>It’s Hard to Be a Saint in the City
+    </bdi>
+  </a>
+  <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+  </span>
+</td>
+#+end_example
 
 
 * TODO search pages
@@ -74612,190 +74966,10 @@ but NOT anymore on the final rendered page
 </span>
 #+end_example
 
-
-* TODO entity-collections
+* do not add "Picard" column to some URLs
 
 #+begin_example
-https://musicbrainz.org/release/180b9945-d38e-3570-aac3-8e81808cf5ab/collections
+https://musicbrainz.org/release/abd5b4b0-485d-4729-a9dc-13ba79110553/collections
 https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23/collections
+
 #+end_example
-
-Add support for <entity>-collection pagetypes:
-
-1.)
-
-in the userscript header change
-
-#+begin_example
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users)(?:\?.*)?$/
-#+end_example
-
-to
-
-#+begin_example
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections)(?:\?.*)?$/
-#+end_example
-
-2.)
-
-change the following pageType
-
-#+begin_example
-        {
-            type: 'collections',
-            match: (path) => path.includes('/collections'),
-            buttons: [ { label: 'Show all Collections for User' } ],
-            tableMode: 'multi',
-            features: {
-                // The user-collections page has multiple <h3>-headed <table.tbl> siblings
-                // (one per collection category, e.g. "Own collections", "Subscribed
-                // collections").  groupByH3 tells the fetch loop to iterate all tables
-                // in tablesToProcess and walk backwards for each table's <h3> label
-                // instead of using the single-table generic else-branch.
-                groupByH3: true
-            }
-        },
-#+end_example
-
-to
-
-#+begin_example
-        {
-            type: 'user-collections',
-            match: (path) => path.match(/\/user\/.*\/collections/),
-            buttons: [ { label: 'Show all Collections for User' } ],
-            tableMode: 'multi',
-            features: {
-                // The user-collections page has multiple <h3>-headed <table.tbl> siblings
-                // (one per collection category, e.g. "Own collections", "Subscribed
-                // collections").  groupByH3 tells the fetch loop to iterate all tables
-                // in tablesToProcess and walk backwards for each table's <h3> label
-                // instead of using the single-table generic else-branch.
-                groupByH3: true
-            }
-        },
-#+end_example
-
-3.)
-
-add the following two new pageTypes
-
-#+begin_example
-        {
-            type: 'release-collections',
-            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/collections/),
-            features: {
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text as the column name (e.g. "Collections").
-                listToTable: [ '' ]
-            },
-            tableMode: 'single'
-        },
-        {
-            type: 'releasegroup-collections',
-            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/collections/),
-            features: {
-                // Empty sectionId triggers Structure C in applyListToTable: the
-                // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text as the column name (e.g. "Collections").
-                listToTable: [ '' ]
-            },
-            tableMode: 'single'
-        },
-#+end_example
-
-after the just renamed pageType "type: 'user-collections'"
-
-4.)
-
-the new pageTypes "type: 'release-collections'" and "type: 'releasegroup-collections'" are similar to the pageType "type: 'editor-subscribers'"
-
-See also the two uploaded HTML files for the differences:
-
-#+begin_example
-'Release “Born in the U.S.A.” by Bruce Springsteen - Collections - MusicBrainz.html' ==> pageType "type: 'release-collections'"
-'Editor “vzell” - Subscribers - MusicBrainz.html' ==> pageType "type: 'editor-subscribers'"
-#+end_example
-
-5.)
-
-the following code
-
-#+begin_example
-                const _isSubscribers        = _currentPath.includes('/subscribers');
-
-                // ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>,
-                //                       /user/.../tag/<v>/<entity>, /subscribers) ─
-                if (_isAreaUsers || _isTagValueEntity || _isUserTagValueEntity || _isSubscribers) {
-#+end_example
-
-should probably be extended for the new pageTypes.
-
-6.)
-
-a.)
-
-The following code for the "pageType === 'editor-subscribers'"
-
-#+begin_example
-        // The rendered table may contain a trailing row "Plus N other anonymous
-        // users".  When found:
-        //   1. Parse N from the row text.
-        //   2. Remove the row from the table.
-        //   3. Patch the h2 row-count stat to reflect the reduced row count.
-        //   4. Rewrite the preceding <p> as
-        //      "There are currently <b>R</b> real and <b>N</b> anonymous users
-        //       subscribed to edits that you make:" where R = total - N.
-        if (pageType === 'editor-subscribers') {
-#+end_example
-
-translates
-
-#+begin_example
-There are currently 8 users subscribed to edits that you make:
-#+end_example
-
-and the last list element
-
-#+begin_example
-Plus 2 other anonymous users
-#+end_example
-
-to
-
-#+begin_example
-There are currently 6 real and 2 anonymous users subscribed to edits that you make:
-#+end_example
-
-and remove the last list element.
-
-b.)
-
-for the newly introduced pageTypes we need something similar, e.g.
-
-#+begin_example
-<entity-name, e.g "Born in the U.S.A."> has been added to 9 collections:
-#+end_example
-
-and the last list element
-
-#+begin_example
-plus 6 other private collections
-#+end_example
-
-should translate to
-
-#+begin_example
-<entity-name, e.g "Born in the U.S.A."> has been added to 9 collections and 6 other private collections
-#+end_example
-
-the numbers (e.g. 9 and 6) should be rendered in bold and the <entity-name, e.g "Born in the U.S.A."> in bold italic.
-
-The last list element
-
-#+begin_example
-plus 6 other private collections
-#+end_example
-
-should also be removed from the final rendered page

@@ -1,5 +1,34 @@
 [
   {
+    "version": "9.99.502",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "✨ New",
+        "items": [
+          "Added Collection_Editor ColumnDataExtractor: splits the combined 'CollectionName by EditorName' cell produced by the Structure C ul→table conversion into separate Collection and Editor columns. Finds the /collection/ anchor for Collection and the /user/ anchor (including the avatar img) for Editor.",
+          "release-collections and releasegroup-collections pageTypes now declare columnExtractors with Collection_Editor on sourceColumn 'Collections', yielding the two separate columns after the list-to-table conversion."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.501",
+    "date": "2026-04-19",
+    "sections": [
+      {
+        "label": "✨ New",
+        "items": [
+          "@include header: added 'collections' to the sub-pages pattern so /release/<mbid>/collections and /release-group/<mbid>/collections URLs are matched.",
+          "Renamed pageType 'collections' → 'user-collections' with a narrower match (/user/.*/collections) to avoid false matches on entity collection pages.",
+          "Added pageType 'release-collections' matching /release/<mbid>/collections and 'releasegroup-collections' matching /release-group/<mbid>/collections. Both use tableMode:single and listToTable:[''] to trigger Structure C in applyListToTable (h2+ul → table).",
+          "applyListToTable Structure C: extended the path-classification guard to also match /release|release-group/<mbid>/collections paths, enabling the h2+ul conversion for the new pageTypes.",
+          "finalCleanup for release-collections / releasegroup-collections: removes the trailing 'plus N other private collections' row, patches the h2 row-count stat, and rewrites the intro paragraph to '<b><i>EntityName</i></b> has been added to <b>N</b> collections and <b>M</b> other private collections' (the private clause is omitted when M=0)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.500",
     "date": "2026-04-18",
     "sections": [
