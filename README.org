@@ -74618,3 +74618,83 @@ but NOT anymore on the final rendered page
 #+end_example
 
 
+* TODO entity-collections
+
+#+begin_example
+https://musicbrainz.org/release/180b9945-d38e-3570-aac3-8e81808cf5ab/collections
+https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23/collections
+#+end_example
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users)(?:\?.*)?$/
+#+end_example
+
+to
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections)(?:\?.*)?$/
+#+end_example
+
+and add the following pageType
+
+#+begin_example
+        {
+            type: 'collections',
+            match: (path) => path.includes('/collections'),
+            buttons: [ { label: 'Show all Collections for User' } ],
+            tableMode: 'multi',
+            features: {
+                // The user-collections page has multiple <h3>-headed <table.tbl> siblings
+                // (one per collection category, e.g. "Own collections", "Subscribed
+                // collections").  groupByH3 tells the fetch loop to iterate all tables
+                // in tablesToProcess and walk backwards for each table's <h3> label
+                // instead of using the single-table generic else-branch.
+                groupByH3: true
+            }
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'user-collections',
+            match: (path) => path.match(/\/user\/.*\/collections/),
+            buttons: [ { label: 'Show all Collections for User' } ],
+            tableMode: 'multi',
+            features: {
+                // The user-collections page has multiple <h3>-headed <table.tbl> siblings
+                // (one per collection category, e.g. "Own collections", "Subscribed
+                // collections").  groupByH3 tells the fetch loop to iterate all tables
+                // in tablesToProcess and walk backwards for each table's <h3> label
+                // instead of using the single-table generic else-branch.
+                groupByH3: true
+            }
+        },
+#+end_example
+
+#+begin_example
+        {
+            type: 'release-collections',
+            match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/collections/),
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Subscribers").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'releasegroup-collections',
+            match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/collections/),
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Subscribers").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
+
