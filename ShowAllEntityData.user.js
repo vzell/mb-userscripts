@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.499+2026-04-18
+// @version      9.99.500+2026-04-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -30134,9 +30134,21 @@ a { color: #1565c0; }`;
             _subRow.className = 'mb-cdtoc-tracklist-row';
             _subRow.style.display = _initiallyVisible ? '' : 'none';
             const _subTd = document.createElement('td');
-            _subTd.colSpan = tr.cells.length;
+            // Use a large colSpan that covers all outer-table columns regardless of
+            // how many synthetic/injected columns have been added at call time.
+            _subTd.colSpan = 999;
             _subTd.style.cssText = 'padding: 0 0 0.5em 1em;';
             _subTd.innerHTML = _tlHtml;
+
+            // ── Prevent inner tracklist table from being picked up by script-wide
+            // querySelectorAll('table.tbl') calls (applyStickyColumn, initPicardTaggerColumn,
+            // _artInitPics, etc.).  The inner table has class="tbl medium"; removing
+            // "tbl" stops all those passes from treating its rows as data rows.
+            _subTd.querySelectorAll('table.tbl').forEach(innerTable => {
+                innerTable.classList.remove('tbl');
+                innerTable.classList.add('mb-cdtoc-inner-tracklist');
+            });
+
             _subRow.appendChild(_subTd);
             tr.after(_subRow);
 

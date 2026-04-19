@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.500",
+    "date": "2026-04-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "cdtoc tracklist toggle (v9.99.499 still broken — two further bugs). Bug 1: inner tracklist table has class='tbl medium'. After _cdtocInitTracklistToggles injected it into the DOM, every querySelectorAll('table.tbl') call (applyStickyColumn, initPicardTaggerColumn, _artInitPics, etc.) picked up the inner table and processed its track rows as if they were main-table data rows, adding mb-sticky-col, mb-picard-cell, and other decorations that disrupted the layout. Fix: after setting _subTd.innerHTML, query _subTd.querySelectorAll('table.tbl') and remove the 'tbl' class, replacing it with 'mb-cdtoc-inner-tracklist', so the inner table is invisible to all script-wide querySelectorAll('table.tbl') passes. Bug 2: _subTd.colSpan = tr.cells.length was evaluated at finalCleanup time, before initRelationshipsColumn and initPicardTaggerColumn appended their cells to the data rows. The colSpan was therefore too small, causing the tracklist to only span the initially-extracted columns. Fix: replaced with colSpan=999, which the browser clamps to the actual column count of the outer table."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.499",
     "date": "2026-04-18",
     "sections": [

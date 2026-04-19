@@ -74620,6 +74620,12 @@ https://musicbrainz.org/release/180b9945-d38e-3570-aac3-8e81808cf5ab/collections
 https://musicbrainz.org/release-group/3c39a076-8e52-38f2-8076-260d0672fb23/collections
 #+end_example
 
+Add support for <entity>-collection pagetypes:
+
+1.)
+
+in the userscript header change
+
 #+begin_example
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users)(?:\?.*)?$/
 #+end_example
@@ -74630,7 +74636,9 @@ to
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections)(?:\?.*)?$/
 #+end_example
 
-and add the following pageType
+2.)
+
+change the following pageType
 
 #+begin_example
         {
@@ -74668,6 +74676,10 @@ to
         },
 #+end_example
 
+3.)
+
+add the following two new pageTypes
+
 #+begin_example
         {
             type: 'release-collections',
@@ -74675,7 +74687,7 @@ to
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text as the column name (e.g. "Subscribers").
+                // the h2 text as the column name (e.g. "Collections").
                 listToTable: [ '' ]
             },
             tableMode: 'single'
@@ -74686,14 +74698,29 @@ to
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
-                // the h2 text as the column name (e.g. "Subscribers").
+                // the h2 text as the column name (e.g. "Collections").
                 listToTable: [ '' ]
             },
             tableMode: 'single'
         },
 #+end_example
 
-check the following code
+after the just renamed pageType "type: 'user-collections'"
+
+4.)
+
+the new pageTypes "type: 'release-collections'" and "type: 'releasegroup-collections'" are similar to the pageType "type: 'editor-subscribers'"
+
+See also the two uploaded HTML files for the differences:
+
+#+begin_example
+'Release “Born in the U.S.A.” by Bruce Springsteen - Collections - MusicBrainz.html' ==> pageType "type: 'release-collections'"
+'Editor “vzell” - Subscribers - MusicBrainz.html' ==> pageType "type: 'editor-subscribers'"
+#+end_example
+
+5.)
+
+the following code
 
 #+begin_example
                 const _isSubscribers        = _currentPath.includes('/subscribers');
@@ -74701,37 +74728,74 @@ check the following code
                 // ── Structure C: h2+ul (/area/<mbid>/users, /tag/<v>/<entity>,
                 //                       /user/.../tag/<v>/<entity>, /subscribers) ─
                 if (_isAreaUsers || _isTagValueEntity || _isUserTagValueEntity || _isSubscribers) {
-                    Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
-                        let _next  = _h2.nextElementSibling;
-                        let _steps = 0;
-                        let _ul    = null;
-                        while (_next && _steps < 5) {
-                            if (_next.tagName === 'UL') { _ul = _next; break; }
-                            _next = _next.nextElementSibling;
-                            _steps++;
-                        }
-                        if (!_ul) return;
-
-                        // Column name derivation:
-                        //   area-users:       full h2 text (e.g. "Users")
-                        //   tag-value-entity: first word before "tagged" in the h2 text
-                        //                     e.g. "Labels tagged as «country»" → "Labels"
-                        const _h2Text = _h2.textContent.trim();
-                        let _colName;
-                        if (_isUserTagValueEntity) {
-                            // e.g. "Release groups vzell tagged as «gig»"
-                            // → take everything before "tagged", strip the trailing
-                            //   username, then singularise: "Release groups" → "Release group".
-                            const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
-                            const _words        = _beforeTagged.split(/\s+/);
-                            const _plural = (_words.length > 1 ? _words.slice(0, -1) : _words).join(' ') || _h2Text;
-                            _colName = _toSingular(_plural);
-                        } else if (_isTagValueEntity) {
-                            // e.g. "Release groups tagged as «gig»"
-                            // → everything before "tagged", then singularise: "Release groups" → "Release group".
-                            const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
-                            _colName = _toSingular(_beforeTagged || _h2Text);
-                        } else {
-                            _colName = _h2Text;
-                        }
 #+end_example
+
+should probably be extended for the new pageTypes.
+
+6.)
+
+a.)
+
+The following code for the "pageType === 'editor-subscribers'"
+
+#+begin_example
+        // The rendered table may contain a trailing row "Plus N other anonymous
+        // users".  When found:
+        //   1. Parse N from the row text.
+        //   2. Remove the row from the table.
+        //   3. Patch the h2 row-count stat to reflect the reduced row count.
+        //   4. Rewrite the preceding <p> as
+        //      "There are currently <b>R</b> real and <b>N</b> anonymous users
+        //       subscribed to edits that you make:" where R = total - N.
+        if (pageType === 'editor-subscribers') {
+#+end_example
+
+translates
+
+#+begin_example
+There are currently 8 users subscribed to edits that you make:
+#+end_example
+
+and the last list element
+
+#+begin_example
+Plus 2 other anonymous users
+#+end_example
+
+to
+
+#+begin_example
+There are currently 6 real and 2 anonymous users subscribed to edits that you make:
+#+end_example
+
+and remove the last list element.
+
+b.)
+
+for the newly introduced pageTypes we need something similar, e.g.
+
+#+begin_example
+<entity-name, e.g "Born in the U.S.A."> has been added to 9 collections:
+#+end_example
+
+and the last list element
+
+#+begin_example
+plus 6 other private collections
+#+end_example
+
+should translate to
+
+#+begin_example
+<entity-name, e.g "Born in the U.S.A."> has been added to 9 collections and 6 other private collections
+#+end_example
+
+the numbers (e.g. 9 and 6) should be rendered in bold and the <entity-name, e.g "Born in the U.S.A."> in bold italic.
+
+The last list element
+
+#+begin_example
+plus 6 other private collections
+#+end_example
+
+should also be removed from the final rendered page
