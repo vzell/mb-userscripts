@@ -5250,7 +5250,6 @@
             tableMode: 'single'
         },
         // Search pages
-        // Search pages
         {
             type: 'search',
             match: (path) => path.includes('/search'),
