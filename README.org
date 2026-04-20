@@ -75903,6 +75903,10 @@ The "Table Details" tables already have entries for the column names itself but 
 
 **** The flag icon should also be extracted from the "Release events" cell
 
+add flag icon support:
+
+1.)
+
 The flag icon should also be extracted from the "Release events" data cell e.g.
 
 #+begin_example
@@ -75921,6 +75925,69 @@ So the extracted "Release country" should have a value for the above example as
 #+end_example
 
 So in essence the text part should come from the 'title="United States (US)"' attribute
+
+2.)
+
+Is there no conflict with the two same named functions "splitCountryDate(sourceCell)" ?
+
+a.)
+
+One in
+
+#+begin_example
+    const ColumnDataExtractor = {
+
+        /**
+         * splitCountryDate — splits a "Country/Date" cell into separate Country and
+         * Date cells.  Source structure: .release-event > (.release-country +
+         * .release-date), repeated once per release event.
+         *
+         * Each release event becomes one <li> item inside a <ul>, producing true
+         * multi-row cells instead of the former comma-separated flat layout.  A
+         * single-event cell is still wrapped in <ul><li> so that the structure is
+         * consistent and compatible with the collapsableColumns mechanism
+         * (initCollapsableColumns inspects `ul > li` count to decide whether to add
+         * the ▶/◀ toggle — cells with only one <li> are left un-toggled).
+         *
+         * Synthetic columns: ['Country', 'Date']
+         */
+        splitCountryDate(sourceCell) {
+#+end_example
+
+b.)
+
+The other one in
+
+#+begin_example
+        /**
+         * splitCountryDate — splits a "Release events" cell (populated by
+         * initReleaseEventsColumn / _rePopulateCell) into separate "Release country"
+         * and "Release date" cells.
+         *
+         * Source structure: a <td class="mb-re-cell"> whose content is a <ul> where
+         * each <li> encodes one release event as plain text in one of two formats:
+         *
+         *   With country:    "XX  YYYY-MM-DD"  (country code + two spaces + ISO date)
+         *   Without country: "YYYY-MM-DD"      (date only, no country prefix)
+         *
+         * The two-space separator is produced by _rePopulateCell:
+         *   li.textContent = `${codes[0]}  ${ev.date || '\u00a0'}`;
+         *
+         * For multi-event cells each <li> produces one parallel <li> in the two
+         * output cells, preserving row alignment — the same approach used by
+         * ColumnDataExtractor.splitCountryDate for native Country/Date columns.
+         * A single-event cell is also wrapped in <ul><li> for structural consistency.
+         *
+         * When the source cell is empty or has no <ul> content, both output cells
+         * are returned empty.
+         *
+         * Synthetic columns: ['Release country', 'Release date']
+         *
+         * @param   {HTMLTableCellElement} sourceCell  mb-re-cell <td> populated by initReleaseEventsColumn.
+         * @returns {HTMLTableCellElement[]}            Two synthetic <td> elements: [Release country, Release date].
+         */
+        splitCountryDate(sourceCell) {
+#+end_example
 
 
 ** Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
