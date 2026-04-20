@@ -5569,6 +5569,12 @@
                     non_paginated: false,
                     features: {
                         injectedColumns: [ 'Relationships' ],
+                        columnExtractors: [
+                            { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                        ],
+                        integerColumns: [
+		            {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'}
+		        ],
                         addCAA: 'Title',
                         extractMainColumn: 'Title',
                         stickyColumn: 'Title'
@@ -5616,6 +5622,12 @@
                     non_paginated: true,
                     features: {
                         injectedColumns: [ 'Relationships' ],
+                        columnExtractors: [
+                            { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                        ],
+                        integerColumns: [
+		            {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'}
+		        ],
                         addCAA: 'Title',
                         extractMainColumn: 'Title',
                         stickyColumn: 'Title'
@@ -5640,6 +5652,16 @@
             type: 'area-aliases',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Area' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         {
@@ -5647,6 +5669,14 @@
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Area (specialized)' } ],
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'Length', align: ':'}
+		],
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
@@ -5657,11 +5687,16 @@
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
             buttons: [ { label: 'Show all Recordings for Area' } ],
             features: {
-                extractMainColumn: 'Title',
-                stickyColumn: 'Title',
                 columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'Length', align: ':'}
+		],
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
             },
             tableMode: 'multi',
             non_paginated: true
@@ -5671,6 +5706,12 @@
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
             buttons: [ { label: 'Show all Works for Area (specialized)' } ],
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'}
+		],
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
@@ -5682,6 +5723,12 @@
             buttons: [ { label: 'Show all Works for Area' } ],
             tableMode: 'multi',
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'}
+		],
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },

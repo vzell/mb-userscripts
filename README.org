@@ -75623,7 +75623,7 @@ English(primary) => English | primary
         }
 #+end_example
 
-** when initial column is fixed, the highlight color hovering over the curretn row doesn't take fixed column ito account
+** when sticky column is fixed, the highlight color hovering over the current row doesn't take sticky column into account
 ** add CAA enriched tooltip also to the "addCAA" thumbnail
 ** "Picard" column adjustments
 
@@ -75651,6 +75651,11 @@ do not add "Picard" column to the following URLs
 
 #+begin_example
 https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/tags
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/artists
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/events
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/places
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users
 #+end_example
 
 3.)
@@ -75658,10 +75663,61 @@ https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/tags
 these URLs are actually missing the "Picard column
 
 #+begin_example
-
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
 #+end_example
 
+** Remove synthetic/injected columns from sub-tables which do not make sense
 
+On multi-table pageTypes like e.g. https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+remove
+
+#+begin_example
+Release events
+Relationships
+#+end_example
+
+from all sub-tables where NO "Release"-type column is present 
+
+** better documentation for the "Edit Pinned Filter List" in the "TABLE FILTER CONFIGURATION"
+
+** better handling of "sa_auto_expand" parameter
+
+#+begin_example
+        sa_auto_expand: {
+            label: "Auto-Expand Rows",
+            type: "number",
+            default: 50,
+            description: "Row count threshold to auto-expand tables"
+        },
+#+end_example
+
+** add an injected column extractor feature
+
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+
+#+begin_example
+modified   ShowAllEntityData.user.js
+@@ -5747,12 +5751,21 @@
+             buttons: [ { label: 'Show all Performances for Place' } ],
+             features: {
+                 injectedColumns: [ 'Release events', 'Relationships' ],
++                injectedColumnExtractors: [
++                    { sourceColumn: 'Release events', extractor: 'splitCountryDate', syntheticColumns: ['Release country', 'Release date'] },
++                    { sourceColumn: 'Release date',   extractor: 'dateParts',        syntheticColumns: ['R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month'] }
+                 ],
+                 collapsableColumns: [ 'Release events' ],
+                 addCAA: 'Title',
+-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
++                integerColumns: [
++		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
++		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
++		    {sourceColumn: 'Length', align: ':'}
++		],
+                 extractMainColumn: 'Title',
+                 stickyColumn: 'Title'
+             },
+#+end_example
 
 * some latest fixes
 
