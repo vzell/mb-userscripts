@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.514",
+    "date": "2026-04-20",
+    "sections": [
+      {
+        "label": "🐛 Fix / ✨ Improve",
+        "items": [
+          "Add missing configuration parameters for multiple pageTypes."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.513",
     "date": "2026-04-20",
     "sections": [

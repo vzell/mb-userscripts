@@ -75687,7 +75687,6 @@ Relationships
 from all sub-tables where NO "Release"-type column is present 
 
 ** better documentation for the "Edit Pinned Filter List" in the "TABLE FILTER CONFIGURATION"
-
 ** better handling of "sa_auto_expand" parameter
 
 #+begin_example
@@ -75700,6 +75699,7 @@ from all sub-tables where NO "Release"-type column is present
 #+end_example
 
 ** add an injected column extractor feature
+*** facts
 
 https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
 
@@ -75724,6 +75724,78 @@ modified   ShowAllEntityData.user.js
                  extractMainColumn: 'Title',
                  stickyColumn: 'Title'
              },
+#+end_example
+
+*** claude
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.454+2026-04-10') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.454"')
+
+#+begin_example
+    // --- SyntheticColumnDataExtractor: Second-Pass Extraction Registry ---
+#+end_example
+
+
+** Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
+** add support for artist-credit pages
+
+#+begin_example
+        // Artist credit pages (e.g Artist credit “Bruce Springsteen & The E Street Band”)
+        {
+            type: 'artist-credit',
+            match: (path) => path.match(/\/artist-credit\//),
+            features: {
+                // Empty sectionId triggers Structure D in applyListToTable.
+                listToTable: [ '' ],
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+** add support for "artist-credit" pages
+
+#+begin_example
+modified   ShowAllEntityData.user.js
+@@ -25,6 +25,7 @@
+ // @match        *://*.musicbrainz.org/tag/*
+ // @match        *://*.musicbrainz.org/cdtoc/*
+ // @match        *://*.musicbrainz.org/taglookup*
++// @match        *://*.musicbrainz.org/artist-credit/*
+ // @connect      raw.githubusercontent.com
+ // @connect      coverartarchive.org
+ // @connect      eventartarchive.org
+@@ -5264,6 +5265,16 @@
+             },
+             tableMode: 'single'
+         },
++        // Artist credit pages (e.g Artist credit “Bruce Springsteen & The E Street Band”)
++        {
++            type: 'artist-credit',
++            match: (path) => path.match(/\/artist-credit\//),
++            features: {
++                // Empty sectionId triggers Structure D in applyListToTable.
++                listToTable: [ '' ],
++            },
++            tableMode: 'multi'
++        },
+#+end_example
+
+** reorder the following parameters
+
+#+begin_example
+        sa_ui_thead_th_derived_bg: {
+            label: 'Derived column header background color',
+            type: 'color_picker',
+            default: '#c8c8b0',
+            description: 'Background color for derived table column-header cells — columns further extracted ' +
+                         'from already-extracted columns via syntheticColumnExtractors (e.g. DD, MM, YYYY, ' +
+                         'Day, Month derived from the Date column; Event-Type, Event-Date, etc. derived from ' +
+                         'the Comment column). ' +
+                         'The default (#c8c8b0) is a warm sandy beige — similar brightness to the extracted ' +
+                         'color but with a warm hue — so the two synthetic tiers are visually distinct. ' +
+                         'Also used as the row-tint color for derived-column rows in the Statistics panel ' +
+                         'Table Details section.'
+        },
 #+end_example
 
 * some latest fixes
