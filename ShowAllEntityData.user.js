@@ -6492,7 +6492,7 @@
                         console.log(`[VZ-${SCRIPT_BASE_NAME}]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                console.log('[ShowAllEntityData] Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                console.log('[VZ-${SCRIPT_BASE_NAME}] Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
             }
 
             // Auto-exit after 5 seconds
