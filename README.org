@@ -75587,6 +75587,12 @@ but NOT anymore on the final rendered page
 
 
 * TODO latest fixes
+** Locale ==> Locale + Type
+
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/aliases
+
+English(primary) => English | primary
+
 ** erg
 
 #+begin_example
@@ -75616,9 +75622,50 @@ but NOT anymore on the final rendered page
             return;
         }
 #+end_example
-** double entry
+
+** when initial column is fixed, the highlight color hovering over the curretn row doesn't take fixed column ito account
+** add CAA enriched tooltip also to the "addCAA" thumbnail
+** "Picard" column adjustments
+
+the following definition
 
 #+begin_example
-         // Search pages
-+        // Search pages
+    const _PICARD_PAGE_PATTERNS = [
+        /\/cdtoc\//,
+        /\/collection\//,
+        /\/recording\//,
+        /\/release-group\//,
+        /\/release\//,
+        /\/series\//,
+        /\/taglookup/,
+        /\/search/,
+        /\/artist\/[a-f0-9-]{36}\/releases/,
+    ];
 #+end_example
+
+has to be refined
+
+a.)
+
+do not add "Picard" column to the following URLs
+
+#+begin_example
+https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/tags
+#+end_example
+
+3.)
+
+these URLs are actually missing the "Picard column
+
+#+begin_example
+
+#+end_example
+
+
+
+* some latest fixes
+
+Some latest fixes:
+
+1.)
+

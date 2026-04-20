@@ -100,33 +100,12 @@
                          "to also be active."
         },
 
-        sa_render_overflow_tables_in_new_tab: {
-            label: "Render overflow tables in a new tab",
-            type: "checkbox",
-            default: true,
-            description: "Render sub-tables on pages like 'Artist-Relastionships' in a new tab. These are limited to 100 rows by default."
-        },
-
         // ============================================================
         // EXPERIMENTAL FEATURES SECTION
         // ============================================================
         divider_experimental: {
             type: 'divider',
             label: '🔬 EXPERIMENTAL FEATURES'
-        },
-
-        sa_collabsable_sidebar: {
-            label: "Collabsable sidebar (experimental)",
-            type: "checkbox",
-            default: true,
-            description: "Render sidebar collabsable"
-        },
-
-        sa_sidebar_collapsed: {
-            label: "Start with sidebar collapsed",
-            type: "checkbox",
-            default: false,
-            description: "Automatically collapse the sidebar when the consolidated view is first rendered, freeing up horizontal space immediately. Only takes effect when 'Collabsable sidebar' is also enabled."
         },
 
         sa_enable_event_parts_extractor: {
@@ -170,6 +149,43 @@
             type: "checkbox",
             default: true,
             description: "After the consolidated table is rendered, move any h2 sections that MusicBrainz renders after the data-table h2 (e.g. 'Relationships', 'Related works') to immediately before the data h2. Each section — the h2 heading plus all sibling elements up to the next h2 — is relocated as a unit, preserving the original section order. This keeps all non-data sections grouped above the data table for easier navigation."
+        },
+
+        // ============================================================
+        //  COLLABSABLE SIDEBAR SECTION
+        // ============================================================
+        divider_collabsable_sidebar: {
+            type: 'divider',
+            label: '⭲ COLLABSABLE SIDEBAR'
+        },
+
+        sa_collabsable_sidebar: {
+            label: "Collabsable sidebar",
+            type: "checkbox",
+            default: true,
+            description: "Render sidebar collabsable"
+        },
+
+        sa_sidebar_collapsed: {
+            label: "Start with sidebar collapsed",
+            type: "checkbox",
+            default: false,
+            description: "Automatically collapse the sidebar when the consolidated view is first rendered, freeing up horizontal space immediately. Only takes effect when 'Collabsable sidebar' is also enabled."
+        },
+
+        // ============================================================
+        //  OVERFLOW TABLES SECTION
+        // ============================================================
+        divider_overflow_tables: {
+            type: 'divider',
+            label: '≡ OVERFLOW TABLES'
+        },
+
+        sa_render_overflow_tables_in_new_tab: {
+            label: "Render overflow tables in a new browser tab",
+            type: "checkbox",
+            default: true,
+            description: "Render incomplete sections on pages like 'Artist-Relastionships' in a new browser tab. These are currently limited to 100 rows by default MusicBrainz."
         },
 
         // ============================================================
