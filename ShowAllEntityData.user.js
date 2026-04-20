@@ -5454,13 +5454,22 @@
             buttons: [ { label: 'Show all Releases for Instrument' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] }
+                    { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
+                    {
+                      sourceColumn:    'Tracks',
+                      extractor:       'sumTracks',
+                      syntheticColumns: ['Total Tracks']
+                    }
                 ],
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
-                collapsableColumns: [ 'Country/Date' ,'Country', 'Date' ],
+                integerColumns: [
+		    {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'},
+		    {sourceColumn: 'Total Tracks', align: 'R'}
+		],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                addCAA: 'Release',
                 extractMainColumn: 'Release',
                 stickyColumn: 'Release'
             },
@@ -5471,6 +5480,13 @@
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
             buttons: [ { label: 'Show all Recordings for Instrument' } ],
             features: {
+                columnExtractors: [
+                    { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                ],
+                collapsableColumns: [ 'ISRCs' ],
+                integerColumns: [
+                    { sourceColumn: 'Length', align: ':' }
+                ],
                 extractMainColumn: 'Name',
                 stickyColumn: 'Name'
             },
@@ -5488,6 +5504,16 @@
             //features: {
             //    extractMainColumn: 'Locale' // Specific header
             //},
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         // Area pages
@@ -5596,16 +5622,19 @@
                         columnExtractors: [
                             { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
                             {
-                                sourceColumn:    'Tracks',
-                                extractor:       'sumTracks',
-                                syntheticColumns: ['Total Tracks']
+                              sourceColumn:    'Tracks',
+                              extractor:       'sumTracks',
+                              syntheticColumns: ['Total Tracks']
                             },
                         ],
                         syntheticColumnExtractors: [
                             { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                         ],
                         injectedColumns: [ 'Relationships' ],
-                        integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
+                        integerColumns: [
+			    {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'},
+			    {sourceColumn: 'Total Tracks', align: 'R'}
+			],
                         renderMultiRowCell: [ 'Label', 'Catalog#' ],
                         collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
                         addCAA: 'Release',
