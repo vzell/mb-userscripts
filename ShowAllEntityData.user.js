@@ -5730,12 +5730,16 @@
             buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                integerColumns: [
+		    {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'},
+		    {sourceColumn: 'Length', align: ':'}
+		],
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
@@ -5747,12 +5751,16 @@
             buttons: [ { label: 'Show all Performances for Place' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] }
+                    { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'Length', align: ':'}
+		],
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
