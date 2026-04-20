@@ -5848,6 +5848,16 @@
             type: 'series-aliases',
             match: (path) => path.match(/\/series\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Series' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         {
@@ -5938,6 +5948,16 @@
             type: 'label-aliases',
             match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Label' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         {
@@ -6012,6 +6032,16 @@
             type: 'work-aliases',
             match: (path) => path.match(/\/work\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Work' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         {
@@ -6234,6 +6264,16 @@
             type: 'releasegroup-aliases',
             match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Releasegroup' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         {
@@ -6274,6 +6314,16 @@
             type: 'release-aliases',
             match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Release' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         {
@@ -6288,6 +6338,16 @@
             type: 'recording-aliases',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Recording' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         {
@@ -6327,6 +6387,16 @@
             type: 'event-aliases',
             match: (path) => path.match(/\/event\/[a-f0-9-]{36}\/aliases/),
             buttons: [ { label: 'Show all Aliases for Event' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Begin date', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                    { sourceColumn: 'End date',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                ],
+                integerColumns: [
+                    { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                    { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                ]
+            },
             tableMode: 'single'
         },
         {

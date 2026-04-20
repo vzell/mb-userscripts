@@ -75651,11 +75651,18 @@ do not add "Picard" column to the following URLs
 
 #+begin_example
 https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/tags
+
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/artists
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/events
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/places
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users
+
+https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints
+#+end_example
+
+#+begin_example
+https://musicbrainz.org/series/5c605c0d-de8d-478e-9b93-d518ccecc748 except for release series
 #+end_example
 
 3.)
