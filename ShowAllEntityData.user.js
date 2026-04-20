@@ -310,7 +310,7 @@
             label: "Shortcut: Load from Disk",
             type: "keyboard_shortcut",
             default: "Ctrl+L",
-            description: "Open the Load-from-disk dialog (default: Ctrl+L)"
+            description: "Open the 'Load from Disk' dialog (default: Ctrl+L)"
         },
 
         sa_shortcut_auto_resize: {
@@ -345,7 +345,7 @@
             label: "Shortcut: Open Export Menu",
             type: "keyboard_shortcut",
             default: "Ctrl+E",
-            description: "Open the Export menu (CSV / JSON / Org-Mode) (default: Ctrl+E)"
+            description: "Open the Export menu (CSV / JSON / Org-Mode / HTML) (default: Ctrl+E)"
         },
 
         sa_shortcut_open_settings: {
@@ -363,10 +363,10 @@
         },
 
         sa_shortcut_focus_column_filter: {
-            label: "Shortcut: Focus Column Filter",
+            label: "Shortcut: Focus First Column Filter",
             type: "keyboard_shortcut",
             default: "Ctrl+C",
-            description: "Focus the first column filter of the next table, cycling through all tables (default: Ctrl+C)"
+            description: "Focus the first column filter of the next table/sub-table, cycling through all tables (default: Ctrl+C)"
         },
 
         sa_shortcut_clear_filters: {
@@ -581,7 +581,7 @@
             label: "Large Dataset Threshold",
             type: "number",
             default: 5000,
-            description: "Row count threshold to prompt save-or-render dialog (0 to disable)"
+            description: "Row count threshold to prompt the 'Save or Render' dialog (0 to disable)"
         },
 
         sa_render_warning_threshold: {
@@ -970,6 +970,19 @@
                          + '(vz-mb-saed-art-cache, store: rel-ws2).'
         },
 
+        sa_rel_completion_toast_duration: {
+            label: 'Relationships load-complete toast duration (seconds)',
+            type: 'number',
+            default: 8,
+            min: 0,
+            max: 60,
+            description: 'When all Relationships column cells have been populated '
+                         + 'with favicon icon links, a small non-intrusive toast notification '
+                         + 'appears in the bottom-right corner confirming completion. '
+                         + 'It dismisses automatically after this many seconds, or immediately '
+                         + 'on click. Set to 0 to disable the notification entirely.'
+        },
+
         sa_enable_relationship_debug: {
             label: 'Enable Relationships column debug logging',
             type: 'checkbox',
@@ -978,8 +991,7 @@
                          + 'MBID extraction per row, WS2 fetch requests and responses, icon class '
                          + 'resolution, favicon probing, and cell population. '
                          + 'Uses Lib.debug(\'relationships\', ...) — requires \'Enable debug logging\' '
-                         + 'to also be active. Set to false once the feature is confirmed working '
-                         + 'to reduce console noise. Default: true (on by default during initial rollout).'
+                         + 'to also be active. '
         },
 
         // Configurable lookup tables for the Relationships column.
@@ -1080,7 +1092,7 @@
         sa_auto_resize_columns: {
             label: 'Auto-resize columns on load',
             type: 'checkbox',
-            default: true,
+            default: false,
             description: 'When enabled, automatically triggers the "↔️ Resize" button ' +
                          '(same as clicking it manually) immediately after the table is rendered, ' +
                          'so columns are fitted to their content on every page load without manual clicks.'
@@ -1181,7 +1193,7 @@
             label: 'Enable Save/Load to Disk',
             type: 'checkbox',
             default: true,
-            description: 'Show/hide the "💾 Save" and "📂 Load" buttons for disk persistence'
+            description: 'Show/hide the "💾 Save to Disk" and "📂 Load from Disk" buttons for disk persistence of page data'
         },
 
         // --- Filename construction options ---
@@ -1218,7 +1230,7 @@
         },
 
         sa_load_history_limit: {
-            label: 'Load Filter History — max stored entries',
+            label: 'Load Filter History → max stored entries',
             type: 'number',
             default: 50,
             min: 0,
@@ -1227,7 +1239,7 @@
         },
 
         sa_load_history_dropdown_size: {
-            label: 'Load Filter History — visible rows in dropdown',
+            label: 'Load Filter History → visible rows in dropdown',
             type: 'number',
             default: 10,
             min: 3,
@@ -1241,7 +1253,7 @@
             default: 600,
             min: 300,
             max: 1400,
-            description: 'Initial pixel width of the "📂 Load Table Data" dialog. The dialog is also resizable by dragging its edges.'
+            description: 'Initial pixel width of the "📂 Load from Disk" dialog. The dialog is also resizable by dragging its edges.'
         },
 
         sa_ld_dialog_min_width: {
@@ -1250,21 +1262,21 @@
             default: 640,
             min: 280,
             max: 1200,
-            description: 'Minimum width of the "📂 Load Table Data" dialog in pixels. Prevents the dialog from being resized narrower than this value. Default: 640 px.'
+            description: 'Minimum width of the "📂 Load from Disk" dialog in pixels. Prevents the dialog from being resized narrower than this value. Default: 640 px.'
         },
 
         sa_ld_dialog_header_font_size: {
             label: 'Load dialog header description font size',
             type: 'text',
             default: '1.00em',
-            description: 'Font size of the description paragraph below the "📂 Load Table Data" dialog title (e.g. 0.9em, 14px, 1rem)'
+            description: 'Font size of the description paragraph below the "📂 Load from Disk" dialog title (e.g. 0.9em, 14px, 1rem)'
         },
 
         sa_ld_status_font_size: {
             label: 'Load dialog status message font size',
             type: 'text',
             default: '0.95em',
-            description: 'Font size for the load-, filter- and render-status message containers inside the "📂 Load Table Data" dialog (e.g. 0.9em, 14px, 1rem)'
+            description: 'Font size for the load-, filter- and render-status message containers inside the "📂 Load from Disk" dialog (e.g. 0.9em, 14px, 1rem)'
         },
 
         // --- H1 action bar: Save / Load button colour overrides ---
@@ -1300,7 +1312,7 @@
             default: 1800,
             min: 0,
             max: 30000,
-            description: 'How long (in milliseconds) the "Save Table Data" and "Export Table Data" dialogs remain open after a download has been initiated before auto-closing. ' +
+            description: 'How long (in milliseconds) the "Save to Disk" and "Export Table Data" dialogs remain open after a download has been initiated before auto-closing. ' +
                          'Set to 0 to disable auto-close entirely (the dialog must then be dismissed manually via the × close button or the Escape key). ' +
                          'Range: 0 – 30 000 ms (0 – 30 s). Default: 1800 ms (1.8 s).'
         },
@@ -1308,7 +1320,7 @@
         sa_ld_auto_resize_after_load: {
             label: 'Auto-resize columns after loading from disk',
             type: 'checkbox',
-            default: true,
+            default: false,
             description: 'When enabled, automatically triggers the "↔️ Resize" button ' +
                          '(equivalent to clicking it manually) immediately after table data has been ' +
                          'loaded and rendered from a disk file. ' +
@@ -1321,17 +1333,17 @@
         },
 
         // ============================================================
-        // EXPAND RELEASE GROUPS SECTION
+        // EXPAND RELEASE AND RELEASE GROUPS SECTION
         // Adapted from "MusicBrainz: Expand/collapse release groups"
         // by Michael Wiencek — injected post-render into the SA table.
         // ============================================================
         divider_expand_rgs: {
             type: 'divider',
-            label: '🔍 EXPAND RELEASE GROUPS'
+            label: '🔍 EXPAND RELEASE AND RELEASE GROUPS'
         },
 
         sa_enable_expand_rgs: {
-            label: 'Enable Expand Release Groups',
+            label: 'Enable Expand Release and Release Groups',
             type: 'checkbox',
             default: true,
             description: 'After the consolidated table is rendered, inject inline ▶/▼ expand/collapse buttons ' +
@@ -1579,19 +1591,6 @@
                          'volume on pages with many entities.'
         },
 
-        sa_rel_completion_toast_duration: {
-            label: 'Relationships load-complete toast duration (seconds)',
-            type: 'number',
-            default: 8,
-            min: 0,
-            max: 60,
-            description: 'When all Relationships column cells have been populated '
-                         + 'with favicon icon links, a small non-intrusive toast notification '
-                         + 'appears in the bottom-right corner confirming completion. '
-                         + 'It dismisses automatically after this many seconds, or immediately '
-                         + 'on click. Set to 0 to disable the notification entirely.'
-        },
-
         sa_caa_completion_toast_duration: {
             label: 'CAA load-complete toast duration (seconds)',
             type: 'number',
@@ -1627,7 +1626,7 @@
         sa_enable_release_events_debug: {
             label: 'Enable Release events column debug logging',
             type: 'checkbox',
-            default: true,
+            default: false,
             description: 'Enable detailed console logging for the Release events column pipeline. '
                          + 'Uses Lib.debug(\'release-events\', ...).'
         },
