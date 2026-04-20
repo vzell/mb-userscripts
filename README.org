@@ -75860,9 +75860,67 @@ plus the corresponding supporting code and implement the same to support the abo
 
 add a new changelog entry to the uploaded changelog file "ShowAllEntityData_CHANGELOG.json"
 
+**** bugs
+
+some bugs:
+
+1.)
+
+There is a bug when loading from disk by clicking the "load from Disk" button":
+
+All the columns
+
+#+begin_example
+'Release country', 'Release date'
+'R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month'
+#+end_example
+
+are doubled after load from disk finishes and the final page is renderded:
+
+a.)
+
+The first time they are renderded with the saved data cells extracted from the injected column "Release events"  after the "Comment" column and before the "Release events" column
+
+b.)
+
+the second time with empty data cells after the "Relationships" column.
+
+This would also be the right place, but WITH the filled data cells, saved to disk beforehand.
+
+2.)
+
+The "Statistics" UI panel "mb-stats-panel" should have an entry for the count of new synthetic columns coming from the "injectedColumnExtractors"
+
+#+begin_example
+Total injected derived columns: <value> <comment>
+#+end_example
+
+The "Table Details" tables already have entries for the column names itself but with now values in the "UNIQUE" column
+
 **** add "Total injected derived columns" in the statistics panel
 
 
+
+**** The flag icon should also be extracted from the "Release events" cell
+
+The flag icon should also be extracted from the "Release events" data cell e.g.
+
+#+begin_example
+<td class="mb-re-cell" data-mbid="fe40efa7-e5b3-4f88-bca0-40619dbe7e44" style="" data-re-done="1">
+  <ul style="list-style: none; margin: 0px; padding: 0px;">
+    <li class="flag flag-US" title="United States (US)">US  1997
+    </li>
+  </ul>
+</td>
+#+end_example
+
+So the extracted "Release country" should have a value for the above example as
+
+#+begin_example
+[flag-US icon] United States (US)
+#+end_example
+
+So in essence the text part should come from the 'title="United States (US)"' attribute
 
 
 ** Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
