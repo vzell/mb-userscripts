@@ -75727,7 +75727,7 @@ modified   ShowAllEntityData.user.js
 #+end_example
 
 *** claude
-**** initial
+**** DONE initial
 
 In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.514+2026-04-20') and
 changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.514"')
@@ -75860,7 +75860,7 @@ plus the corresponding supporting code and implement the same to support the abo
 
 add a new changelog entry to the uploaded changelog file "ShowAllEntityData_CHANGELOG.json"
 
-**** bugs
+**** DONE bugs
 
 some bugs:
 
@@ -75897,15 +75897,20 @@ Total injected derived columns: <value> <comment>
 
 The "Table Details" tables already have entries for the column names itself but with now values in the "UNIQUE" column
 
-**** add "Total injected derived columns" in the statistics panel
+**** DONE The flag icon should also be extracted from the "Release events" cell
 
-
-
-**** The flag icon should also be extracted from the "Release events" cell
-
-add flag icon support:
+bug is still present:
 
 1.)
+
+All the new synthetic columns are still doubled after load from disk finishes and the final page is renderded. But the
+data cells are now empyt for both pairs.  Additionally the data cells from the "Release events" and "Relationships"
+columns now show up in the 'Release country' and 'Release date' columns respectively and the actual "Release events" and
+"Relationships" columns are now empty.
+
+2.)
+
+add flag icon support:
 
 The flag icon should also be extracted from the "Release events" data cell e.g.
 
@@ -75926,7 +75931,7 @@ So the extracted "Release country" should have a value for the above example as
 
 So in essence the text part should come from the 'title="United States (US)"' attribute
 
-2.)
+3.)
 
 Is there no conflict with the two same named functions "splitCountryDate(sourceCell)" ?
 
@@ -75988,6 +75993,121 @@ The other one in
          */
         splitCountryDate(sourceCell) {
 #+end_example
+
+**** label-relationships
+
+change the definition of
+
+#+begin_example
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+to
+
+#+begin_example
+        {
+            type: 'label-relationships-filtered',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label (specialized)' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                injectedColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'splitCountryDate', syntheticColumns: ['Release country', 'Release date'] },
+                    { sourceColumn: 'Release date',   extractor: 'dateParts',        syntheticColumns: ['R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month'] }
+                 ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
+		    {sourceColumn: 'Length', align: ':'}
+		],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        {
+            type: 'label-relationships',
+            match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Label' } ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                ],
+                injectedColumns: [ 'Release events', 'Relationships' ],
+                injectedColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'splitCountryDate', syntheticColumns: ['Release country', 'Release date'] },
+                    { sourceColumn: 'Release date',   extractor: 'dateParts',        syntheticColumns: ['R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month'] }
+                 ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
+		    {sourceColumn: 'Length', align: ':'}
+		],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
+
+**** DONE bug when picard column is present - https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/relationships
+
+On pages which have the "Picard" column at the end as the last column, e.g. https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/relationships
+
+there is another bug when loading from disc:
+
+The picard icon from the "Picard" column is now located in the first new synthetic column "Release country", and all
+other synthetic columns values have shifted one to the right.
+
+**** check "Total injected derived columns" in the statistics panel
+
+**** TODO add better handling for injected derived columns inclusive new background column header colour
+
+**** TODO remove "{sourceColumn: 'Length', align: ':'}" from integerColumns for label pageTypes
 
 
 ** Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages

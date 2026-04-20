@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.514+2026-04-20
+// @version      9.99.519+2026-04-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -3129,6 +3129,101 @@
             }
 
             return tds;
+        },
+
+
+        /**
+         * splitCountryDate — splits a "Release events" cell (populated by
+         * initReleaseEventsColumn / _rePopulateCell) into separate "Release country"
+         * and "Release date" cells.
+         *
+         * Source structure: a <td class="mb-re-cell"> whose content is a <ul> where
+         * each <li> encodes one release event as plain text in one of two formats:
+         *
+         *   With country:    "XX  YYYY-MM-DD"  (country code + two spaces + ISO date)
+         *   Without country: "YYYY-MM-DD"      (date only, no country prefix)
+         *
+         * The two-space separator is produced by _rePopulateCell:
+         *   li.textContent = `${codes[0]}  ${ev.date || '\u00a0'}`;
+         *
+         * For multi-event cells each <li> produces one parallel <li> in the two
+         * output cells, preserving row alignment — the same approach used by
+         * ColumnDataExtractor.splitCountryDate for native Country/Date columns.
+         * A single-event cell is also wrapped in <ul><li> for structural consistency.
+         *
+         * When the source cell is empty or has no <ul> content, both output cells
+         * are returned empty.
+         *
+         * Synthetic columns: ['Release country', 'Release date']
+         *
+         * @param   {HTMLTableCellElement} sourceCell  mb-re-cell <td> populated by initReleaseEventsColumn.
+         * @returns {HTMLTableCellElement[]}            Two synthetic <td> elements: [Release country, Release date].
+         */
+        splitCountryDate(sourceCell) {
+            const tdCountry = document.createElement('td');
+            const tdDate    = document.createElement('td');
+
+            if (!sourceCell) return [tdCountry, tdDate];
+
+            const liItems = Array.from(sourceCell.querySelectorAll('ul > li'));
+            if (!liItems.length) return [tdCountry, tdDate];
+
+            // Two-space separator used by _rePopulateCell between country code and date.
+            // Each <li> is stamped with: classList='flag flag-XX', title='Name (XX)',
+            // textContent='XX  YYYY-MM-DD' (or ' ' when no date is known).
+            const SEP = '  ';
+
+            const ulCountry = document.createElement('ul');
+            const ulDate    = document.createElement('ul');
+            ulCountry.style.cssText = 'list-style:none;margin:0;padding:0;';
+            ulDate.style.cssText    = 'list-style:none;margin:0;padding:0;';
+
+            liItems.forEach(li => {
+                const raw = li.textContent.trim();
+
+                // ── Extract date portion from textContent ─────────────────────
+                // Split on the two-space separator; accept the right-hand side as
+                // the date only when the left-hand side is a 2-letter country code.
+                let date = '';
+                const sepIdx = raw.indexOf(SEP);
+                if (sepIdx !== -1) {
+                    const prefix = raw.slice(0, sepIdx).trim();
+                    const suffix = raw.slice(sepIdx + SEP.length).trim();
+                    date = /^[A-Z]{2}$/.test(prefix) ? suffix : raw;
+                } else {
+                    date = raw;
+                }
+
+                // ── Build country cell content from flag class + title attr ───
+                // _rePopulateCell stamps li.classList = 'flag flag-XX' and
+                // li.title = 'United States (US)'.  Use the title as visible text
+                // so the full country name (not just the 2-letter code) is shown.
+                const liC = document.createElement('li');
+                const flagClass = Array.from(li.classList).find(c => c.startsWith('flag-'));
+                if (flagClass) {
+                    const fullTitle = li.title || flagClass.replace('flag-', '');
+                    const span = document.createElement('span');
+                    span.classList.add('flag', flagClass);
+                    span.title       = fullTitle;
+                    span.textContent = fullTitle;
+                    liC.appendChild(span);
+                }
+                // No flag class → country cell stays empty (event has no area data).
+
+                // ── Build date cell ───────────────────────────────────────────
+                const liD = document.createElement('li');
+                // Suppress the non-breaking space placeholder so sort/filter treat
+                // the date cell as empty rather than as a non-empty string.
+                liD.textContent = (date === '\u00a0' || date === '') ? '' : date;
+
+                ulCountry.appendChild(liC);
+                ulDate.appendChild(liD);
+            });
+
+            if (ulCountry.hasChildNodes()) tdCountry.appendChild(ulCountry);
+            if (ulDate.hasChildNodes())    tdDate.appendChild(ulDate);
+
+            return [tdCountry, tdDate];
         }
 
     };
@@ -3207,6 +3302,34 @@
                 return true;
             })
             .map(entry => ({ ...entry }));
+    }
+
+    /**
+     * Derives the runtime injected-column extractor descriptor list from a merged
+     * activeDefinition object.
+     *
+     * Injected-column extractors run in a third pass, AFTER injected columns
+     * (e.g. 'Release events') have been populated asynchronously by
+     * initReleaseEventsColumn().  Each descriptor's `sourceColumn` names one of
+     * those populated injected columns; the extractor function receives the
+     * corresponding <td> and returns further synthetic <td>s (e.g. splitting
+     * 'Release events' into 'Release country' + 'Release date').
+     *
+     * Chaining is supported: a later descriptor may name a synthetic column
+     * produced by an earlier descriptor in the same list (e.g. 'Release date'
+     * produced by splitCountryDate can feed a subsequent dateParts extractor).
+     *
+     * Unlike primary column extractors, no `colIdx` is maintained — source cells
+     * are located by column name from a per-row map built during applyInjectedColumnExtractors().
+     *
+     * @param {object} def - Merged activeDefinition (the resolved page definition object)
+     * @returns {Array<{sourceColumn: string, extractor: string, syntheticColumns: string[]}>}
+     */
+    function buildActiveInjectedColumnExtractors(def) {
+        const features = def?.features || {};
+        if (!Array.isArray(features.injectedColumnExtractors)) return [];
+        // Shallow-clone each entry so mutations at call-sites do not affect pageDefinitions.
+        return features.injectedColumnExtractors.map(entry => ({ ...entry }));
     }
 
     /**
@@ -5806,16 +5929,21 @@
             buttons: [ { label: 'Show all Performances for Place (specialized)' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] },
                     { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
+                injectedColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'splitCountryDate', syntheticColumns: ['Release country', 'Release date'] },
+                    { sourceColumn: 'Release date',   extractor: 'dateParts',        syntheticColumns: ['R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month'] }
+                 ],
                 integerColumns: [
-		    {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'},
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
 		    {sourceColumn: 'Length', align: ':'}
 		],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
@@ -5831,12 +5959,17 @@
                     { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
-                collapsableColumns: [ 'Release events' ],
-                addCAA: 'Title',
+                injectedColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'splitCountryDate', syntheticColumns: ['Release country', 'Release date'] },
+                    { sourceColumn: 'Release date',   extractor: 'dateParts',        syntheticColumns: ['R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month'] }
+                 ],
                 integerColumns: [
 		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
 		    {sourceColumn: 'Length', align: ':'}
 		],
+                collapsableColumns: [ 'Release events' ],
+                addCAA: 'Title',
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             },
@@ -5968,8 +6101,16 @@
                 columnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
+                injectedColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'splitCountryDate', syntheticColumns: ['Release country', 'Release date'] },
+                    { sourceColumn: 'Release date',   extractor: 'dateParts',        syntheticColumns: ['R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month'] }
+                 ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
+		    {sourceColumn: 'Length', align: ':'}
+		],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title',
@@ -5986,8 +6127,16 @@
                 columnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 injectedColumns: [ 'Release events', 'Relationships' ],
+                injectedColumnExtractors: [
+                    { sourceColumn: 'Release events', extractor: 'splitCountryDate', syntheticColumns: ['Release country', 'Release date'] },
+                    { sourceColumn: 'Release date',   extractor: 'dateParts',        syntheticColumns: ['R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month'] }
+                 ],
+                integerColumns: [
+		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
+		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
+		    {sourceColumn: 'Length', align: ':'}
+		],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title',
@@ -13030,6 +13179,12 @@ ${sections.join('\n')}
                      _injectedCols: injected, _synthCols: extracted + derived + injected };
         })();
 
+        // Count synthetic columns produced by injectedColumnExtractors (third-pass ICE).
+        // These are a sub-set of _derivedCols (they share the mb-derived-extracted-column
+        // class), broken out separately so the stats panel can report them explicitly.
+        const _iceDerivedCols = activeInjectedColumnExtractors
+            .reduce((n, e) => n + e.syntheticColumns.length, 0);
+
         // ── Global statistics rows ────────────────────────────────────────────
         // Artwork-related labels use _artKey ('CAA' or 'EAA') so EAA pages
         // show EAA everywhere.  Loading times come from _caaFetchStats which
@@ -13111,6 +13266,15 @@ ${sections.join('\n')}
                 comment: _derivedCols > 0
                     ? 'Columns further derived from extracted columns via syntheticColumnExtractors'
                     : 'No syntheticColumnExtractors configured for this page type',
+            },
+            {
+                stat: '🔗 Total injected derived columns',
+                value: _iceDerivedCols > 0
+                    ? `<span style="color:${C.accent};font-weight:600">${_iceDerivedCols}</span>`
+                    : '0',
+                comment: _iceDerivedCols > 0
+                    ? 'Columns derived from injected columns via injectedColumnExtractors (e.g. Release country, Release date, R-DD … R-Month)'
+                    : 'No injectedColumnExtractors configured for this page type',
             },
             {
                 stat: '💉 Total injected columns',
@@ -15723,6 +15887,12 @@ a { color: #1565c0; }`;
     // These run in a second pass after primary extractors; the source cell is located by name
     // from the primary extractor output map (no colIdx bookkeeping needed).
     let activeSyntheticColumnExtractors = [];
+
+    // Runtime injected-column extractor list populated by buildActiveInjectedColumnExtractors().
+    // Each entry: { sourceColumn, extractor, syntheticColumns }
+    // These run in a third pass after initReleaseEventsColumn() has populated mb-re-cell content;
+    // source cells are located by column name from a per-row map (no colIdx bookkeeping needed).
+    let activeInjectedColumnExtractors = [];
 
     // Runtime injected-column list populated by buildActiveInjectedColumns() in startFetchingProcess.
     // Each entry: { colName: string, entityType: string, incOptions: string[] }
@@ -22435,6 +22605,29 @@ a { color: #1565c0; }`;
                 theadRow.appendChild(thInj);
             });
         }
+        // Inject headers for injected-column extractor synthetic columns LAST.
+        // These are derived (third-pass) columns produced from injected-column cells
+        // (e.g. 'Release country' / 'Release date' split from 'Release events').
+        // Order mirrors applyInjectedColumnExtractors(): declaration order of descriptors.
+        if (activeInjectedColumnExtractors.length) {
+            const _iceBg = headerDerivedBgColor;
+            activeInjectedColumnExtractors.forEach(entry => {
+                entry.syntheticColumns.forEach(colName => {
+                    const _htxtIce = Array.from(theadRow.cells)
+                        .map(th => (th.dataset.colName || th.textContent.replace(/[\u21c5\u25b2\u25bc\u2702\u25b6\u25c0\u25a4]/g, '').trim()));
+                    if (_htxtIce.includes(colName)) return;
+                    const th = document.createElement('th');
+                    th.textContent = colName;
+                    th.dataset.colName = colName;
+                    th.classList.add('mb-derived-extracted-column', 'mb-ice-th');
+                    th.style.backgroundColor = _iceBg;
+                    const tip = _synthColTooltip(entry.extractor, entry.sourceColumn, colName);
+                    if (tip) th.title = tip;
+                    Lib.debug('cleanup', `Injecting injected-column-extractor header: ${colName} (via extractor: ${entry.extractor}, source: ${entry.sourceColumn})`);
+                    theadRow.appendChild(th);
+                });
+            });
+        }
     }
 
     /**
@@ -22888,11 +23081,15 @@ a { color: #1565c0; }`;
         // Each eraser descriptor removes specific marker spans from a designated source column.
         activeInjectedColumns = buildActiveInjectedColumns(activeDefinition);
         activeReleaseEventColumns = buildActiveReleaseEventColumns(activeDefinition);
+        activeInjectedColumnExtractors = buildActiveInjectedColumnExtractors(activeDefinition);
         if (activeInjectedColumns.length) {
             Lib.debug('init', `injectedColumns: [${activeInjectedColumns.map(e => `"${e.colName}"(${e.entityType})`).join(', ')}]`);
         }
         if (activeReleaseEventColumns.length) {
             Lib.debug('init', `releaseEventColumns: [${activeReleaseEventColumns.map(e => `"${e.colName}"`).join(', ')}]`);
+        }
+        if (activeInjectedColumnExtractors.length) {
+            Lib.debug('init', `injectedColumnExtractors configured: ${activeInjectedColumnExtractors.map(e => `"${e.extractor}"("${e.sourceColumn}") → [${e.syntheticColumns.join(', ')}]`).join('; ')}`);
         }
 
         activeColumnErasers = buildActiveColumnErasers(activeDefinition);
@@ -23561,6 +23758,20 @@ a { color: #1565c0; }`;
                         _finalColNames.push('MB-Name');
                         _finalColNames.push('Comment');
                     }
+                    // 5. Release events injected column (populated async by initReleaseEventsColumn).
+                    activeReleaseEventColumns.forEach(entry => _finalColNames.push(entry.colName));
+                    // 6. Relationships injected columns.
+                    activeInjectedColumns.forEach(entry => _finalColNames.push(entry.colName));
+                    // 7. Synthetic columns from injected-column extractors (third pass).
+                    // These are derived from injected-column cells after async population;
+                    // their placeholder cells (mb-ice-cell) are appended in declaration order.
+                    // Chain resolution: each entry's source may be a column produced by a
+                    // preceding entry in the same list (e.g. 'Release date' from 'Release events').
+                    activeInjectedColumnExtractors.forEach(entry => {
+                        const _srcPresent = _finalColNames.includes(entry.sourceColumn);
+                        if (!_srcPresent) return;
+                        entry.syntheticColumns.forEach(cn => _finalColNames.push(cn));
+                    });
                     // Resolve colIdx for each integerColumns descriptor
                     activeIntegerColumns.forEach(entry => {
                         const idx = _finalColNames.indexOf(entry.sourceColumn);
@@ -23834,6 +24045,21 @@ a { color: #1565c0; }`;
                                         newRow.appendChild(_tdInj);
                                     });
                                 }
+                                // 5c. Append injected-column-extractor placeholder cells (third pass).
+                                // These are filled by applyInjectedColumnExtractors() after
+                                // initReleaseEventsColumn() has populated the mb-re-cell source cells.
+                                // Order: declaration order of injectedColumnExtractors entries.
+                                if (activeInjectedColumnExtractors.length) {
+                                    activeInjectedColumnExtractors.forEach(entry => {
+                                        entry.syntheticColumns.forEach(() => {
+                                            const _tdIce = document.createElement('td');
+                                            _tdIce.className = 'mb-ice-cell';
+                                            _tdIce.style.backgroundColor =
+                                                (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '33';
+                                            newRow.appendChild(_tdIce);
+                                        });
+                                    });
+                                }
                                 // ── end shared synthetic-column pipeline ─────────────────────────
 
                                 // 6. Apply integer-column styling (centered inline-block + L/R/C).
@@ -23937,6 +24163,7 @@ a { color: #1565c0; }`;
                                 const _tmpDef = { ...activeDefinition, features: _mergedForGroup };
                                 activeColumnExtractors = buildActiveColumnExtractors(_tmpDef);
                                 activeSyntheticColumnExtractors = buildActiveSyntheticColumnExtractors(_tmpDef);
+                                activeInjectedColumnExtractors = buildActiveInjectedColumnExtractors(_tmpDef);
                                 activeIntegerColumns = buildActiveIntegerColumns(_tmpDef);
                             }
 
@@ -24129,6 +24356,18 @@ a { color: #1565c0; }`;
                                         _tdInj.style.backgroundColor =
                                             (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
                                         newRow.appendChild(_tdInj);
+                                    });
+                                }
+                                // 5c. Append injected-column-extractor placeholder cells (third pass).
+                                if (activeInjectedColumnExtractors.length) {
+                                    activeInjectedColumnExtractors.forEach(entry => {
+                                        entry.syntheticColumns.forEach(() => {
+                                            const _tdIce2 = document.createElement('td');
+                                            _tdIce2.className = 'mb-ice-cell';
+                                            _tdIce2.style.backgroundColor =
+                                                (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '33';
+                                            newRow.appendChild(_tdIce2);
+                                        });
                                     });
                                 }
                                 // 6. Integer-column styling
@@ -24447,6 +24686,18 @@ a { color: #1565c0; }`;
                                             _tdInjS.style.backgroundColor =
                                                 (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '55';
                                             newRow.appendChild(_tdInjS);
+                                        });
+                                    }
+                                    // 5c. Append injected-column-extractor placeholder cells (third pass).
+                                    if (activeInjectedColumnExtractors.length) {
+                                        activeInjectedColumnExtractors.forEach(entry => {
+                                            entry.syntheticColumns.forEach(() => {
+                                                const _tdIce3 = document.createElement('td');
+                                                _tdIce3.className = 'mb-ice-cell';
+                                                _tdIce3.style.backgroundColor =
+                                                    (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '33';
+                                                newRow.appendChild(_tdIce3);
+                                            });
                                         });
                                     }
 
@@ -26342,6 +26593,7 @@ a { color: #1565c0; }`;
                             const _td = { ...activeDefinition, features: _mf };
                             activeColumnExtractors          = buildActiveColumnExtractors(_td);
                             activeSyntheticColumnExtractors = buildActiveSyntheticColumnExtractors(_td);
+                            activeInjectedColumnExtractors  = buildActiveInjectedColumnExtractors(_td);
                             activeIntegerColumns            = buildActiveIntegerColumns(_td);
 
                             // Persist any per-group tooltipColumns / extractMainColumn on the
@@ -32663,6 +32915,162 @@ a { color: #1565c0; }`;
         if (activeReleaseEventColumns.length) {
             document.querySelectorAll('table.tbl').forEach(t => initCollapsableColumns(t));
         }
+        // Third-pass: derive synthetic columns from the now-populated injected columns
+        // (e.g. split 'Release events' into 'Release country' + 'Release date').
+        if (activeInjectedColumnExtractors.length) applyInjectedColumnExtractors();
+    }
+
+    /**
+     * Third-pass extractor: processes every data row in the rendered table(s) and
+     * fills the mb-ice-cell placeholder <td>s that were appended during row building.
+     *
+     * This runs AFTER initReleaseEventsColumn() has populated mb-re-cell content, so
+     * each row's 'Release events' cell already contains the full <ul><li> structure
+     * produced by _rePopulateCell().
+     *
+     * Algorithm per row:
+     *   1. Build an injCellMap (column-name → <td>) seeded with the injected source
+     *      columns (currently only 'Release events' / mb-re-cell).
+     *   2. Collect the row's mb-ice-cell placeholder <td>s in DOM order.
+     *   3. For each injectedColumnExtractors descriptor (in declaration order):
+     *      a. Look up the source cell from injCellMap.
+     *      b. Call SyntheticColumnDataExtractor[entry.extractor](sourceCell).
+     *      c. Fill the next N placeholder cells with the extractor's output.
+     *      d. Register the output cells back into injCellMap under their syntheticColumns
+     *         names so that later descriptors can chain off them (e.g. dateParts reading
+     *         'Release date' produced by an earlier splitCountryDate call).
+     *
+     * Idempotent: cells already marked mb-ice-done are skipped, so calling this
+     * function more than once (e.g. after a re-render) is safe.
+     *
+     * Also walks groupedRows / allRows in-memory structures so that filtering and
+     * sorting operate on the populated data even before the next DOM render cycle.
+     */
+    function applyInjectedColumnExtractors() {
+        if (!activeInjectedColumnExtractors.length) return;
+
+        const _iceBg = (Lib.settings.sa_ui_thead_th_injected_bg || '#b8b8d0') + '22';
+
+        // Total number of ICE placeholder cells expected per row.
+        const _iceTotal = activeInjectedColumnExtractors
+            .reduce((n, e) => n + e.syntheticColumns.length, 0);
+
+        /**
+         * Ensure a row has exactly _iceTotal mb-ice-cell placeholder <td>s.
+         * Rows reconstructed from disk lack these cells (they were excluded from
+         * serialization), so we must append them before _processRow fills them.
+         * Already-present cells (live-fetch rows) are left untouched.
+         * @param {HTMLTableRowElement} row
+         */
+        function _ensureIceCells(row) {
+            const existing = row.querySelectorAll('td.mb-ice-cell').length;
+            const missing  = _iceTotal - existing;
+            if (missing <= 0) return;
+            // Insert before the Picard cell when present so the ICE columns land in
+            // the correct position and Picard remains the rightmost column.
+            // On live-fetch rows the Picard cell does not yet exist at this point
+            // (initPicardTaggerColumn runs after applyInjectedColumnExtractors on the
+            // live path), so insertBefore(td, null) is equivalent to appendChild().
+            const _picardTd = row.querySelector('td.mb-picard-cell');
+            for (let i = 0; i < missing; i++) {
+                const td = document.createElement('td');
+                td.className = 'mb-ice-cell';
+                td.style.backgroundColor = _iceBg;
+                row.insertBefore(td, _picardTd);  // null → appends when no Picard cell
+            }
+        }
+
+        /**
+         * Process a single <tr> element: fill its mb-ice-cell placeholders.
+         * @param {HTMLTableRowElement} row
+         */
+        function _processRow(row) {
+            // Skip rows that have already been processed.
+            if (row.dataset.iceDone) return;
+
+            // ── 1. Build source cell map from injected columns ────────────────
+            // Seed with 'Release events' → mb-re-cell (only populated RE cells).
+            const injCellMap = new Map();
+            activeReleaseEventColumns.forEach(entry => {
+                const cell = row.querySelector('td.mb-re-cell');
+                if (cell && cell.dataset.reDone) injCellMap.set(entry.colName, cell);
+            });
+
+            // If none of the required source columns are present (e.g. RE not yet
+            // populated), bail out — the call after initReleaseEventsColumn will
+            // re-run once data is available.
+            const _hasSource = activeInjectedColumnExtractors.some(e => injCellMap.has(e.sourceColumn));
+            if (!_hasSource) return;
+
+            // ── 2. Collect placeholder cells in DOM order ─────────────────────
+            const iceCells = Array.from(row.querySelectorAll('td.mb-ice-cell:not(.mb-ice-done)'));
+            let iceIdx = 0;
+
+            // ── 3. Run each descriptor ────────────────────────────────────────
+            activeInjectedColumnExtractors.forEach(entry => {
+                const sourceCell = injCellMap.get(entry.sourceColumn);
+
+                let resultCells;
+                if (!sourceCell) {
+                    Lib.warn('extract',
+                        `injectedColumnExtractor: source column "${entry.sourceColumn}" not found ` +
+                        `— extractor "${entry.extractor}" skipped`);
+                    resultCells = entry.syntheticColumns.map(() => document.createElement('td'));
+                } else if (typeof SyntheticColumnDataExtractor[entry.extractor] !== 'function') {
+                    Lib.error('extract',
+                        `injectedColumnExtractor: unknown extractor function "${entry.extractor}"`);
+                    resultCells = entry.syntheticColumns.map(() => document.createElement('td'));
+                } else {
+                    const res = SyntheticColumnDataExtractor[entry.extractor](sourceCell);
+                    // Pad to declared length; trim any surplus.
+                    while (res.length < entry.syntheticColumns.length) res.push(document.createElement('td'));
+                    resultCells = res.slice(0, entry.syntheticColumns.length);
+                }
+
+                // ── 3c. Fill placeholder cells ────────────────────────────────
+                resultCells.forEach((td, j) => {
+                    const placeholder = iceCells[iceIdx++];
+                    if (!placeholder) return;
+                    placeholder.classList.add('mb-ice-done');
+                    placeholder.style.backgroundColor = '';
+                    // Move child nodes from the extractor output td into the placeholder.
+                    while (td && td.firstChild) placeholder.appendChild(td.firstChild);
+                    // Carry over any textContent for leaf cells (e.g. country code).
+                    if (td && !td.firstChild && td.textContent) {
+                        placeholder.textContent = td.textContent;
+                    }
+                });
+
+                // ── 3d. Register outputs into injCellMap for downstream chaining ──
+                // Re-invoke the extractor on the same source to obtain fresh td
+                // elements that can serve as source cells for later descriptors
+                // (e.g. 'Release date' td produced here feeds a dateParts extractor).
+                if (sourceCell && typeof SyntheticColumnDataExtractor[entry.extractor] === 'function') {
+                    const chainRes = SyntheticColumnDataExtractor[entry.extractor](sourceCell);
+                    entry.syntheticColumns.forEach((colName, j) => {
+                        if (chainRes[j]) injCellMap.set(colName, chainRes[j]);
+                    });
+                }
+            });
+
+            row.dataset.iceDone = '1';
+        }
+
+        // ── Walk all rendered rows ────────────────────────────────────────────
+        // _ensureIceCells runs first on each row so that disk-loaded rows (which
+        // were reconstructed without mb-ice-cell <td>s) get their placeholders
+        // appended before _processRow tries to fill them.
+        document.querySelectorAll('table.tbl tbody tr').forEach(row => { _ensureIceCells(row); _processRow(row); });
+
+        // Also process in-memory row stores so filtered/sorted views pick up data.
+        if (typeof groupedRows !== 'undefined') {
+            groupedRows.forEach(g => g.rows.forEach(row => { _ensureIceCells(row); _processRow(row); }));
+        }
+        if (typeof allRows !== 'undefined' && allRows.length) {
+            allRows.forEach(row => { _ensureIceCells(row); _processRow(row); });
+        }
+
+        Lib.debug('extract', `applyInjectedColumnExtractors: complete (${activeInjectedColumnExtractors.length} descriptor(s))`);
     }
 
     /**
@@ -33139,7 +33547,8 @@ a { color: #1565c0; }`;
                     .filter(row => !row.classList.contains('mb-col-filter-row')); // Exclude filter row
                 dataToSave.headers = headerRows.map(row => {
                     return Array.from(row.cells)
-                        .filter(cell => !cell.classList.contains('mb-picard-th'))
+                        .filter(cell => !cell.classList.contains('mb-picard-th') &&
+                                        !cell.classList.contains('mb-ice-th'))
                         .map(cell => ({
                         html: cell.innerHTML,
                         colSpan: cell.colSpan || 1,
@@ -33163,6 +33572,7 @@ a { color: #1565c0; }`;
                         return Array.from(row.cells)
                             .filter(cell => !cell.classList.contains('mb-rel-cell') &&
                                             !cell.classList.contains('mb-re-cell') &&
+                                            !cell.classList.contains('mb-ice-cell') &&
                                             !cell.classList.contains('mb-picard-cell'))
                             .map(cell => ({
                             html: getCleanCellHtml(cell),
@@ -33181,6 +33591,7 @@ a { color: #1565c0; }`;
                     return Array.from(row.cells)
                         .filter(cell => !cell.classList.contains('mb-rel-cell') &&
                                         !cell.classList.contains('mb-re-cell') &&
+                                        !cell.classList.contains('mb-ice-cell') &&
                                         !cell.classList.contains('mb-picard-cell'))
                         .map(cell => ({
                         html: getCleanCellHtml(cell),
@@ -33478,6 +33889,10 @@ a { color: #1565c0; }`;
                 if (!activeReleaseEventColumns.length) {
                     activeReleaseEventColumns = buildActiveReleaseEventColumns(activeDefinition);
                     Lib.debug('cache', `disk-load: rebuilt activeReleaseEventColumns (${activeReleaseEventColumns.length})`);
+                }
+                if (!activeInjectedColumnExtractors.length) {
+                    activeInjectedColumnExtractors = buildActiveInjectedColumnExtractors(activeDefinition);
+                    Lib.debug('cache', `disk-load: rebuilt activeInjectedColumnExtractors (${activeInjectedColumnExtractors.length})`);
                 }
 
                 // Visually mark the action button that corresponds to the loaded data with

@@ -1,5 +1,77 @@
 [
   {
+    "version": "9.99.519",
+    "date": "2026-04-21",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix Picard column shift on disk-load for pages with a Picard column (e.g. label/relationships): `_ensureIceCells` was appending ICE placeholder <td>s at the row end via `appendChild`, placing them after the Picard <td> that `initPicardTaggerColumn` had already injected synchronously. Fixed by using `row.insertBefore(td, picardTd)` — inserts ICE cells before the Picard cell when it exists, and falls back to append-at-end (equivalent to `appendChild`) when no Picard cell is present, preserving correct behaviour on live-fetch rows."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.518",
+    "date": "2026-04-21",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Add `injectedColumnExtractors` to `label-relationships-filtered` and `label-relationships` page types: splits 'Release events' into 'Release country' + 'Release date' via `splitCountryDate`, then further splits 'Release date' into 'R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month' via `dateParts`. Extend `integerColumns` with R-DD (R), R-MM (R), R-YYYY (C) and Length (:) alignment descriptors."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.517",
+    "date": "2026-04-21",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix doubled injected-derived columns (Release country, Release date, R-DD…R-Month) when loading from disk: (a) stamp ICE <th> headers with class `mb-ice-th` in cleanupHeaders so they are excluded from header serialization — on disk-load, cleanupHeaders re-injects them cleanly without duplication; (b) add `_ensureIceCells(row)` inside applyInjectedColumnExtractors that appends the correct number of `mb-ice-cell` placeholder <td>s to each row before processing, covering disk-loaded rows that were reconstructed without ICE cells.",
+          "Fix column-shift bug (Release events / Relationships data appearing in ICE columns on disk-load): root cause was that saved headers included ICE <th>s but saved rows excluded ICE <td>s, causing a header/cell count mismatch. Fixed by excluding both from serialization (mb-ice-th headers and mb-ice-cell data cells) and regenerating both on load.",
+          "Improve `SyntheticColumnDataExtractor.splitCountryDate` flag rendering: the 'Release country' cell now renders a `<span class=\"flag flag-XX\" title=\"United States (US)\">United States (US)</span>` element by reading the `flag-XX` CSS class and `title` attribute stamped on each source <li> by `_rePopulateCell`, instead of the bare 2-letter country code from textContent. Events with no area data produce an empty country cell as before."
+        ]
+      },
+      {
+        "label": "ℹ️ Note",
+        "items": [
+          "No JS conflict exists between `ColumnDataExtractor.splitCountryDate` and `SyntheticColumnDataExtractor.splitCountryDate`: they are methods on two separate object literals and are dispatched independently by their respective caller pipelines (`ColumnDataExtractor[entry.extractor]` vs `SyntheticColumnDataExtractor[entry.extractor]`)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.516",
+    "date": "2026-04-21",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix doubled injected-derived columns when loading from disk: exclude `mb-ice-cell` <td>s from serialization in both multi-table (grouped) and single-table (allRows) save paths, exactly as `mb-re-cell` and `mb-rel-cell` are already excluded. On load, `initReleaseEventsColumn()` → `applyInjectedColumnExtractors()` re-derives the ICE cells from the re-fetched Release events data, so no stale or duplicated cells appear.",
+          "Add '🔗 Total injected derived columns' row to the Statistics panel between '🔁 Total derived columns' and '💉 Total injected columns', reporting the count of synthetic columns produced by `injectedColumnExtractors` (e.g. Release country, Release date, R-DD … R-Month). Value is computed live from `activeInjectedColumnExtractors` at panel-open time; shows 0 with a descriptive comment when no `injectedColumnExtractors` are configured."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.515",
+    "date": "2026-04-20",
+    "sections": [
+      {
+        "label": "🌟 New Feature",
+        "items": [
+          "Add `injectedColumnExtractors` feature for `place-performances` and `place-performances-filtered` page types: splits the async-populated 'Release events' injected column into derived synthetic columns 'Release country' and 'Release date', with 'Release date' further split into 'R-DD', 'R-MM', 'R-YYYY', 'R-Day', 'R-Month' via a chained `dateParts` extractor.",
+          "Add `SyntheticColumnDataExtractor.splitCountryDate`: parses the `mb-re-cell` `<ul><li>` format (2-letter country code + two-space separator + ISO date) produced by `_rePopulateCell`, outputting parallel `<ul><li>` structures for 'Release country' and 'Release date' — mirrors the existing `ColumnDataExtractor.splitCountryDate` for native Country/Date DOM columns.",
+          "Add `buildActiveInjectedColumnExtractors(def)` builder function, `applyInjectedColumnExtractors()` runtime function, and `let activeInjectedColumnExtractors` variable: a third-pass extraction pipeline that fires after `initReleaseEventsColumn()` has async-populated injected-column cells, with chained-descriptor support (each extractor's output columns feed into the injCellMap for downstream descriptors).",
+          "Extend `integerColumns` for both place-performances page types with R-DD (align R), R-MM (align R), R-YYYY (align C) descriptors for the new release-date synthetic columns."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.514",
     "date": "2026-04-20",
     "sections": [
@@ -540,7 +612,7 @@
       {
         "label": "✨ Feature",
         "items": [
-          "Added support for the MusicBrainz Most Popular Tags page (/tags). (1) New @match directive: *://*.musicbrainz.org/tags* added after the user-tags match. (2) New pageType 'popular-tags': match=/^\/tags/, single button 'Show most popular tags' with params:{show_list:'1'}, features: renameH2ToH3:true (demotes the existing Genres/Other Tags h2s to h3), insertH2:'Popular tags' (creates the new section anchor h2), listToTable:[''] (triggers the new Structure E), integerColumns Tag count right-aligned, tableMode:'multi'. (3) Structure E in applyListToTable (sectionId='' dispatch): detected via _currentPath.match(/^\\/tags/). Walks every <h3> (after renameH2ToH3) and converts its next-sibling <ul class='tag-list top-tag-list'> into a 2-column <table class='tbl'> whose columns are singular(h3 text) (e.g. 'Genre', 'Other Tag') and 'Tag count', matching the Structure A/B layout used by user-tags pages. The table dataset.mbOriginalColName is set so renderGroupedTable can patch per-group cloned theads correctly."
+          "Added support for the MusicBrainz Most Popular Tags page (/tags). (1) New @match directive: *://*.musicbrainz.org/tags* added after the user-tags match. (2) New pageType 'popular-tags': match=/^/tags/, single button 'Show most popular tags' with params:{show_list:'1'}, features: renameH2ToH3:true (demotes the existing Genres/Other Tags h2s to h3), insertH2:'Popular tags' (creates the new section anchor h2), listToTable:[''] (triggers the new Structure E), integerColumns Tag count right-aligned, tableMode:'multi'. (3) Structure E in applyListToTable (sectionId='' dispatch): detected via _currentPath.match(/^\\/tags/). Walks every <h3> (after renameH2ToH3) and converts its next-sibling <ul class='tag-list top-tag-list'> into a 2-column <table class='tbl'> whose columns are singular(h3 text) (e.g. 'Genre', 'Other Tag') and 'Tag count', matching the Structure A/B layout used by user-tags pages. The table dataset.mbOriginalColName is set so renderGroupedTable can patch per-group cloned theads correctly."
         ]
       }
     ]
