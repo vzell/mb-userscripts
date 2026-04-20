@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.510+2026-04-19
+// @version      9.99.513+2026-04-20
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -5250,22 +5250,175 @@
             tableMode: 'single'
         },
         // Search pages
+        // Search pages
         {
             type: 'search',
             match: (path) => path.includes('/search'),
-            buttons: [ { label: 'Show all Search results' } ],
+            // labelFromType: true reads ?type= from the URL and appends the entity
+            // type to the button label dynamically, e.g. "Show all Search Results for Releases".
+            buttons: [ { label: 'Show all Search Results', labelFromType: true } ],
             tableMode: 'single',
+            rowTargetSelector: 'p.pageselector-results', // Specific target for Search pages
             features: {
-                renderMultiRowCell: [ 'Label', 'Catalog#' ],
-                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes', 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
-                extractMainColumn: 'Name',  // Specific header
-                stickyColumn: 'Name',
                 transformToH2: true,        // New flag to trigger <h2> transformation
                 // Inject a "Searchform" h2 before the existing (single) h2 on the page
                 // so the collapsible-section infrastructure can wrap the search form.
                 insertPrependH2: 'Searchform'
             },
-            rowTargetSelector: 'p.pageselector-results' // Specific target for Search pages
+            // Per-entity feature sets resolved from ?type= URL parameter via
+            // resolveEntityFeaturesFromH2 (which has a special branch for pageType 'search').
+            // Keys are the plural, title-cased entity-type labels produced by
+            // _urlTypeToEntityFeatureKey() from the raw URL type value.
+            entityFeatures: {
+                'Releases': {
+                    columnExtractors: [
+                        { sourceColumn: 'Name',         extractor: 'caa',                syntheticColumns: ['CAA'] },
+                        { sourceColumn: 'Country/Date', extractor: 'splitCountryDate',   syntheticColumns: ['Country', 'Date'] },
+                        { sourceColumn: 'Tracks',       extractor: 'sumTracks',          syntheticColumns: ['Total Tracks'] },
+                        { sourceColumn: 'Format',       extractor: 'extractFormatTypes', syntheticColumns: ['Format Types'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    injectedColumns: [ 'Relationships' ],
+                    integerColumns: [
+                        { sourceColumn: 'DD',           align: 'R' },
+                        { sourceColumn: 'MM',           align: 'R' },
+                        { sourceColumn: 'YYYY',         align: 'C' },
+                        { sourceColumn: 'Total Tracks', align: 'R' }
+                    ],
+                    collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'CAA', 'Label', 'Catalog#' ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode', 'Language', 'Type', 'Status' ],
+                    renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                    addCAA: 'Name',
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Events': {
+                    columnExtractors: [
+                        { sourceColumn: 'Name',     extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Name',     extractor: 'caa',            syntheticColumns: ['EAA'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Name',     extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
+                        { sourceColumn: 'Name',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
+                    ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    integerColumns: [
+                        { sourceColumn: 'DD',   align: 'R' },
+                        { sourceColumn: 'MM',   align: 'R' },
+                        { sourceColumn: 'YYYY', align: 'C' }
+                    ],
+                    tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
+                    addEAA: 'Name',
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Release groups': {
+                    columnExtractors: [
+                        { sourceColumn: 'Release group', extractor: 'caa', syntheticColumns: ['CAA'] }
+                    ],
+                    tooltipColumns: [ 'Release group', 'Artist', 'Type' ],
+                    injectedColumns: [ 'Relationships' ],
+                    collapsableColumns: [ 'CAA' ],
+                    addCAA: 'Release group',
+                    extractMainColumn: 'Release group',
+                    stickyColumn: 'Release group'
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+                    collapsableColumns: [ 'ISRCs', 'Release' ],
+                    integerColumns: [
+                        { sourceColumn: 'Medium', align: 'R' },
+                        { sourceColumn: 'Track',  align: 'R' },
+                        { sourceColumn: 'Length', align: ':' }
+                    ],
+                    addCAA: 'Release',
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Artists': {
+                    columnExtractors: [
+                        { sourceColumn: 'Begin', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                        { sourceColumn: 'End',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                    ],
+                    integerColumns: [
+                        { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                        { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                    ],
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Places': {
+                    columnExtractors: [
+                        { sourceColumn: 'Area',  extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
+                        { sourceColumn: 'Begin', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                        { sourceColumn: 'End',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                    ],
+                    integerColumns: [
+                        { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                        { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                    ],
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Areas': {
+                    columnExtractors: [
+                        { sourceColumn: 'Name',  extractor: 'splitArea', syntheticColumns: ['Area', 'Country'] },
+                        { sourceColumn: 'Begin', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                        { sourceColumn: 'End',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                    ],
+                    integerColumns: [
+                        { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                        { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                    ],
+                    stickyColumn: 'Name'
+                },
+                'Labels': {
+                    columnExtractors: [
+                        { sourceColumn: 'Begin', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
+                        { sourceColumn: 'End',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
+                    ],
+                    integerColumns: [
+                        { sourceColumn: 'B-DD', align: 'R' }, { sourceColumn: 'B-MM', align: 'R' }, { sourceColumn: 'B-YYYY', align: 'C' },
+                        { sourceColumn: 'E-DD', align: 'R' }, { sourceColumn: 'E-MM', align: 'R' }, { sourceColumn: 'E-YYYY', align: 'C' }
+                    ],
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Series': {
+                    integerColumns: [ { sourceColumn: 'Number of entities', align: 'R' } ],
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'CD stubs': {
+                    integerColumns: [ { sourceColumn: 'Tracks', align: 'R' } ],
+                    stickyColumn: 'CD stub'
+                },
+                'Works': {
+                    collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC' ],
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Tags': {
+                    stickyColumn: 'Name'
+                },
+                'Instruments': {
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Annotations': {
+                    collapsableColumns: [ 'Annotation' ],
+                    injectedColumns: [ 'Relationships' ],
+                    addCAA: 'Name',
+                    extractMainColumn: 'Name',
+                    stickyColumn: 'Name'
+                },
+                'Editors': {
+                    stickyColumn: 'Name'
+                }
+            }
         },
         // Instrument pages
         {
@@ -5854,8 +6007,12 @@
             // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}$/) && !path.endsWith('/releases'),
             buttons: [
-                { label: '🧮 Official RGs',         params: { all: '0', va: '0' } },
-                { label: '🧮 Official VA RGs',      params: { all: '0', va: '1' } },
+                // These two narrow buttons (official only) are superseded by the
+                // per-view toggle buttons injected after the full render: "Official
+                // Discography", "Non-Official Discography", "Complete" and
+                // "Complete (merged)".  Kept here (commented) for reference only.
+                // { label: '🧮 Official RGs',         params: { all: '0', va: '0' } },
+                // { label: '🧮 Official VA RGs',      params: { all: '0', va: '1' } },
                 { label: '🧮 Artist RGs',           params: { all: '1', va: '0' } },
                 { label: '🧮 Various Artists RGs',  params: { all: '1', va: '1' } }
             ],
@@ -15483,6 +15640,24 @@ a { color: #1565c0; }`;
             }
         }
 
+        // ── Dynamic label from URL ?type= parameter (labelFromType: true) ──────
+        // When a button definition carries `labelFromType: true`, read the `type`
+        // query parameter, convert it to an entity-type label
+        // (e.g. `release_group` → `Release groups`), and append it to the button
+        // label template as "Show all Search Results for <EntityType>".
+        if (conf.labelFromType) {
+            const _rawType  = new URLSearchParams(window.location.search).get('type') || '';
+            const _typeLabel = _urlTypeToEntityFeatureKey(_rawType);
+            if (_typeLabel) {
+                // Append " for <TypeLabel>" if not already present, or replace the
+                // existing suffix so re-renders stay correct.
+                const _base = conf.label.replace(/\s+for\s+\S.*$/, '').trim();
+                conf = Object.assign({}, conf, {
+                    label: `${_base} for ${_typeLabel}`
+                });
+            }
+        }
+
         // Build button label with Ctrl-M+N superscript mnemonic (¹²³…) after the 🧮 emoji.
         // Every action button receives this prefix so the Ctrl-M shortcut system can
         // discover and activate it regardless of the button's original label format.
@@ -22318,6 +22493,23 @@ a { color: #1565c0; }`;
      */
     function resolveEntityFeaturesFromH2(def) {
         if (!def.entityFeatures) return {};
+
+        // ── Search pageType: resolve from URL ?type= parameter ────────────────
+        // Search pages use labelFromType rather than labelFromH2.  The entity
+        // type is encoded in the URL (e.g. ?type=release_group) and must be
+        // converted to the plural form used as entityFeatures keys.
+        if (def.type === 'search') {
+            const _urlType = new URLSearchParams(window.location.search).get('type') || '';
+            const _key     = _urlTypeToEntityFeatureKey(_urlType);
+            Lib.debug('init', `resolveEntityFeaturesFromH2 [search]: urlType="${_urlType}" → key="${_key}"`);
+            if (_key && def.entityFeatures[_key]) {
+                Lib.debug('init', `resolveEntityFeaturesFromH2 [search]: matched key "${_key}"`);
+                return def.entityFeatures[_key];
+            }
+            Lib.debug('init', `resolveEntityFeaturesFromH2 [search]: no match for "${_key}" — returning {}`);
+            return {};
+        }
+
         let h2Type = _getH2EntityType();
 
         // ── Tag page H2 text normalisation ───────────────────────────────────
@@ -22355,6 +22547,40 @@ a { color: #1565c0; }`;
 
     // Backward-compatibility alias for code that still calls the old series-specific name.
     const resolveSeriesEntityFeatures = resolveEntityFeaturesFromH2;
+
+    /**
+     * Converts a MusicBrainz search URL `type` parameter value into the plural
+     * entity-type key used by `entityFeatures` maps (e.g. on the 'search' pageType).
+     *
+     * Algorithm:
+     *   1. Replace underscores with spaces.
+     *   2. Capitalize the first letter only (first word only, e.g. "release group").
+     *   3. Append "s" to pluralize — with special cases for "Series" (unchanged)
+     *      and "Cdstub" → "Cdstubs".
+     *
+     * Examples:
+     *   release        → Releases
+     *   release_group  → Release groups
+     *   recording      → Recordings
+     *   annotation     → Annotations
+     *   cdstub         → CD stubs
+     *   series         → Series
+     *
+     * @param {string} urlType  The raw `type` query-param value (lowercase, underscored).
+     * @returns {string}        The pluralised, title-cased entity-feature key, or '' on
+     *                          empty input.
+     */
+    function _urlTypeToEntityFeatureKey(urlType) {
+        if (!urlType) return '';
+        // Replace underscores with spaces, capitalize first letter only.
+        const _spaced = urlType.replace(/_/g, ' ');
+        const _titled = _spaced.charAt(0).toUpperCase() + _spaced.slice(1);
+        // Pluralise — special cases where adding 's' is wrong or unneeded.
+        if (_titled === 'Series') return 'Series';
+        // MB's URL type is 'cdstub' (no space); map it to the display key 'CD stubs'.
+        if (_titled.toLowerCase() === 'cdstub') return 'CD stubs';
+        return _titled + 's';
+    }
 
     /**
      * Resolves the per-entity feature set for a multi-table tag page group by

@@ -1,5 +1,46 @@
 [
   {
+    "version": "9.99.513",
+    "date": "2026-04-20",
+    "sections": [
+      {
+        "label": "🐛 Fix / ✨ Improve",
+        "items": [
+          "Search entityFeatures: corrected several entries vs v9.99.511 — Releases: added addCAA:'Name'; Events: added addEAA:'Name'; Release groups: added addCAA:'Release group'; Recordings: merged duplicate collapsableColumns, added Length integer column with ':' align, added addCAA:'Release'; Artists: removed splitArea extractors for Area/Begin area/End area (these columns are not present in search results); Areas: changed extractor from splitLocation to splitArea with simpler syntheticColumns ['Area','Country'], removed extractMainColumn (not needed for area search); Labels: removed splitArea extractor (Area column absent in label search results); CD stubs: renamed key from 'Cdstubs' to 'CD stubs' to match _urlTypeToEntityFeatureKey('cdstub') output; added Instruments entity feature entry; Works: restored correct collapsableColumns ['Authors','Recording artists','Other artists','ISWC']."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.512",
+    "date": "2026-04-20",
+    "sections": [
+      {
+        "label": "🐛 Fix / 🧹 Cleanup",
+        "items": [
+          "search entityFeatures: corrected multiple entries vs v9.99.511 — added addCAA:'Name' to Releases, addEAA:'Name' to Events, addCAA:'Release group' to Release groups, addCAA:'Release' to Recordings; removed incorrect splitArea extractors from Artists (no Area column on artist search); changed Areas to use splitArea (not splitLocation); removed splitArea from Labels (no Area column); added Instruments entry; fixed duplicate collapsableColumns key in Recordings; fixed Track align to 'R' and added Length align ':'; added 'Release' to Recordings collapsableColumns.",
+          "_urlTypeToEntityFeatureKey: added special case for 'cdstub' → 'CD stubs' (MB URL type has no space; entityFeatures key has space and capital letters). Updated JSDoc example.",
+          "artist-releasegroups: commented out the '🧮 Official RGs' and '🧮 Official VA RGs' buttons with a note that the per-view toggle buttons (Official Discography, Non-Official Discography, Complete, Complete (merged)) supersede them."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.511",
+    "date": "2026-04-20",
+    "sections": [
+      {
+        "label": "✨ New",
+        "items": [
+          "Search pages: added full entityFeatures map covering all MB search entity types (Releases, Events, Release groups, Recordings, Artists, Places, Areas, Labels, Series, Cdstubs, Works, Tags, Annotations, Editors). Each entry carries appropriate columnExtractors, syntheticColumnExtractors, integerColumns, collapsableColumns, tooltipColumns, injectedColumns, renderMultiRowCell, extractMainColumn, and stickyColumn settings. The old flat features block (renderMultiRowCell, collapsableColumns, extractMainColumn, stickyColumn) is replaced by per-entity config.",
+          "Added _urlTypeToEntityFeatureKey() helper that converts URL ?type= parameter values to entityFeatures map keys (release → Releases, release_group → Release groups, annotation → Annotations, series → Series, etc.).",
+          "Added labelFromType: true button-config flag: when set, reads ?type= from the URL at button-creation time, converts it via _urlTypeToEntityFeatureKey(), and appends 'for <EntityType>' to the base label (e.g. 'Show all Search Results for Release groups').",
+          "resolveEntityFeaturesFromH2: added a fast-path for pageType='search' that reads ?type= from the URL and resolves the matching entityFeatures key directly, bypassing the H2-text lookup (which is unreliable on search pages whose H2 is dynamically generated from the query)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.510",
     "date": "2026-04-19",
     "sections": [
