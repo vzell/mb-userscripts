@@ -6252,7 +6252,6 @@
             match: (path) => path.includes('/works'),
             buttons: [ { label: 'Show all Works for Artist' } ],
             features: {
-                injectedColumns: [ 'Relationships' ],
                 collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
                 extractMainColumn: 'Work',
                 stickyColumn: 'Work'
