@@ -6108,8 +6108,7 @@
                  ],
                 integerColumns: [
 		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
-		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
-		    {sourceColumn: 'Length', align: ':'}
+		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'}
 		],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',
@@ -6134,8 +6133,7 @@
                  ],
                 integerColumns: [
 		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
-		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'},
-		    {sourceColumn: 'Length', align: ':'}
+		    {sourceColumn: 'R-DD',   align: 'R'}, {sourceColumn: 'R-MM', align: 'R'}, {sourceColumn: 'R-YYYY', align: 'C'}
 		],
                 collapsableColumns: [ 'Release events' ],
                 addCAA: 'Title',

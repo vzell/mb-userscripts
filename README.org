@@ -75623,7 +75623,7 @@ English(primary) => English | primary
         }
 #+end_example
 
-** when sticky column is fixed, the highlight color hovering over the current row doesn't take sticky column into account
+** when a sticky column is fixed, the highlight color hovering over the current row doesn't take the sticky column into account
 ** add CAA enriched tooltip also to the "addCAA" thumbnail
 ** "Picard" column adjustments
 
@@ -76108,7 +76108,6 @@ other synthetic columns values have shifted one to the right.
 **** TODO add better handling for injected derived columns inclusive new background column header colour
 
 **** TODO remove "{sourceColumn: 'Length', align: ':'}" from integerColumns for label pageTypes
-
 
 ** Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
 ** add support for artist-credit pages
