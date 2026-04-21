@@ -75625,9 +75625,19 @@ English(primary) => English | primary
 
 ** when a sticky column is fixed, the highlight color hovering over the current row doesn't take the sticky column into account
 ** add CAA enriched tooltip also to the thumbnail in the column configured with the "addCAA" parameter
+*** initial
 
 add the CAA enriched tooltip which pops up when hovering over an image in the big image stripe above a table also to the
 thumbnail in the column configured with the "addCAA" parameter
+
+*** bugs
+
+hovering over the thumbnails displays the tooltip over the image popup instead of to the right
+
+*** conditional behavior based on whether hover preview is enabled
+
+The user's request doesn't specify conditional behavior based on whether hover preview is enabled, and the bigbox strip
+itself shows the tooltip regardless, so I'll add it unconditionally to the thumbnail as well.
 
 ** "Picard" column adjustments
 
@@ -76508,4 +76518,6 @@ add before the pageType "type: 'taglookup',"
 Some latest fixes:
 
 1.)
+
+* https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908 does not restore CAA images when loading from disk
 
