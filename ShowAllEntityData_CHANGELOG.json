@@ -1,5 +1,34 @@
 [
   {
+    "version": "9.99.523",
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "artist-credit-entity: extended entityFeatures with `extractMainColumn` + `stickyColumn` for Release groups and Releases; added Recordings entry with `columnExtractors` (`video` extractor), `syntheticColumnExtractors` (`eventParts` extractor producing Event-Type/Date/Detail/Venue/Venue-Detail/City/State/Country), `extractMainColumn: 'Recording'`, and `stickyColumn: 'Recording'`.",
+          "artist-credit: added the same entityFeatures map (Release groups, Releases, Recordings with identical configuration to artist-credit-entity) so that the multi-table overview page resolves per-group CAA, sticky-column, main-column, and extractor settings correctly via `resolveEntityFeaturesFromH3`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.522",
+    "date": "2026-04-21",
+    "sections": [
+      {
+        "label": "🌟 New Feature",
+        "items": [
+          "Add support for MusicBrainz artist-credit pages: new `@match *://*.musicbrainz.org/artist-credit/*` directive activates the script on all `/artist-credit/…` URLs.",
+          "New pageType `artist-credit` (`/artist-credit/<id>`, e.g. `/artist-credit/1488075`): inserts `<h2>Artist list</h2>` after `<div class=\"tabs\">` and before the `<p>This artist credit is composed of…</p>` paragraph (via `insertH2: 'Artist list'`). The `<ul id=\"artist-credit-artists\">` below it is left as-is. All `<h3>+<ul>` pairs under `<h2>Uses</h2>` (Release groups, Releases, Recordings, Tracks, …) are converted to one-column `<table class=\"tbl\">` elements by new Structure F in `applyListToTable`; first-column headers use the singular form of the h3 text (e.g. `Release groups` → `Release group`). The `<h2>Uses</h2>` element stays in place and becomes the `targetHeader` anchor for `renderGroupedTable`. `tableMode: 'multi'` drives the full grouped-table rendering machinery including per-sub-table filters, sorting, master toggle, and collapsible sections. Added `'artist-credit'` to `_singularPageTypes` so `colName` is correctly singularised in the fetch pipeline.",
+          "New pageType `artist-credit-entity` (`/artist-credit/<id>/<entity>`, e.g. `/artist-credit/1488075/release-group`): when the entity sub-page renders its data as a plain `<ul>` without id or class, Structure G in `applyListToTable` converts it to a one-column `<table class=\"tbl\">`. The column name is derived from the last URL path segment with hyphens replaced by spaces and the first character capitalised (`release-group` → `Release group`). The entityFeatures map (`Release groups`: `addCAA: 'Release group'`; `Releases`: `addCAA: 'Release'`) is resolved via a new URL-based fast-path in `resolveEntityFeaturesFromH2` (plural of the singular URL slug is looked up as the entityFeatures key). `tableMode: 'single'`.",
+          "Extended the `See all N` button machinery in `renderGroupedTable` to also fire on `pageType === 'artist-credit'`: the last row of each group table is inspected for a `<td><em><a href*=\"/artist-credit/\">See all N …</a></em></td>` entry; when found, a `mb-show-all-subtable-btn` button is inserted in the h3 header (after the filter container), the trailing row is removed, and `mbTotalRows` is patched. Tooltip text is differentiated from tag-value pages. The original tag-value block now covers both `tag-value`, `user-tag-value`, and `artist-credit` through a unified condition and a `_hrefFragment` / `_pageKindLabel` selector variable.",
+          "Added `artist-credit-entity` fast-path to `resolveEntityFeaturesFromH2`: reads the last URL path segment, converts it to singular capitalised form, appends `s` for the plural entityFeatures key (special-casing `Series`), and returns the matching entityFeatures entry."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.521",
     "date": "2026-04-21",
     "sections": [

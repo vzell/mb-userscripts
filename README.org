@@ -75624,7 +75624,11 @@ English(primary) => English | primary
 #+end_example
 
 ** when a sticky column is fixed, the highlight color hovering over the current row doesn't take the sticky column into account
-** add CAA enriched tooltip also to the "addCAA" thumbnail
+** add CAA enriched tooltip also to the thumbnail in the column configured with the "addCAA" parameter
+
+add the CAA enriched tooltip which pops up when hovering over an image in the big image stripe above a table also to the
+thumbnail in the column configured with the "addCAA" parameter
+
 ** "Picard" column adjustments
 
 the following definition
@@ -75677,6 +75681,7 @@ these URLs are actually missing the "Picard column
 
 #+begin_example
 https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist-credit/1488075/release
 #+end_example
 
 ** Remove synthetic/injected columns from sub-tables which do not make sense
@@ -76172,10 +76177,11 @@ The fix (in renderGroupedTable):
 - const container → let container (enables reassignment)
 - After the cleanup, a new re-root block checks: if targetHeader is not contained within container, re-assign container = targetHeader.parentNode (div#page). All subsequent querySelectorAll calls — including inside the master-toggle click handler closure — now scope to the right element.
 
-** add support for artist-credit pages
+** TODO add support for artist-credit pages
+*** DONE initial
 
-In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.514+2026-04-20') and
-changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.514"')
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.521+2026-04-21') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.521"')
 
 add support for artist credits pages on MusicBrainz. An example HTML version of such a page is uploaded as "Artist credit “Bruce Springsteen & The E Street Band” - MusicBrainz.html"
 
@@ -76298,6 +76304,163 @@ button should be inserted in the corresponding h3 header line and the last list 
 
 the pageType "type: 'artist-credit-entity'" should be implemented as described the comment in the "features:" parameter
 
+*** DONE more features
+
+change the following definitions from
+
+#+begin_example
+        // Artist credits per entity (/artist-credit/<id>/<entity>,
+        // e.g. /artist-credit/1488075/release-group).
+        // Must come before 'artist-credit' because its match is narrower
+        // (two path segments after /artist-credit/ instead of one).
+        {
+            type: 'artist-credit-entity',
+            match: (path) => path.match(/\/artist-credit\/[^/]+\/.+/),
+            buttons: [ { label: 'Show all Artist-Credit Entities' } ],
+            entityFeatures: {
+                'Release groups': {
+                    addCAA: 'Release group'
+                },
+                'Releases': {
+                    addCAA: 'Release'
+                }
+            },
+            features: {
+                // Empty sectionId triggers Structure G in applyListToTable:
+                // a plain <ul> without id or class is converted to a one-column
+                // table whose header equals the last URL path segment, capitalised
+                // with hyphens replaced by spaces (e.g. "release-group" →
+                // "Release group").  The entityFeatures key is the plural form
+                // (e.g. "Release groups") so that resolveEntityFeaturesFromH2
+                // can match the correct CAA/EAA configuration.
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+        // Artist credit overview pages (/artist-credit/<id>,
+        // e.g. /artist-credit/1488075 → 'Artist credit "Bruce Springsteen & The E Street Band"').
+        {
+            type: 'artist-credit',
+            match: (path) => path.match(/\/artist-credit\//),
+            buttons: [ { label: 'Show all Artist-Credit Uses' } ],
+            features: {
+                // Inserts <h2>Artist list</h2> after <div class="tabs"> and
+                // before <p>This artist credit is composed of…</p>.
+                // The <ul id="artist-credit-artists"> below it is left as-is;
+                // only the h3+ul pairs under <h2>Uses</h2> are converted.
+                insertH2: 'Artist list',
+                // Empty sectionId triggers Structure F in applyListToTable:
+                // each <h3>+<ul> pair under <h2>Uses</h2> is converted to a
+                // one-column <table class="tbl"> whose first-column header is
+                // the singular form of the h3 text (e.g. "Release groups" →
+                // "Release group").  The <h2>Uses</h2> element stays in place
+                // and becomes the targetHeader anchor for renderGroupedTable.
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+to
+
+#+begin_example
+        // Artist credits per entity (/artist-credit/<id>/<entity>,
+        // e.g. /artist-credit/1488075/release-group).
+        // Must come before 'artist-credit' because its match is narrower
+        // (two path segments after /artist-credit/ instead of one).
+        {
+            type: 'artist-credit-entity',
+            match: (path) => path.match(/\/artist-credit\/[^/]+\/.+/),
+            buttons: [ { label: 'Show all Artist-Credit Entities' } ],
+            entityFeatures: {
+                'Release groups': {
+                    addCAA: 'Release group',
+                    extractMainColumn: 'Release group',
+                    stickyColumn: 'Release group'
+                },
+                'Releases': {
+                    addCAA: 'Release',
+                    extractMainColumn: 'Release',
+                    stickyColumn: 'Release'
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Recording', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    ],
+                    extractMainColumn: 'Recording',
+                    stickyColumn: 'Recording'
+                }
+            },
+            features: {
+                // Empty sectionId triggers Structure G in applyListToTable:
+                // a plain <ul> without id or class is converted to a one-column
+                // table whose header equals the last URL path segment, capitalised
+                // with hyphens replaced by spaces (e.g. "release-group" →
+                // "Release group").  The entityFeatures key is the plural form
+                // (e.g. "Release groups") so that resolveEntityFeaturesFromH2
+                // can match the correct CAA/EAA configuration.
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+        // Artist credit overview pages (/artist-credit/<id>,
+        // e.g. /artist-credit/1488075 → 'Artist credit "Bruce Springsteen & The E Street Band"').
+        {
+            type: 'artist-credit',
+            match: (path) => path.match(/\/artist-credit\//),
+            buttons: [ { label: 'Show all Artist-Credit Uses' } ],
+            entityFeatures: {
+                'Release groups': {
+                    addCAA: 'Release group',
+                    extractMainColumn: 'Release group',
+                    stickyColumn: 'Release group'
+                },
+                'Releases': {
+                    addCAA: 'Release',
+                    extractMainColumn: 'Release',
+                    stickyColumn: 'Release'
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Recording', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    ],
+                    extractMainColumn: 'Recording',
+                    stickyColumn: 'Recording'
+                },
+            },
+            features: {
+                // Inserts <h2>Artist list</h2> after <div class="tabs"> and
+                // before <p>This artist credit is composed of…</p>.
+                // The <ul id="artist-credit-artists"> below it is left as-is;
+                // only the h3+ul pairs under <h2>Uses</h2> are converted.
+                insertH2: 'Artist list',
+                // Empty sectionId triggers Structure F in applyListToTable:
+                // each <h3>+<ul> pair under <h2>Uses</h2> is converted to a
+                // one-column <table class="tbl"> whose first-column header is
+                // the singular form of the h3 text (e.g. "Release groups" →
+                // "Release group").  The <h2>Uses</h2> element stays in place
+                // and becomes the targetHeader anchor for renderGroupedTable.
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi'
+        },
+#+end_example
+
+*** TODO on multi-table pages with different table structures, enable entityFeatures 
+
+on multi-table pages with different table structures, enable entityFeatures
+
+Why is there a difference between
+
+https://musicbrainz.org/artist-credit/1488075 - where it's NOT working, and
+https://musicbrainz.org/tag/country - OK
+
 ** reorder the following parameters
 
 #+begin_example
@@ -76316,6 +76479,29 @@ the pageType "type: 'artist-credit-entity'" should be implemented as described t
         },
 #+end_example
 
+** add "Rating" support
+
+#+begin_example
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections|ratings)(?:\?.*)?$/
+#+end_example
+
+add before the pageType "type: 'taglookup',"
+
+#+begin_example
+        // Entity ratings (e.g. /artist/<mbid>/ratings)
+        {
+            type: 'artist-ratings',
+            match: (path) => path.includes('/ratings'),
+            buttons: [ { label: 'Show all Ratings for Artist' } ],
+            features: {
+                // Empty sectionId triggers Structure C in applyListToTable: the
+                // function scans for <h2>…<ul> pairs in the content area and uses
+                // the h2 text as the column name (e.g. "Ratings").
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+#+end_example
 
 * some latest fixes
 

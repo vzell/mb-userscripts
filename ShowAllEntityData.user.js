@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.521+2026-04-21
+// @version      9.99.523+2026-04-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -25,6 +25,7 @@
 // @match        *://*.musicbrainz.org/tag/*
 // @match        *://*.musicbrainz.org/cdtoc/*
 // @match        *://*.musicbrainz.org/taglookup*
+// @match        *://*.musicbrainz.org/artist-credit/*
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
 // @connect      eventartarchive.org
@@ -3815,17 +3816,26 @@
      * `<table class="tbl">` elements so the standard fetch / filter / sort pipeline
      * can process them.  Called for every entry in `features.listToTable`.
      *
-     * Supports five distinct DOM structures, selected by path and sectionId:
+     * Supports seven distinct DOM structures, selected by path and sectionId:
      *   A) div-wrapped  — `<div id="sectionId"><ul>…</ul></div>`
      *   B) bare-ul      — `<ul class="<singular>-list">…</ul>`
      *   C) h2+ul        — area-users, tag-value-entity, user-tag-value-entity, subscribers
      *   D) h3+ul        — one-segment tag pages (/tag/VALUE, /user/USERNAME/tag/VALUE)
      *   E) h3+ul (popular-tags) — /tags page after renameH2ToH3 has renamed the
      *                              original h2 headings to h3
+     *   F) h3+ul (artist-credit) — /artist-credit/<id> overview page; converts the
+     *                              h3+ul pairs under <h2>Uses</h2> into one-column
+     *                              tables (singular h3 text as column header).
+     *                              The <ul id="artist-credit-artists"> is not touched.
+     *   G) bare-ul (artist-credit-entity) — /artist-credit/<id>/<entity> sub-page;
+     *                              a plain <ul> without id or class is converted to
+     *                              a one-column table whose header is derived from
+     *                              the URL last path segment (e.g. "release-group"
+     *                              → "Release group").
      *
      * Structures A and B produce two-column tables (Name | Tag count).
-     * Structures C, D, and E produce single-column tables whose header is the
-     * singular form of the section heading (via `_toSingular()`).
+     * Structures C, D, E, F, and G produce single-column tables whose header is the
+     * singular form of the section heading (via `_toSingular()` or URL derivation).
      *
      * Must run AFTER `applyRenameH2ToH3` / `applyInsertH2` and BEFORE maxPage
      * determination so that `parseDocumentForTables` finds the resulting
@@ -4036,6 +4046,121 @@
                             ` (${_tbody.rows.length} rows, col="${_colName}", structure="popular-tags-h3-ul").`);
                     });
                     return; // Structure E handled all h3+ul pairs for this entry
+                }
+
+                // ── Structure F: artist-credit overview pages ────────────────────────
+                // Triggered for pageType 'artist-credit' (/artist-credit/<id>).
+                // Each <h3> under <h2>Uses</h2> (e.g. "Release groups", "Releases",
+                // "Recordings", "Tracks") is paired with the next sibling <ul> and
+                // converted to a one-column <table class="tbl">.
+                // Column name: singular form of the h3 text
+                //   (e.g. "Release groups" → "Release group").
+                // dataset.mbOriginalColName is set so renderGroupedTable can patch
+                // the cloned templateHead for each group independently.
+                // The <ul id="artist-credit-artists"> above <h2>Uses</h2> is
+                // intentionally skipped — it is a plain informational list.
+                if (pageType === 'artist-credit') {
+                    Array.from(_root.querySelectorAll('h3')).forEach(_h3 => {
+                        let _next  = _h3.nextElementSibling;
+                        let _steps = 0;
+                        let _ul    = null;
+                        while (_next && _steps < 5) {
+                            if (_next.tagName === 'UL') { _ul = _next; break; }
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_ul) return;
+
+                        const _h3Text  = _h3.textContent.trim();
+                        const _colName = _toSingular(_h3Text);
+                        const _table   = docContext.createElement('table');
+                        _table.className = 'tbl';
+                        // Store the per-group column name so renderGroupedTable
+                        // can patch the cloned templateHead for each group.
+                        _table.dataset.mbOriginalColName = _colName;
+
+                        const _thead = docContext.createElement('thead');
+                        const _hr    = docContext.createElement('tr');
+                        const _th    = docContext.createElement('th');
+                        _th.textContent = _colName;
+                        _hr.appendChild(_th);
+                        _thead.appendChild(_hr);
+                        _table.appendChild(_thead);
+
+                        const _tbody = docContext.createElement('tbody');
+                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                            const _tr = docContext.createElement('tr');
+                            if (li.className) _tr.className = li.className;
+                            const _td = docContext.createElement('td');
+                            Array.from(li.childNodes).forEach(n => _td.appendChild(n.cloneNode(true)));
+                            _tr.appendChild(_td);
+                            _tbody.appendChild(_tr);
+                        });
+                        _table.appendChild(_tbody);
+
+                        _ul.parentNode.replaceChild(_table, _ul);
+                        Lib.debug('init',
+                            `applyListToTable: artist-credit: converted h3="${_h3Text}" ul → table` +
+                            ` (${_tbody.rows.length} rows, col="${_colName}",` +
+                            ` structure="artist-credit-h3-ul").`);
+                    });
+                    return; // Structure F handled all h3+ul pairs for this entry
+                }
+
+                // ── Structure G: artist-credit entity sub-pages ──────────────────────
+                // Triggered for pageType 'artist-credit-entity'
+                // (/artist-credit/<id>/<entity>, e.g. /artist-credit/1488075/recording).
+                // The page may present its full entity list as a plain <ul> without
+                // id or class attribute.  The column name is derived from the last
+                // URL path segment with hyphens replaced by spaces and the first
+                // character capitalised (e.g. "release-group" → "Release group").
+                if (pageType === 'artist-credit-entity') {
+                    const _entitySlug = _currentPath.split('/').filter(Boolean).pop() || '';
+                    const _colName = _entitySlug
+                        .replace(/-/g, ' ')
+                        .replace(/^\w/, c => c.toUpperCase());
+
+                    // Find a plain <ul> that has neither an id nor a class —
+                    // the artist-credit-artists list has an id and is on the
+                    // overview page, so it cannot appear here.
+                    const _ul = Array.from(_root.querySelectorAll('ul'))
+                        .find(u => !u.id && !u.className);
+                    if (!_ul) {
+                        Lib.debug('init',
+                            `applyListToTable: artist-credit-entity: no plain <ul> found` +
+                            ` for entity="${_colName}" — skipping (page may use` +
+                            ` a native <table> already).`);
+                        return;
+                    }
+
+                    const _table = docContext.createElement('table');
+                    _table.className = 'tbl';
+
+                    const _thead = docContext.createElement('thead');
+                    const _hr    = docContext.createElement('tr');
+                    const _th    = docContext.createElement('th');
+                    _th.textContent = _colName;
+                    _hr.appendChild(_th);
+                    _thead.appendChild(_hr);
+                    _table.appendChild(_thead);
+
+                    const _tbody = docContext.createElement('tbody');
+                    Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                        const _tr = docContext.createElement('tr');
+                        if (li.className) _tr.className = li.className;
+                        const _td = docContext.createElement('td');
+                        Array.from(li.childNodes).forEach(n => _td.appendChild(n.cloneNode(true)));
+                        _tr.appendChild(_td);
+                        _tbody.appendChild(_tr);
+                    });
+                    _table.appendChild(_tbody);
+
+                    _ul.parentNode.replaceChild(_table, _ul);
+                    Lib.debug('init',
+                        `applyListToTable: artist-credit-entity: converted plain ul → table` +
+                        ` (${_tbody.rows.length} rows, col="${_colName}",` +
+                        ` entity="${_entitySlug}", structure="artist-credit-entity-ul").`);
+                    return; // Structure G handled
                 }
 
                 Lib.debug('init', `applyListToTable: sectionId='' but path "${_currentPath}" matches no known structure — skipping.`);
@@ -4743,6 +4868,92 @@
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
             }
+        },
+        // Artist credits per entity (/artist-credit/<id>/<entity>,
+        // e.g. /artist-credit/1488075/release-group).
+        // Must come before 'artist-credit' because its match is narrower
+        // (two path segments after /artist-credit/ instead of one).
+        {
+            type: 'artist-credit-entity',
+            match: (path) => path.match(/\/artist-credit\/[^/]+\/.+/),
+            buttons: [ { label: 'Show all Artist-Credit Entities' } ],
+            entityFeatures: {
+                'Release groups': {
+                    addCAA: 'Release group',
+                    extractMainColumn: 'Release group',
+                    stickyColumn: 'Release group'
+                },
+                'Releases': {
+                    addCAA: 'Release',
+                    extractMainColumn: 'Release',
+                    stickyColumn: 'Release'
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Recording', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    ],
+                    extractMainColumn: 'Recording',
+                    stickyColumn: 'Recording'
+                }
+            },
+            features: {
+                // Empty sectionId triggers Structure G in applyListToTable:
+                // a plain <ul> without id or class is converted to a one-column
+                // table whose header equals the last URL path segment, capitalised
+                // with hyphens replaced by spaces (e.g. "release-group" →
+                // "Release group").  The entityFeatures key is the plural form
+                // (e.g. "Release groups") so that resolveEntityFeaturesFromH2
+                // can match the correct CAA/EAA configuration.
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+        // Artist credit overview pages (/artist-credit/<id>,
+        // e.g. /artist-credit/1488075 → 'Artist credit "Bruce Springsteen & The E Street Band"').
+        {
+            type: 'artist-credit',
+            match: (path) => path.match(/\/artist-credit\//),
+            buttons: [ { label: 'Show all Artist-Credit Uses' } ],
+            entityFeatures: {
+                'Release groups': {
+                    addCAA: 'Release group',
+                    extractMainColumn: 'Release group',
+                    stickyColumn: 'Release group'
+                },
+                'Releases': {
+                    addCAA: 'Release',
+                    extractMainColumn: 'Release',
+                    stickyColumn: 'Release'
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Recording', extractor: 'video', syntheticColumns: ['Video'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    ],
+                    extractMainColumn: 'Recording',
+                    stickyColumn: 'Recording'
+                },
+            },
+            features: {
+                // Inserts <h2>Artist list</h2> after <div class="tabs"> and
+                // before <p>This artist credit is composed of…</p>.
+                // The <ul id="artist-credit-artists"> below it is left as-is;
+                // only the h3+ul pairs under <h2>Uses</h2> are converted.
+                insertH2: 'Artist list',
+                // Empty sectionId triggers Structure F in applyListToTable:
+                // each <h3>+<ul> pair under <h2>Uses</h2> is converted to a
+                // one-column <table class="tbl"> whose first-column header is
+                // the singular form of the h3 text (e.g. "Release groups" →
+                // "Release group").  The <h2>Uses</h2> element stays in place
+                // and becomes the targetHeader anchor for renderGroupedTable.
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi'
         },
         // Subscriptions pages — a single consolidated type with per-button
         // virtualPath values that replace the last URL path segment on click,
@@ -22910,6 +23121,35 @@ a { color: #1565c0; }`;
             return {};
         }
 
+        // ── artist-credit-entity pageType: resolve from URL path segment ─────
+        // The entity type is the last URL path segment (e.g. "release-group").
+        // Format: replace hyphens with spaces and capitalise the first character
+        // to obtain the singular form ("Release group"), then append "s" for the
+        // plural entityFeatures key ("Release groups").
+        // Special case: "series" stays "Series" (plural == singular).
+        if (def.type === 'artist-credit-entity') {
+            const _parts      = window.location.pathname.split('/').filter(Boolean);
+            const _entitySlug = _parts[_parts.length - 1] || '';
+            const _singular   = _entitySlug
+                .replace(/-/g, ' ')
+                .replace(/^\w/, c => c.toUpperCase());
+            const _plural = (_singular.toLowerCase() === 'series')
+                ? 'Series'
+                : _singular + 's';
+            Lib.debug('init',
+                `resolveEntityFeaturesFromH2 [artist-credit-entity]: ` +
+                `entitySlug="${_entitySlug}" → singular="${_singular}" → key="${_plural}"`);
+            if (_plural && def.entityFeatures[_plural]) {
+                Lib.debug('init',
+                    `resolveEntityFeaturesFromH2 [artist-credit-entity]: matched key "${_plural}"`);
+                return def.entityFeatures[_plural];
+            }
+            Lib.debug('init',
+                `resolveEntityFeaturesFromH2 [artist-credit-entity]: ` +
+                `no match for "${_plural}" in entityFeatures — returning {}`);
+            return {};
+        }
+
         let h2Type = _getH2EntityType();
 
         // ── Tag page H2 text normalisation ───────────────────────────────────
@@ -24148,7 +24388,8 @@ a { color: #1565c0; }`;
                                 'user-tags', 'popular-tags',
                                 'artist-tags', 'releasegroup-tags', 'release-tags',
                                 'recording-tags', 'work-tags', 'label-tags',
-                                'series-tags', 'place-tags', 'area-tags', 'instrument-tags'
+                                'series-tags', 'place-tags', 'area-tags', 'instrument-tags',
+                                'artist-credit'
                             ]);
                             const _colName = _singularPageTypes.has(pageType)
                                 ? _toSingular(category)
@@ -26793,10 +27034,14 @@ a { color: #1565c0; }`;
                 // Append the filter container (initially hidden) to the h3
                 h3.appendChild(stfResult.container);
 
-                // ── "See all N" button for tag pages ─────────────────────────
+                // ── "See all N" button for tag pages and artist-credit pages ──────
                 // On tag value pages (pageType 'tag-value', 'user-tag-value') the
                 // rendered table may have a trailing "See all N <entity-type>s"
                 // row whose first cell contains an <em><a href="/tag/…"> link.
+                // On artist-credit overview pages (pageType 'artist-credit') each
+                // entity section (Release groups, Releases, Recordings, Tracks) may
+                // likewise have a trailing "See all N <entity-type>s" row whose
+                // first cell contains an <em><a href="/artist-credit/…"> link.
                 // When found:
                 //   • A button is inserted in the h3, after the filter-container
                 //     span (or after the filter toggle icon), that opens the full
@@ -26808,13 +27053,22 @@ a { color: #1565c0; }`;
                 //   • table.dataset.mbTotalRows and the h3 mb-row-count-stat span
                 //     are patched to reflect the actual (post-removal) row count so
                 //     that the "(N of M)" display does not appear.
-                if (pageType === 'tag-value' || pageType === 'user-tag-value') {
+                if (pageType === 'tag-value' || pageType === 'user-tag-value' ||
+                        pageType === 'artist-credit') {
                     const _lastRow = tbody.lastElementChild;
                     if (_lastRow) {
-                        const _em  = _lastRow.querySelector('td em a[href*="/tag/"]');
+                        // Selector targets the page-specific See-all link pattern:
+                        //   tag pages      → <em><a href="/tag/…">
+                        //   artist-credit  → <em><a href="/artist-credit/…">
+                        const _hrefFragment = (pageType === 'artist-credit')
+                            ? '/artist-credit/'
+                            : '/tag/';
+                        const _em = _lastRow.querySelector(
+                            `td em a[href*="${_hrefFragment}"]`
+                        );
                         if (_em) {
                             const _href  = _em.getAttribute('href');
-                            const _label = _em.textContent.trim(); // e.g. "See all 60 labels"
+                            const _label = _em.textContent.trim(); // e.g. "See all 1,076 release groups"
                             const _countMatch  = _label.match(/See all ([\d,]+)/i);
                             const _count       = _countMatch ? _countMatch[1] : '?';
                             const _entityMatch = _label.match(/See all [\d,]+ (.+)/i);
@@ -26824,10 +27078,12 @@ a { color: #1565c0; }`;
                             _seeAllBtn.type      = 'button';
                             _seeAllBtn.className = 'mb-show-all-subtable-btn';
                             _seeAllBtn.textContent = `Show all ${_count} rows`;
+                            const _pageKindLabel = (pageType === 'artist-credit')
+                                ? 'MusicBrainz Artist Credit overview pages show at most 10 rows per entity section'
+                                : 'MusicBrainz Tag-Values pages have currently a limit of 10 rows rendered at most per entity type section';
                             _seeAllBtn.title =
                                 `Click to show all ${_count} ${_entityLabel} in a new browser tab ` +
-                                `for this sub-section (MusicBrainz Tag-Values pages have currently ` +
-                                `a limit of 10 rows rendered at most per entity type section)`;
+                                `for this sub-section (${_pageKindLabel})`;
                             const _initBg    = Lib.settings.sa_ui_show_all_subtable_btn_bg         || '#FFE0B2';
                             const _clickedBg = Lib.settings.sa_ui_show_all_subtable_btn_bg_clicked || '#CCFFCC';
                             _seeAllBtn.style.background = _initBg;
@@ -26861,7 +27117,7 @@ a { color: #1565c0; }`;
                             }
 
                             Lib.debug('render',
-                                `tag-value: added "Show all ${_count} rows" button to h3 "${categoryName}"; ` +
+                                `${pageType}: added "Show all ${_count} rows" button to h3 "${categoryName}"; ` +
                                 `patched mbTotalRows to ${_realCount}.`);
                         }
                     }
