@@ -75994,7 +75994,7 @@ The other one in
         splitCountryDate(sourceCell) {
 #+end_example
 
-**** label-relationships
+**** DONE label-relationships
 
 change the definition of
 
@@ -76103,13 +76103,24 @@ there is another bug when loading from disc:
 The picard icon from the "Picard" column is now located in the first new synthetic column "Release country", and all
 other synthetic columns values have shifted one to the right.
 
+**** DONE remove "{sourceColumn: 'Length', align: ':'}" from integerColumns for label pageTypes
 **** check "Total injected derived columns" in the statistics panel
 
 **** TODO add better handling for injected derived columns inclusive new background column header colour
 
-**** TODO remove "{sourceColumn: 'Length', align: ':'}" from integerColumns for label pageTypes
-
 ** Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
+
+In the uploaded userscript "ShowAllEntityData.user.js"
+
+On pageType "type: 'user-tags'", e.g. https://musicbrainz.org/user/vzell/tags
+the "Show/Hide all-sub-sections" toggle button has no effect
+
+#+begin_example
+<button class="mb-master-toggle" type="button" data-state="collapsed" title="Click to uncollapse all sub-sections (Ctrl+Click to uncollapse ALL sub-sections)">Show all sub-sections</button>
+#+end_example
+
+please fix and add a changelog entry to the uploaded changelog file
+
 ** add support for artist-credit pages
 
 #+begin_example
