@@ -75643,11 +75643,17 @@ the following definition
     ];
 #+end_example
 
-has to be refined
+and the code in the function
+
+#+begin_example
+function _picardPageIsSupported
+#+end_example
+
+have to be refined
 
 a.)
 
-do not add "Picard" column to the following URLs
+do not add the "Picard" column to the following URLs
 
 #+begin_example
 https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/tags
@@ -75662,7 +75668,7 @@ https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerpri
 #+end_example
 
 #+begin_example
-https://musicbrainz.org/series/5c605c0d-de8d-478e-9b93-d518ccecc748 except for release series
+https://musicbrainz.org/series/5c605c0d-de8d-478e-9b93-d518ccecc748  ==> except for release series
 #+end_example
 
 3.)
@@ -75698,7 +75704,7 @@ from all sub-tables where NO "Release"-type column is present
         },
 #+end_example
 
-** add an injected column extractor feature
+** TODO add an injected column extractor feature
 *** facts
 
 https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
@@ -76108,7 +76114,7 @@ other synthetic columns values have shifted one to the right.
 
 **** TODO add better handling for injected derived columns inclusive new background column header colour
 
-** Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
+** TODO Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
 *** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -76168,12 +76174,53 @@ The fix (in renderGroupedTable):
 
 ** add support for artist-credit pages
 
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.514+2026-04-20') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.514"')
+
+add support for artist credits pages on MusicBrainz. An example HTML version of such a page is uploaded as "Artist credit “Bruce Springsteen & The E Street Band” - MusicBrainz.html"
+
+1.)
+
+in the userscript header add the following "match" directive
+
 #+begin_example
-        // Artist credit pages (e.g Artist credit “Bruce Springsteen & The E Street Band”)
+// @match        *://*.musicbrainz.org/artist-credit/*
+#+end_example
+
+after
+
+#+begin_example
+// @match        *://*.musicbrainz.org/taglookup*
+#+end_example
+
+2.)
+
+add two new pageType definition with the right "features" parameter along the line of
+
+#+begin_example
+        // Artist credits per entity (/artist-credit/1488075/<entity>, e.g. artist-credit/1488075/release-group)
+        {
+            type: 'artist-credit-entity',
+            match: (path) => path.match(/\/artist-credit\/[^/]+\/.+/),
+            features: {
+                // Empty sectionId triggers a Structure <to be implemented> in applyListToTable:
+                // simple list without any class parameter
+		//   <ul>
+		//     <li>..</li>
+		//     <li>..</li>
+		//   </ul>
+		// should be converted to one-column table with the column name the same as "<entity>" in the URL, but Capitalized
+		// So: "recording" => "Recording"
+                listToTable: [ '' ]
+            },
+            tableMode: 'single'
+        },
+        // Artist credit pages (/artist-credit/1488075 ==> 'Artist credit “Bruce Springsteen & The E Street Band”')
         {
             type: 'artist-credit',
             match: (path) => path.match(/\/artist-credit\//),
             features: {
+	        insertH2: 'Artist list',
                 // Empty sectionId triggers Structure D in applyListToTable.
                 listToTable: [ '' ],
             },
@@ -76181,33 +76228,66 @@ The fix (in renderGroupedTable):
         },
 #+end_example
 
-** add support for "artist-credit" pages
+after the pageType definition of "type: 'cdtoc'" in the variable "const pageDefinitions". For now we concentrate on the
+implementation of the pageType "type: 'artist-credit'" so that the final rendered page has the following structure:
+
+a.)
+
+There should be an h2 header named 'Artist list' after the container
 
 #+begin_example
-modified   ShowAllEntityData.user.js
-@@ -25,6 +25,7 @@
- // @match        *://*.musicbrainz.org/tag/*
- // @match        *://*.musicbrainz.org/cdtoc/*
- // @match        *://*.musicbrainz.org/taglookup*
-+// @match        *://*.musicbrainz.org/artist-credit/*
- // @connect      raw.githubusercontent.com
- // @connect      coverartarchive.org
- // @connect      eventartarchive.org
-@@ -5264,6 +5265,16 @@
-             },
-             tableMode: 'single'
-         },
-+        // Artist credit pages (e.g Artist credit “Bruce Springsteen & The E Street Band”)
-+        {
-+            type: 'artist-credit',
-+            match: (path) => path.match(/\/artist-credit\//),
-+            features: {
-+                // Empty sectionId triggers Structure D in applyListToTable.
-+                listToTable: [ '' ],
-+            },
-+            tableMode: 'multi'
-+        },
+<div class="tabs">..</div>
 #+end_example
+
+and before the line
+
+#+begin_example
+<p>This artist credit is composed of the following artists:</p>
+#+end_example
+
+b.)
+
+The h2 header
+
+#+begin_example
+<h2>Uses</h2>
+#+end_example
+
+should stay as is and all the "<ul>" lists, each under it's own h3 header, should be converted to one-column tables with
+the column name equal to the corresponding h3 header text, so that the standard "tableMode: 'multi'" machinerie can take
+over.
+
+3.)
+
+because the new pageType "type: 'artist-credit'" is similar to the pageType "type: 'tag-value'"
+maybe the following code can be reused or enhanced
+
+#+begin_example
+                // ── "See all N" button for tag pages ─────────────────────────
+                // On tag value pages (pageType 'tag-value', 'user-tag-value') the
+                // rendered table may have a trailing "See all N <entity-type>s"
+                // row whose first cell contains an <em><a href="/tag/…"> link.
+                // When found:
+                //   • A button is inserted in the h3, after the filter-container
+                //     span (or after the filter toggle icon), that opens the full
+                //     entity list in a new tab.  It reuses the same
+                //     mb-show-all-subtable-btn class and colour settings as the
+                //     existing overflow-table button on artist-relationships pages.
+                //   • The trailing "See all" row is removed from the table because
+                //     the button makes it redundant.
+                //   • table.dataset.mbTotalRows and the h3 mb-row-count-stat span
+                //     are patched to reflect the actual (post-removal) row count so
+                //     that the "(N of M)" display does not appear.
+                if (pageType === 'tag-value' || pageType === 'user-tag-value') {
+#+end_example
+
+as the "artist-credit" pages could also optionally have as the last list entry a link entry "See all <n> <entity type inplural>"
+(e.g. "See all 1,076 release groups") to the paginated entrypoint URL to access all entities. In that case a
+button should be inserted in the corresponding h3 header line and the last list entry removed afterwards.
+
+4.)
+
+the pageType "type: 'artist-credit-entity'" should be implemented as the comment in the "features:" parameter
 
 ** reorder the following parameters
 
