@@ -76202,6 +76202,14 @@ add two new pageType definition with the right "features" parameter along the li
         {
             type: 'artist-credit-entity',
             match: (path) => path.match(/\/artist-credit\/[^/]+\/.+/),
+            entityFeatures: {
+                'Release groups': {
+                    addCAA: 'Release group'
+                },
+                'Releases': {
+                    addCAA: 'Release'
+                },
+            },
             features: {
                 // Empty sectionId triggers a Structure <to be implemented> in applyListToTable:
                 // simple list without any class parameter
@@ -76211,6 +76219,7 @@ add two new pageType definition with the right "features" parameter along the li
 		//   </ul>
 		// should be converted to one-column table with the column name the same as "<entity>" in the URL, but Capitalized
 		// So: "recording" => "Recording"
+		// The mapping to the 'entityFeatures' should be with the plural version of "<entity>", "-" converted to " "
                 listToTable: [ '' ]
             },
             tableMode: 'single'
@@ -76254,8 +76263,8 @@ The h2 header
 #+end_example
 
 should stay as is and all the "<ul>" lists, each under it's own h3 header, should be converted to one-column tables with
-the column name equal to the corresponding h3 header text, so that the standard "tableMode: 'multi'" machinerie can take
-over.
+the column name equal to the corresponding h3 header text in singular form, so that the standard "tableMode: 'multi'"
+machinerie can take over.
 
 3.)
 
@@ -76281,13 +76290,13 @@ maybe the following code can be reused or enhanced
                 if (pageType === 'tag-value' || pageType === 'user-tag-value') {
 #+end_example
 
-as the "artist-credit" pages could also optionally have as the last list entry a link entry "See all <n> <entity type inplural>"
+as the "artist-credit" pages could also optionally have as the last list entry a link entry "See all <n> <entity type in plural>"
 (e.g. "See all 1,076 release groups") to the paginated entrypoint URL to access all entities. In that case a
 button should be inserted in the corresponding h3 header line and the last list entry removed afterwards.
 
 4.)
 
-the pageType "type: 'artist-credit-entity'" should be implemented as the comment in the "features:" parameter
+the pageType "type: 'artist-credit-entity'" should be implemented as described the comment in the "features:" parameter
 
 ** reorder the following parameters
 

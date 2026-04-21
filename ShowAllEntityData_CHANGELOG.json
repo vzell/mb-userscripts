@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.521",
+    "date": "2026-04-21",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix 'Show/Hide all sub-sections' master-toggle having no effect on `user-tags` pages (e.g. /user/<n>/tags): the page uses `div#page` with no `div#content`, and the native `<ul>` lists are wrapped inside `<div id=\"all-tags\">` which is a sibling of the native `<h2>Tags vzell upvoted</h2>`. After `applyListToTable` converts the lists, `container` resolves to `div#all-tags` (parentNode of the first `table.tbl`). The cleanup pass empties `div#all-tags` correctly, but all new h3/table pairs are then inserted after the h2 — outside `div#all-tags` — via `lastInsertedElement.after()`. The master-toggle click handler's `container.querySelectorAll('table.tbl')` scoped to the now-empty `div#all-tags` and found nothing. Fix: in `renderGroupedTable`, changed `const container` to `let container` and added a re-root block after the cleanup pass — when `targetHeader` is not contained within `container`, `container` is re-assigned to `targetHeader.parentNode` (`div#page` here). All subsequent `querySelectorAll` calls then scope to the element that actually holds the rendered output. Also reverts the incorrect 9.99.520 fix which had added spurious `renameH2ToH3: true` and `insertH2: 'User tags'` to the `user-tags` definition (that injected a redundant second h2 and shifted the native h2 to appear after the tables)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.520",
+    "date": "2026-04-21",
+    "sections": [
+      {
+        "label": "🐛 Fix (reverted — superseded by 9.99.521)",
+        "items": [
+          "Attempted fix for user-tags master-toggle by adding renameH2ToH3+insertH2 to the user-tags page definition — incorrect: introduced a redundant 'User tags' h2 and caused the native 'Tags vzell upvoted' h2 to appear after the tables. Superseded by the correct container re-root fix in 9.99.521."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.519",
     "date": "2026-04-21",
     "sections": [

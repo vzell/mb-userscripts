@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.519+2026-04-21
+// @version      9.99.521+2026-04-21
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4913,6 +4913,28 @@
             }
         },
         // User tags pages (/user/<username>/tags e.g. /user/vzell/tags, /user/vzell/tags?show_downvoted=1)
+        //
+        // Native MusicBrainz DOM structure (no div#content — uses div#page directly):
+        //   <h1>vzell's tags…</h1>
+        //   <div class="tabs">…</div>
+        //   <h2>Tags vzell upvoted</h2>       ← correct targetHeader (native h2)
+        //   <form style="margin-top:1em">…</form>
+        //   <div id="all-tags">               ← sub-wrapper (becomes initial container)
+        //     <h3>Genres</h3>
+        //     <div id="genres"><ul class="genre-list">…</ul></div>
+        //     <h3>Other tags</h3>
+        //     <div id="tags"><ul class="tag-list">…</ul></div>
+        //   </div>
+        //
+        // Bug: after applyListToTable converts the <ul>s, `container` is set to
+        // `div#all-tags` (parentNode of the first table.tbl, since no div#content
+        // exists).  The h2 targetHeader is a SIBLING of div#all-tags, not inside it.
+        // After the cleanup pass empties div#all-tags, all new h3/table pairs are
+        // inserted after the h2 (outside div#all-tags) via lastInsertedElement.after().
+        // The master-toggle click handler's `container.querySelectorAll('table.tbl')`
+        // scopes to the now-empty div#all-tags → finds nothing → no visual effect.
+        // Fix: renderGroupedTable re-roots `container` to `targetHeader.parentNode`
+        // when targetHeader is outside the initial container (see re-root block there).
         {
             type: 'user-tags',
             match: (path, params) => path.match(/\/user\/[^/]+\/tags/),
@@ -26329,7 +26351,12 @@ a { color: #1565c0; }`;
     async function renderGroupedTable(dataArray, isArtistMain, query = '') {
         Lib.debug('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
 
-        const container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
+        // `let` (not `const`) so we can re-root to targetHeader.parentNode on pages
+        // that have no div#content and wrap the initial tables in a sub-element
+        // (e.g. user-tags: tables start inside div#all-tags, but targetHeader h2 is
+        // a sibling of that wrapper; after cleanup all new h3/table pairs are
+        // inserted outside the original sub-container — see re-root block below).
+        let container = document.getElementById('content') || document.querySelector('table.tbl')?.parentNode;
         if (!container) {
             Lib.error('render', 'Abort: #content container not found.');
             return;
@@ -26380,6 +26407,38 @@ a { color: #1565c0; }`;
                 }
                 el.remove();
             });
+
+            // ── Re-root container when targetHeader lives outside initial container ──
+            // Applies to pages that have no div#content and whose initial tables sit
+            // inside a sub-wrapper that is a SIBLING of the target h2, not its ancestor.
+            //
+            // Concrete example — user-tags (/user/<n>/tags):
+            //   div#page
+            //     h2 "Tags vzell upvoted"    ← targetHeader
+            //     div#all-tags               ← initial container (table.tbl parentNode)
+            //       h3 "Genres" / table.tbl
+            //       h3 "Other tags" / table.tbl
+            //
+            // After the cleanup above, div#all-tags is empty.  The dataArray.forEach
+            // loop inserts new h3/table pairs via `lastInsertedElement.after(h3)`,
+            // which starts from targetHeader — placing them OUTSIDE div#all-tags.
+            // The master-toggle click handler and existingTables query both use
+            // `container`, which still points at the now-empty div#all-tags → no effect.
+            //
+            // Fix: re-root container to targetHeader.parentNode (div#page here) so that
+            // all subsequent querySelectorAll calls scope to the element that actually
+            // contains the rendered output.  The cleanup pass above correctly operated
+            // on the original sub-wrapper, so no cleanup work is lost.
+            if (targetHeader && !container.contains(targetHeader)) {
+                const reRootedContainer = targetHeader.parentNode;
+                if (reRootedContainer) {
+                    Lib.debug('render',
+                        `Re-rooting container from "${container.id || container.tagName}" ` +
+                        `to targetHeader.parentNode "${reRootedContainer.id || reRootedContainer.tagName}" ` +
+                        `(targetHeader was outside initial container).`);
+                    container = reRootedContainer;
+                }
+            }
 
             if (targetHeader) {
                 Lib.debug('render', ` Injecting master toggle button and filter container after target header ${targetH2Name}.`);
