@@ -76109,6 +76109,7 @@ other synthetic columns values have shifted one to the right.
 **** TODO add better handling for injected derived columns inclusive new background column header colour
 
 ** Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
+*** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
 
@@ -76120,6 +76121,50 @@ the "Show/Hide all-sub-sections" toggle button has no effect
 #+end_example
 
 please fix and add a changelog entry to the uploaded changelog file
+
+*** bugs
+
+still the same problem.
+
+But there actually was an h2 => "Tags vzell upvoted" which was rendered perfectly. Now I get an h2 => "User tags" with a non functioning toggle button and the "Tags vzell upvoted" shows up as an h2 AFETR the table
+
+#+begin_example
+<h3>Tags vzell upvoted</h3>
+#+end_example
+
+Check also the uploaded HTML file from the initial page.
+
+Please fix
+
+*** root cause
+
+Actual DOM structure of /user/vzell/tags:
+
+#+begin_example
+div#page  (no div#content on this page type)
+  h1 "vzell's tags…"
+  div.tabs
+  h2 "Tags vzell upvoted"       ← correct targetHeader
+  form style="margin-top:1em"
+  div#all-tags                  ← sub-wrapper
+    h3 "Genres"
+    div#genres > ul.genre-list
+    h3 "Other tags"
+    div#tags > ul.tag-list
+#+end_example
+
+The bug chain:
+
+1.) No div#content → container = document.querySelector('table.tbl').parentNode = div#all-tags
+2.) targetHeader = h2 (sibling of div#all-tags, not inside it)
+3.) Cleanup empties div#all-tags correctly
+4.) New h3/table pairs are inserted via lastInsertedElement.after() starting from the h2 — landing outside div#all-tags
+5.) Master-toggle click handler: container.querySelectorAll('table.tbl') → scopes to the now-empty div#all-tags → finds nothing
+
+The fix (in renderGroupedTable):
+
+- const container → let container (enables reassignment)
+- After the cleanup, a new re-root block checks: if targetHeader is not contained within container, re-assign container = targetHeader.parentNode (div#page). All subsequent querySelectorAll calls — including inside the master-toggle click handler closure — now scope to the right element.
 
 ** add support for artist-credit pages
 
