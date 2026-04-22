@@ -76542,8 +76542,8 @@ The h3 headers are NOT rendered, although they are in the page albeit with "disp
 
 **** one bug persists
 
-In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.521+2026-04-21') and
-changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.521"')
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.529+2026-04-22') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.529"')
 
 total row count bugs for the following pageTypes
 

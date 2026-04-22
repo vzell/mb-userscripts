@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.529+2026-04-22
+// @version      9.99.530+2026-04-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -25208,7 +25208,19 @@ a { color: #1565c0; }`;
             // --- RENDERING START ---
             Lib.debug('render', 'DOM rendering starting...');
 
-            updateH2Count(totalRows, totalRows);
+            // For single-table pages, updateH2Count is called now (before rendering) because
+            // there are no "See all" rows to remove.  For multi-table pages the call is
+            // intentionally deferred until AFTER renderGroupedTable() completes, because
+            // renderGroupedTable() removes "See all N <entities>" trailing rows from each
+            // group.rows in-memory array during rendering.  Calling updateH2Count() here with
+            // the pre-removal groupedRows sum would produce a count that is too high by exactly
+            // the number of groups that had a "See all" row (matching the number of h3 headers
+            // with overflow links).  After rendering, group.rows has the correct post-removal
+            // length, so we recalculate the real total from there.
+            // Affected pageTypes: 'tag-value', 'user-tag-value', 'artist-credit'.
+            if (activeDefinition.tableMode !== 'multi') {
+                updateH2Count(totalRows, totalRows);
+            }
 
             activeBtn.disabled = false;
             activeBtn.classList.remove('mb-show-all-btn-loading');
@@ -25233,6 +25245,10 @@ a { color: #1565c0; }`;
                     finalizeRLCColumnWidths(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
                 }
                 await renderGroupedTable(groupedRows, _isReleaseGroupsMultiMode());
+                // Now that renderGroupedTable() has spliced out "See all" rows from every
+                // group.rows, recalculate the true total and update the h2 badge.
+                const totalRowsAfterRender = groupedRows.reduce((acc, g) => acc + g.rows.length, 0);
+                updateH2Count(totalRowsAfterRender, totalRowsAfterRender);
             } else {
                 originalAllRows = [...allRows];
                 // Finalize colon-aligned columns before render so colons line up

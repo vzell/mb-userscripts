@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.530",
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix h2 total row count too high by the number of h3 headers on first render for pageTypes `tag-value`, `user-tag-value`, and `artist-credit` (e.g. `/tag/country` showed 99 instead of 91 with 8 overflow groups; `/user/vzell/tag/live` showed 14 instead of 13 with 1 overflow group): root cause was that `updateH2Count(totalRows, totalRows)` was called in `startFetchingProcess` *before* `renderGroupedTable()` ran. At that point the `groupedRows` sum included the trailing 'See all N …' `<tr>` in each group's `rows` array; `renderGroupedTable()` only splices those rows out of `group.rows` (and removes them from the DOM) during its own execution. The count was therefore inflated by exactly the number of groups that carried a 'See all' row. After save/load the rows were already absent, so the figure was correct — explaining why the bug self-healed on disk round-trip. Fix: for `tableMode === 'multi'` pages, suppressed the pre-render `updateH2Count` call and instead added a deferred call immediately after `await renderGroupedTable()` completes, recalculating the true total via `groupedRows.reduce((acc, g) => acc + g.rows.length, 0)` on the now-correct post-removal arrays."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.529",
     "date": "2026-04-22",
     "sections": [
