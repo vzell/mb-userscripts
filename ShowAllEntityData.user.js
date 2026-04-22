@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.523+2026-04-22
+// @version      9.99.525+2026-04-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -35398,6 +35398,8 @@ a { color: #1565c0; }`;
                                 ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
                                 ph.addEventListener('mouseleave', _hideArtHoverPreview);
                             }
+                            // ── Bigbox tooltip (ergInjectCaaInlineThumbnails IDB) ─
+                            _wireInlineThumbnailBigboxTooltip(ph);
                             if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
                                 let hintStatus, hintLabel;
                                 if (fromIdb) {
@@ -35445,6 +35447,8 @@ a { color: #1565c0; }`;
                                 ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
                                 ph.addEventListener('mouseleave', _hideArtHoverPreview);
                             }
+                            // ── Bigbox tooltip (ergInjectCaaInlineThumbnails native) ─
+                            _wireInlineThumbnailBigboxTooltip(ph);
                             if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
                                 const hint  = getResourceTimingHint(this.src);
                                 const emoji = cacheStatusEmoji(hint.status);
@@ -40998,6 +41002,212 @@ a { color: #1565c0; }`;
      *
      * @param {ArtCtx} ctx  Archive context descriptor.
      */
+    /**
+     * Wires the enriched bigbox tooltip (mouseenter / mouseleave) onto an inline
+     * thumbnail placeholder span `ph` so that hovering a column thumbnail shows
+     * the same rich tooltip as hovering a bigbox strip image.
+     *
+     * Mirrors the `wrapper.addEventListener('mouseenter', …)` block inside
+     * `_artInitBigPics` exactly:
+     *   1. Tries `_renderBigboxTooltipFromColumns` (honours `tooltipColumns` from
+     *      the active page definition or the per-table `mbEntityTooltipColumns`
+     *      dataset attribute for multi-table pages).
+     *   2. Falls back to a static layout built from column values read from the
+     *      row: entity name, disambiguation comment, Artist, Format (Tracks),
+     *      Country/Date, Label – Cat#, Barcode.
+     *
+     * The tooltip is positioned to the right of `ph`, falling back to the left
+     * when the right edge would overflow the viewport — same algorithm as bigbox.
+     *
+     * Per-table entity features (`mbEntityTooltipColumns` / `mbEntityExtractMain-
+     * Column`) are snapshotted from the owning `table.tbl` at wire-time (after
+     * image load, when the table is fully configured), mirroring the snapshot
+     * taken by `_artInitBigPics` at call time.
+     *
+     * Must be called after the inline image has successfully loaded so that `ph`
+     * is already in the live DOM (`ph.isConnected` is true).
+     *
+     * @param {HTMLElement} ph  The `.mb-caa-inline-ph` / `.mb-eaa-inline-ph` span.
+     */
+    function _wireInlineThumbnailBigboxTooltip(ph) {
+        // Derive context from the live DOM — ph is always inside td > tr > table
+        // at the point this function is called (after successful image load).
+        const _td    = ph.closest('td');
+        const _table = ph.closest('table.tbl');
+
+        // Snapshot per-table entity features for multi-table pages (tag-value,
+        // artist-credit, …) where each group table carries its own tooltipColumns
+        // in dataset.mbEntityTooltipColumns, serialised by renderGroupedTable.
+        const _ttCols = (() => {
+            if (!_table) return null;
+            try {
+                return _table.dataset.mbEntityTooltipColumns
+                    ? JSON.parse(_table.dataset.mbEntityTooltipColumns)
+                    : null;
+            } catch (_e) { return null; }
+        })();
+        const _ttMain = _table ? (_table.dataset.mbEntityExtractMainColumn || null) : null;
+
+        ph.addEventListener('mouseenter', function() {
+            const _tip = _ensureArtBigboxTooltip();
+            if (!_tip) return;
+            _tip.innerHTML = '';
+
+            const _rowEl = ph.closest('tr');
+
+            // Build the effective page-definition for the tooltip renderer,
+            // merging per-table entity features if present (same as bigbox).
+            const _effPageDef = _ttCols
+                ? {
+                    ...(activeDefinition || {}),
+                    features: {
+                        ...((activeDefinition && activeDefinition.features) || {}),
+                        tooltipColumns: _ttCols,
+                        ...(_ttMain ? { extractMainColumn: _ttMain } : {})
+                    }
+                  }
+                : activeDefinition;
+
+            if (Lib.settings.sa_enable_tooltip_debug) {
+                Lib.debug('tooltips', '[inline tooltip] rowEl=' + !!_rowEl +
+                    ' ttCols=' + JSON.stringify(_ttCols) +
+                    ' ttMain=' + JSON.stringify(_ttMain));
+            }
+
+            // ── Primary path: tooltipColumns-driven rendering ──────────────────
+            if (_rowEl && _table &&
+                    _renderBigboxTooltipFromColumns(_tip, _rowEl, _effPageDef, _table)) {
+                if (Lib.settings.sa_enable_tooltip_debug) {
+                    Lib.debug('tooltips', '[inline tooltip] rendered via tooltipColumns');
+                }
+            } else {
+                // ── Static fallback: column-based field extraction ─────────────
+                if (Lib.settings.sa_enable_tooltip_debug) {
+                    Lib.debug('tooltips', '[inline tooltip] using static fallback');
+                }
+
+                /**
+                 * Returns the trimmed text of the row cell whose <th> matches
+                 * `name` (case-insensitive), or '' when absent.
+                 * @param {string} name
+                 * @returns {string}
+                 */
+                const _cellText = (name) => {
+                    if (!_rowEl || !_table) return '';
+                    const _hdr = _table.querySelector('thead tr:first-child');
+                    if (!_hdr) return '';
+                    const _lo = name.toLowerCase();
+                    let _ci = -1;
+                    Array.from(_hdr.cells).forEach((th, i) => {
+                        if (th.textContent.trim().toLowerCase() === _lo) _ci = i;
+                    });
+                    if (_ci === -1) return '';
+                    const _cell = _rowEl.cells[_ci];
+                    return _cell ? _cell.textContent.replace(/\s+/g, ' ').trim() : '';
+                };
+
+                // Entity name: text of the entity anchor inside the td.
+                const _anchor  = _td ? _td.querySelector('a[href]') : null;
+                const _name    = _anchor
+                    ? _anchor.textContent.trim()
+                    : (_td ? _td.textContent.replace(/\s+/g, ' ').trim() : '');
+                const _comment = (() => {
+                    if (!_td) return '';
+                    const cs = _td.querySelector('span.comment');
+                    return cs ? cs.textContent.trim() : '';
+                })();
+                const _artist  = _cellText('Artist');
+                const _format  = _cellText('Format');
+                const _tracks  = _cellText('Tracks');
+                const _cd      = _cellText('Country/Date');
+                const _label   = _cellText('Label').replace(/\s*\([^)]*\)\s*$/, '').trim();
+                const _catnum  = _cellText('Catalog#');
+                const _barcode = _cellText('Barcode');
+
+                if (_name) {
+                    const _el = document.createElement('div');
+                    _el.style.cssText = 'font-weight:600; margin-bottom:2px;';
+                    _el.textContent = _name;
+                    _tip.appendChild(_el);
+                }
+                if (_comment) {
+                    const _el = document.createElement('div');
+                    _el.style.cssText = 'font-style:italic; color:#cdd6f4; margin-bottom:2px;';
+                    _el.textContent = _comment;
+                    _tip.appendChild(_el);
+                }
+                if (_artist) {
+                    const _el = document.createElement('div');
+                    _el.style.cssText = 'margin-bottom:4px;';
+                    _el.textContent = _artist;
+                    _tip.appendChild(_el);
+                }
+                if (_format || _cd || _label || _catnum || _barcode) {
+                    const _el = document.createElement('div');
+                    _el.style.cssText = 'border-top:1px solid #45475a; margin:4px 0;';
+                    _tip.appendChild(_el);
+                }
+                if (_format) {
+                    const _el = document.createElement('div');
+                    _el.style.cssText = 'margin-bottom:2px;';
+                    _el.textContent = _tracks ? _format + ' (' + _tracks + ')' : _format;
+                    _tip.appendChild(_el);
+                }
+                if (_cd) {
+                    const _el = document.createElement('div');
+                    _el.style.cssText = 'margin-bottom:2px;';
+                    _el.textContent = _cd;
+                    _tip.appendChild(_el);
+                }
+                if (_label || _catnum) {
+                    const _el = document.createElement('div');
+                    _el.style.cssText = 'margin-bottom:2px;';
+                    _el.textContent = (_label && _catnum)
+                        ? _label + ' \u2013 ' + _catnum
+                        : (_label || _catnum);
+                    _tip.appendChild(_el);
+                }
+                if (_barcode) {
+                    const _el = document.createElement('div');
+                    _el.style.cssText = 'color:#a6adc8;';
+                    _el.textContent = _barcode;
+                    _tip.appendChild(_el);
+                }
+            }
+
+            // ── Position: right of the hover-preview popup (when visible) or
+            //             right of ph (when hover-preview is disabled).
+            // When sa_caa_hover_preview is enabled, _showArtHoverPreview fires on
+            // the same mouseenter event (registered first on ph) and positions the
+            // preview popup to the right of ph.  Anchoring our tooltip to ph too
+            // would place it directly on top of the preview popup.  Instead, we
+            // read the preview div's bounding rect (already positioned by
+            // _positionArtHoverPreview) and push the tooltip further right.
+            const _previewDiv  = Lib.settings.sa_caa_hover_preview
+                ? document.getElementById('mb-art-hover-preview')
+                : null;
+            const _anchorRect  = (_previewDiv && _previewDiv.style.display !== 'none')
+                ? _previewDiv.getBoundingClientRect()
+                : ph.getBoundingClientRect();
+            const _vw = window.innerWidth, _vh = window.innerHeight;
+            _tip.style.display = 'block';
+            const _tw = _tip.offsetWidth, _th = _tip.offsetHeight;
+            let _x = _anchorRect.right + 8;
+            let _y = _anchorRect.top;
+            if (_x + _tw > _vw - 6) _x = _anchorRect.left - _tw - 8;
+            if (_y + _th > _vh - 6) _y = _vh - _th - 6;
+            if (_x < 4) _x = 4;
+            if (_y < 4) _y = 4;
+            _tip.style.left = _x + 'px';
+            _tip.style.top  = _y + 'px';
+        });
+
+        ph.addEventListener('mouseleave', function() {
+            const _tip = document.getElementById('mb-art-bigbox-tooltip');
+            if (_tip) _tip.style.display = 'none';
+        });
+    }
+
     function _artInitInlinePics(ctx, cacheBust = false, targetTable = null) {
         if (!Lib.settings.sa_enable_caa_pics) return;
         if (!Lib.settings.sa_caa_pics_inline) return;
@@ -41156,6 +41366,8 @@ a { color: #1565c0; }`;
                                 existingPh.addEventListener('mouseleave', _hideArtHoverPreview);
                                 existingPh.dataset[hoverWiredAttr] = '1';
                             }
+                            // ── Bigbox tooltip (C1 restore) ───────────────────────
+                            _wireInlineThumbnailBigboxTooltip(existingPh);
 
                             if (blobIsAlive && !cacheBust) {
                                 // ── C1: blob is valid — image already visible ──────────
@@ -41250,6 +41462,8 @@ a { color: #1565c0; }`;
                                                         existingPh.appendChild(hs);
                                                     }
                                                 }
+                                                // ── Bigbox tooltip (C2 IDB restore) ────────────────
+                                                _wireInlineThumbnailBigboxTooltip(existingPh);
                                             }
                                         })
                                         .catch(() => { _artSetInlineSortKey(ctx, td, false); /* 404 — leave ph as invisible spacer */ });
@@ -41262,6 +41476,8 @@ a { color: #1565c0; }`;
                                             this.style.display = 'inline';
                                             td.dataset[ctx.inlineDoneAttr] = '1';
                                             _artSetInlineSortKey(ctx, td, true);
+                                            // ── Bigbox tooltip (C2 native restore) ─────────────
+                                            _wireInlineThumbnailBigboxTooltip(existingPh);
                                         }
                                         resolve();
                                     }, { once: true });
@@ -41387,6 +41603,8 @@ a { color: #1565c0; }`;
                                         ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
                                         ph.addEventListener('mouseleave', _hideArtHoverPreview);
                                     }
+                                    // ── Bigbox tooltip (fresh IDB load) ────────────────
+                                    _wireInlineThumbnailBigboxTooltip(ph);
 
                                     // ── Cache-hint indicator (inline) ──────────────────
                                     if (Lib.settings.sa_rt_enable && Lib.settings.sa_rt_show_inline) {
@@ -41464,6 +41682,8 @@ a { color: #1565c0; }`;
                                         ph.addEventListener('mouseenter', () => _showArtHoverPreview(bigUrl, ph));
                                         ph.addEventListener('mouseleave', _hideArtHoverPreview);
                                     }
+                                    // ── Bigbox tooltip (fresh native load) ─────────────
+                                    _wireInlineThumbnailBigboxTooltip(ph);
                                     // After the image has loaded (and the browser has therefore
                                     // committed a PerformanceResourceEntry for the URL), query
                                     // the Resource Timing API to determine whether the image was

@@ -1,5 +1,31 @@
 [
   {
+    "version": "9.99.525",
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix inline-thumbnail bigbox tooltip positioning: when `sa_caa_hover_preview` is enabled, both the hover-preview popup and the bigbox tooltip fire on the same `mouseenter` event. The previous code anchored the tooltip to `ph.getBoundingClientRect()`, placing it on top of the already-visible preview popup. Fixed in `_wireInlineThumbnailBigboxTooltip`: the positioning block now detects whether `#mb-art-hover-preview` is visible (i.e. `sa_caa_hover_preview` is on and `_showArtHoverPreview` has already run), and if so uses the preview div's bounding rect as the anchor, pushing the tooltip to the right of the preview popup — matching the layout of the bigbox strip tooltip. Falls back to `ph.getBoundingClientRect()` when hover-preview is disabled."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.524",
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "label": "🌟 New Feature",
+        "items": [
+          "Add `_wireInlineThumbnailBigboxTooltip(ph)` helper: wires the same enriched bigbox tooltip (mouseenter / mouseleave on the `mb-art-bigbox-tooltip` singleton div) used by the big image strip to inline thumbnail placeholder spans in the `addCAA`-configured column. Primary path: delegates to `_renderBigboxTooltipFromColumns` honoring `tooltipColumns` from the active page definition or from `table.dataset.mbEntityTooltipColumns` (multi-table pages). Static fallback: entity name, disambiguation comment, Artist, Format (Tracks), Country/Date, Label – Cat#, Barcode — identical fields to the bigbox static fallback. Tooltip is positioned to the right of the thumbnail, falling back to the left on viewport overflow. Per-table entity features (`mbEntityTooltipColumns` / `mbEntityExtractMainColumn`) are snapshotted at wire-time so per-group configuration on tag-value and artist-credit pages is respected.",
+          "Call `_wireInlineThumbnailBigboxTooltip` at all 5 success paths in `_artInitInlinePics`: fresh IDB load, fresh native `img.onload`, Case C1 same-session restore (existingPh), Case C2 IDB refetch (existingPh, inside `isConnected` guard), and Case C2 native refetch (existingPh, inside `isConnected` guard).",
+          "Call `_wireInlineThumbnailBigboxTooltip` at both success paths in `ergInjectCaaInlineThumbnails` (IDB and native fallback) so ERG release-list inline thumbnails also show the tooltip."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.523",
     "date": "2026-04-22",
     "sections": [

@@ -75624,17 +75624,21 @@ English(primary) => English | primary
 #+end_example
 
 ** when a sticky column is fixed, the highlight color hovering over the current row doesn't take the sticky column into account
-** add CAA enriched tooltip also to the thumbnail in the column configured with the "addCAA" parameter
-*** initial
+** DONE add CAA enriched tooltip also to the thumbnail in the column configured with the "addCAA" parameter
+*** DONE initial
 
 add the CAA enriched tooltip which pops up when hovering over an image in the big image stripe above a table also to the
 thumbnail in the column configured with the "addCAA" parameter
 
-*** bugs
+*** DONE bugs
 
-hovering over the thumbnails displays the tooltip over the image popup instead of to the right
+There is a bug:
 
-*** conditional behavior based on whether hover preview is enabled
+Although the tooltip popup over thumbails in "addCAA/addEAA" added column works, hovering over the thumbnails in these
+columns displays the tooltip positioned OVER the actual image popup (anchored on the top left corner by default) instead
+of to the right of the image popup, like it does for the tooltip when hovering over the images in the big image stripe
+
+*** TODO conditional behavior based on whether hover preview is enabled
 
 The user's request doesn't specify conditional behavior based on whether hover preview is enabled, and the bigbox strip
 itself shows the tooltip regardless, so I'll add it unconditionally to the thumbnail as well.
@@ -76129,7 +76133,7 @@ other synthetic columns values have shifted one to the right.
 
 **** TODO add better handling for injected derived columns inclusive new background column header colour
 
-** TODO Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
+** DONE Show/Hide all-sub-sections not working on "https://musicbrainz.org/user/vzell/tags" pages
 *** initial
 
 In the uploaded userscript "ShowAllEntityData.user.js"
@@ -76462,6 +76466,17 @@ to
         },
 #+end_example
 
+*** TODO bugs
+
+#+begin_example
+00:06:18.217 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.523+2026-04-22) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/artist-credit/1488075 
+00:06:18.246 [VZ-ShowAllEntityData: artist-credit] 📝 Changelog source: remote — replaced 0 local entries with 698 remote entries (fromCache=true) 
+00:06:30.776 [VZ-ShowAllEntityData: artist-credit] ❌ No template table head found. 
+00:06:30.776 [VZ-ShowAllEntityData: artist-credit] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:29296:31)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:37040:27)
+#+end_example
+
 *** TODO on multi-table pages with different table structures, enable entityFeatures 
 
 on multi-table pages with different table structures, enable entityFeatures
@@ -76513,11 +76528,13 @@ add before the pageType "type: 'taglookup',"
         },
 #+end_example
 
+
 * some latest fixes
 
 Some latest fixes:
 
 1.)
+
 
 * https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908 does not restore CAA images when loading from disk
 
