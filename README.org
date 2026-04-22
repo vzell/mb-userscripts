@@ -76477,7 +76477,7 @@ to
     at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:37040:27)
 #+end_example
 
-*** TODO Inline thumbail image are not restored when loading from disk, either when on the initial or the final rendered page
+*** DONE Inline thumbail image are not restored when loading from disk, either when on the initial or the final rendered page
 **** initial
 
 some bugs
