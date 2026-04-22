@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.525+2026-04-22
+// @version      9.99.529+2026-04-22
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4311,6 +4311,22 @@
     function applyInsertH2(def) {
         const _text = def?.features?.insertH2;
         if (!_text) return;
+
+        // ── Idempotency guard ──────────────────────────────────────────────────
+        // On disk-load the pre-processing block calls applyInsertH2 even when
+        // the user is on the final rendered page (where startFetchingProcess
+        // already called it).  Inserting a second identical <h2> shifts the
+        // allH2s sequence that renderGroupedTable uses to locate targetHeader,
+        // which can cause targetHeader to resolve to the duplicate instead of
+        // the intended anchor — breaking group insertion order.
+        // Guard: if any existing <h2> in the page already carries the exact
+        // same text, skip the insertion entirely.
+        const _existing = Array.from(document.querySelectorAll('h2'))
+            .find(h => h.textContent.trim() === _text.trim());
+        if (_existing) {
+            Lib.debug('init', `applyInsertH2: <h2>"${_text}"</h2> already present — skipping (idempotency).`);
+            return;
+        }
 
         const _h2 = document.createElement('h2');
         _h2.textContent = _text;
@@ -22153,8 +22169,12 @@ a { color: #1565c0; }`;
                     return clone;
                 }).filter(r => testRowMatch(r, matchCtx));
 
-                // Always push to filteredArray, even if matches.length is 0, to maintain the table count and restoration capability
-                filteredArray.push({ category: group.category || group.key || 'Unknown', rows: matches });
+                // Always push to filteredArray, even if matches.length is 0, to maintain the table count and restoration capability.
+                // Spread the full group object so that colName, entityFeatures, key, originalRows etc.
+                // are preserved for the renderGroupedTable call that follows (per-group column-name
+                // patching and per-group inline-thumbnail initialisation both read group.colName /
+                // group.entityFeatures from the passed dataArray).
+                filteredArray.push({ ...group, rows: matches });
                 totalFiltered += matches.length;
             });
 
@@ -26627,7 +26647,11 @@ a { color: #1565c0; }`;
         if (!targetHeader) {
             Lib.debug('render', 'Target H2 not found by specific type, falling back to document position logic.');
             for (let i = 0; i < allH2s.length; i++) {
-                if (allH2s[i].compareDocumentPosition(firstTable) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                // firstTable may be null on listToTable pages when disk-loading before
+                // applyListToTable has converted <ul>s to <table.tbl>s.  Guard
+                // against passing null to compareDocumentPosition which throws a TypeError.
+                if (firstTable &&
+                        allH2s[i].compareDocumentPosition(firstTable) & Node.DOCUMENT_POSITION_FOLLOWING) {
                     targetHeader = allH2s[i];
                 } else {
                     Lib.debug('render', `Stopping H2 search at index ${i}: table no longer follows this header.`);
@@ -27105,6 +27129,34 @@ a { color: #1565c0; }`;
 
                             // Remove the trailing "See all" row — the button replaces it.
                             _lastRow.remove();
+
+                            // ── Splice from in-memory row arrays ──────────────────────
+                            // _lastRow.remove() only removes the TR from the DOM (tbody).
+                            // group.rows (in-memory) still holds a reference to it.
+                            // On any subsequent runFilter call, filteredArray is built
+                            // from groupedRows; if "See all" is the last row of a group
+                            // it passes the empty-filter testRowMatch and gets appended
+                            // to the new tbody.  With a non-empty query renderGroupedTable
+                            // takes the filter-reuse path (query truthy → no detection
+                            // block) and the "See all" row becomes permanently visible.
+                            // Fix: splice it out of every in-memory array immediately.
+                            const _seeAllSplice = (arr) => {
+                                if (!Array.isArray(arr)) return;
+                                const _si = arr.indexOf(_lastRow);
+                                if (_si !== -1) arr.splice(_si, 1);
+                            };
+                            _seeAllSplice(group.rows);
+                            _seeAllSplice(group.originalRows);
+                            // Also patch the global groupedRows source when dataArray is
+                            // a filtered copy (runFilter passes a derived filteredArray
+                            // whose .rows is a new array, not the same reference).
+                            if (typeof groupedRows !== 'undefined' &&
+                                    groupedRows[index]) {
+                                if (groupedRows[index].rows !== group.rows)
+                                    _seeAllSplice(groupedRows[index].rows);
+                                if (groupedRows[index].originalRows)
+                                    _seeAllSplice(groupedRows[index].originalRows);
+                            }
 
                             // Patch mbTotalRows to the real (post-removal) row count so that
                             // updateSubTableRowCount() shows "(N)" and not "(N of N+1)".
@@ -34079,6 +34131,30 @@ a { color: #1565c0; }`;
                 performClutterCleanup();
                 cleanupAfterInitialLoad();
 
+                // ── DOM pre-processing for listToTable pages (e.g. artist-credit) ───
+                // On pages where applyListToTable converts <ul> lists to <table.tbl>
+                // elements (pageTypes with features.listToTable), the button click
+                // normally calls startFetchingProcess which runs applyRenameH2ToH3,
+                // applyInsertH2, and applyListToTable before fetching.  On disk-load
+                // startFetchingProcess is never invoked, so those pre-processing steps
+                // have not run.  Without them:
+                //   (a) document.querySelector('table.tbl') returns null — the headers
+                //       restoration block silently skips, renderGroupedTable has no
+                //       templateHead to clone, and compareDocumentPosition crashes
+                //       when called with null as its argument.
+                //   (b) The insertH2 <h2> anchor that renderGroupedTable uses as
+                //       targetHeader is absent, so the master-toggle and filterContainer
+                //       are never anchored.
+                // Run the same three steps here before the headers restoration block.
+                if (activeDefinition.features && activeDefinition.features.listToTable) {
+                    Lib.debug('cache',
+                        'disk-load: running DOM pre-processing (renameH2ToH3, insertH2, ' +
+                        'applyListToTable) for listToTable page type: ' + pageType);
+                    applyRenameH2ToH3(activeDefinition);
+                    applyInsertH2(activeDefinition);
+                    applyListToTable(activeDefinition);
+                }
+
                 // Restore table headers if they were saved
                 if (data.headers && data.headers.length > 0) {
                     const firstTable = document.querySelector('table.tbl');
@@ -34131,6 +34207,18 @@ a { color: #1565c0; }`;
                     groupedRows = [];
                     expandedCells.clear();
                     _mbRowIdxCounter = 0;
+
+                    // PageTypes that use singular colName (same set as _singularPageTypes
+                    // in startFetchingProcess, kept in sync here for disk-load parity).
+                    const _diskSingularTypes = new Set([
+                        'tag-value', 'user-tag-value',
+                        'user-tags', 'popular-tags',
+                        'artist-tags', 'releasegroup-tags', 'release-tags',
+                        'recording-tags', 'work-tags', 'label-tags',
+                        'series-tags', 'place-tags', 'area-tags', 'instrument-tags',
+                        'artist-credit'
+                    ]);
+
                     data.groups.forEach(group => {
                         const reconstructedRows = [];
                         group.rows.forEach((rowCells, rowIndex) => {
@@ -34150,18 +34238,64 @@ a { color: #1565c0; }`;
                                 tr.appendChild(td);
                             });
 
+                            // ── Skip "See all N …" rows ───────────────────────────────────
+                            // _lastRow.remove() in renderGroupedTable removes the "See all"
+                            // TR from the DOM but NOT from group.rows; saveTableDataToDisk
+                            // serialises group.rows so the row is written to disk.  On
+                            // disk-load we filter it out here so that:
+                            //   (a) loadedRowCount (→ updateH2Count) shows the correct
+                            //       number (e.g. 91) rather than inflated count (91+8).
+                            //   (b) The _seeAllSplice in renderGroupedTable only needs to
+                            //       handle live-fetch rows, not disk-loaded ones.
+                            // Detection: sole cell contains <em><a href*="/tag/"> or
+                            // <em><a href*="/artist-credit/"> whose text starts with
+                            // "See all" (case-insensitive).
+                            if (tr.cells.length === 1) {
+                                const _seeAllA = tr.cells[0].querySelector(
+                                    'em a[href*="/tag/"], em a[href*="/artist-credit/"]'
+                                );
+                                if (_seeAllA && /^see all\b/i.test(_seeAllA.textContent.trim())) {
+                                    Lib.debug('cache',
+                                        `disk-load: skipped "See all" row ("${_seeAllA.textContent.trim().substring(0, 60)}")`);
+                                    return; // skip this row
+                                }
+                            }
+
                             if (rowMatchesFilter(tr)) {
                                 tr.dataset.mbRowIdx = String(_mbRowIdxCounter++);
                                 reconstructedRows.push(tr);
                             }
                         });
 
-                        groupedRows.push({
+                        // ── Derive colName and entityFeatures ─────────────────────
+                        // startFetchingProcess sets both on each groupedRows entry;
+                        // disk-load must mirror the same logic so that:
+                        //   (a) renderGroupedTable patches the first <th> of each
+                        //       sub-table to the correct (singular) column name
+                        //       (fixes: all sub-tables showing the first group's name)
+                        //   (b) the per-group inline-thumbnail loop in renderGroupedTable
+                        //       finds group.entityFeatures.addCAA/addEAA and calls
+                        //       _artInitInlinePics with the correct column name per table
+                        //       (fixes: inline CAA/EAA thumbnails absent on disk-load)
+                        const _grpCat = group.category || group.key;
+                        const _grpColName = _diskSingularTypes.has(pageType)
+                            ? _toSingular(_grpCat)
+                            : _grpCat;
+                        const _grpEntityFeatures = (activeDefinition.entityFeatures && _grpCat)
+                            ? resolveEntityFeaturesFromH3(_grpCat, activeDefinition)
+                            : null;
+
+                        const _grpEntry = {
                             key: group.key,
-                            category: group.category || group.key,
+                            category: _grpCat,
+                            colName: _grpColName,
                             rows: reconstructedRows,
                             originalRows: [...reconstructedRows]
-                        });
+                        };
+                        if (_grpEntityFeatures && Object.keys(_grpEntityFeatures).length > 0) {
+                            _grpEntry.entityFeatures = _grpEntityFeatures;
+                        }
+                        groupedRows.push(_grpEntry);
                         loadedRowCount += reconstructedRows.length;
                     });
                     allRows = [];
@@ -34195,6 +34329,36 @@ a { color: #1565c0; }`;
                 isLoaded = true;
                 if (data.tableMode) activeDefinition.tableMode = data.tableMode;
                 if (activeDefinition.tableMode !== 'multi') originalAllRows = [...allRows];
+
+                // ── Merge entity-specific features into activeDefinition ──────────────
+                // startFetchingProcess calls resolveEntityFeaturesFromH2(baseDef) and
+                // merges the result into activeDefinition.features before any render or
+                // CAA initialisation.  On disk-load this merge never happens, so keys
+                // such as addCAA / addEAA / extractMainColumn that live inside the
+                // entityFeatures map (e.g. series-releases: entityFeatures.Releases)
+                // are absent from activeDefinition.features.  This causes initCaaPics()
+                // / initEaaPics() to skip entirely (they guard on features.addCAA /
+                // features.addEAA) and also breaks extractMainColumn-driven sticky
+                // columns.
+                // Fix: apply the same merge here immediately after the tableMode
+                // assignment so all downstream code (descriptor builders, initCaaPics,
+                // initCaaInlinePics, applyStickyColumn, etc.) sees the correct merged
+                // features.
+                if (baseDefinition && baseDefinition.entityFeatures) {
+                    const _diskEntityFeatures = resolveEntityFeaturesFromH2(baseDefinition);
+                    if (_diskEntityFeatures && Object.keys(_diskEntityFeatures).length > 0) {
+                        activeDefinition = {
+                            ...activeDefinition,
+                            features: {
+                                ..._diskEntityFeatures,
+                                ...(activeDefinition.features || {})
+                            }
+                        };
+                        Lib.debug('cache',
+                            'disk-load: merged entityFeatures into activeDefinition.features — ' +
+                            'keys: ' + Object.keys(_diskEntityFeatures).join(', '));
+                    }
+                }
                 if (!activeInjectedColumns.length) {
                     activeInjectedColumns = buildActiveInjectedColumns(activeDefinition);
                     Lib.debug('cache', `disk-load: rebuilt activeInjectedColumns (${activeInjectedColumns.length})`);
@@ -34412,6 +34576,22 @@ a { color: #1565c0; }`;
                 // Install navigation guard (idempotent — safe to call on every render)
                 initNavigationGuard();
 
+                // ── updateH2Count MUST run before makeH2sCollapsible ─────────────────
+                // makeH2sCollapsible uses the presence of .mb-row-count-stat on an h2
+                // to identify the main data header (isMainDataHeader = true → icon='▼'
+                // → contentNodes are NOT hidden).  Without .mb-row-count-stat, every h2
+                // is treated as a non-data header (icon='▲') and ALL its content nodes
+                // (including the script-managed h3/table pairs) are set to display:none.
+                // updateH2Count stamps .mb-row-count-stat, so it must precede
+                // makeH2sCollapsible to ensure the correct h2 is left expanded.
+                updateH2Count(loadedRowCount, loadedRowCount);
+
+                // Trailing h2 relocation: must run AFTER updateH2Count() because
+                // _relocateTrailingH2Sections() anchors on .mb-row-count-stat which
+                // is inserted by updateH2Count().  finalCleanup() (called earlier)
+                // already attempted this but found no stat and silently no-oped.
+                _relocateTrailingH2Sections();
+
                 makeH2sCollapsible();
 
                 // ── Artist-Releasegroups: inject discography view buttons ─────────
@@ -34575,14 +34755,6 @@ a { color: #1565c0; }`;
                 // In both cases runFilter() (or renderGroupedTable via runFilter)
                 // is the authoritative and sufficient call site.
 
-                updateH2Count(loadedRowCount, loadedRowCount);
-
-                // Trailing h2 relocation: must run AFTER updateH2Count() because
-                // _relocateTrailingH2Sections() anchors on .mb-row-count-stat which
-                // is inserted by updateH2Count().  finalCleanup() (called earlier)
-                // already attempted this but found no stat and silently no-oped.
-                _relocateTrailingH2Sections();
-
                 // Explicitly place the CAA/EAA global toggle buttons in the h2
                 // after the count stat has been created.
                 //
@@ -34596,7 +34768,7 @@ a { color: #1565c0; }`;
                 //      → _artCreateOrUpdateGlobalToggleButton → still defers
                 //      → then runFilter calls updateH2Count: count stat created
                 //        but updateH2Count's re-anchor loop finds no buttons yet
-                //   3. updateH2Count(loadedRowCount) [this call] recreates the stat
+                //   3. updateH2Count(loadedRowCount) [called above] recreates the stat
                 //        re-anchor loop still finds no buttons
                 //
                 // Net result in a new session: the button is never created.

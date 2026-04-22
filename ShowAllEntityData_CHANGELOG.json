@@ -1,5 +1,58 @@
 [
   {
+    "version": "9.99.529",
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix h3 sub-table headers hidden after disk-load from initial page on multi-h2 pages (e.g. `artist-credit` which has both `<h2>Artist list</h2>` and the native `<h2>Uses</h2>`): `makeH2sCollapsible` uses the presence of `.mb-row-count-stat` on an h2 to determine whether it is the main data header (`isMainDataHeader = true` → icon='▼' → contentNodes left visible). Without `.mb-row-count-stat`, every h2 is treated as a non-data header and its contentNodes are set to `display: none`. In `loadTableDataFromDisk`, `makeH2sCollapsible` was called at line ~34579 but `updateH2Count` (which stamps `.mb-row-count-stat`) was called much later at line ~34758 — so when `makeH2sCollapsible` fired, neither h2 had the stat span, and the h3/table pairs under `<h2>Uses</h2>` were all hidden. Fix: moved `updateH2Count(loadedRowCount, loadedRowCount)` and the immediately following `_relocateTrailingH2Sections()` call to run immediately before `makeH2sCollapsible`, with an explanatory comment. The downstream `_artCreateOrUpdateGlobalToggleButton` calls that followed the old position are retained in place (they only need the count stat to exist, which it now does from the earlier call)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.528",
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix inline CAA/EAA thumbnail images still absent after disk-load (Bug 1): root cause was `runFilter`'s `filteredArray.push({ category, rows: matches })` — only `category` and `rows` were preserved; `colName`, `entityFeatures`, `key`, and `originalRows` were silently dropped. The per-group inline-thumbnail loop in `renderGroupedTable` reads `group.entityFeatures` from the passed `dataArray` (here `filteredArray`); with `entityFeatures` absent it skipped every group. Fix: changed to `filteredArray.push({ ...group, rows: matches })` so all group properties are preserved. Also fixes per-group column-name patching (the `colName` property that patches the first `<th>` of each sub-table's header) in the `runFilter` re-render pass.",
+          "Fix h3 headers and CAA image stripe missing after disk-load from the initial page (Bug 2): `applyInsertH2` was not idempotent. On disk-load the pre-processing block calls it unconditionally; on the final rendered page (where `startFetchingProcess` had already called it) this inserted a second identical `<h2>`, shifting the `allH2s` sequence that `renderGroupedTable` uses to locate `targetHeader`. When the duplicate h2 preceded `firstTable`, `targetHeader` resolved to the duplicate instead of the intended anchor, causing subsequent group h3/table pairs to be inserted in the wrong position (or with `lastInsertedElement = null`). Fix: added an idempotency guard at the top of `applyInsertH2` that scans for an existing `<h2>` with the same text and returns immediately when found.",
+          "Fix h3 total row count wrong after disk-load (Bug 3): `saveTableDataToDisk` serialises `group.rows` which still contained the 'See all N …' trailing TR (it was only removed from the DOM by `_lastRow.remove()`, not from the in-memory array). On disk-load the row was reconstructed into `reconstructedRows` and counted in `loadedRowCount`, inflating the `updateH2Count` total (e.g. 99 instead of 91 with 8 overflow groups). Fix: added a 'See all' row detection skip inside the `data.groups.forEach` row reconstruction loop — a row whose sole cell contains `<em><a href*='/tag/'> or <em><a href*='/artist-credit/'>` with text matching `/^see all\\b/i` is silently skipped before being pushed to `reconstructedRows`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.527",
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix 'See all N entities' row reappearing after disk-load on `tag-value`, `user-tag-value`, and `artist-credit` pages (Bug 1a): `_lastRow.remove()` in `renderGroupedTable` removed the TR from the DOM but left it in the in-memory `group.rows` array. `saveTableDataToDisk` serialises `group.rows`, so the row was written to disk and reconstructed on load. More critically, on every `runFilter` call with a non-empty query, the filter-reuse path (`if (query && existingTables[index])`) skips the `if (!query)` block that contains the 'See all' detection, so the row was appended to tbody and became permanently visible. Fix: after `_lastRow.remove()`, added `_seeAllSplice()` calls that remove the TR from `group.rows`, `group.originalRows`, and — when `dataArray` is a filtered copy passed by `runFilter` — from the matching `groupedRows[index].rows` and `groupedRows[index].originalRows` as well.",
+          "Fix all sub-tables showing the first sub-table's column name after disk-load on `tag-value`, `user-tag-value`, and `artist-credit` pages (Bug 1b): disk-load reconstructed groups without a `colName` property. `renderGroupedTable` patches the first `<th>` of each group's cloned `templateHead` only when `group.colName` is set; without it all groups inherited the first table's column name. Fix: in `loadTableDataFromDisk`'s group reconstruction block, compute `colName` using `_toSingular(category)` for pageTypes in the singular set (same set as `_singularPageTypes` in `startFetchingProcess`) and `category` for all others.",
+          "Fix inline CAA/EAA thumbnail images absent after disk-load on `tag-value`, `user-tag-value`, and `artist-credit` pages (Bug 1c): disk-load reconstructed groups without an `entityFeatures` property. The per-group inline-thumbnail loop in `renderGroupedTable` reads `group.entityFeatures.addCAA/addEAA` to find the correct column name per sub-table; with `group.entityFeatures` missing it skipped every group (`_gAddCAA` and `_gAddEAA` both undefined). Fix: in the same group reconstruction block, call `resolveEntityFeaturesFromH3(category, activeDefinition)` and store the result as `group.entityFeatures` when it is non-empty."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.526",
+    "date": "2026-04-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix crash when using 'Load from Disk' on `artist-credit` overview pages (and any other `listToTable` multi-table pageType): `loadTableDataFromDisk` did not run the DOM pre-processing steps (`applyRenameH2ToH3`, `applyInsertH2`, `applyListToTable`) that `startFetchingProcess` normally applies before a live fetch. Without them, `document.querySelector('table.tbl')` returned `null` (no `<ul>`→`<table.tbl>` conversion had run), causing (a) the headers-restoration block to silently skip, (b) `renderGroupedTable` to log 'No template table head found', and (c) a `TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'` crash. Fix: added a pre-processing block in `loadTableDataFromDisk` (before the headers-restoration block) that calls all three DOM mutation functions when `activeDefinition.features.listToTable` is set. Also added a defensive `firstTable &&` null-guard to the `compareDocumentPosition` call in `renderGroupedTable` as a belt-and-suspenders safeguard.",
+          "Fix CAA/EAA artwork not restored on disk-load for pageTypes that carry `entityFeatures` (e.g. `series-releases`, `collections-releases`): `loadTableDataFromDisk` did not call `resolveEntityFeaturesFromH2(baseDefinition)` or merge the result into `activeDefinition.features`, so keys such as `addCAA`, `addEAA`, and `extractMainColumn` that live inside the `entityFeatures` map were absent from `activeDefinition.features` on disk-load. This caused `initCaaPics()` / `initEaaPics()` / `initCaaInlinePics()` to skip entirely (they guard on `features.addCAA` / `features.addEAA`) and `applyStickyColumn` to find no sticky-column name. Fix: added a merge block in `loadTableDataFromDisk` immediately after the `tableMode` assignment that calls `resolveEntityFeaturesFromH2(baseDefinition)` and merges the resolved entity-specific features into `activeDefinition.features` — mirroring the merge that `startFetchingProcess` performs at the start of a live fetch. The rebuilt active-descriptor lists that follow then correctly include the merged `addCAA` / `addEAA` / `extractMainColumn` etc."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.525",
     "date": "2026-04-22",
     "sections": [

@@ -76466,7 +76466,7 @@ to
         },
 #+end_example
 
-*** TODO bugs
+*** DONE bugs
 
 #+begin_example
 00:06:18.217 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.523+2026-04-22) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/artist-credit/1488075 
@@ -76476,6 +76476,113 @@ to
     at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:29296:31)
     at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:37040:27)
 #+end_example
+
+*** TODO Inline thumbail image are not restored when loading from disk, either when on the initial or the final rendered page
+**** initial
+
+some bugs
+
+1.)
+
+when on pages of the following pageTypes
+
+#+begin_example
+type: 'tag-value'
+type: 'user-tag-value'
+type: 'artist-credit'
+#+end_example
+
+after loading from disk, either when on the initial or the final rendered page,
+
+a.)
+
+the "See all <n> <entities>" row reappears as the last row in a sub-table if more than 10 rows are actually available
+
+b.)
+
+the first column-name in all sub-tables is the same as from the first sub-table
+
+c.)
+
+the inline thumbnail images are not restored when loading from disk, either when on the initial or the final rendered page
+
+**** bugs
+
+still bugs
+
+1.)
+
+the inline thumbnail images are still NOT restored when loading from disk, either when on the initial or the final rendered page (the 
+
+2.)
+
+additionally the h3 headers before the sub-tables + the CAA image stripe (except for the EAA image stripes) are now missing after loading from disk right from the initial page
+
+3.)
+
+The h3 total row count is wrong when initially on the final rendered page, e.g. 99 instead of 91, when there are 8 sub-tables with over-flow rows
+
+**** bugs
+
+The inline thumbnail images are NOW restored when loading from disk.
+
+The following bug still persists, when loading from disk right from the initial page:
+
+The h3 headers are NOT rendered, although they are in the page albeit with "display: none;"
+
+#+begin_example
+<h3 class="mb-toggle-h3" title="Click to collapse/uncollapse sub-section (Ctrl+Click to toggle ALL sub-sections)" style="cursor: pointer; user-select: none; display: none;"><span class="mb-toggle-icon">▼</span>Releases <span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;10&lt;/span&gt; rows total unfiltered in this sub-table">(10)</span><button id="mb-caa-toggle-btn-1" type="button" class="mb-caa-art-toggle-btn" title="Hide CAA cover art image stripe for this sub-section" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;" data-art-render-gen="2"><img class="mb-caa-toggle-thumb" src="blob:https://musicbrainz.org/980d44ba-03cf-4d04-9f1f-c671bfebedb9" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">10</span></button><button id="mb-caa-toggle-btn-retry-1" type="button" title="Retry loading all CAA cover art images for this sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button><button id="mb-stf-Releases-resize-btn" type="button" class="mb-subtable-resize-btn" title="Auto-resize columns in sub-section &quot;Releases&quot;" aria-label="Auto-resize columns for: Releases" style="font-size: 0.8em; padding: 1px 5px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; display: inline-flex; align-items: center; box-sizing: border-box; transition: background-color 0.2s, border-color 0.2s, transform 0.1s, box-shadow 0.1s;">↔️</button><button id="mb-stf-Releases-vis-btn" type="button" class="mb-subtable-vis-btn" title="Show/hide columns in sub-section &quot;Releases&quot;" aria-label="Column visibility for: Releases" style="font-size: 0.85em; padding: 1px 5px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; margin-left: 6px; display: inline-flex; align-items: center; box-sizing: border-box; transition: background-color 0.2s, border-color 0.2s, transform 0.1s, box-shadow 0.1s;">👁️</button><span class="mb-subtable-filter-toggle-icon" title="Toggle filter elements for sub-section &quot;Releases&quot;" role="button" aria-label="Toggle sub-table filter for &quot;Releases&quot;">🔍</span><span class="mb-subtable-filter-container" data-category-name="Releases"><span class="mb-subtable-filter-wrapper"><span class="mb-stf-input-wrap" style="position: relative; display: inline-flex; align-items: center;"><input id="mb-stf-Releases-input" type="text" placeholder="Filter &quot;Releases&quot;… just in this sub-category" title="Filter rows in the &quot;Releases&quot; sub-table, use 'Ctrl+U' for unicode character map" style="font-size: 1em; padding: 2px 28px 2px 6px; border-top: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-left: 2px solid rgb(204, 204, 204); border-image: initial; border-right: none; border-radius: 3px 0px 0px 3px; width: 320px; height: 24px; box-sizing: border-box; transition: box-shadow 0.2s; outline: none;"><button id="mb-stf-Releases-clear" type="button" tabindex="-1" title="Clear filter for &quot;Releases&quot;" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgb(192, 57, 43); font-size: 1em; font-weight: bold; line-height: 1; padding: 2px 3px; border-radius: 3px; display: none;">✕</button></span><span class="mb-stf-drag-handle" title="Drag to resize filter field" style="display: inline-flex; align-items: center; justify-content: center; width: 10px; flex-shrink: 0; cursor: col-resize; user-select: none; border-top: 2px solid rgb(204, 204, 204); border-right: 2px solid rgb(204, 204, 204); border-bottom: 2px solid rgb(204, 204, 204); border-image: initial; border-left: none; border-radius: 0px 3px 3px 0px; background: rgb(240, 240, 240); font-size: 7px; color: rgb(170, 170, 170); letter-spacing: -1px;">⋮</span></span><button type="button" title="Pin current filter to persistent list (saves query + checkbox states)" style="padding: 0px 8px; background: rgb(232, 245, 233); border: 1px solid rgb(165, 214, 167); border-radius: 6px; cursor: pointer; font-size: 1.1em; font-weight: bold; color: rgb(46, 125, 50); transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box; flex-shrink: 0;">+</button><span style="position: relative; display: inline-flex; align-items: stretch; flex-shrink: 0;"><button type="button" title="Show/hide filter history (Alt+H)" style="padding: 0px 8px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); border-radius: 6px; cursor: pointer; font-size: 0.85em; white-space: nowrap; transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s; height: 24px; box-sizing: border-box;">🕑 <span style="text-decoration:underline">H</span>istory ▼</button><div style="display: none; position: absolute; top: calc(100% + 4px); left: 0px; min-width: 420px; background: white; border: 1px solid rgb(204, 204, 204); border-radius: 6px; box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 16px; z-index: 20001; box-sizing: border-box;"><div style="padding: 8px 8px 6px; border-bottom: 1px solid rgb(238, 238, 238);"><div style="position: relative; display: flex; align-items: center;"><input type="text" placeholder="🔍 Quick filter both lists…" style="width: 100%; box-sizing: border-box; padding: 5px 28px 5px 8px; border: 1px solid rgb(204, 204, 204); border-radius: 4px; font-size: 0.88em; outline: none;"><button type="button" tabindex="-1" title="Clear quick filter" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: rgb(192, 57, 43); font-size: 0.95em; font-weight: bold; line-height: 1; padding: 2px 3px; border-radius: 3px; display: none;">✕</button></div></div><div style="padding: 4px 8px 2px; background: rgb(232, 245, 233); border-bottom: 1px solid rgb(200, 230, 201); display: flex; align-items: center; justify-content: space-between;"><span style="font-size: 0.76em; font-weight: 700; color: rgb(46, 125, 50); text-transform: uppercase; letter-spacing: 0.04em;">📌 Pinned</span><button type="button" title="Edit the persistent pinned filter list (Alt+E)" style="padding: 2px 7px; background: rgb(255, 248, 225); border: 1px solid rgb(255, 224, 130); border-radius: 5px; cursor: pointer; font-size: 0.76em; font-weight: 600; color: rgb(230, 81, 0); white-space: nowrap; transition: background-color 0.2s, transform 0.1s, box-shadow 0.1s; line-height: 1.6;">✎ <span style="text-decoration:underline">E</span>dit Pinned Filter List</button></div><div tabindex="0" style="max-height: 380px; overflow-y: auto;"><div style="padding:8px 10px;color:#aaa;font-size:0.85em;text-align:center;">No matching entries</div></div><div style="padding: 3px 8px; border-top: 1px solid rgb(238, 238, 238); border-bottom: 1px solid rgb(221, 221, 221); font-size: 0.76em; color: rgb(102, 102, 102); display: flex; justify-content: space-between; background: rgb(249, 251, 231);"><span>0 of 0 entries</span><span>↑↓ navigate   Enter: apply</span></div><div style="padding: 4px 8px 2px; background: rgb(227, 242, 253); border-bottom: 1px solid rgb(187, 222, 251);"><span style="font-size:0.76em;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:0.04em;">🕑 Recent (LRU)</span></div><div tabindex="0" style="max-height: 380px; overflow-y: auto;"><div class="mb-fhw-hist-row" data-idx="0" data-list="lru" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;gap:6px;">
+                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Human</span>
+                    <span style="flex-shrink:0;display:flex;gap:3px;align-items:center;"></span>
+                </div><div class="mb-fhw-hist-row" data-idx="1" data-list="lru" style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;gap:6px;">
+                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">on</span>
+                    <span style="flex-shrink:0;display:flex;gap:3px;align-items:center;"></span>
+                </div></div><div style="padding: 3px 8px; border-top: 1px solid rgb(238, 238, 238); font-size: 0.76em; color: rgb(136, 136, 136); display: flex; justify-content: space-between;"><span>2 of 2 entries</span><span>↑↓ navigate   Enter: apply   Esc: close</span></div></div></span><label id="mb-stf-Releases-case-label" for="mb-stf-Releases-case-checkbox" title="Case Sensitive Filtering (filter for &quot;Releases&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Releases-case-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Cc</label><label id="mb-stf-Releases-rx-label" for="mb-stf-Releases-rx-checkbox" title="RegExp Filtering (filter for &quot;Releases&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Releases-rx-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Rx</label><label id="mb-stf-Releases-ex-label" for="mb-stf-Releases-ex-checkbox" title="Exclude Matches (filter for &quot;Releases&quot; sub-table)" style="font-size: 0.8em; cursor: pointer; display: flex; align-items: center; margin: 0px; user-select: none; font-weight: normal; height: 24px;"><input id="mb-stf-Releases-ex-checkbox" type="checkbox" style="margin-right: 2px; vertical-align: middle;">Ex</label></span><button id="mb-stf-Releases-subtable-collapse-btn" type="button" class="mb-subtable-collapse-btn" title="Expand ALL collapsed multi-row cells in &quot;Releases&quot; sub-section" aria-label="Expand all collapsed multi-row cells in: Releases" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background-image: initial; background-position: initial; background-size: initial; background-repeat: initial; background-attachment: initial; background-origin: initial; background-clip: initial; border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; align-items: center; gap: 4px; margin-left: 8px; transition: background-color 0.2s, color 0.2s, box-shadow 0.2s; display: none;"><span style="align-self:center;font-size:1em;">▶</span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>Expand</span><span>all</span></span><span style="display:flex;flex-direction:column;align-items:center;line-height:1;font-size:0.72em;"><span>multi-row</span><span>cells</span></span></button><span class="mb-subtable-controls"><button id="mb-stf-Releases-toggle-filter-highlight-btn" type="button" title="Toggle filter string highlighting for the sub-table filter and ALL column filters in this sub-table (except the filter string when &quot;Loading from Disk&quot; was used)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; transition: background-color 0.3s; display: none;">🎨 Toggle highlighting</button><button id="mb-stf-Releases-clear-all-btn" class="mb-stf-clear-col-btn" type="button" title="Clear ALL column filters for this sub-table (the sub-table filter itself is kept)" style="font-size: 0.8em; padding: 2px 6px; border-radius: 4px; background: rgb(240, 240, 240); border: 1px solid rgb(204, 204, 204); cursor: pointer; vertical-align: middle; display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span>Clear all column filters</button><button class="mb-subtable-clear-btn" type="button" title="Clear ALL COLUMN filters for this sub-table" style="display: none;"><span style="color: red; font-size: 1em; font-weight: bold;">✗ </span><span class="mb-subtable-clear-btn-label">Clear all column filters</span></button><span class="mb-filter-status" data-table-name="Releases" data-table-index="1"></span><span class="mb-sort-status" data-table-name="Releases" data-table-index="1"></span></span></h3>
+#+end_example
+
+**** one bug persists
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.521+2026-04-21') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.521"')
+
+total row count bugs for the following pageTypes
+
+#+begin_example
+type: 'tag-value'
+type: 'user-tag-value'
+type: 'artist-credit'
+#+end_example
+
+1.)
+
+OK, the h3 headers ARE rendered now, but on e.g. https://musicbrainz.org/tag/country (there are 91 list entries total
+below the different h3 headers, 8 which have 10 rows each with the "See all <n> <entities>" at the end, one with 8 and
+one with 3 entries)
+
+the first time after the final rendering the total row count in the h2 header is 99
+
+#+begin_example
+<span class="mb-row-count-stat" data-mbtt="There are &lt;span style=&quot;background:#e8e8e8;color:#111111;border-radius:2px;padding:0 3px;font-weight:bold;&quot;&gt;99&lt;/span&gt; rows total unfiltered in ALL sub-tables">(99)</span>
+#+end_example
+
+It's fixed when saving and loading to and from disk, afterwards the 91 are displayed.
+
+2.)
+
+on e.g. https://musicbrainz.org/user/vzell/tag/live (there are 13 list entries total below the different h3 headers, 1
+which has 10 rows with the "See all <n> <entities>" at the end, one with 3)
+
+the first time after the final rendering the total row count in the h2 header is 14
+
+It's fixed when saving and loading to and from disk, afterwards the 13 are displayed.
+
+3.)
+
+the same problem exists for e.g. https://musicbrainz.org/artist-credit/1488075
+
+The first time after the final rendering the total row count is the actual row count plus the number of h3 headers it looks like.
+
+Please fix and add a changelog entry
 
 *** TODO on multi-table pages with different table structures, enable entityFeatures 
 
@@ -76528,6 +76635,17 @@ add before the pageType "type: 'taglookup',"
         },
 #+end_example
 
+** remove "Showing Various Artist releases." from end of artist-release pages
+
+remove "Showing Various Artist releases." from end of artist-release pages when present
+
+#+begin_example
+"Showing Various Artist releases. "
+<a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f/releases?va=0">Show releases by this artist instead</a>
+"."
+#+end_example
+
+
 
 * some latest fixes
 
@@ -76536,5 +76654,31 @@ Some latest fixes:
 1.)
 
 
-* https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908 does not restore CAA images when loading from disk
+* Some pageTypes do not restore CAA images when loading from disk
+** DONE initial
+
+Some bugs:
+
+1.)
+
+when on the final rendered page of e.g. "https://musicbrainz.org/artist-credit/1488075" and directly trying to "Load from Disk"
+I get the following error in the console:
+
+#+begin_example
+00:06:18.217 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.523+2026-04-22) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/artist-credit/1488075 
+00:06:18.246 [VZ-ShowAllEntityData: artist-credit] 📝 Changelog source: remote — replaced 0 local entries with 698 remote entries (fromCache=true) 
+00:06:30.776 [VZ-ShowAllEntityData: artist-credit] ❌ No template table head found. 
+00:06:30.776 [VZ-ShowAllEntityData: artist-credit] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:29296:31)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:37040:27)
+#+end_example
+
+2.)
+
+Some pageTypes do not restore CAA images when "loading from disk" and already on the final rendered page, e.g.
+
+#+begin_example
+https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908
+#+end_example
+
 
