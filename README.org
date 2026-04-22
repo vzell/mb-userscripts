@@ -75856,6 +75856,7 @@ https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationship
 #+end_example
 
 *** TODO "multi"-table pages
+**** initial
 
 In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.535+2026-04-22') and
 changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.535"')
@@ -75935,8 +75936,11 @@ These are the full "single"-table pendants of the "multi"-table overview pages. 
 only on pages which actually have in the "Title" column data cells MusicBrainz release page "/release/<release MBID>"
 links
 
+**** maybe
 
-
+#+begin_example
+All sub-tables on these pages share the same Title first-column header, so a header-name check cannot distinguish "Composed release" from "Composed work". The correct signal is whether the data cells contain /release/<mbid> links.
+#+end_example
 
 an additional check need to be made if each specific sub-table really has a column of type "Release"
 
@@ -76895,6 +76899,56 @@ remove "Showing Various Artist releases." from end of artist-release pages when 
 #+end_example
 
 
+** missing "dateParts" extractor and tooltipColumns
+
+#+begin_example
+        // Artist pages
+        {
+            type: 'artist-relationships-filtered',
+            // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist (specialized)' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                collapsableColumns: [ 'CAA' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'artist-relationships',
+            // Only match if NO link_type_id is present (the overview page)
+            match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
+            buttons: [ { label: 'Show all Relationships for Artist' } ],
+            features: {
+                columnErasers: [
+                    { sourceColumn: 'Title', erasers: ['▶', '➕'] }
+                ],
+                columnExtractors: [
+                    { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
+                    { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
+                ],
+                injectedColumns: [ 'Relationships' ],
+                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                collapsableColumns: [ 'CAA' ],
+                tooltipColumns: [ 'Title', 'Artist', '---', 'Credited as', 'Attributes' ],
+                addCAA: 'Title',
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+#+end_example
 
 * some latest fixes
 
