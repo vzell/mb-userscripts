@@ -75643,7 +75643,8 @@ of to the right of the image popup, like it does for the tooltip when hovering o
 The user's request doesn't specify conditional behavior based on whether hover preview is enabled, and the bigbox strip
 itself shows the tooltip regardless, so I'll add it unconditionally to the thumbnail as well.
 
-** "Picard" column adjustments
+** TODO "Picard" column adjustments
+*** DONE initial
 
 the following definition
 
@@ -75681,6 +75682,8 @@ https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/events
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/places
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
 https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/users
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/works
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/aliases
 
 https://musicbrainz.org/recording/e94a1986-8853-4c1e-932b-cec1e01914a7/fingerprints
 #+end_example
@@ -75694,9 +75697,255 @@ https://musicbrainz.org/series/5c605c0d-de8d-478e-9b93-d518ccecc748  ==> except 
 these URLs are actually missing the "Picard column
 
 #+begin_example
-https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+
 https://musicbrainz.org/artist-credit/1488075/release
+https://musicbrainz.org/artist-credit/1488075
+
+https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c
+
+https://musicbrainz.org/instrument/63021302-86cd-4aee-80df-2270d54f4978/releases
+
+https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
 #+end_example
+
+*** DONE bugs
+
+1.)
+
+and this URL type is actually misssing the "Picard" column
+
+#+begin_example
+https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/relationships
+#+end_example
+
+2.)
+
+actually pages with just recordings or release-groups should always be excluded as ONLY releases can be submitted to
+picard, so the following URLs should NOT have the "Picard" column
+
+#+begin_example
+https://musicbrainz.org/area/489ce91b-6658-3307-9877-795b68554c98/recordings
+https://musicbrainz.org/artist-credit/1488075/recording
+
+https://musicbrainz.org/series/6d28ac8e-7a62-4237-ae36-00803a57aed0  ==> type release-groups
+https://musicbrainz.org/artist-credit/1488075/release-group
+#+end_example
+
+please also fix the comments and code in
+
+#+begin_example
+    /**
+     * URL path patterns for page types where the Picard column should appear.
+     * Mirrors the @match directives from the original Magic Tagger Button script.
+     *
+     * Patterns are kept deliberately narrow so that entity sub-pages that never
+     * list releases or recordings (e.g. /tags, /aliases, /fingerprints, /users,
+     * /artists, /events, /places, /works) do not receive the column.  Additional
+     * runtime exclusions are handled in `_picardPageIsSupported()`.
+     *
+     * Matched against `window.location.pathname` only.
+     *
+     * @type {RegExp[]}
+     */
+    const _PICARD_PAGE_PATTERNS = [
+#+end_example
+
+and
+
+#+begin_example
+    /**
+     * Checks whether the current page URL matches one of the supported tagger
+     * page patterns, and additionally excludes pages where no release/recording
+     * entities are shown (mirroring the original script's `checkCurrentPageExcluded`
+     * logic).
+     *
+     * Explicit runtime exclusions (beyond the narrow patterns above):
+     *   - `/release/<mbid>/collections` and `/release-group/<mbid>/collections`
+     *     — these pages list collection memberships, not entities to queue in Picard.
+     *   - Search pages with a `type` parameter other than 'release' or 'recording'.
+     *   - Series pages whose H2 entity type is not Releases, Release groups, or
+     *     Recordings — e.g. Event series and Work series have no Picard-queuable rows.
+     *
+     * @returns {boolean}  true when the Picard column should be shown.
+     */
+    function _picardPageIsSupported() {
+        const _path = window.location.pathname;
+        if (!_PICARD_PAGE_PATTERNS.some(re => re.test(_path))) return false;
+
+        // Exclude entity /collections sub-pages — they show collection memberships,
+        // not release/recording entities that can be queued in Picard.
+        if (_path.match(/\/(?:release|release-group)\/[a-f0-9-]{36}\/collections/)) return false;
+
+        // Exclude search pages for non-release / non-recording entity types.
+        if (_path === '/search') {
+            const _t = new URLSearchParams(window.location.search).get('type');
+            if (_t && _t !== 'release' && _t !== 'recording') return false;
+        }
+
+        // For series overview pages, only show Picard when the entity listed is
+        // Releases, Release groups, or Recordings.  Event series, Work series etc.
+        // contain no Picard-queuable rows.  Read the live H2 to determine the type.
+        if (_path.match(/\/series\/[a-f0-9-]{36}(?:[/?]|$)/)) {
+            const _h2Text = (typeof _getH2EntityType === 'function' ? _getH2EntityType() : '').toLowerCase();
+            const _picardSeriesTypes = ['releases', 'release groups', 'recordings'];
+            // If the H2 text is resolved and does not match any queuable type, exclude.
+            if (_h2Text && !_picardSeriesTypes.some(k => _h2Text.includes(k))) return false;
+        }
+
+        return true;
+    }
+#+end_example
+
+accordingly
+
+*** DONE collection URLs bug
+
+the following collection URLs
+
+#+begin_example
+https://musicbrainz.org/collection/<MBID>
+#+end_example
+
+should only have the "Picard" column when they are part of a table where the first column is "Release"
+
+*** still missing
+
+bugs:
+
+1.)
+
+this URL type is actually misssing the "Picard" column
+
+#+begin_example
+https://musicbrainz.org/tag/country/release
+#+end_example
+
+2.)
+
+the following URLs, e.g.
+
+#+begin_example
+https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing
+#+end_example
+
+when the h2 header shows "Release" should also have the "Picard" column
+
+*** bugs
+
+The last fix had not the desired effect, it even breaks before working cases e.g.
+
+release series pages with "Release" in the first column and "Releases" in the h2 header
+
+#+begin_example
+https://musicbrainz.org/series/fab79f62-2fa5-4f85-9369-82c77811a290
+#+end_example
+
+also this one doesn't work anymore
+
+#+begin_example
+https://musicbrainz.org/label/8e6ab8cc-b190-482e-9975-cce113fba59c/relationships
+#+end_example
+
+where the second column is a release column
+
+And this is is also not working anymore
+
+#+begin_example
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+#+end_example
+
+*** TODO "multi"-table pages
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.535+2026-04-22') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.535"')
+
+there is a bug with first column detection in "const _isMultiEntityTagPage":
+
+1.)
+
+the code extracts also the sort and unique value count and symbol instead of just the plain text of the column header as
+can be seen in the console debug log for e.g. https://musicbrainz.org/tag/country
+
+#+begin_example
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Area ⇅▲▼8📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Artist ⇅▲▼10📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Event ⇅▲▼10📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Instrument ⇅▲▼3📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Label ⇅▲▼10📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Release group ⇅▲▼10📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Release ⇅▲▼10📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Recording ⇅▲▼10📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Series ⇅▲▼10📊", not "Release" (tag/user-tag page). 
+22:08:07.724 [VZ-ShowAllEntityData: tag-value] 📝 initPicardTaggerColumn: skipping table — first column is "Work ⇅▲▼10📊", not "Release" (tag/user-tag page). 
+#+end_example
+
+2.)
+
+There are other "multi"-table pages which have a column with release data cells:
+
+a.)
+
+pageType "type: 'artist-credit'", e.g.
+
+#+begin_example
+https://musicbrainz.org/artist-credit/1488075
+#+end_example
+
+could also benefit of the first column detection, as it also has multiple sub-tables but only one has the first column named "Release"
+
+b.)
+
+For the following pageTypes "type: 'artist-relationships'" and "type: 'place-performances'" e.g.
+
+#+begin_example
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances
+#+end_example
+
+the situation is a little more complex. ALL sub-tables have a "Title" column and multiple sub-tables could actually have
+in the corresponding data-cells release data which is picard taggable, e.g. for the URL https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/relationships
+the sub-tables with the following h3 headers
+
+#+begin_example
+Composed release
+Instruments release
+Liner notes for release
+etc.
+#+end_example
+
+The check would be if the data-cell has a reference to a MusicBrainz release page "/release/<release MBID>"
+
+c.)
+
+Even worse, these pageTypes ("type: 'artist-relationships'" and "type: 'place-performances'") could potentially have on all the sub-tables the overflow-buttons
+
+#+begin_example
+<button title="Click to show all 247 rows in a new browser tab for this sub-section (MusicBrainz Artist-Relationships pages have currently a limit of 100 rows rendered at most per relationship type section)" class="mb-show-all-subtable-btn" type="button" style="background: rgb(255, 224, 178);">Show all 247 rows</button>
+#+end_example
+
+and when clicked render a page of pageType
+
+#+begin_example
+type: 'artist-relationships-filtered'
+type: 'place-performances-filtered'
+#+end_example
+
+These are the full "single"-table pendants of the "multi"-table overview pages. The "Picard" button should be rendered
+only on pages which actually have in the "Title" column data cells MusicBrainz release page "/release/<release MBID>"
+links
+
+
+
+
+an additional check need to be made if each specific sub-table really has a column of type "Release"
+
+
+For case 2 (/user/<name>/tag/<value>): this is the multi-h3 overview page showing multiple entity types. The H2 says
+something like "Tags for user vzell" — not the entity type. The entity type filtering here is per-h3-subtable. This
+means the picard column needs to only appear per-table where the h3 header (category) is "Releases". But
+_picardPageIsSupported() is a page-level gate, not a per-table gate. Let me check how initPicardTaggerColumn is called
+and whether it iterates tables:
 
 ** Remove synthetic/injected columns from sub-tables which do not make sense
 
