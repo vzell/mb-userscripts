@@ -75936,20 +75936,47 @@ These are the full "single"-table pendants of the "multi"-table overview pages. 
 only on pages which actually have in the "Title" column data cells MusicBrainz release page "/release/<release MBID>"
 links
 
-**** maybe
+**** question
+
+could the whole detection if a table/sub-table needs a "Picard" column be completely simplified just by checking each
+and every table on every pageType if the data cells contain "/release/<mbid>" links (absolut "http(s)://....//release/<mbid>" or just "/release/<mbid>").
+
+Then it wouldn't matter what the name of the column actually is and also the position in the table wouldn't matter and
+it would be future proof to work with newly added pageTypes
+
+**** bugs
+
+why have some pageTypes e.g.
 
 #+begin_example
-All sub-tables on these pages share the same Title first-column header, so a header-name check cannot distinguish "Composed release" from "Composed work". The correct signal is whether the data cells contain /release/<mbid> links.
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+https://musicbrainz.org/series/5c605c0d-de8d-478e-9b93-d518ccecc748  ==> event series
 #+end_example
 
-an additional check need to be made if each specific sub-table really has a column of type "Release"
+an additional column (no header and data cells are rendered just the column filter)
 
+#+begin_example
+<th><span class="mb-col-filter-wrapper"><input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="15"><span class="mb-col-filter-clear" title="Clear column filter">✕</span></span></th>
+#+end_example
 
-For case 2 (/user/<name>/tag/<value>): this is the multi-h3 overview page showing multiple entity types. The H2 says
-something like "Tags for user vzell" — not the entity type. The entity type filtering here is per-h3-subtable. This
-means the picard column needs to only appear per-table where the h3 header (category) is "Releases". But
-_picardPageIsSupported() is a page-level gate, not a per-table gate. Let me check how initPicardTaggerColumn is called
-and whether it iterates tables:
+It looks like this are "single"-table pageTypes
+
+**** root cause
+
+#+begin_example
+Root cause confirmed
+After exhaustive tracing, the ghost filter column is produced by a specific sequence in renderGroupedTable (multi-table mode), not the single-table pipeline. Here's the exact mechanism:
+In renderGroupedTable, for each group/sub-table:
+
+cleanupHeaders(_theadForGroup) → N header cells
+addColumnFilterRow(table) → filter row built with N cells ✅
+
+But then, after all sub-tables are created, initPicardTaggerColumn() runs and — for every table that passes the release-link guard — appends a Picard <th> to thead tr:first-child and to thead tr:not(:first-child) (which includes the filter row). ✅ Correct for those tables.
+The ghost appears on sub-tables that FAIL the guard (no /release/ links) — Picard skips them correctly. But those tables' sibling supported tables got a Picard <th> injected, and makeTableSortableUnified or applyStickyColumn iterating over querySelectorAll('table.tbl') can interfere with column index expectations.
+The simplest, most robust fix is in addColumnFilterRow itself: drop the idempotency guard that skips rebuilding when a filter row already exists, and instead always rebuild it — preserving the existing filter input values. This means even if the column count changes post-render (Picard injection, visibility changes, etc.), the next addColumnFilterRow call always produces a correctly-aligned filter row.
+Shall I implement this fix as 9.99.538?
+#+end_example
+
 
 ** Remove synthetic/injected columns from sub-tables which do not make sense
 
