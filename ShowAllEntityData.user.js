@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.540+2026-04-23
+// @version      9.99.541+2026-04-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -7582,6 +7582,18 @@
             // <td> elements (e.g. tr.even > td { background: #e4e4e4 }), not <tr>.
             // So we read getComputedStyle on the CELL (not the row), but first clear
             // any previous inline background so the CSS class rule wins the cascade.
+            //
+            // Hover-highlight fix: because we bake the zebra background as an inline
+            // cell.style.background, MusicBrainz's native tr:hover > td rule (and any
+            // author-sheet tbody tr:hover rule) cannot override it — inline styles win
+            // the cascade unconditionally even against !important in a stylesheet.
+            // We compensate by attaching mouseenter/mouseleave handlers on the <tr>:
+            // on enter we swap the sticky cell's inline background to match its
+            // non-sticky siblings' hover colour (read via getComputedStyle at event
+            // time, when the browser has already applied the :hover rules to siblings);
+            // on leave we restore the original zebra background stored in
+            // data-mb-sticky-bg.  The attribute is refreshed on every _apply() call
+            // so re-runs after zebra re-striping always have the current rest colour.
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const cell = tr.cells[stickyIdx];
                 if (!cell) return;
@@ -7591,9 +7603,48 @@
                 // Clear inline background so CSS class applies, then snapshot the result.
                 cell.style.background = '';
                 const cellBg = getComputedStyle(cell).backgroundColor;
-                cell.style.background = (cellBg === 'rgba(0, 0, 0, 0)' || cellBg === 'transparent')
+                const restBg = (cellBg === 'rgba(0, 0, 0, 0)' || cellBg === 'transparent')
                     ? '#ffffff' : cellBg;
+                cell.style.background = restBg;
+                // Persist rest-state colour for the hover handlers.
+                cell.dataset.mbStickyBg = restBg;
                 cell.classList.add('mb-sticky-col');
+
+                // Wire hover handlers once per row (guard via dataset flag).
+                if (!tr.dataset.mbStickyHoverWired) {
+                    tr.dataset.mbStickyHoverWired = '1';
+                    tr.addEventListener('mouseenter', () => {
+                        const c = tr.cells[stickyIdx];
+                        if (!c || !c.classList.contains('mb-sticky-col')) return;
+                        // Read the hover colour from the first non-sticky sibling td.
+                        // At mouseenter time the browser has already applied :hover rules
+                        // to the sibling tds, so getComputedStyle reflects the hover bg.
+                        let hoverBg = '';
+                        for (let i = 0; i < tr.cells.length; i++) {
+                            const sib = tr.cells[i];
+                            if (sib !== c && !sib.classList.contains('mb-sticky-col')) {
+                                hoverBg = getComputedStyle(sib).backgroundColor;
+                                break;
+                            }
+                        }
+                        // Fall back to MusicBrainz's known hover tint (#e2e2e2) if the
+                        // sibling's computed bg is transparent or still equals our own
+                        // rest colour (can happen when there is only one column or when
+                        // the browser hasn't painted the :hover state yet).
+                        const ownRest = c.dataset.mbStickyBg || '#ffffff';
+                        if (!hoverBg || hoverBg === ownRest ||
+                                hoverBg === 'rgba(0, 0, 0, 0)' || hoverBg === 'transparent') {
+                            hoverBg = '#e2e2e2';
+                        }
+                        c.style.background = hoverBg;
+                    });
+                    tr.addEventListener('mouseleave', () => {
+                        const c = tr.cells[stickyIdx];
+                        if (c && c.classList.contains('mb-sticky-col')) {
+                            c.style.background = c.dataset.mbStickyBg || '#ffffff';
+                        }
+                    });
+                }
             });
 
             Lib.debug('ui', `applyStickyColumn: idx=${stickyIdx} left=${leftPx} table=${table.id||'(no-id)'}`);
@@ -25362,6 +25413,16 @@ a { color: #1565c0; }`;
                 const mainTable = document.querySelector('table.tbl');
                 if (mainTable) addColumnFilterRow(mainTable);
 
+                // Guard Release events column: remove it (and its ICE synthetic columns)
+                // from tables whose tbody contains no /release/<mbid> links.  This covers
+                // the single-table -filtered variants of place-performances and
+                // label-relationships where the relationship type being viewed may not
+                // be a release relationship (e.g. "Held concert at", "Member of").
+                // Must run after cleanupHeaders() (so the Release events <th> exists)
+                // but before initReleaseEventsColumn() (so no mb-re-cell tds are created
+                // for suppressed tables).
+                if (mainTable) _suppressReleaseEventsIfNoReleaseLinks(mainTable);
+
                 if (mainTable) makeTableSortableUnified(mainTable, 'main_table');
 
                 // Initialise collapsable multi-row columns (runs after expand + sort setup).
@@ -27114,6 +27175,15 @@ a { color: #1565c0; }`;
             } else {
                 group.rows.forEach(r => tbody.appendChild(r));
             }
+
+            // Guard Release events column: now that tbody rows are in the DOM we can
+            // check whether this particular sub-table contains any /release/<mbid> links.
+            // Sub-tables for non-release relationship types (e.g. "Held concert at",
+            // "Member of") will have none; their Release events <th> and all ICE
+            // synthetic <th>s are removed here along with the corresponding <td> cells
+            // in every row.  Must run before initReleaseEventsColumn() so that
+            // mb-re-cell placeholder <td>s are never created for suppressed sub-tables.
+            _suppressReleaseEventsIfNoReleaseLinks(table);
 
             // After rows are in the DOM: re-apply any active multi-sort tints for this table.
             // This covers the reuse-existing-table branch (query truthy) where
@@ -33314,6 +33384,89 @@ a { color: #1565c0; }`;
         }
         cell.appendChild(ul);
 
+    }
+
+    /**
+     * Suppresses the "Release events" column (and all ICE synthetic columns derived
+     * from it) in `table` when the table's tbody contains no anchor linking to a
+     * MusicBrainz /release/<mbid> page in the "Title" data cells.
+     *
+     * Motivation — on place-performances and label-relationships multi-table pages
+     * (and their -filtered single-table variants) the pageType definition always
+     * declares `injectedColumns: ['Release events']`, so cleanupHeaders() always
+     * injects the Release events <th> and its ICE synthetic <th>s (Release country,
+     * Release date, …) regardless of whether any row actually links to a release.
+     * Sub-tables for non-release relationship types (e.g. "Held concert at",
+     * "Member of") have no /release/ links and should therefore not show the column.
+     * This helper performs the same data-driven guard that initPicardTaggerColumn
+     * uses for the Picard column: scan tbody data cells, and if no release link is
+     * found remove the Release events <th>, all mb-ice-th synthetic <th>s, their
+     * corresponding <td>s in every body row, and the matching filter-row <th>.
+     *
+     * Must be called AFTER the table's tbody rows have been appended (so there is
+     * data to inspect) but BEFORE initReleaseEventsColumn() (so that mb-re-cell
+     * placeholder <td>s are never created for suppressed tables).
+     *
+     * @param {HTMLTableElement} table - The rendered table to inspect and potentially suppress.
+     */
+    function _suppressReleaseEventsIfNoReleaseLinks(table) {
+        if (!table) return;
+        if (!activeReleaseEventColumns.length) return; // Release events not active for this pageType
+
+        // Check whether the tbody contains at least one /release/<mbid> link in a
+        // non-sticky, non-rel-cell data cell (mirrors the Picard column guard exactly).
+        const _hasReleaseLink = !!table.querySelector(
+            'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) ' +
+            'a[href*="/release/"]:not([href*="/release-group/"])'
+        );
+        if (_hasReleaseLink) return; // Release events column is appropriate — leave table untouched.
+
+        Lib.debug('release-events',
+            `_suppressReleaseEventsIfNoReleaseLinks: no /release/ links in table ` +
+            `"${table.id || table.dataset.mbSafeId || '(no-id)'}" — suppressing Release events column.`);
+
+        // ── 1. Collect column indices to remove from the thead ────────────────────
+        const _theadRow = table.querySelector('thead tr:first-child');
+        if (!_theadRow) return;
+
+        const _indicesToRemove = [];
+        Array.from(_theadRow.cells).forEach((th, idx) => {
+            const _colName = th.dataset.colName ||
+                th.textContent.replace(/[\u21c5\u25b2\u25bc\u2702\u25b6\u25c0\u25a4\u2702\ufe0f0-9]/g, '').trim();
+            // Remove: the Release events injected-column <th> itself
+            const _isReCol = activeReleaseEventColumns.some(e => e.colName === _colName);
+            // Remove: every ICE synthetic <th> derived from Release events
+            const _isIceTh = th.classList.contains('mb-ice-th');
+            if (_isReCol || _isIceTh) _indicesToRemove.push(idx);
+        });
+
+        if (!_indicesToRemove.length) return; // Already absent (e.g. cleanupHeaders skipped them)
+
+        // ── 2. Remove the corresponding <td>s from every tbody row ────────────────
+        // Iterate in descending index order so earlier deletions do not shift later indices.
+        const _sortedDesc = [..._indicesToRemove].sort((a, b) => b - a);
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            _sortedDesc.forEach(idx => {
+                if (tr.cells[idx]) tr.deleteCell(idx);
+            });
+        });
+
+        // ── 3. Remove the <th>s from the first header row ────────────────────────
+        _sortedDesc.forEach(idx => {
+            if (_theadRow.cells[idx]) _theadRow.deleteCell(idx);
+        });
+
+        // ── 4. Remove the corresponding <th>s from every other thead row
+        //       (filter row and any secondary header rows) ─────────────────────────
+        table.querySelectorAll('thead tr:not(:first-child)').forEach(tr => {
+            _sortedDesc.forEach(idx => {
+                if (tr.cells[idx]) tr.deleteCell(idx);
+            });
+        });
+
+        Lib.debug('release-events',
+            `_suppressReleaseEventsIfNoReleaseLinks: removed ${_indicesToRemove.length} column(s) ` +
+            `(indices ${_indicesToRemove.join(', ')}) from table.`);
     }
 
     /**

@@ -76228,7 +76228,10 @@ from all sub-tables where NO "Release"-type column is present
 
 *** TODO initial
 
-some enhancements:
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.540+2026-04-23') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.540"')
+
+add some some enhancements:
 
 1.)
 
@@ -76286,6 +76289,10 @@ tbody tr:hover th.mb-sticky-col {
 
 This must be added alongside the existing tbody tr:hover rule so the sticky cell inherits the row's hover background
 instead of keeping its own fixed background. 
+
+*** fix
+
+the sticky column hover highlight is still not working
 
 
 ** better documentation for the "Edit Pinned Filter List" in the "TABLE FILTER CONFIGURATION"

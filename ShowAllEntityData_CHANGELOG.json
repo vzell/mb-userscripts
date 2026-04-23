@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.541",
+    "date": "2026-04-23",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Add `_suppressReleaseEventsIfNoReleaseLinks(table)` helper that applies the same data-driven release-link guard used by `initPicardTaggerColumn` to the Release events injected column and all ICE synthetic columns derived from it (`Release country`, `Release date`, `R-DD`, `R-MM`, `R-YYYY`, `R-Day`, `R-Month`). When a rendered sub-table or single table contains no `a[href*=\"/release/\"]:not([href*=\"/release-group/\"])` anchor in its tbody data cells (excluding `.mb-sticky-col` and `.mb-rel-cell`), the helper removes the Release events `<th>`, all `mb-ice-th` synthetic `<th>`s, their corresponding `<td>` cells from every body row, and the matching cells from every secondary thead row (filter row etc.). This prevents the Release events column from appearing on non-release relationship sub-tables on `place-performances` and `label-relationships` multi-table pages (e.g. \"Held concert at\", \"Member of\") and on `place-performances-filtered` / `label-relationships-filtered` single-table pages when the filtered relationship type is not a release relationship. The helper is hooked into the multi-table group loop immediately after each sub-table's tbody rows are appended, and into the single-table pipeline immediately after `renderFinalTable` + `cleanupHeaders`. It runs before `initReleaseEventsColumn()` in both pipelines so that `mb-re-cell` placeholder `<td>`s are never created for suppressed tables.",
+          "Fix sticky column hover highlight: `applyStickyColumn` sets an explicit inline `style.background` on each body sticky cell (snapshotted from the zebra-stripe CSS class so the cell remains opaque while scrolling horizontally). Inline styles have unconditional cascade priority — they win over every author-sheet rule including `!important`, so MusicBrainz's native `tr:hover > td` rule cannot override the sticky cell's background. Fix: `applyStickyColumn` now stores the rest-state colour in `cell.dataset.mbStickyBg` (refreshed on every `_apply()` call so re-runs after zebra re-striping always have the current value), and attaches `mouseenter`/`mouseleave` handlers on each `<tr>` (wired once per row, guarded by `tr.dataset.mbStickyHoverWired`). On `mouseenter` the handler reads the hover background from the first non-sticky sibling `<td>` via `getComputedStyle` — at that moment the browser has already applied its `:hover` rules to siblings, so the value is the actual live hover colour — and writes it directly to `c.style.background`. A fallback of `#e2e2e2` (MusicBrainz's known hover tint) is used when the sibling's computed background is still transparent, matches the rest colour, or is otherwise unavailable. On `mouseleave` the handler restores `c.style.background` from `c.dataset.mbStickyBg`. This approach bypasses the CSS cascade entirely and works regardless of what colour MusicBrainz's native stylesheet uses for the hover state."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.540",
     "date": "2026-04-23",
     "sections": [
