@@ -75671,7 +75671,7 @@ of to the right of the image popup, like it does for the tooltip when hovering o
 The user's request doesn't specify conditional behavior based on whether hover preview is enabled, and the bigbox strip
 itself shows the tooltip regardless, so I'll add it unconditionally to the thumbnail as well.
 
-** DONE "Picard" column adjustments
+** TODO "Picard" column adjustments
 *** DONE initial
 
 the following definition
@@ -76189,6 +76189,31 @@ How can such a situation be detected witout explicitly forcing the affected endu
 
 Please fix.
 
+*** TODO is this still needed after new "Picard" column handling
+
+Are the following two code blocks still needed as we now detect if the "Picard" column should be present by lookinkg for
+the presence of at least one anchor linking to a MusicBrainz "/release/<mbid>" page
+
+#+begin_example
+            // Re-align the filter row after Picard injection.
+            // initPicardTaggerColumn appends a <th class="mb-picard-th"> to the first
+            // header row AND an empty <th> to every secondary thead row (including the
+            // filter row) on supported pages.  On UNsupported pages (e.g. place-events,
+            // event series) the Picard column is skipped, but any earlier column count
+            // mismatch (from whatever cause) is healed here by the stale-detection logic
+            // inside addColumnFilterRow: if filter-row cell count == header cell count the
+            // call is a cheap no-op; otherwise the stale row is rebuilt automatically.
+            const _mainTableForFilter = document.querySelector('table.tbl');
+            if (_mainTableForFilter) addColumnFilterRow(_mainTableForFilter);
+#+end_example
+
+#+begin_example
+                // Re-align the filter row after Picard injection (stale-detection no-op
+                // when counts already match; self-heals on mismatch — see addColumnFilterRow).
+                const _diskLoadFilterTable = document.querySelector('table.tbl');
+                if (_diskLoadFilterTable) addColumnFilterRow(_diskLoadFilterTable);
+#+end_example
+
 ** TODO Remove synthetic/injected columns from sub-tables which do not make sense
 *** maybe
 
@@ -76228,6 +76253,40 @@ when a sticky column is defined in a table/sub-table, the standard highlight col
 hovering over the current row with the mouse (probably a native MusicBrainz functionality which gives a visual clue on
 which row we are) doesn't take the sticky column itself into account, it's not highlighted. Please fix so that the
 highlightning streches across the whole current row
+
+3.) your diagnosis up to now (before we got interrupted) was:
+
+for 1.
+
+The cleanest architecture:
+For multi-table pages (place-performances, label-relationships): After rows are appended to tbody, scan tbody for /release/ links. If none found, remove the Release events <th> and all its derived synthetic <th>s (ice ths: Release country, Release date, R-DD, R-MM, R-YYYY, R-Day, R-Month) from the thead, AND remove the corresponding <td> cells from every row in that tbody. Do this right after the tbody is populated.
+For single-table filtered pages (place-performances-filtered, label-relationships-filtered): After renderFinalTable + cleanupHeaders, the tbody has rows — same scan, same removal.
+Rather than modifying cleanupHeaders (which runs too early for multi-table), I'll add a dedicated helper _suppressReleaseEventsIfNoReleaseLinks(table) called at the right point in both pipelines.
+
+
+#+begin_example
+Enhancement 1 (Release events guard) — complete:
+
+New _suppressReleaseEventsIfNoReleaseLinks(table) function added before initReleaseEventsColumn
+Hooked into single-table pipeline (place-performances-filtered, label-relationships-filtered) after renderFinalTable + cleanupHeaders
+Hooked into multi-table group loop (place-performances, label-relationships) after each sub-table's tbody rows are appended
+Removes the Release events <th>, all ice synthetic <th>s, their corresponding <td> cells per row, and the matching filter-row <th> — when no /release/<mbid> link is found in the table's data cells
+#+end_example
+
+for 2.
+
+Enhancement 2 (sticky column hover highlight) — not yet applied. The fix is a CSS addition at the tbody tr:hover location (line 9850):
+
+#+begin_example
+tbody tr:hover td.mb-sticky-col,
+tbody tr:hover th.mb-sticky-col {
+    background-color: inherit;
+}
+#+end_example
+
+This must be added alongside the existing tbody tr:hover rule so the sticky cell inherits the row's hover background
+instead of keeping its own fixed background. 
+
 
 ** better documentation for the "Edit Pinned Filter List" in the "TABLE FILTER CONFIGURATION"
 ** better handling of "sa_auto_expand" parameter
@@ -77229,23 +77288,6 @@ type: 'tag-value-entity'       -R,RG
 type: 'user-tag-value-entity'  -R,RG
 #+end_example
 
-** TODO is this still needed after new "Picard" column handling
-
-Is this still needed after the new "Picard" column handling:
-
-#+begin_example
-// Re-align the filter row after Picard injection.
-
-const _mainTableForFilter = document.querySelector('table.tbl');
-if (_mainTableForFilter) addColumnFilterRow(_mainTableForFilter);
-#+end_example
-
-#+begin_example
-// Re-align the filter row after Picard injection (stale-detection no-op
-// when counts already match; self-heals on mismatch — see addColumnFilterRow).
-const _diskLoadFilterTable = document.querySelector('table.tbl');
-if (_diskLoadFilterTable) addColumnFilterRow(_diskLoadFilterTable);
-#+end_example
 
 * some latest fixes
 
