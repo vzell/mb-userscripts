@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.536+2026-04-23
+// @version      9.99.540+2026-04-23
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -15505,8 +15505,14 @@ a { color: #1565c0; }`;
             const columnWidths = new Array(columnCount).fill(0);
             const columnVisible = new Array(columnCount).fill(false);
 
-            // Determine which columns are visible by checking the first header row
-            const headers = table.querySelectorAll('thead th');
+            // Determine which columns are visible by checking the FIRST header row only.
+            // Using 'thead tr:first-child th' (not the bare 'thead th') is essential:
+            // the bare selector also matches filter-row ths (tr.mb-col-filter-row) which
+            // are injected into thead as a second tr.  Including them would cause the
+            // headers array to be twice as long as the actual column count, leading to
+            // out-of-bounds columnVisible access and potentially misaligned min-width
+            // assignments that produce a ghost filter column in some browsers.
+            const headers = table.querySelectorAll('thead tr:first-child th');
             headers.forEach((th, colIndex) => {
                 if (colIndex >= columnCount) return;
                 // A column is visible if its header is not hidden
@@ -21669,14 +21675,68 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Adds a filter row beneath the table header with input fields for per-column filtering
-     * @param {HTMLTableElement} table - The table to add column filters to
+     * Injects a per-column filter row (`<tr class="mb-col-filter-row">`) into the
+     * `<thead>` of `table`, creating one text `<input>` per header column.
+     *
+     * Idempotency / stale-row handling:
+     *   - **First call** (no `.mb-col-filter-row` exists): builds the row fresh.
+     *   - **Re-call with matching cell count**: no-op — the existing row is already
+     *     correctly aligned with the header and no work is needed.
+     *   - **Re-call with mismatched cell count** (stale row): the stale filter row is
+     *     removed, any typed values are snapshotted by `data-col-idx`, the row is
+     *     rebuilt from the current header, and the saved values are restored.  This
+     *     self-healing path fires whenever a column is added or removed *after* the
+     *     initial build — e.g. by `initPicardTaggerColumn` (Picard column), a second
+     *     `cleanupHeaders` pass, or any future column modifier — preventing the
+     *     "ghost filter cell" symptom (a filter input with no header `<th>` above it).
+     *
+     * @param {HTMLTableElement} table - The table to add (or repair) the filter row for.
      */
     function addColumnFilterRow(table) {
         const thead = table.tHead;
-        if (!thead || thead.querySelector('.mb-col-filter-row')) return;
+        if (!thead) return;
 
         const originalHeader = thead.querySelector('tr');
+        if (!originalHeader) return;
+
+        // ── Stale-filter-row detection ────────────────────────────────────────────
+        // The filter row must have exactly one cell per header cell.  If it was
+        // built when the header had a different column count (e.g. because a
+        // column was added or removed after the initial build — by Picard injection,
+        // a second cleanupHeaders pass, or any future column modifier), the counts
+        // diverge and the last filter cell becomes a ghost with no corresponding
+        // header above it (or the reverse: a header th with no filter input below).
+        //
+        // Strategy:
+        //   • First call (no filter row yet): build fresh.
+        //   • Subsequent calls where cell count matches: no-op (cheap idempotency).
+        //   • Subsequent calls where cell count differs (stale): remove the old
+        //     filter row, snapshot any typed values by data-col-idx, rebuild, and
+        //     restore the values — so the user does not lose in-progress filter text.
+        const _existingFilterRow  = thead.querySelector('tr.mb-col-filter-row');
+        const _headerCellCount    = originalHeader.cells.length;
+
+        /** @type {Map<number,string>} colIdx → saved raw value (may include focus prefix) */
+        const _savedValues = new Map();
+
+        if (_existingFilterRow) {
+            if (_existingFilterRow.cells.length === _headerCellCount) {
+                // Cell counts match — filter row is already aligned.  No rebuild needed.
+                return;
+            }
+            // Cell count mismatch — snapshot existing filter input values (keyed by
+            // data-col-idx), remove the stale row, fall through to rebuild.
+            Lib.debug('filter',
+                `addColumnFilterRow: stale filter row detected — ` +
+                `filter cells=${_existingFilterRow.cells.length}, ` +
+                `header cells=${_headerCellCount}. Rebuilding and preserving values.`);
+            _existingFilterRow.querySelectorAll('.mb-col-filter-input').forEach(inp => {
+                if (inp.value) _savedValues.set(Number(inp.dataset.colIdx), inp.value);
+            });
+            _existingFilterRow.remove();
+        }
+
+        // ── Build the new filter row ──────────────────────────────────────────────
         const filterRow = document.createElement('tr');
         filterRow.className = 'mb-col-filter-row';
 
@@ -21779,6 +21839,18 @@ a { color: #1565c0; }`;
             th.appendChild(wrapper);
             filterRow.appendChild(th);
         });
+        // ── Restore any saved filter values into the newly-built inputs ─────────
+        // Applies only after a stale-row rebuild (savedValues is empty on first build).
+        // Values are keyed by the original data-col-idx, so they land in the correct
+        // column even when the total column count changed.  Columns that were removed
+        // (their idx no longer exists) are silently dropped.
+        if (_savedValues.size > 0) {
+            filterRow.querySelectorAll('.mb-col-filter-input').forEach(inp => {
+                const _saved = _savedValues.get(Number(inp.dataset.colIdx));
+                if (_saved) inp.value = _saved;
+            });
+        }
+
         thead.appendChild(filterRow);
     }
 
@@ -22687,8 +22759,28 @@ a { color: #1565c0; }`;
             for (const [headerPrefix, settingKey] of Object.entries(removalMapSetting)) {
                 if (txt.startsWith(headerPrefix)) {
                     const isEnabled = Lib.settings[settingKey];
-                    if (isEnabled) {
-                        Lib.debug('cleanup', `Marking column ${idx} ("${txt}") for removal. Match: "${headerPrefix}", Setting: "${settingKey}"`);
+
+                    // External-hide detection: another userscript (e.g. a Rating hider)
+                    // may have set display:none on the <th> without removing it from the
+                    // DOM.  If sa_remove_rating is OFF but the Rating <th> is already
+                    // invisible (inline style or computed style = none), keeping it would
+                    // produce a misaligned ghost filter column — the filter row includes a
+                    // cell for the hidden <th>, but the browser renders the column as absent.
+                    // Solution: treat any externally-hidden column as if the removal setting
+                    // were enabled, regardless of the user's preference.
+                    const isExternallyHidden =
+                        th.style.display === 'none' ||
+                        window.getComputedStyle(th).display === 'none';
+
+                    if (isEnabled || isExternallyHidden) {
+                        if (isExternallyHidden && !isEnabled) {
+                            Lib.debug('cleanup',
+                                `Marking column ${idx} ("${txt}") for removal: ` +
+                                `externally hidden by another script (computed display=none) ` +
+                                `even though "${settingKey}" is disabled — removing to prevent ghost filter column.`);
+                        } else {
+                            Lib.debug('cleanup', `Marking column ${idx} ("${txt}") for removal. Match: "${headerPrefix}", Setting: "${settingKey}"`);
+                        }
                         indicesToRemove.push(idx);
                     } else {
                         Lib.debug('cleanup', `Skipping removal of column ${idx} ("${txt}"). Setting "${settingKey}" is disabled.`);
@@ -23954,11 +24046,20 @@ a { color: #1565c0; }`;
                                 break;
                             }
                         }
-                        // Setting-gated exclusions (Rating)
+                        // Setting-gated exclusions (Rating) — also catches columns
+                        // hidden externally by another userscript (display:none on <th>)
+                        // even when sa_remove_rating is disabled, to keep index tracking
+                        // aligned with what cleanupHeaders will remove from the thead.
                         for (const [headerPrefix, settingKey] of Object.entries(removalMap)) {
-                            if (txt.startsWith(headerPrefix) && Lib.settings[settingKey]) {
-                                indicesToExclude.push(idx);
-                                break; // A column can only be excluded once
+                            if (txt.startsWith(headerPrefix)) {
+                                const _settingOn = Lib.settings[settingKey];
+                                const _extHidden =
+                                    th.style.display === 'none' ||
+                                    window.getComputedStyle(th).display === 'none';
+                                if (_settingOn || _extHidden) {
+                                    indicesToExclude.push(idx);
+                                    break; // A column can only be excluded once
+                                }
                             }
                         }
 
@@ -25493,6 +25594,17 @@ a { color: #1565c0; }`;
             // rightmost column (injectedColumns like Relationships append to the row end;
             // Picard must come last so its td aligns with the Picard th).
             initPicardTaggerColumn();
+
+            // Re-align the filter row after Picard injection.
+            // initPicardTaggerColumn appends a <th class="mb-picard-th"> to the first
+            // header row AND an empty <th> to every secondary thead row (including the
+            // filter row) on supported pages.  On UNsupported pages (e.g. place-events,
+            // event series) the Picard column is skipped, but any earlier column count
+            // mismatch (from whatever cause) is healed here by the stale-detection logic
+            // inside addColumnFilterRow: if filter-row cell count == header cell count the
+            // call is a cheap no-op; otherwise the stale row is rebuilt automatically.
+            const _mainTableForFilter = document.querySelector('table.tbl');
+            if (_mainTableForFilter) addColumnFilterRow(_mainTableForFilter);
 
             // CAA / EAA initialisation — split by tableMode:
             //
@@ -34749,6 +34861,11 @@ a { color: #1565c0; }`;
                 // must come after so column order matches the thead).
                 initPicardTaggerColumn();
 
+                // Re-align the filter row after Picard injection (stale-detection no-op
+                // when counts already match; self-heals on mismatch — see addColumnFilterRow).
+                const _diskLoadFilterTable = document.querySelector('table.tbl');
+                if (_diskLoadFilterTable) addColumnFilterRow(_diskLoadFilterTable);
+
                 // CAA / EAA art thumbnails and big-pic strip:
                 // Do NOT call initCaaPics / initEaaPics / initCaaInlinePics /
                 // initEaaInlinePics here.
@@ -42257,180 +42374,6 @@ a { color: #1565c0; }`;
     // ==========================================================================
 
     /**
-     * URL path patterns for page types where the Picard column should appear.
-     * Mirrors the @match directives from the original Magic Tagger Button script.
-     *
-     * Only pages that list **releases** receive the column — Picard can only queue
-     * releases, not recordings, release groups, or other entity types.  Patterns
-     * are kept deliberately narrow so that sub-pages that never list releases
-     * (e.g. /tags, /aliases, /fingerprints, /users, /artists, /events, /places,
-     * /recordings, /works) do not match.  Additional runtime exclusions for pages
-     * that cannot be determined from the URL alone are handled in
-     * `_picardPageIsSupported()`.
-     *
-     * Matched against `window.location.pathname` only.
-     *
-     * @type {RegExp[]}
-     */
-    const _PICARD_PAGE_PATTERNS = [
-        // ── Artist ────────────────────────────────────────────────────────────
-        // /artist/<mbid>/releases
-        /\/artist\/[a-f0-9-]{36}\/releases/,
-        // /artist/<mbid>/relationships  (overview and ?link_type_id=… filtered view
-        // — contains releases when the relationship type links to releases)
-        /\/artist\/[a-f0-9-]{36}\/relationships/,
-
-        // ── Artist credit ─────────────────────────────────────────────────────
-        // /artist-credit/<id>          (overview: h3+ul sub-tables including releases)
-        // /artist-credit/<id>/release  (entity sub-page listing releases)
-        // Sub-pages for /recording and /release-group are excluded at runtime in
-        // `_picardPageIsSupported()` because they contain no queuable releases.
-        /\/artist-credit\//,
-
-        // ── Area ──────────────────────────────────────────────────────────────
-        // Only the /releases sub-page lists releases.
-        // /recordings, /artists, /events, /places, /labels, /works, /aliases,
-        // /users do not.
-        /\/area\/[a-f0-9-]{36}\/releases/,
-
-        // ── cdtoc / collection / taglookup / search ───────────────────────────
-        /\/cdtoc\//,
-        /\/collection\//,
-        /\/taglookup/,
-        /\/search/,
-
-        // ── Instrument ────────────────────────────────────────────────────────
-        // Only the /releases sub-page; /artists, /recordings, /aliases do not.
-        /\/instrument\/[a-f0-9-]{36}\/releases/,
-
-        // ── Label ─────────────────────────────────────────────────────────────
-        // The bare overview (/label/<mbid>), /releases, and /relationships sub-pages
-        // all list releases.  /tags, /aliases do not.
-        /\/label\/[a-f0-9-]{36}(?:\/releases|\/relationships|$|\?)/,
-
-        // ── Place ─────────────────────────────────────────────────────────────
-        // /place/<mbid>/performances lists recordings — which cannot be queued in
-        // Picard directly — but the table rows link to their parent releases, which
-        // *can* be queued.  Both the overview and ?link_type_id=… filtered variant
-        // are matched.
-        /\/place\/[a-f0-9-]{36}\/performances/,
-
-        // ── Recording ─────────────────────────────────────────────────────────
-        // The bare overview (/recording/<mbid>) and /releases sub-page list the
-        // releases a recording appears on, which can be queued.
-        // /fingerprints and /aliases do not.
-        /\/recording\/[a-f0-9-]{36}(?:\/releases|$|\?)/,
-
-        // ── Release / Release-group ───────────────────────────────────────────
-        /\/release-group\//,
-        /\/release\//,
-
-        // ── Series ────────────────────────────────────────────────────────────
-        // Series overview pages can list Releases, Release groups, Recordings,
-        // Events, or Works.  Only release series need Picard.  The runtime check
-        // in `_picardPageIsSupported()` reads the live H2 to decide; this pattern
-        // just gates entry to that check.
-        /\/series\//,
-
-        // ── Tag pages ─────────────────────────────────────────────────────────
-        // /tag/<value>/release  — single-table page listing only releases tagged
-        //   with <value>.  The entity type is explicit in the URL; no runtime check
-        //   needed.  Other entity sub-pages (/tag/<value>/artist, /recording, …)
-        //   do not match because the pattern anchors on 'release' as the last segment.
-        /\/tag\/[^/]+\/release(?:[/?]|$)/,
-        // /tag/<value>          — multi-table overview listing all entity types tagged
-        //   with <value> under separate h3 sub-tables (Areas, Artists, …, Releases, …).
-        //   The per-table first-column guard in `initPicardTaggerColumn` skips any
-        //   sub-table whose first <th> plain text (via _cleanColHeaderText) is not
-        //   'Release'.
-        /\/tag\/[^/]+(?:[/?]|$)/,
-
-        // ── User tag pages ────────────────────────────────────────────────────
-        // /user/<name>/tag/<value>  — same multi-table structure as /tag/<value>
-        //   but scoped to a single user's votes.  The per-table first-column guard
-        //   in `initPicardTaggerColumn` skips non-release sub-tables.
-        /\/user\/[^/]+\/tag\/[^/]+(?:[/?]|$)/,
-    ];
-
-    /**
-     * Checks whether the current page URL matches one of the supported tagger
-     * page patterns, and additionally excludes pages where no **releases** are
-     * listed — Picard can only queue releases, not recordings, release groups,
-     * or other entity types.
-     *
-     * Explicit runtime exclusions (beyond the narrow patterns above):
-     *   - `/release/<mbid>/collections` and `/release-group/<mbid>/collections`
-     *     — these pages list collection memberships, not releases to queue in Picard.
-     *   - Search pages with a `type` parameter other than 'release'.
-     *   - `/artist-credit/<mbid>/recording` and `/artist-credit/<mbid>/release-group`
-     *     — these entity sub-pages contain recordings / release groups, not releases.
-     *   - Collection pages (`/collection/<mbid>`) whose H2 entity type is not
-     *     'Releases' — collections can hold Areas, Artists, Events, Genres,
-     *     Instruments, Labels, Recordings, Release groups, Works, etc., none of
-     *     which can be queued in Picard.  Only release collections (first column
-     *     header 'Release', H2 text 'Releases') qualify.
-     *   - Series pages whose H2 entity type is not 'Releases' — e.g. Release group
-     *     series, Recording series, Event series, and Work series have no queuable rows.
-     *
-     * Note: `/tag/<value>`, `/user/<n>/tag/<value>`, and `/artist-credit/<id>`
-     * multi-table pages are allowed through by this function even though they
-     * contain sub-tables for multiple entity types.  The per-table first-column
-     * guard inside `initPicardTaggerColumn` (using _cleanColHeaderText() to strip
-     * sort/stats glyphs) handles per-subtable filtering, skipping any sub-table
-     * whose first `<th>` plain text is not 'Release'.
-     *
-     * Note: `/artist/<mbid>/relationships` and `/place/<mbid>/performances`
-     * multi-table overview pages are allowed through here; the per-table
-     * release-link guard in `initPicardTaggerColumn` skips sub-tables that
-     * have no /release/<mbid> links in their tbody rows.  The same data-driven
-     * guard applies to the ?link_type_id=… filtered single-table variants.
-     *
-     * @returns {boolean}  true when the Picard column should be shown.
-     */
-    function _picardPageIsSupported() {
-        const _path = window.location.pathname;
-        if (!_PICARD_PAGE_PATTERNS.some(re => re.test(_path))) return false;
-
-        // Exclude entity /collections sub-pages — they show collection memberships,
-        // not releases that can be queued in Picard.
-        if (_path.match(/\/(?:release|release-group)\/[a-f0-9-]{36}\/collections/)) return false;
-
-        // Exclude search pages for non-release entity types.
-        // (Recording search results are not directly queuable; only release search is.)
-        if (_path === '/search') {
-            const _t = new URLSearchParams(window.location.search).get('type');
-            if (_t && _t !== 'release') return false;
-        }
-
-        // Exclude artist-credit entity sub-pages that list recordings or release groups —
-        // neither can be queued in Picard.  The overview (/artist-credit/<id>) and
-        // the /release sub-page are allowed through.
-        if (_path.match(/\/artist-credit\/[^/]+\/(?:recording|release-group)(?:[/?]|$)/)) return false;
-
-        // For collection pages, only show Picard when the collection holds releases
-        // (i.e. the first column header is 'Release' and the H2 reads 'Releases').
-        // Collections can hold any entity type; only release collections are queuable.
-        // Read the live H2 text via _getH2EntityType() to determine the entity type.
-        if (_path.match(/\/collection\/[a-f0-9-]{36}(?:[/?]|$)/)) {
-            const _h2Text = (typeof _getH2EntityType === 'function' ? _getH2EntityType() : '').toLowerCase();
-            // If the H2 is resolved and is not a release collection, exclude.
-            if (_h2Text && !_h2Text.includes('releases')) return false;
-        }
-
-        // For series overview pages, only show Picard when the entity listed is
-        // Releases.  Release group series, Recording series, Event series, and
-        // Work series contain no directly queuable rows.
-        // Read the live H2 text via _getH2EntityType() to determine the type.
-        if (_path.match(/\/series\/[a-f0-9-]{36}(?:[/?]|$)/)) {
-            const _h2Text = (typeof _getH2EntityType === 'function' ? _getH2EntityType() : '').toLowerCase();
-            // If the H2 is resolved and is not a release series, exclude.
-            if (_h2Text && !_h2Text.includes('releases')) return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Sends an HTTP GET to `url` with a short timeout, resolving with the
      * response object or rejecting on network / timeout errors.
      *
@@ -42685,33 +42628,26 @@ a { color: #1565c0; }`;
      *   accidentally inserting picard_td before rel_td (which would happen if
      *   runFilter fires before initRelationshipsColumn, e.g. during load-from-disk).
      *
-     * Per-table guards (applied inside the forEach loop):
-     *
-     *   1. Multi-entity sub-table guard (_isMultiEntitySubTablePage):
-     *      Applies to /tag/<value>, /user/<n>/tag/<value>, and /artist-credit/<id>
-     *      overview pages where each h3 sub-table lists a *different* entity type.
-     *      Skips any sub-table whose first column header — extracted with
-     *      _cleanColHeaderText() to strip sort/stats glyphs (⇅▲▼NN📊) — is not
-     *      exactly 'Release'.
-     *
-     *   2. Relationships/performances multi-table release-link guard
-     *      (_isRelationshipsMultiPage):
-     *      Applies to /artist/<mbid>/relationships and /place/<mbid>/performances
-     *      overview pages where ALL h3 sub-tables share the same 'Title' first-
-     *      column header but only those whose tbody rows link to /release/<mbid>
-     *      are Picard-relevant (e.g. "Composed release", "Instruments release").
-     *      Skips any sub-table that has no `a[href*="/release/"]` in its tbody.
-     *
-     *   3. Relationships/performances filtered single-table release-link guard
-     *      (_isRelationshipsFilteredPage):
-     *      Applies to the ?link_type_id=… filtered variants of the above pages
-     *      (pageTypes 'artist-relationships-filtered', 'place-performances-filtered').
-     *      Shows the Picard column only when the (single) table has at least one
-     *      /release/<mbid> link in its tbody.
+     * Per-table guard — universal data-driven release-link check:
+     *   Before injecting the Picard column into a table, the tbody is queried for
+     *   at least one anchor whose href contains "/release/" but not "/release-group/"
+     *   (excluding .mb-sticky-col and .mb-rel-cell cells).  Tables with no such
+     *   link are silently skipped.  This single selector-based check is
+     *   page-type-agnostic and covers all multi-sub-table scenarios automatically:
+     *   - tag / user-tag / artist-credit overview pages: only the "Releases"
+     *     sub-table has /release/<mbid> data-cell links.
+     *   - artist-relationships / place-performances multi-table pages: only
+     *     relationship-type sub-tables that link to releases (e.g. "Composed
+     *     release") pass; non-release sub-tables (works, recordings, …) do not.
+     *   - artist-relationships-filtered / place-performances-filtered pages: the
+     *     table is included only when the filtered relationship type links to
+     *     releases.
+     *   - Any future page type: no code change required.
      *
      * Guards:
      *   - `Lib.settings.sa_enable_picard_tagger` must be true.
-     *   - Current page URL must match `_picardPageIsSupported()`.
+     *   - Per table: tbody must contain at least one `a[href*="/release/"]`
+     *     that is not a `/release-group/` link (universal data-driven guard).
      *
      * Port detection runs asynchronously in the background the first time any
      * button is clicked; injecting the column itself is fully synchronous.
@@ -42727,7 +42663,6 @@ a { color: #1565c0; }`;
      */
     function initPicardTaggerColumn(rewireOnly = false) {
         if (!Lib.settings.sa_enable_picard_tagger) return;
-        if (!_picardPageIsSupported()) return;
 
         const _tables = document.querySelectorAll('table.tbl');
         if (!_tables.length) {
@@ -42735,91 +42670,39 @@ a { color: #1565c0; }`;
             return;
         }
 
-        // Page-type flags computed once before the forEach loop so each per-table
-        // guard branch is cheap.
-        //
-        // _isMultiEntitySubTablePage — pages where multiple h3 sub-tables list
-        //   *different* entity types (Areas / Artists / Releases / Recordings …
-        //   on tag pages; Release groups / Releases / Recordings / Tracks on
-        //   artist-credit overview pages).  Only the sub-table whose first column
-        //   header is exactly 'Release' contains rows that can be queued in Picard.
-        //   Bug fix (9.99.536): the header name is extracted with _cleanColHeaderText()
-        //   instead of raw textContent.trim() so that sort/stats glyphs injected by
-        //   makeTableSortableUnified (⇅▲▼NN📊) are stripped before the comparison.
-        //
-        // _isRelationshipsMultiPage — pages where ALL h3 sub-tables share the
-        //   same 'Title' first-column header but only those sub-tables whose rows
-        //   link to a MusicBrainz /release/<mbid> URL are relevant for Picard.
-        //   Covers: 'artist-relationships' (overview, multi-table) and
-        //   'place-performances' (overview, multi-table).
-        //
-        // _isRelationshipsFilteredPage — the single-table filtered pendant
-        //   (?link_type_id=…) of the above overview pages.  Picard is shown only
-        //   when at least one tbody row links to /release/<mbid>.
-        const _path = window.location.pathname;
-        const _isMultiEntitySubTablePage =
-            /\/tag\/[^/]+(?:[/?]|$)/.test(_path) ||
-            /\/user\/[^/]+\/tag\/[^/]+(?:[/?]|$)/.test(_path) ||
-            /\/artist-credit\/[^/]+(?:[/?]|$)/.test(_path);
-
-        const _isRelationshipsMultiPage =
-            /\/artist\/[a-f0-9-]{36}\/relationships(?:[/?]|$)/.test(_path) ||
-            /\/place\/[a-f0-9-]{36}\/performances(?:[/?]|$)/.test(_path);
-
-        // For the filtered (single-table) relationship pages we need a lazy
-        // one-time check: the table has release links ↔ Picard column should show.
-        // We store the result in a module-level variable so rewireOnly calls reuse it.
-        const _isRelationshipsFilteredPage =
-            (/\/artist\/[a-f0-9-]{36}\/relationships/.test(_path) ||
-             /\/place\/[a-f0-9-]{36}\/performances/.test(_path)) &&
-            new URLSearchParams(window.location.search).has('link_type_id');
-
         _tables.forEach(table => {
-            // ── Per-table first-column guard (tag / user-tag / artist-credit) ─
-            // Applied only on pages where h3 sub-tables cover multiple entity
-            // types.  Skips any sub-table whose first <th> plain text (resolved
-            // via _cleanColHeaderText to strip sort/stats glyphs) is not 'Release'.
-            if (_isMultiEntitySubTablePage) {
-                const _firstTh = table.querySelector('thead tr:first-child th:first-child');
-                const _firstColName = _firstTh ? _cleanColHeaderText(_firstTh) : '';
-                if (_firstTh && _firstColName !== 'Release') {
-                    Lib.debug('picard',
-                        `initPicardTaggerColumn: skipping table — first column is ` +
-                        `"${_firstColName}", not "Release" (multi-entity sub-table page).`);
-                    return; // skip this sub-table
-                }
-            }
-
-            // ── Per-table release-link guard (artist-relationships /
-            //    place-performances multi-table overview pages) ─────────────────
-            // ALL sub-tables on these pages have the same 'Title' first-column
-            // header but only those whose data-rows link to /release/<mbid> are
-            // relevant for Picard.  Skip any table that has no such link.
-            if (_isRelationshipsMultiPage) {
-                const _hasReleaseLink = !!table.querySelector(
-                    'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href*="/release/"]'
-                );
-                if (!_hasReleaseLink) {
-                    Lib.debug('picard',
-                        `initPicardTaggerColumn: skipping table — no /release/ links ` +
-                        `in tbody (relationships/performances multi-table page).`);
-                    return; // skip this sub-table
-                }
-            }
-
-            // ── Filtered relationship/performance single-table pages ───────────
-            // Show Picard column only when at least one row in this table links to
-            // a MusicBrainz /release/<mbid> page (not recordings, not works, …).
-            if (_isRelationshipsFilteredPage) {
-                const _hasReleaseLink = !!table.querySelector(
-                    'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href*="/release/"]'
-                );
-                if (!_hasReleaseLink) {
-                    Lib.debug('picard',
-                        `initPicardTaggerColumn: skipping table — no /release/ links ` +
-                        `in tbody (relationships/performances filtered single-table page).`);
-                    return; // skip this table entirely
-                }
+            // ── Universal data-driven release-link guard ──────────────────────
+            // Inject the Picard column only when this table's tbody actually
+            // contains at least one anchor linking to a MusicBrainz /release/<mbid>
+            // page.  This single check replaces every page-type-specific header-
+            // name and URL-pattern guard that was previously needed:
+            //
+            //   • tag / user-tag / artist-credit multi-entity pages — each h3
+            //     sub-table is checked independently; only the "Releases" sub-table
+            //     has /release/<mbid> data-cell links.
+            //   • artist-relationships / place-performances multi-table pages —
+            //     only relationship-type sub-tables that link to releases (e.g.
+            //     "Composed release", "Instruments release") contain /release/<mbid>
+            //     links; non-release sub-tables (works, recordings, …) do not.
+            //   • artist-relationships-filtered / place-performances-filtered
+            //     single-table pages — the guard naturally handles the case where
+            //     the filtered relationship type is non-release.
+            //   • Any future page type — no code change required; correctness
+            //     is determined entirely by the data in the table.
+            //
+            // The selector excludes .mb-sticky-col and .mb-rel-cell because those
+            // injected cells may contain duplicate or unrelated hrefs.
+            // The :not([href*="/release-group/"]) exclusion is required because
+            // "/release-group/" contains the substring "/release/" and would
+            // otherwise produce false positives on release-group tables.
+            const _hasReleaseLink = !!table.querySelector(
+                'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) ' +
+                'a[href*="/release/"]:not([href*="/release-group/"])'
+            );
+            if (!_hasReleaseLink) {
+                Lib.debug('picard',
+                    `initPicardTaggerColumn: skipping table — no /release/<mbid> links in tbody.`);
+                return; // skip this table
             }
 
             // ── Add header cell (once per table, full mode only) ─────────────

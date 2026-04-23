@@ -1,5 +1,59 @@
 [
   {
+    "version": "9.99.540",
+    "date": "2026-04-23",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix real root cause of the ghost filter column on place-events, artist-events, artist-works, artist-recordings, and event-series pages: another userscript (e.g. a Rating-column hider) can set `display:none` on the native MusicBrainz Rating `<th>` without removing it from the DOM. When `sa_remove_rating` is false our script previously kept the hidden `<th>` in the header row. `addColumnFilterRow` then built a filter cell for it (copying the `display:none` style, so the filter cell was initially hidden too), but a subsequent browser re-style or the external script restoring visibility caused the filter cell to become visible while the header `<th>` remained invisible — producing the ghost. Fix: both `cleanupHeaders()` and the fetch-phase header-index scanner (`referenceTable.querySelectorAll('thead th')` loop) now check `th.style.display === 'none' || window.getComputedStyle(th).display === 'none'` in addition to the `sa_remove_rating` setting. If either condition is true the Rating column is removed from the header row and excluded from index tracking, exactly as if `sa_remove_rating` were enabled. A dedicated debug log entry distinguishes the external-hide path from the setting-driven path. This makes the column-removal logic robust against any external agent that hides a column header without touching its data cells, regardless of the user's `sa_remove_rating` preference."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.539",
+    "date": "2026-04-23",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix ghost filter column on place-events and event-series pages: `toggleAutoResizeColumns` used `table.querySelectorAll('thead th')` which matched ths in ALL thead rows including the `tr.mb-col-filter-row` injected by `addColumnFilterRow`, making the `headers` array twice as long as the actual column count (e.g. 32 for a 16-column table). The `headers.forEach((th, idx) => { if (columnVisible[idx]) th.style.minWidth = ... })` loop then iterated over filter-row ths with out-of-bounds `columnVisible[idx]` accesses (undefined/falsy), which in some browsers produces subtle DOM or layout side-effects that manifest as a misaligned ghost column. Fix: changed selector to `thead tr:first-child th` (matching the already-correct sub-table resize variant at line ~15119) so only the real header row is ever consulted for measurement, visibility, and min-width assignment."
+        ]
+      },
+      {
+        "label": "♻️ Refactor",
+        "items": [
+          "Remove `_PICARD_PAGE_PATTERNS` (RegExp[] constant, ~70 lines) and `_picardPageIsSupported()` (function, ~40 lines) entirely. These are no longer needed now that `initPicardTaggerColumn` uses a universal per-table data-driven guard — `tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href*=\"/release/\"]:not([href*=\"/release-group/\"])` — to decide whether to inject the Picard column. Any table on any page type that contains no `/release/<mbid>` link in its data cells is automatically skipped; any table that does contain such a link gets the column, regardless of URL pattern, H2 entity type, or any other page-type-specific heuristic. The `if (!_picardPageIsSupported()) return` early-exit in `initPicardTaggerColumn` is removed; the sole remaining entry guard is `if (!Lib.settings.sa_enable_picard_tagger) return`. JSDoc for `initPicardTaggerColumn` updated accordingly."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.538",
+    "date": "2026-04-23",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix ghost filter column on single-table event pages (e.g. `/place/<mbid>/events`, event `/series/<mbid>`) and potentially any future page type: replace the blind idempotency guard in `addColumnFilterRow` (`if (filterRow already exists) return`) with stale-detection rebuild logic. The new logic compares the existing filter row's cell count against the current header row cell count on every call; if they match the function is still a no-op (cheap); if they differ the stale filter row is removed, any in-progress filter values typed by the user are snapshotted by `data-col-idx`, the row is rebuilt from the current header cell set, and the saved values are restored. This self-heals the ghost-cell symptom (a filter `<input>` with no `<th>` above it, or a header `<th>` with no filter input below) that arises whenever any column modifier runs after the filter row has already been built — regardless of which modifier caused it and on which page type."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.537",
+    "date": "2026-04-23",
+    "sections": [
+      {
+        "label": "♻️ Refactor",
+        "items": [
+          "Simplify `initPicardTaggerColumn` per-table guard to a single universal data-driven check: the three page-type-specific flag variables (`_isMultiEntitySubTablePage`, `_isRelationshipsMultiPage`, `_isRelationshipsFilteredPage`) and their corresponding guard blocks introduced in 9.99.536 are replaced by one CSS selector query — `tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href*=\"/release/\"]:not([href*=\"/release-group/\"])` — applied unconditionally to every `table.tbl`. Any table whose tbody contains no anchor linking to a MusicBrainz `/release/<mbid>` page is silently skipped; all others receive the Picard column regardless of page type, column layout, or URL structure. The `:not([href*=\"/release-group/\"])` exclusion is required because `/release-group/` contains the substring `/release/`. This approach is page-type-agnostic and automatically correct for all existing supported pages (tag/user-tag/artist-credit multi-entity sub-tables, artist-relationships/place-performances multi-table and filtered pages) as well as any future page types added to `_PICARD_PAGE_PATTERNS` without requiring any further code changes. Updated JSDoc for `initPicardTaggerColumn` and `_picardPageIsSupported()` to document the unified guard strategy."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.536",
     "date": "2026-04-23",
     "sections": [
