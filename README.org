@@ -74689,6 +74689,34 @@ other buttons
                 { label: '🧮 Various Artists RGs',  params: { all: '1', va: '1' } }
 #+end_example
 
+* DONE Some pageTypes do not restore CAA images when loading from disk
+** DONE initial
+
+Some bugs:
+
+1.)
+
+when on the final rendered page of e.g. "https://musicbrainz.org/artist-credit/1488075" and directly trying to "Load from Disk"
+I get the following error in the console:
+
+#+begin_example
+00:06:18.217 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.523+2026-04-22) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/artist-credit/1488075 
+00:06:18.246 [VZ-ShowAllEntityData: artist-credit] 📝 Changelog source: remote — replaced 0 local entries with 698 remote entries (fromCache=true) 
+00:06:30.776 [VZ-ShowAllEntityData: artist-credit] ❌ No template table head found. 
+00:06:30.776 [VZ-ShowAllEntityData: artist-credit] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
+    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:29296:31)
+    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:37040:27)
+#+end_example
+
+2.)
+
+Some pageTypes do not restore CAA images when "loading from disk" and already on the final rendered page, e.g.
+
+#+begin_example
+https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908
+#+end_example
+
+
 
 * maybe later
 
@@ -75977,8 +76005,191 @@ The simplest, most robust fix is in addColumnFilterRow itself: drop the idempote
 Shall I implement this fix as 9.99.538?
 #+end_example
 
+**** TODO bugs
 
-** Remove synthetic/injected columns from sub-tables which do not make sense
+still buggy
+
+1.)
+
+the last fix didn't have any effect
+
+a.)
+
+please check the uploaded console debug log for hints
+
+b.)
+
+strangely, even without your last patch, the problem didn't show up on another computer in different browsers
+
+2.)
+
+do we actually need the following code anymore because
+
+#+begin_example
+    /**
+     * URL path patterns for page types where the Picard column should appear.
+     * Mirrors the @match directives from the original Magic Tagger Button script.
+     *
+     * Only pages that list **releases** receive the column — Picard can only queue
+     * releases, not recordings, release groups, or other entity types.  Patterns
+     * are kept deliberately narrow so that sub-pages that never list releases
+     * (e.g. /tags, /aliases, /fingerprints, /users, /artists, /events, /places,
+     * /recordings, /works) do not match.  Additional runtime exclusions for pages
+     * that cannot be determined from the URL alone are handled in
+     * `_picardPageIsSupported()`.
+     *
+     * Matched against `window.location.pathname` only.
+     *
+     * @type {RegExp[]}
+     */
+    const _PICARD_PAGE_PATTERNS = [
+#+end_example
+
+#+begin_example
+    /**
+     * Checks whether the current page URL matches one of the supported tagger
+     * page patterns, and additionally excludes pages where no **releases** are
+     * listed — Picard can only queue releases, not recordings, release groups,
+     * or other entity types.
+     *
+     * Explicit runtime exclusions (beyond the narrow patterns above):
+     *   - `/release/<mbid>/collections` and `/release-group/<mbid>/collections`
+     *     — these pages list collection memberships, not releases to queue in Picard.
+     *   - Search pages with a `type` parameter other than 'release'.
+     *   - `/artist-credit/<mbid>/recording` and `/artist-credit/<mbid>/release-group`
+     *     — these entity sub-pages contain recordings / release groups, not releases.
+     *   - Collection pages (`/collection/<mbid>`) whose H2 entity type is not
+     *     'Releases' — collections can hold Areas, Artists, Events, Genres,
+     *     Instruments, Labels, Recordings, Release groups, Works, etc., none of
+     *     which can be queued in Picard.  Only release collections (first column
+     *     header 'Release', H2 text 'Releases') qualify.
+     *   - Series pages whose H2 entity type is not 'Releases' — e.g. Release group
+     *     series, Recording series, Event series, and Work series have no queuable rows.
+     *
+     * Note: `/tag/<value>`, `/user/<n>/tag/<value>`, `/artist-credit/<id>`,
+     * `/artist/<mbid>/relationships`, and `/place/<mbid>/performances` multi-table
+     * pages are allowed through by this function even though they may contain
+     * sub-tables whose rows are not releases.  The universal data-driven per-table
+     * guard inside `initPicardTaggerColumn` handles sub-table filtering: it queries
+     * each table's tbody for `a[href*="/release/"]:not([href*="/release-group/"])`
+     * and skips any table where no such link is found.  This applies uniformly to
+     * all page types including any future additions, with no code changes required.
+     *
+     * @returns {boolean}  true when the Picard column should be shown.
+     */
+    function _picardPageIsSupported() {
+#+end_example
+
+as we now detect if the "Picard" column should be present by lookinkg for the presence of at least one anchor linking to
+a MusicBrainz "/release/<mbid>" page
+
+#+begin_example
+    function initPicardTaggerColumn(rewireOnly = false) {
+        if (!Lib.settings.sa_enable_picard_tagger) return;
+        if (!_picardPageIsSupported()) return;
+
+        const _tables = document.querySelectorAll('table.tbl');
+        if (!_tables.length) {
+            Lib.debug('picard', 'initPicardTaggerColumn: no table.tbl found — skipping');
+            return;
+        }
+
+        _tables.forEach(table => {
+            // ── Universal data-driven release-link guard ──────────────────────
+            // Inject the Picard column only when this table's tbody actually
+            // contains at least one anchor linking to a MusicBrainz /release/<mbid>
+            // page.  This single check replaces every page-type-specific header-
+            // name and URL-pattern guard that was previously needed:
+            //
+            //   • tag / user-tag / artist-credit multi-entity pages — each h3
+            //     sub-table is checked independently; only the "Releases" sub-table
+            //     has /release/<mbid> data-cell links.
+            //   • artist-relationships / place-performances multi-table pages —
+            //     only relationship-type sub-tables that link to releases (e.g.
+            //     "Composed release", "Instruments release") contain /release/<mbid>
+            //     links; non-release sub-tables (works, recordings, …) do not.
+            //   • artist-relationships-filtered / place-performances-filtered
+            //     single-table pages — the guard naturally handles the case where
+            //     the filtered relationship type is non-release.
+            //   • Any future page type — no code change required; correctness
+            //     is determined entirely by the data in the table.
+            //
+            // The selector excludes .mb-sticky-col and .mb-rel-cell because those
+            // injected cells may contain duplicate or unrelated hrefs.
+            // The :not([href*="/release-group/"]) exclusion is required because
+            // "/release-group/" contains the substring "/release/" and would
+            // otherwise produce false positives on release-group tables.
+            const _hasReleaseLink = !!table.querySelector(
+                'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) ' +
+                'a[href*="/release/"]:not([href*="/release-group/"])'
+            );
+            if (!_hasReleaseLink) {
+                Lib.debug('picard',
+                    `initPicardTaggerColumn: skipping table — no /release/<mbid> links in tbody.`);
+                return; // skip this table
+            }
+#+end_example
+
+Please cleanup all not needed stuff
+
+**** TODO solution
+
+#+begin_example
+Question 1 (ghost column root cause): The debug log's key line is Final table structure → headers=6, rowCells=16 — headers=6 means table.querySelectorAll('thead th').length at render time is 6, but rowCells=16. That's the pre-cleanupHeaders thead. Then cleanupHeaders fires and adds 10, making 16. addColumnFilterRow builds 16 filter cells. All aligned. The ghost comes from sa_auto_resize_columns triggering toggleAutoResizeColumns via setTimeout(0), which uses table.querySelectorAll('thead th') — querying ALL ths in ALL thead rows including the filter row (16+16=32). It then sets th.style.minWidth on all 32 ths with columnVisible[idx] — for idx 16..31 (filter row), columnVisible[idx] is undefined (falsy), so minWidth is not set. That's fine. But it also iterates those 32 ths for the measurement loop. The filter row gets mutated into having its ths affected (specifically, the .column-resizer div from makeColumnsResizable is appended to filter row ths too, since makeColumnsResizable also uses thead tr:first-child th... wait no).
+Let me verify the exact ghost-creating line:Ran 2 commandsRan 2 commandsNow I have a clear plan. Two changes:
+Fix 1: In toggleAutoResizeColumns (and its sub-table variant), change table.querySelectorAll('thead th') → table.querySelectorAll('thead tr:first-child th') so the filter row ths are never included in the headers variable. This is both the correct fix AND the likely ghost-column cause — when columnVisible array is built from all 32 ths with the guard cutting off at 16, the columnVisible.forEach that creates colgroup cols creates only 16 cols (correct). But then headers.forEach((th, idx) => { if (columnVisible[idx]) th.style.minWidth = ... }) iterates all 32 ths — for filter ths at idx 16+ columnVisible[idx] is undefined which is falsy, so nothing is set. However, on one specific browser the behaviour may differ. Making it thead tr:first-child th is unambiguously correct.
+Fix 2: Remove _PICARD_PAGE_PATTERNS and _picardPageIsSupported() entirely since initPicardTaggerColumn's per-table release-link guard is the sole authority.
+#+end_example
+
+**** TODO new hint, the problem seems to be the "Rating column"
+
+I think I found the real "ghost column root cause":
+
+1.)
+
+The problem seems to be the "Rating column".
+
+On some browsers when the variable "sa_remove_rating" is false, so when the rating column SHOULD be included
+e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/recordings the rating column SHOULD be present
+on the final rendered page. It actually is (without it's column header) but its column values are located inside the
+"Length" column, all other columns are shifted to the right and the ghost column appears.
+
+The problems occurs because of the following phenomeon (which only occurs on some browsers)
+
+a.)
+
+when the initial page is renderded, on the problem browsers I can see the "Rating" column with it's values quickly
+appear before the "Length" column, but then they vanish (they are not rendered anymore, although present in the HTML
+code '<th colspan="1" class="rating c">Rating</th>').
+
+So when the final page is rendered, the problem occurs; because of the actual presence of the "Rating" data cells they
+are renderd but NOT the "Rating" column header anymore. The "Rating" column search filter box IS rendered, which also
+explains the ghost column shift.
+
+Maybe it's another userscript which runs on the initial page and doesn't display the "Rating" column, but our script
+logic renders the "Rating" column search filter box and the data cells.
+
+When I explicitely set the variable "sa_remove_rating" to true, the problem disappears
+
+b.)
+
+The same is true for the following URLs
+
+#+begin_example
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/works
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/events
+https://musicbrainz.org/series/5c605c0d-de8d-478e-9b93-d518ccecc748  ==> event series
+#+end_example
+
+When I explicitely set the variable "sa_remove_rating" to true, the ghost column disappears.
+
+How can such a situation be detected witout explicitly forcing the affected enduser/browser to set the variable
+"sa_remove_rating" to true.
+
+Please fix.
+
+** TODO Remove synthetic/injected columns from sub-tables which do not make sense
 
 On multi-table pageTypes like e.g. https://musicbrainz.org/place/a727b970-8ea0-4f75-abc8-db131f72aecb/performances
 
@@ -75990,6 +76201,9 @@ Relationships
 #+end_example
 
 from all sub-tables where NO "Release"-type column is present 
+
+please apply the same pattern as with the "Picard" column, so guard the inclusion of the "Release events" column on the
+presence of a table column with at least a release data cell
 
 ** better documentation for the "Edit Pinned Filter List" in the "TABLE FILTER CONFIGURATION"
 ** better handling of "sa_auto_expand" parameter
@@ -76925,7 +77139,6 @@ remove "Showing Various Artist releases." from end of artist-release pages when 
 "."
 #+end_example
 
-
 ** missing "dateParts" extractor and tooltipColumns
 
 #+begin_example
@@ -76977,38 +77190,11 @@ remove "Showing Various Artist releases." from end of artist-release pages when 
         },
 #+end_example
 
+
 * some latest fixes
 
 Some latest fixes:
 
 1.)
-
-
-* Some pageTypes do not restore CAA images when loading from disk
-** DONE initial
-
-Some bugs:
-
-1.)
-
-when on the final rendered page of e.g. "https://musicbrainz.org/artist-credit/1488075" and directly trying to "Load from Disk"
-I get the following error in the console:
-
-#+begin_example
-00:06:18.217 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.523+2026-04-22) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/artist-credit/1488075 
-00:06:18.246 [VZ-ShowAllEntityData: artist-credit] 📝 Changelog source: remote — replaced 0 local entries with 698 remote entries (fromCache=true) 
-00:06:30.776 [VZ-ShowAllEntityData: artist-credit] ❌ No template table head found. 
-00:06:30.776 [VZ-ShowAllEntityData: artist-credit] ❌ Failed to load data from file: TypeError: Failed to execute 'compareDocumentPosition' on 'Node': parameter 1 is not of type 'Node'.
-    at renderGroupedTable (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:29296:31)
-    at reader.onload (userscript.html?name=VZ%253A-MusicBrainz-Show-All-Entity-Data-In-A-Consolidated-View.user.js&id=e658b320-2072-48e2-acaa-251e5f556f4e:37040:27)
-#+end_example
-
-2.)
-
-Some pageTypes do not restore CAA images when "loading from disk" and already on the final rendered page, e.g.
-
-#+begin_example
-https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908
-#+end_example
 
 
