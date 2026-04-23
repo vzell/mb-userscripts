@@ -76294,6 +76294,11 @@ instead of keeping its own fixed background.
 
 the sticky column hover highlight is still not working
 
+*** bug
+
+the sticky column hover highlight is now working, but only initially on the final rendered page.
+
+After sorting or filtering we have the original behaviour of NO highlightning
 
 ** better documentation for the "Edit Pinned Filter List" in the "TABLE FILTER CONFIGURATION"
 ** better handling of "sa_auto_expand" parameter

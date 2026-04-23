@@ -7610,41 +7610,58 @@
                 cell.dataset.mbStickyBg = restBg;
                 cell.classList.add('mb-sticky-col');
 
-                // Wire hover handlers once per row (guard via dataset flag).
-                if (!tr.dataset.mbStickyHoverWired) {
-                    tr.dataset.mbStickyHoverWired = '1';
-                    tr.addEventListener('mouseenter', () => {
-                        const c = tr.cells[stickyIdx];
-                        if (!c || !c.classList.contains('mb-sticky-col')) return;
-                        // Read the hover colour from the first non-sticky sibling td.
-                        // At mouseenter time the browser has already applied :hover rules
-                        // to the sibling tds, so getComputedStyle reflects the hover bg.
-                        let hoverBg = '';
-                        for (let i = 0; i < tr.cells.length; i++) {
-                            const sib = tr.cells[i];
-                            if (sib !== c && !sib.classList.contains('mb-sticky-col')) {
-                                hoverBg = getComputedStyle(sib).backgroundColor;
-                                break;
-                            }
+                // Wire hover handlers — always rewire, because after sort/filter
+                // renderFinalTable/renderGroupedTable inserts cloneNode(true) copies of
+                // the source rows.  cloneNode copies dataset attributes (so a
+                // dataset-flag guard like `if (!tr.dataset.mbStickyHoverWired)` would
+                // see '1' on the clone and skip wiring), but does NOT copy JS object
+                // properties.  We therefore store the handler functions as named
+                // properties on the tr element (_mbStickyEnter / _mbStickyLeave):
+                //   • removeEventListener with the stored reference cleanly detaches
+                //     any previously wired listener from this exact tr node
+                //   • on a freshly cloned tr these properties are undefined, so
+                //     removeEventListener is a harmless no-op and we wire fresh
+                // This guarantees exactly one live listener pair per tr after every
+                // _apply() call, regardless of how many times the row was cloned or
+                // re-inserted.
+                const _enter = () => {
+                    const c = tr.cells[stickyIdx];
+                    if (!c || !c.classList.contains('mb-sticky-col')) return;
+                    // Read the hover colour from the first non-sticky sibling td.
+                    // At mouseenter time the browser has already applied :hover rules
+                    // to the sibling tds, so getComputedStyle reflects the hover bg.
+                    let hoverBg = '';
+                    for (let i = 0; i < tr.cells.length; i++) {
+                        const sib = tr.cells[i];
+                        if (sib !== c && !sib.classList.contains('mb-sticky-col')) {
+                            hoverBg = getComputedStyle(sib).backgroundColor;
+                            break;
                         }
-                        // Fall back to MusicBrainz's known hover tint (#e2e2e2) if the
-                        // sibling's computed bg is transparent or still equals our own
-                        // rest colour (can happen when there is only one column or when
-                        // the browser hasn't painted the :hover state yet).
-                        const ownRest = c.dataset.mbStickyBg || '#ffffff';
-                        if (!hoverBg || hoverBg === ownRest ||
-                                hoverBg === 'rgba(0, 0, 0, 0)' || hoverBg === 'transparent') {
-                            hoverBg = '#e2e2e2';
-                        }
-                        c.style.background = hoverBg;
-                    });
-                    tr.addEventListener('mouseleave', () => {
-                        const c = tr.cells[stickyIdx];
-                        if (c && c.classList.contains('mb-sticky-col')) {
-                            c.style.background = c.dataset.mbStickyBg || '#ffffff';
-                        }
-                    });
-                }
+                    }
+                    // Fall back to MusicBrainz's known hover tint (#e2e2e2) if the
+                    // sibling's computed bg is transparent or still equals our own
+                    // rest colour (can happen when there is only one column or when
+                    // the browser hasn't painted the :hover state yet).
+                    const ownRest = c.dataset.mbStickyBg || '#ffffff';
+                    if (!hoverBg || hoverBg === ownRest ||
+                            hoverBg === 'rgba(0, 0, 0, 0)' || hoverBg === 'transparent') {
+                        hoverBg = '#e2e2e2';
+                    }
+                    c.style.background = hoverBg;
+                };
+                const _leave = () => {
+                    const c = tr.cells[stickyIdx];
+                    if (c && c.classList.contains('mb-sticky-col')) {
+                        c.style.background = c.dataset.mbStickyBg || '#ffffff';
+                    }
+                };
+                // Remove any previously attached listener on this exact node, then add fresh ones.
+                if (tr._mbStickyEnter) tr.removeEventListener('mouseenter', tr._mbStickyEnter);
+                if (tr._mbStickyLeave) tr.removeEventListener('mouseleave', tr._mbStickyLeave);
+                tr._mbStickyEnter = _enter;
+                tr._mbStickyLeave = _leave;
+                tr.addEventListener('mouseenter', _enter);
+                tr.addEventListener('mouseleave', _leave);
             });
 
             Lib.debug('ui', `applyStickyColumn: idx=${stickyIdx} left=${leftPx} table=${table.id||'(no-id)'}`);
