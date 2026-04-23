@@ -75651,7 +75651,7 @@ English(primary) => English | primary
         }
 #+end_example
 
-** when a sticky column is fixed, the highlight color hovering over the current row doesn't take the sticky column into account
+** DONE when a sticky column is fixed, the highlight color hovering over the current row doesn't take the sticky column into account
 ** DONE add CAA enriched tooltip also to the thumbnail in the column configured with the "addCAA" parameter
 *** DONE initial
 
@@ -76226,7 +76226,7 @@ Relationships
 
 from all sub-tables where NO "Release"-type column is present 
 
-*** TODO initial
+*** DONE initial
 
 In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.540+2026-04-23') and
 changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.540"')
@@ -76290,11 +76290,11 @@ tbody tr:hover th.mb-sticky-col {
 This must be added alongside the existing tbody tr:hover rule so the sticky cell inherits the row's hover background
 instead of keeping its own fixed background. 
 
-*** fix
+*** DONE fix
 
 the sticky column hover highlight is still not working
 
-*** bug
+*** DONE bug
 
 the sticky column hover highlight is now working, but only initially on the final rendered page.
 
