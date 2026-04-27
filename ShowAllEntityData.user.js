@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.546+2026-04-27
+// @version      9.99.547+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22064,7 +22064,7 @@ a { color: #1565c0; }`;
      * @returns {Array<{val:string, idx:number}>}  — with an `._rxErrors` property
      *          (array of formatted error strings) attached for single-table callers.
      */
-    function getColFilters(table, isCaseSensitive, isRegExp) {
+    function getColFilters(table, isCaseSensitive, isRegExp, isExclude = false) {
         if (!table) {
             const empty = [];
             empty._rxErrors = [];
@@ -22113,7 +22113,10 @@ a { color: #1565c0; }`;
                     val:            raw,
                     idx:            colIdx,
                     isMultiRowFilter: true,
-                    multiRowMode:   inp.dataset.mbMultirowMode
+                    multiRowMode:   inp.dataset.mbMultirowMode,
+                    isRegExp,
+                    isCaseSensitive,
+                    isExclude
                 });
                 return;
             }
@@ -22130,7 +22133,7 @@ a { color: #1565c0; }`;
                     // regexp patterns. The 'i' flag in testRowMatch handles case.
                     // Lowercasing would break character-class ranges like [A-Z].
                     const val = isRegExp ? raw : (isCaseSensitive ? raw : raw.toLowerCase());
-                    result.push({ val, idx: colIdx });
+                    result.push({ val, idx: colIdx, isRegExp, isCaseSensitive, isExclude });
                 } catch (e) {
                     // Invalid: 4 px error border
                     inp.style.boxShadow   = '';
@@ -22153,7 +22156,7 @@ a { color: #1565c0; }`;
                 inp.style.borderColor = '';
                 inp.style.borderWidth = '';
                 const val = isCaseSensitive ? raw : raw.toLowerCase();
-                result.push({ val, idx: colIdx });
+                result.push({ val, idx: colIdx, isRegExp, isCaseSensitive, isExclude });
             }
         });
 
@@ -22299,32 +22302,47 @@ a { color: #1565c0; }`;
                 continue; // no text highlight for state-based filters
             }
 
+            // Use per-filter flags embedded by getColFilters from the per-subtable
+            // checkboxes, falling back to global ctx flags for single-table pages and
+            // any filter objects that pre-date this change.
+            const _fIsRegExp  = f.isRegExp        !== undefined ? f.isRegExp        : isRegExp;
+            const _fIsCase    = f.isCaseSensitive !== undefined ? f.isCaseSensitive : isCaseSensitive;
+            const _fIsExclude = f.isExclude       !== undefined ? f.isExclude       : isExclude;
+
             const cellText = getCleanColumnText(row.cells[f.idx]);
             let match = false;
-            if (isRegExp) {
+            if (_fIsRegExp) {
                 try {
-                    match = new RegExp(f.val, isCaseSensitive ? '' : 'i').test(cellText);
+                    match = new RegExp(f.val, _fIsCase ? '' : 'i').test(cellText);
                 } catch (e) {
-                    match = isCaseSensitive
+                    match = _fIsCase
                         ? cellText.includes(f.val)
                         : cellText.toLowerCase().includes(f.val);
                 }
             } else {
-                match = isCaseSensitive
+                match = _fIsCase
                     ? cellText.includes(f.val)
                     : cellText.toLowerCase().includes(f.val);
             }
-            if (!match) { colHit = false; break; }
+            // Respect per-filter exclude flag (may differ from global isExclude on
+            // multi-table pages where each sub-table has its own Ex checkbox).
+            if (!(_fIsExclude ? !match : match)) { colHit = false; break; }
         }
 
         const finalHit = globalHit && colHit;
         if (finalHit) {
             // Highlighting on excluded matches would be misleading, so skip it
             if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
-            // Multi-row state filters operate on DOM structure, not on text → skip highlight
+            // Multi-row state filters operate on DOM structure, not on text → skip highlight.
+            // Use per-filter case/regexp flags so highlight patterns match what was actually tested.
             colFilters.forEach(f => {
                 if (!f.isMultiRowFilter) {
-                    highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp);
+                    const _fIsExclude = f.isExclude       !== undefined ? f.isExclude       : isExclude;
+                    const _fIsCase    = f.isCaseSensitive !== undefined ? f.isCaseSensitive : isCaseSensitive;
+                    const _fIsRegExp  = f.isRegExp        !== undefined ? f.isRegExp        : isRegExp;
+                    if (!_fIsExclude) {
+                        highlightText(row, f.val, _fIsCase, f.idx, _fIsRegExp);
+                    }
                 }
             });
 
@@ -22333,23 +22351,31 @@ a { color: #1565c0; }`;
             // _highlightRelCellIcons adds .mb-rel-icon-match to matching <a> elements;
             // plain highlightText() cannot produce a visible highlight there because
             // the filter key lives in a display:none span and the icon is an <img>.
-            if (!isExclude) {
-                if (globalQuery) {
-                    Array.from(row.cells).forEach(cell => {
-                        if (cell.classList.contains('mb-rel-cell')) {
-                            _highlightRelCellIcons(cell, globalQueryRaw, isCaseSensitive, isRegExp);
-                        }
-                    });
-                }
-                colFilters.forEach(f => {
-                    if (!f.isMultiRowFilter) {
-                        const cell = row.cells[f.idx];
-                        if (cell && cell.classList.contains('mb-rel-cell')) {
-                            _highlightRelCellIcons(cell, f.val, isCaseSensitive, isRegExp);
-                        }
+            // Global filter: guard with !isExclude (excluded rows carry no match highlight).
+            if (globalQuery && !isExclude) {
+                Array.from(row.cells).forEach(cell => {
+                    if (cell.classList.contains('mb-rel-cell')) {
+                        _highlightRelCellIcons(cell, globalQueryRaw, isCaseSensitive, isRegExp);
                     }
                 });
             }
+            // Column filters: each filter object carries its own per-sub-table exclude
+            // flag (_fIsExclude); do NOT gate this block on the global isExclude so that
+            // column rel-icon highlights work correctly when the sub-table Ex checkbox
+            // differs from the global one.
+            colFilters.forEach(f => {
+                if (!f.isMultiRowFilter) {
+                    const _fIsExclude = f.isExclude       !== undefined ? f.isExclude       : isExclude;
+                    const _fIsCase    = f.isCaseSensitive !== undefined ? f.isCaseSensitive : isCaseSensitive;
+                    const _fIsRegExp  = f.isRegExp        !== undefined ? f.isRegExp        : isRegExp;
+                    if (!_fIsExclude) {
+                        const cell = row.cells[f.idx];
+                        if (cell && cell.classList.contains('mb-rel-cell')) {
+                            _highlightRelCellIcons(cell, f.val, _fIsCase, _fIsRegExp);
+                        }
+                    }
+                }
+            });
         }
         return finalHit;
     }
@@ -22463,14 +22489,23 @@ a { color: #1565c0; }`;
                 const _subRxCb  = _subH3
                     ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-rx-checkbox"]')
                     : null;
-                const _colIsRegExp = _subRxCb ? _subRxCb.checked : false;
-                matchCtx.colFilters = getColFilters(_subTable, isCaseSensitive, _colIsRegExp);
+                const _subCaseCb = _subH3
+                    ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-case-checkbox"]')
+                    : null;
+                const _subExCb = _subH3
+                    ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-ex-checkbox"]')
+                    : null;
+                const _colIsRegExp  = _subRxCb   ? _subRxCb.checked   : false;
+                const _colIsCase    = _subCaseCb ? _subCaseCb.checked : isCaseSensitive;
+                const _colIsExclude = _subExCb   ? _subExCb.checked   : false;
+                matchCtx.colFilters = getColFilters(_subTable, _colIsCase, _colIsRegExp, _colIsExclude);
                 // Keep _activeFilterHighlightCtx in sync so _artHighlightImageLi()
                 // uses the correct per-sub-table column filters when the CAA/EAA
                 // art-cell rebuild fires asynchronously for this group.
                 if (_activeFilterHighlightCtx) {
-                    _activeFilterHighlightCtx.colFilters = matchCtx.colFilters;
-                    _activeFilterHighlightCtx.isRegExp   = _colIsRegExp;
+                    _activeFilterHighlightCtx.colFilters      = matchCtx.colFilters;
+                    _activeFilterHighlightCtx.isRegExp        = _colIsRegExp;
+                    _activeFilterHighlightCtx.isCaseSensitive = _colIsCase;
                 }
                 const matches = group.rows.map(r => {
                     const clone = r.cloneNode(true);
@@ -22558,11 +22593,16 @@ a { color: #1565c0; }`;
             initPicardTaggerColumn(/* rewireOnly */ true);
         } else {
             const totalAbsolute = allRows.length;
-            matchCtx.colFilters = getColFilters(document.querySelector('table.tbl'), isCaseSensitive, isRegExp);
+            // Pass isExclude so that f.isExclude in every filter object reflects the
+            // global Exclude checkbox — without it f.isExclude defaults to false and
+            // testRowMatch's _fIsExclude reads false (not the ctx fallback) because
+            // false !== undefined.
+            matchCtx.colFilters = getColFilters(document.querySelector('table.tbl'), isCaseSensitive, isRegExp, isExclude);
             // Keep _activeFilterHighlightCtx in sync so _artHighlightImageLi()
             // uses the correct column filters for this single-table render.
             if (_activeFilterHighlightCtx) {
-                _activeFilterHighlightCtx.colFilters = matchCtx.colFilters;
+                _activeFilterHighlightCtx.colFilters      = matchCtx.colFilters;
+                _activeFilterHighlightCtx.isCaseSensitive = isCaseSensitive;
             }
             // In single-table mode there is no h3 before the table, so getColFilters
             // cannot write regexp errors to a sub-table status span.  Capture any errors
@@ -39062,14 +39102,15 @@ a { color: #1565c0; }`;
          * @param {boolean} isRegExp  - Whether to treat raw as a regexp pattern.
          * @returns {RegExp|null}     - Null only when raw is empty/falsy.
          */
-        const makeRegex = (raw, isRegExp) => {
+        const makeRegex = (raw, isRegExp, flagsOverride) => {
             if (!raw) return null;
+            const _f = flagsOverride !== undefined ? flagsOverride : flags;
             try {
                 return isRegExp
-                    ? new RegExp(raw, flags)
-                    : new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+                    ? new RegExp(raw, _f)
+                    : new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), _f);
             } catch (e) {
-                return new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+                return new RegExp(raw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), _f);
             }
         };
 
@@ -39083,7 +39124,12 @@ a { color: #1565c0; }`;
         for (const f of ctx.colFilters) {
             if (f.isMultiRowFilter) continue;  // state filters carry no highlight text
             if (f.idx !== colIdx)   continue;  // different column — skip
-            const colRegex = makeRegex(f.val, ctx.isRegExp);
+            // Use per-filter flags (embedded by getColFilters from the per-subtable
+            // checkboxes) with a fallback to the context-level flags for compatibility.
+            const _fIsRegExp = f.isRegExp        !== undefined ? f.isRegExp        : ctx.isRegExp;
+            const _fIsCase   = f.isCaseSensitive !== undefined ? f.isCaseSensitive : ctx.isCaseSensitive;
+            const _fFlags    = _fIsCase ? 'g' : 'gi';
+            const colRegex   = makeRegex(f.val, _fIsRegExp, _fFlags);
             if (colRegex) {
                 highlightCrossTag(li, colRegex, 'mb-column-filter-highlight');
             }
@@ -39133,15 +39179,23 @@ a { color: #1565c0; }`;
         // that contains artCell.  For single-table pages this is equivalent.
         const _owningTable = artCell.closest('table');
 
-        // Resolve the per-sub-table Rx checkbox (multi-table pages only).
+        // Resolve the per-sub-table checkboxes (multi-table pages only).
         const _subH3   = _owningTable ? findH3ForTable(_owningTable) : null;
         const _subRxCb = _subH3
             ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-rx-checkbox"]')
             : null;
-        const colIsRegExp = _subRxCb ? _subRxCb.checked : isRegExp;
+        const _subCaseCb = _subH3
+            ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-case-checkbox"]')
+            : null;
+        const _subExCb = _subH3
+            ? _subH3.querySelector('.mb-subtable-filter-container input[id$="-ex-checkbox"]')
+            : null;
+        const colIsRegExp  = _subRxCb   ? _subRxCb.checked   : isRegExp;
+        const colIsCase    = _subCaseCb ? _subCaseCb.checked : isCaseSensitive;
+        const colIsExclude = _subExCb   ? _subExCb.checked   : false;
 
         const colFilters = _owningTable
-            ? getColFilters(_owningTable, isCaseSensitive, colIsRegExp)
+            ? getColFilters(_owningTable, colIsCase, colIsRegExp, colIsExclude)
             : [];
 
         // ── 3. Bail out early if nothing is active ───────────────────────────────
@@ -39150,7 +39204,7 @@ a { color: #1565c0; }`;
         if (!hasGlobal && !hasCol) return;
 
         // ── 4. Build a single context snapshot and highlight every image li ──────
-        const ctxSnap = { globalQueryRaw, colFilters, isCaseSensitive, isRegExp: colIsRegExp };
+        const ctxSnap = { globalQueryRaw, colFilters, isCaseSensitive: colIsCase, isRegExp: colIsRegExp };
         artCell.querySelectorAll(':scope > ul.mb-caa-art-ul > li.mb-caa-art-li-image')
             .forEach(li => _artHighlightImageLi(li, colIdx, ctxSnap));
     }

@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.547",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix per-sub-table 'Case Sensitive' (Cc), 'RegExp' (Rx), and 'Exclude' (Ex) checkboxes in the h3 header line on multi-table pages not being honoured when filtering on the column level: root cause was that `runFilter()` only read the per-sub-table Rx checkbox for passing to `getColFilters()`, while the Case and Exclude checkboxes were never read. `getColFilters()` now receives all three per-sub-table flags (`_colIsCase`, `_colIsRegExp`, `_colIsExclude`) which it embeds as `{isCaseSensitive, isRegExp, isExclude}` into every filter object `f` it produces. `testRowMatch()` reads them back via `f.isCaseSensitive`, `f.isRegExp`, `f.isExclude` (with fallbacks to the global ctx flags for single-table pages and legacy filter objects). Three additional fixes in the same patch: (1) Single-table `getColFilters` call now passes the global `isExclude` so column-filter objects correctly embed `f.isExclude` instead of always receiving `false` from the default parameter — previously, the global Exclude checkbox was silently ignored for single-table column filters; (2) `_activeFilterHighlightCtx` is now also updated with `isCaseSensitive` per group (alongside the existing `isRegExp` update) so that art-cell highlight rebuilds via `_artHighlightImageLi` use the correct per-sub-table case flag; (3) Relationship icon column-filter highlight in `testRowMatch` finalHit block: moved the `colFilters.forEach` rel-cell highlight loop outside the global `!isExclude` guard so it uses only its own per-filter `!_fIsExclude` gate — previously, a checked global Exclude checkbox suppressed all column-level rel-icon match-box highlights even when the sub-table's own Ex checkbox was unchecked."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.547",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix per-subtable Case Sensitive (Cc), RegExp (Rx), and Exclude (Ex) checkboxes being ignored for column-level filters on multi-table pages — only the global h2 checkbox states were honoured. Root cause was three-fold: (1) `runFilter()` multi-table path only read the per-subtable Rx checkbox (`[id$=\"-rx-checkbox\"]`) and passed the global `isCaseSensitive` and `isExclude` to `getColFilters`; (2) `getColFilters()` did not embed any checkbox flags in its returned filter objects, so `testRowMatch()` had no per-filter state to read; (3) `testRowMatch()` used `ctx.isRegExp`, `ctx.isCaseSensitive`, and `ctx.isExclude` (all global) for every column-filter test regardless of the sub-table's own checkboxes. Fix: (a) `getColFilters(table, isCaseSensitive, isRegExp, isExclude = false)` gains an `isExclude` parameter and now embeds `isRegExp`, `isCaseSensitive`, and `isExclude` on every pushed filter object; (b) `runFilter()` multi-table path also reads the per-subtable `[id$=\"-case-checkbox\"]` and `[id$=\"-ex-checkbox\"]` elements and passes all three to `getColFilters`; (c) `testRowMatch()` column-filter loop resolves `_fIsRegExp`, `_fIsCase`, and `_fIsExclude` from the filter object (falling back to global ctx values for single-table pages and backward compatibility), uses them for cell-text matching, and gates both `highlightText()` and `_highlightRelCellIcons()` calls on `!_fIsExclude`; (d) the async art-cell highlight path (`_artHighlightImageLi` outer call) also reads all three per-subtable checkboxes and passes them to `getColFilters`, and the column-filter loop inside `_artHighlightImageLi` uses `f.isRegExp`/`f.isCaseSensitive` per-filter (with ctx-level fallback) when building the per-column highlight regex."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.546",
     "date": "2026-04-27",
     "sections": [
