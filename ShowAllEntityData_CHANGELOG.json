@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.544",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix regexp highlighting not applying for `^…` (start-of-string) patterns in cells whose first DOM content is a decorative/UI element rather than plain text: (1) cells on series pages whose Release column combines a `[data-erg-btn]` `▶` toggle span and a `.mb-caa-inline-ph` inline-thumbnail span before the actual text — the `▶` glyph and the `🗄️` cache-hint emoji inside the inline-ph span both inflated the highlight walker's `fullText` at position 0, so `^` referred to before those characters; (2) the extracted Country column on release-group pages whose cells contain a flag `<img>` followed by a formatting-whitespace text node (` `) before the `<a>` country text — the space shifted the `^` anchor by one character. Root cause: `highlightCrossTag` used a `NodeFilter.SHOW_TEXT`-only TreeWalker, which cannot issue element-level `FILTER_REJECT` to prune entire subtrees; every text node (including those inside `[data-erg-btn]`, `.mb-caa-inline-ph`, and whitespace-only inter-element nodes) was included verbatim in `fullText`. The filter path uses `getCleanColumnText()` which clones-and-strips those same elements and skips whitespace-only / decorative-icon text nodes, so the filter matched but the highlighter did not. Fix: switch `highlightCrossTag` to `NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT`, add element-level `FILTER_REJECT` for the same exclusion set as `_CLEAN_STRIP_SEL` / `getCleanColumnText` (`script`, `style`, `[data-erg-btn]`, `.mb-caa-inline-ph`, `.mb-eaa-inline-ph`, all `.mb-art-cache-hint-*`, `.mb-caa-count-badge`, `.mb-eaa-count-badge`, `.mb-caa-art-li-image`, `.artwork-icon`, `.caa-icon`, `.icon`), and add text-node `FILTER_REJECT` for whitespace-only nodes and decorative-icon glyphs (mirroring the `isDecorativeIcon()` guard in `getCleanColumnText`). All other element nodes receive `FILTER_SKIP` so their children are still visited. The resulting `fullText` is now positionally equivalent to the string `runFilter()` tested the regexp against, making `^` anchors highlight the correct character in the first real data text node."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.543",
     "date": "2026-04-27",
     "sections": [

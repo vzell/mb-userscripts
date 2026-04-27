@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.543+2026-04-27
+// @version      9.99.544+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -21410,8 +21410,10 @@ a { color: #1565c0; }`;
      * that span across multiple sibling or nested text nodes (cross-tag highlighting).
      *
      * Algorithm overview:
-     *   1. Walk every text node under `root` (excluding script/style), recording each
-     *      node's absolute character offset within the cell's concatenated plain text.
+     *   1. Walk every text node under `root` (excluding decorative/UI-only element
+     *      subtrees, whitespace-only nodes, and decorative icon glyphs), recording
+     *      each node's absolute character offset within the cell's concatenated
+     *      filterable plain text.
      *   2. Run `regex` against the concatenated text to find all match ranges.
      *   3. For each text node that overlaps one or more matches, compute segment
      *      boundaries (node start/end + clamped match start/end), then replace the
@@ -21421,23 +21423,106 @@ a { color: #1565c0; }`;
      *   4. Text nodes are processed in reverse document order so that earlier nodes'
      *      DOM positions are not invalidated by later mutations.
      *
+     * Alignment with getCleanColumnText():
+     *   The TreeWalker uses `SHOW_TEXT | SHOW_ELEMENT` so that element-level
+     *   FILTER_REJECT can prune entire decorative subtrees from the walk.  The
+     *   exclusion list (script/style, [data-erg-btn], .mb-caa-inline-ph,
+     *   .mb-eaa-inline-ph, cache-hint elements, count badges, art-list rows,
+     *   icon spans) mirrors the `_CLEAN_STRIP_SEL` constant and the secondary
+     *   guard inside getCleanColumnText().  Whitespace-only and decorative-icon
+     *   text nodes (▶, ▼, …) are also excluded, matching the `isDecorativeIcon()`
+     *   guard in getCleanColumnText().
+     *
+     *   This ensures that the `fullText` string assembled here is positionally
+     *   equivalent to the string that getCleanColumnText() tested the regex
+     *   against.  Without this alignment, regexp anchors like `^` refer to a
+     *   position before decorative content (▶ glyph, 🗄️ cache-hint emoji,
+     *   formatting-whitespace between an <img> flag and the following <a>), so
+     *   the filter matches but the highlighting silently does not — as reported
+     *   for cells that combine an [data-erg-btn] toggle + .mb-caa-inline-ph
+     *   thumbnail (e.g. the Release column on series pages), and for the
+     *   extracted Country column whose cells start with a flag <img> element
+     *   followed by a whitespace text node before the actual country text.
+     *
      * @param {Element} root      - Container element to search within (typically a `<td>`).
      * @param {RegExp}  regex     - Pre-compiled global RegExp (must carry the 'g' flag).
      * @param {string}  className - CSS class name applied to every highlight `<span>`.
      */
     function highlightCrossTag(root, regex, className) {
         // ── Step 1: collect text nodes with absolute character offsets ──────────
+        //
+        // Use SHOW_TEXT | SHOW_ELEMENT so that FILTER_REJECT on an element node
+        // prunes its entire subtree from the walk — SHOW_TEXT alone prevents
+        // element-level pruning because FILTER_REJECT on a text node only skips
+        // that single node, not its (non-existent) children, and the walker still
+        // descends into sibling/parent element children regardless.
+        //
+        // Exclusions mirror getCleanColumnText() to keep `fullText` positionally
+        // equivalent to the text that runFilter()/the global-regexp test consumed:
+        //
+        //   • Entirely rejected element subtrees (FILTER_REJECT):
+        //       - script / style
+        //       - [data-erg-btn]         — ▶/▼ expand-row toggle glyph
+        //       - .mb-caa-inline-ph      — inline CAA thumbnail placeholder
+        //       - .mb-eaa-inline-ph      — inline EAA thumbnail placeholder
+        //       - .mb-art-cache-hint-*   — cache-status emoji overlays (🗄️ etc.)
+        //       - .mb-caa-count-badge /  — per-image count badges
+        //         .mb-eaa-count-badge
+        //       - .mb-caa-art-li-image   — per-image art rows inside multi-row cells
+        //       - .artwork-icon /        — icon-only decorative spans
+        //         .caa-icon / .icon
+        //
+        //   • Skipped text nodes (FILTER_REJECT on the text node itself):
+        //       - whitespace-only        — formatting text nodes between elements
+        //                                  (e.g. the space between a flag <img>
+        //                                  and the following <a> in Country cells)
+        //       - decorative icon glyphs — single-char symbols in the
+        //                                  isDecorativeIcon() set (▶, ▼, …)
+        //                                  that survive outside a rejected subtree
+        //
+        // Other element nodes receive FILTER_SKIP (not returned by nextNode() but
+        // their children are still visited), and all qualifying TEXT_NODE values
+        // are concatenated verbatim to form fullText.
         const entries = []; // { node: Text, start: number, end: number }
         let offset = 0;
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
             acceptNode(node) {
-                const tag = node.parentNode?.tagName?.toLowerCase();
-                if (tag === 'script' || tag === 'style') return NodeFilter.FILTER_REJECT;
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    const tag = node.tagName.toLowerCase();
+                    // Prune script/style subtrees entirely.
+                    if (tag === 'script' || tag === 'style') return NodeFilter.FILTER_REJECT;
+                    // Prune decorative / UI-overlay element subtrees — mirrors
+                    // _CLEAN_STRIP_SEL and the secondary guard in getCleanColumnText().
+                    if (node.hasAttribute('data-erg-btn')) return NodeFilter.FILTER_REJECT;
+                    if (node.classList) {
+                        const cl = node.classList;
+                        if (cl.contains('mb-caa-inline-ph') ||
+                            cl.contains('mb-eaa-inline-ph') ||
+                            cl.contains('mb-art-cache-hint-inline') ||
+                            cl.contains('mb-art-cache-hint-col-wrap') ||
+                            cl.contains('mb-art-cache-hint-col') ||
+                            cl.contains('mb-caa-count-badge') ||
+                            cl.contains('mb-eaa-count-badge') ||
+                            cl.contains('mb-caa-art-li-image') ||
+                            cl.contains('artwork-icon') ||
+                            cl.contains('caa-icon') ||
+                            cl.contains('icon')) return NodeFilter.FILTER_REJECT;
+                    }
+                    // All other elements: skip (don't return) but visit children.
+                    return NodeFilter.FILTER_SKIP;
+                }
+                // Text node: skip whitespace-only nodes and decorative icon glyphs
+                // (▶, ▼, …) so they do not shift the absolute offsets used for
+                // regex matching — mirrors the isDecorativeIcon() guard in
+                // getCleanColumnText().
+                const trimmed = node.nodeValue.trim();
+                if (!trimmed || isDecorativeIcon(trimmed)) return NodeFilter.FILTER_REJECT;
                 return NodeFilter.FILTER_ACCEPT;
             }
         }, false);
         let node;
         while ((node = walker.nextNode())) {
+            if (node.nodeType !== Node.TEXT_NODE) continue; // SHOW_ELEMENT: skip element hits
             const len = node.nodeValue.length;
             entries.push({ node, start: offset, end: offset + len });
             offset += len;
