@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.544+2026-04-27
+// @version      9.99.545+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -33554,6 +33554,19 @@ a { color: #1565c0; }`;
         if (!table) return;
         if (!activeReleaseEventColumns.length) return; // Release events not active for this pageType
 
+        // ── Empty-tbody guard ───────────────────────────────────────────────────
+        // When runFilter() calls renderGroupedTable() with a filter expression that
+        // matches zero rows, tbody is wiped (innerHTML = '') before this function
+        // is called.  An empty tbody has no release links, so the link-absence check
+        // below would always trigger and wrongly remove the Release-events <th>s.
+        // On the next filter pass (including clearing the filter) the thead is already
+        // mutated: the Release-events columns are gone while every body row still
+        // carries the corresponding <td>s — producing a permanent column shift.
+        // Guard: if the tbody has no <tr> elements we cannot determine whether the
+        // Release-events column is appropriate and must leave the header untouched.
+        const _tbodyForCheck = table.querySelector('tbody');
+        if (!_tbodyForCheck || !_tbodyForCheck.querySelector('tr')) return;
+
         // Check whether the tbody contains at least one /release/<mbid> link in a
         // non-sticky, non-rel-cell data cell (mirrors the Picard column guard exactly).
         const _hasReleaseLink = !!table.querySelector(
@@ -33896,6 +33909,21 @@ a { color: #1565c0; }`;
     function _suppressRelationshipsIfNoReleaseOrReleaseGroupLinks(table) {
         if (!table) return;
         if (!activeInjectedColumns.length) return; // Relationships not active for this pageType
+
+        // ── Empty-tbody guard ───────────────────────────────────────────────────
+        // Same race condition as _suppressReleaseEventsIfNoReleaseLinks: when
+        // runFilter() produces zero matching rows for a group, renderGroupedTable()
+        // clears the tbody before calling this function.  With an empty tbody the
+        // link-absence test below always fires and removes the Relationships <th>
+        // from the thead.  On the very next filter pass (e.g. the user deletes the
+        // filter expression, restoring all rows) the thead is permanently missing
+        // the Relationships <th> while every source row in groupedRows still carries
+        // its .mb-rel-cell <td> — the browser renders Relationships data under the
+        // Picard column header and the Picard column has no header at all.
+        // Guard: skip suppression entirely when the tbody has no rows so that the
+        // Relationships <th> is never destroyed based on an empty-tbody false negative.
+        const _tbodyForCheck = table.querySelector('tbody');
+        if (!_tbodyForCheck || !_tbodyForCheck.querySelector('tr')) return;
 
         // Check whether the tbody contains at least one /release/<mbid> or
         // /release-group/<mbid> link in a non-sticky, non-rel-cell data cell.

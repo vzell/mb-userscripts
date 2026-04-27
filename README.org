@@ -74881,6 +74881,7 @@ also adjust the "SA_UNICODE_CHARS_DEFAULT" with typical examples for the use of 
 
 ** TODO add a quickfilter with search string highlightning to 
 
+** TODO add cursor movement with the up/down keys
 
 * TODO Implement column movement
 
@@ -77410,7 +77411,7 @@ Some latest fixes:
 #+end_example
 
 
-* TODO Relationships
+* TODO Relationships - not used
 ** DONE initial
 
 add some enhancements:
@@ -77949,7 +77950,6 @@ Here the console log for the URL "https://musicbrainz.org/user/vzell/tag/high%20
 07:44:05.954 [VZ-ShowAllEntityData: user-tag-value] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
 #+end_example
 
-
 ** still bugs
 
 #+begin_example
@@ -78006,7 +78006,7 @@ bug a.)
 loading of the "Relationships" column stops as soon as sorting or filtering has benn initiated
 
 
-* TODO syntheticColumnExtractors not honoured in "type: 'artist-credit'"
+* DONE syntheticColumnExtractors not honoured in "type: 'artist-credit'"
 
 why is the
 
@@ -78167,4 +78167,16 @@ or just the "Toggle display of underlying entity page" button present in their d
 On pageTypes (e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c) which have an extracted "Country" column from the original column "Country/Date".
 
 It works in the "Country/Date" column but NOT the "Country". Both render a country flag at the start of the data cells.
+
+
+* TODO regexp filtering on sub-tables in "multi"-table pages
+
+Regexp filtering on sub-tables in "multi"-table pages
+
+* DONE filtering bug and "Relationships" column
+
+On "multi"-table pageTypes when filtering globally and entering a filter condition which filters out ALL rows, then the
+"Relationships" column header/filter and cell values completely vanishe. When removing the filter condition again so
+that all rows reappear, the actual "Relationships" column values are still present but now under the "Picard" column and
+the picard icons for each row are still present but now have no header column.
 

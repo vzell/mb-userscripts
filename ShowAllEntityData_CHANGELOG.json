@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.545",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix permanent Relationships (and Release-events) column-header destruction on multi-table pages when a global filter removes ALL rows from any sub-table, followed by clearing (or changing) the filter: root cause was that both `_suppressRelationshipsIfNoReleaseOrReleaseGroupLinks(table)` and `_suppressReleaseEventsIfNoReleaseLinks(table)` are called inside `renderGroupedTable()` after rows are appended to each group's `<tbody>`. When `runFilter()` passes a filter that matches zero rows, `tbody.innerHTML = ''` is executed first and then the empty group's rows (none) are appended — leaving the tbody with no `<tr>` elements. The two suppression helpers then find no `/release/` or `/release-group/` links (false negative due to empty tbody) and unconditionally delete the `Relationships` / Release-events `<th>` from the thead. On the next `renderGroupedTable` call (`query = 're-run'`, also truthy so existing tables are reused), the real rows are reinserted but the suppression guards now return early because links ARE found — leaving the thead permanently missing the already-deleted `<th>`. The browser then shifts every subsequent column left by one: `.mb-rel-cell` (Relationships data) appears under the Picard column header, and the Picard `<td>` has no header at all. Fix: added an empty-tbody guard at the top of both suppression functions — `if (!_tbodyForCheck || !_tbodyForCheck.querySelector('tr')) return;` — so that suppression is never triggered when the tbody has zero rows (state that is inherently indeterminate and is always due to a filter pass, not to the absence of release links in the data)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.544",
     "date": "2026-04-27",
     "sections": [
