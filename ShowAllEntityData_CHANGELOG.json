@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.546",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "When a filter expression matches a row because of content in the Relationships column, each individual relationship icon whose URL matches is now visually surrounded by a red 2px outline box so it is immediately clear which icon caused the match. Implementation: new helper `_highlightRelCellIcons(cell, queryRaw, isCaseSensitive, isRegExp)` iterates every `<a>` in a `.mb-rel-cell` `<td>`, tests its hidden `.mb-rel-filter-key` URL text against the active filter (regexp or plain-text, case-aware), and adds the CSS class `mb-rel-icon-match` to each matching anchor. A new CSS rule `td.mb-rel-cell a.mb-rel-icon-match { outline: 2px solid red !important; border-radius: 2px; }` is injected alongside the existing rel-cell rules; its one-higher specificity (extra class selector) overrides the baseline `outline: none !important` that suppresses MusicBrainz sprite artefacts on all other rel-cell anchors. `_highlightRelCellIcons` is called from `testRowMatch()` in the `finalHit && !isExclude` block — after the standard `highlightText()` pass — for both the global filter (all `.mb-rel-cell` columns) and per-column filters (only the matched column index). `highlightText()` alone cannot produce a visible result for rel cells because the filter key lives in a `display:none` span and the icon itself is an `<img>`. Stale `.mb-rel-icon-match` classes are cleared at the start of each `testRowMatch()` call (alongside `.mb-global-filter-highlight`/`.mb-column-filter-highlight`), in the unhighlight-all button handler, and in the clear-all-filters handler."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.545",
     "date": "2026-04-27",
     "sections": [

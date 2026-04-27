@@ -78180,3 +78180,54 @@ On "multi"-table pageTypes when filtering globally and entering a filter conditi
 that all rows reappear, the actual "Relationships" column values are still present but now under the "Picard" column and
 the picard icons for each row are still present but now have no header column.
 
+
+* "Relationships" filtering visually surrounded by a red bordered box/square
+** initial
+
+During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
+tables which actually have that column), the corresponding relationship icon should be visually surrounded by a red
+bordered box/square otherwise it's not clear why that specific row actually matches
+
+#+begin_example
+      <td class="mb-rel-cell" data-mbid="76415396-cf11-43dc-ad76-a3a5c4c9072d" style="" data-rel-done="1">
+	<a href="http://www.nexyzbb.ne.jp/~kzoo/albums.html" title="http://www.nexyzbb.ne.jp/~kzoo/albums.html" target="_blank" rel="noopener noreferrer">
+	  <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.nexyzbb.ne.jp" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+	  <span class="mb-rel-filter-key" aria-hidden="true" style="display: none;">http://www.ne
+	    <span class="mb-subtable-filter-highlight">xyz
+	    </span>bb.ne.jp/~kzoo/albums.html
+	  </span>
+	</a>
+	<a href="https://www.discogs.com/release/8874113" title="https://www.discogs.com/release/8874113" target="_blank" rel="noopener noreferrer">
+	  <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.discogs.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+	  <span class="mb-rel-filter-key" aria-hidden="true" style="display: none;">https://www.discogs.com/release/8874113
+	  </span>
+	</a>
+      </td>
+#+end_example
+
+** bug
+
+During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
+tables which actually have that column), the corresponding relationship icons NOW are surrounded by a red bordered
+box/square but only if the filtering is done on the "Relationships" column itself.
+
+two bugs:
+
+1.)
+
+When filtering on the sub-table itself, the filtering works, so rows show up when the "Relationships" column cells
+match, but there is NO red border around the relationship icon
+
+2.)
+
+the global filter doesn't filter "Relationships" column cells at all, so even if sub-table filter works, the same
+filterstring on the global filter will not be honoured by the "Relationships" column
+
+
+* DONE multi-table pages, the "Case Sensitive", "Regex" and "Exclude" check boxes filtering problem
+
+For multi-table pages, the "Case Sensitive", "Regex" and "Exclude" check boxes in the h3 header line per sub-table are
+not honoured when filtering on the column level for specific columns, only the checkbox state from the global h2 filter line.
+
+For multi-table pages, matchCtx.isRegExp is still the global checkbox, but column filters are built with
+_colIsRegExp (per-subtable). But the testRowMatch uses isRegExp from ctx which is the global one. Hmm...

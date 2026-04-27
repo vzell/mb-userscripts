@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.545+2026-04-27
+// @version      9.99.546+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -16901,6 +16901,9 @@ a { color: #1565c0; }`;
             // Also remove subtable-filter highlights
             document.querySelectorAll('.mb-subtable-filter-highlight')
                 .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+            // Remove relationship icon match-boxes.
+            document.querySelectorAll('.mb-rel-icon-match')
+                .forEach(a => a.classList.remove('mb-rel-icon-match'));
 
             filterHighlightEnabled = false;
             updateFilterHighlightButtonAppearance();
@@ -17945,6 +17948,14 @@ a { color: #1565c0; }`;
                 background-image: none !important;
                 box-shadow: none !important;
                 outline: none !important;
+            }
+            /* Filter-match highlight: higher specificity than the outline-reset
+               rule above so it wins even in the presence of !important.
+               Applied by _highlightRelCellIcons() in testRowMatch() when the
+               filter expression matches the URL stored in .mb-rel-filter-key.   */
+            td.mb-rel-cell a.mb-rel-icon-match {
+                outline: 2px solid red !important;
+                border-radius: 2px;
             }
             td.mb-rel-cell a {
                 display: inline-block;
@@ -22150,6 +22161,62 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Marks individual relationship icon `<a>` elements inside a `.mb-rel-cell` `<td>`
+     * whose hidden `.mb-rel-filter-key` URL matches the active filter expression.
+     *
+     * Background: relationship icons are `<img>` elements inside `<a>` links; their
+     * filter-key text lives in a hidden `<span class="mb-rel-filter-key">` appended
+     * to each `<a>` by `_relAppendIcon()`.  `getCleanColumnText()` includes those
+     * spans verbatim so the filter can match them, but `highlightCrossTag()` cannot
+     * produce a visible highlight inside a `display:none` span and cannot surround
+     * an `<img>` with a text-node wrapper.
+     *
+     * This function solves both problems at once: after `testRowMatch()` confirms a
+     * match, it re-checks each `<a>` in the cell individually.  On a per-icon match it
+     * adds the CSS class `mb-rel-icon-match`, which applies a red outline via:
+     *   `td.mb-rel-cell a.mb-rel-icon-match { outline: 2px solid red !important; }`
+     * The higher specificity of that rule beats the baseline `outline: none !important`
+     * reset that suppresses MusicBrainz sprite artefacts on all other rel-cell anchors.
+     *
+     * Stale `.mb-rel-icon-match` classes are removed at the start of every
+     * `testRowMatch()` call and in the bulk-clear paths (unhighlight-all button,
+     * clear-all-filters handler) so they never persist across filter changes.
+     *
+     * @param {HTMLTableCellElement} cell           - A `.mb-rel-cell` `<td>`.
+     * @param {string}               queryRaw       - Raw (un-lowercased) filter value.
+     *                                                For plain-text case-insensitive
+     *                                                filters `getColFilters` pre-lowercases
+     *                                                `f.val`, but the URL comparison below
+     *                                                applies `toLowerCase()` independently,
+     *                                                so both raw and pre-lowercased values
+     *                                                are handled correctly.
+     * @param {boolean}              isCaseSensitive
+     * @param {boolean}              isRegExp
+     */
+    function _highlightRelCellIcons(cell, queryRaw, isCaseSensitive, isRegExp) {
+        if (!queryRaw) return;
+
+        // Build the test function once, reused for every <a> in the cell.
+        let testFn;
+        if (isRegExp) {
+            let rx;
+            try { rx = new RegExp(queryRaw, isCaseSensitive ? '' : 'i'); } catch (_) { return; }
+            testFn = url => { rx.lastIndex = 0; return rx.test(url); };
+        } else {
+            // f.val from getColFilters may already be lowercased for case-insensitive
+            // plain-text mode; toLowerCase() is idempotent so applying it again is safe.
+            const q = isCaseSensitive ? queryRaw : queryRaw.toLowerCase();
+            testFn = url => (isCaseSensitive ? url : url.toLowerCase()).includes(q);
+        }
+
+        for (const a of cell.querySelectorAll('a')) {
+            const keySpan = a.querySelector('.mb-rel-filter-key');
+            if (!keySpan) continue;
+            if (testFn(keySpan.textContent)) a.classList.add('mb-rel-icon-match');
+        }
+    }
+
+    /**
      * Tests whether a single (already-cloned) row passes the current global + column filters.
      * Resets previous highlight markup, applies fresh highlights on a hit, and returns the result.
      *
@@ -22172,6 +22239,9 @@ a { color: #1565c0; }`;
         // Reset previous highlights (critical for correct re-filtering)
         row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
             .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+        // Reset relationship icon match-boxes from any previous filter pass.
+        row.querySelectorAll('.mb-rel-icon-match')
+            .forEach(a => a.classList.remove('mb-rel-icon-match'));
 
         // --- Global filter ---
         let globalHit = !globalQuery;
@@ -22257,6 +22327,29 @@ a { color: #1565c0; }`;
                     highlightText(row, f.val, isCaseSensitive, f.idx, isRegExp);
                 }
             });
+
+            // Relationship icon match-boxes: for every .mb-rel-cell <td> whose URL
+            // text triggered the match, outline the specific matching icon(s) in red.
+            // _highlightRelCellIcons adds .mb-rel-icon-match to matching <a> elements;
+            // plain highlightText() cannot produce a visible highlight there because
+            // the filter key lives in a display:none span and the icon is an <img>.
+            if (!isExclude) {
+                if (globalQuery) {
+                    Array.from(row.cells).forEach(cell => {
+                        if (cell.classList.contains('mb-rel-cell')) {
+                            _highlightRelCellIcons(cell, globalQueryRaw, isCaseSensitive, isRegExp);
+                        }
+                    });
+                }
+                colFilters.forEach(f => {
+                    if (!f.isMultiRowFilter) {
+                        const cell = row.cells[f.idx];
+                        if (cell && cell.classList.contains('mb-rel-cell')) {
+                            _highlightRelCellIcons(cell, f.val, isCaseSensitive, isRegExp);
+                        }
+                    }
+                });
+            }
         }
         return finalHit;
     }
@@ -23907,6 +24000,9 @@ a { color: #1565c0; }`;
         document.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight').forEach(n => {
             n.replaceWith(document.createTextNode(n.textContent));
         });
+        // Clear relationship icon match-boxes.
+        document.querySelectorAll('.mb-rel-icon-match')
+            .forEach(a => a.classList.remove('mb-rel-icon-match'));
 
         // Clear existing filter conditions and UI highlights for a fresh start.
         // Reset to prefix-only — the global filter always keeps the prefix in its value.
