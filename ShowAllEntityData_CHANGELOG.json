@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.543",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix global CAA/EAA cover-art toggle button (`#mb-caa-toggle-btn-global`), global CAA/EAA retry button (`#mb-caa-toggle-btn-global-retry`), and global Relationships retry button (`#mb-rel-retry-global`) not rendered in the h2 header line on multi-table pages after 9.99.530: root cause was that `_artCreateOrUpdateGlobalToggleButton()` (called from `initCaaPics()`/`initEaaPics()` inside `renderGroupedTable()`) requires `h2 .mb-row-count-stat` to exist as the DOM insertion anchor (`countStat.after(btn)`), but 9.99.530 intentionally suppressed the pre-render `updateH2Count` call for `tableMode === 'multi'` pages (to avoid an inflated See-all-row count) and only called it *after* `renderGroupedTable()` completed. At that deferred point `_artCreateOrUpdateGlobalToggleButton` had already returned early with `'deferring'` and the `updateH2Count` re-anchor loop had nothing to reposition. Fix: after the deferred `updateH2Count(totalRowsAfterRender, totalRowsAfterRender)` call, explicitly invoke `_artCreateOrUpdateGlobalToggleButton(CAA_CTX)` and `_artCreateOrUpdateGlobalToggleButton(EAA_CTX)` (guarded by `Lib.settings.sa_enable_caa_pics`) so the buttons are created/repositioned now that `.mb-row-count-stat` is present. The calls are fully idempotent — the function reuses an existing button element when one is already in the DOM."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.542",
     "date": "2026-04-26",
     "sections": [

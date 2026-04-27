@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.542+2026-04-26
+// @version      9.99.543+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -25434,6 +25434,20 @@ a { color: #1565c0; }`;
                 // group.rows, recalculate the true total and update the h2 badge.
                 const totalRowsAfterRender = groupedRows.reduce((acc, g) => acc + g.rows.length, 0);
                 updateH2Count(totalRowsAfterRender, totalRowsAfterRender);
+                // renderGroupedTable() → initCaaPics() → _artCreateOrUpdateGlobalToggleButton()
+                // attempted to place the global CAA/EAA toggle buttons and the global
+                // Relationships retry button into the h2 but deferred because
+                // h2 .mb-row-count-stat did not exist yet (updateH2Count was intentionally
+                // suppressed before renderGroupedTable to avoid an inflated pre-removal
+                // count — see the comment above).  Now that updateH2Count has run and
+                // .mb-row-count-stat is present, call _artCreateOrUpdateGlobalToggleButton
+                // for both contexts so the buttons are created/repositioned correctly.
+                // This is safe to call again: the function is fully idempotent — it reuses
+                // an existing button element when one is found in the DOM.
+                if (Lib.settings.sa_enable_caa_pics) {
+                    _artCreateOrUpdateGlobalToggleButton(CAA_CTX);
+                    _artCreateOrUpdateGlobalToggleButton(EAA_CTX);
+                }
             } else {
                 originalAllRows = [...allRows];
                 // Finalize colon-aligned columns before render so colons line up

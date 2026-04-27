@@ -78005,6 +78005,7 @@ bug a.)
 
 loading of the "Relationships" column stops as soon as sorting or filtering has benn initiated
 
+
 * TODO syntheticColumnExtractors not honoured in "type: 'artist-credit'"
 
 why is the
@@ -78052,7 +78053,15 @@ in the following pageType not honoured
             },
 #+end_example
 
-* working: 529 broken: 530
+
+* DONE working: 529 broken: 530 ---> starting from 542
+
+In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.542+2026-04-26') and
+changelog file "ShowAllEntityData_CHANGELOG.json" (latest version entry: '"version": "9.99.542"')
+
+1.)
+
+there is a bug introduced with the following change
 
 #+begin_example
 modified   ShowAllEntityData.user.js
@@ -78116,4 +78125,46 @@ modified   ShowAllEntityData_CHANGELOG.json
      "version": "9.99.529",
      "date": "2026-04-22",
 #+end_example
+
+the following buttons are not rendered anymore in "multi"-table pages in the h2 header line preceding all the sub-tables
+
+#+begin_example
+<button id="mb-caa-toggle-btn-global" type="button" class="mb-caa-art-toggle-btn mb-global-art-toggle-btn" title="Show CAA cover art image stripes in ALL sections" style="cursor: pointer; padding: 1px 5px 1px 3px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 5px; display: inline-flex; align-items: center; gap: 6px; line-height: 1; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;"><img class="mb-caa-toggle-thumb" src="https://coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/front-250" style="height: 18px; width: 18px; object-fit: cover; border-radius: 2px; vertical-align: middle; display: block;"><span class="mb-caa-toggle-count">119</span></button>
+<button id="mb-caa-toggle-btn-global-retry" type="button" title="Globally retry loading all CAA cover art images for every sub-table (forces network reload)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">⟳</button>
+<button id="mb-rel-retry-global" type="button" title="Globally retry loading all Relationship icons for every sub-table (forces network reload, clears IDB cache)" style="cursor: pointer; padding: 1px 4px; border: 1px solid rgb(170, 170, 170); border-radius: 3px; background: rgb(245, 245, 245); vertical-align: middle; font-size: 0.8em; margin-left: 3px; line-height: 1; display: inline-flex; align-items: center; box-sizing: border-box; transition: transform 0.1s, box-shadow 0.1s;">🔗⟳</button>
+#+end_example
+
+please fix
+
+2.)
+
+add a changelog entry to the uploaded changelog file
+
+
+* DONE Regexp filtering and highlighting bug
+
+There is a bug with Regexp filtering and highlighting the corresponding resulting filter expression:
+
+Let's say we are filtering with the following type of regexp (by first clicking the "mb-global-filter-rx-checkbox"): "^arbitrary character"
+
+The highlightning is NOT taking place for the "arbitrary character" as the beginning of the string in a data cell in the
+following cases, although the actual filtering works
+
+1.)
+
+On pageTypes (e.g. https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908) which have columns which have
+either both, the "Toggle display of underlying entity page" and the "CAA" inline thumbnail (e.g. the "Release" column)
+
+#+begin_example
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶</span>
+<span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;"><img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/5affb12c-c38c-4c4c-8290-0d3141a19f84"><span class="mb-art-cache-hint-inline" title="IndexedDB cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🗄️</span></span>
+#+end_example
+
+or just the "Toggle display of underlying entity page" button present in their datacells (e.g. the "MB-Comment" column extracted from the "Release" column)
+
+2.)
+
+On pageTypes (e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c) which have an extracted "Country" column from the original column "Country/Date".
+
+It works in the "Country/Date" column but NOT the "Country". Both render a country flag at the start of the data cells.
 
