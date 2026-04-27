@@ -77694,8 +77694,318 @@ in the following pageType definitions not honoured
         },
 #+end_example
 
+** bug
 
-* not honoured
+Here the console log for the URL "https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing"
+
+# 9.99.543
+
+#+begin_example
+07:40:06.912 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.543+2026-04-26) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing 
+07:40:06.912 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing 
+07:40:06.912 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing 
+07:40:06.912 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /user/vzell/tag/high%20res%20scan%20missing 
+07:40:06.913 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+07:40:06.913 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+07:40:06.913 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: user-tag-value 
+07:40:06.913 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+07:40:06.913 [VZ-ShowAllEntityData: user-tag-value] 🚀 Initializing script for path: /user/vzell/tag/high%20res%20scan%20missing
+07:40:06.914 [VZ-ShowAllEntityData: user-tag-value] 🚀 Cached entity name at init time: "vzell" 
+07:40:06.916 [VZ-ShowAllEntityData: user-tag-value] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+07:40:06.917 [VZ-ShowAllEntityData: user-tag-value] 🚀 Blurred #headerid-query input on page entry 
+07:40:06.919 [VZ-ShowAllEntityData: user-tag-value] 📝 Changelog source: remote — replaced 0 local entries with 716 remote entries (fromCache=true) 
+07:40:09.251 [VZ-ShowAllEntityData: user-tag-value] 🚀 resolveEntityFeaturesFromH2: H2 entity type = "Entities vzell tagged as “high res scan missing”" 
+07:40:09.251 [VZ-ShowAllEntityData: user-tag-value] 🚀 resolveEntityFeaturesFromH2: no match for "Entities vzell tagged as “high res scan missing”", falling back to "Areas" 
+07:40:09.251 [VZ-ShowAllEntityData: user-tag-value] 🧹 Signalling other scripts to stop... 
+07:40:09.252 [VZ-ShowAllEntityData: user-tag-value] 🚀 applyListToTable: converted h3="Releases" ul → table (2 rows, col="Release", structure="h3-ul"). 
+07:40:09.252 [VZ-ShowAllEntityData: user-tag-value] 📥 Starting fetch process... {show_downvoted: '0'}
+07:40:09.252 [VZ-ShowAllEntityData: user-tag-value] 📥 Context: overrideParams detected. Fetching maxPage with overrides. {show_downvoted: '0'}
+07:40:09.252 [VZ-ShowAllEntityData: user-tag-value] 📥 Fetching maxPage from: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing?show_downvoted=0&page=1 
+07:40:09.252 [VZ-ShowAllEntityData: user-tag-value] 📥 Initiating fetch for URL: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing?show_downvoted=0&page=1 
+07:40:09.617 [VZ-ShowAllEntityData: user-tag-value] ✅ Determined maxPage: 1 
+07:40:09.617 [VZ-ShowAllEntityData: user-tag-value] 📥 Total pages to fetch: 1 
+07:40:09.617 [VZ-ShowAllEntityData: user-tag-value] 🧹 Starting clutter element removal. 
+07:40:09.618 [VZ-ShowAllEntityData: user-tag-value] 📥 Fetching URL for page 1: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing?page=1&show_downvoted=0 
+07:40:09.618 [VZ-ShowAllEntityData: user-tag-value] 📥 Initiating fetch for URL: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing?page=1&show_downvoted=0 
+07:40:09.833 [VZ-ShowAllEntityData: user-tag-value] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+07:40:09.833 [VZ-ShowAllEntityData: user-tag-value] 🚀 applyListToTable: converted h3="Releases" ul → table (2 rows, col="Release", structure="h3-ul"). 
+07:40:09.833 [VZ-ShowAllEntityData: user-tag-value] 📝 No targetHeader provided; returning all tables found in container. 
+07:40:09.833 [VZ-ShowAllEntityData: user-tag-value] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+07:40:09.833 [VZ-ShowAllEntityData: user-tag-value] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+07:40:09.833 [VZ-ShowAllEntityData: user-tag-value] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[Name_Comment("Area"@-1)], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: user-tag-value 
+07:40:09.833 [VZ-ShowAllEntityData: user-tag-value] 📥 listToTable category: "Releases". Rows so far: 0 
+07:40:09.834 [VZ-ShowAllEntityData: user-tag-value] 🚀 resolveEntityFeaturesFromH3: matched key "Releases" 
+07:40:09.834 [VZ-ShowAllEntityData: user-tag-value] 📥 Page 1/1 processed in 0.22s. Rows on page: 2. Total: 2 
+07:40:09.834 [VZ-ShowAllEntityData: user-tag-value] 📥   Summary: Releases: +2 (Total: 2) 
+07:40:09.835 [VZ-ShowAllEntityData: user-tag-value] 🎨 DOM rendering starting... 
+07:40:09.835 [VZ-ShowAllEntityData: user-tag-value] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
+07:40:09.835 [VZ-ShowAllEntityData: user-tag-value] 🎨 Cloning table head for template. 
+07:40:09.835 [VZ-ShowAllEntityData: user-tag-value] 🧹 cleanupHeaders() called → existing headers=[Release] 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🧹 No columns were matched for removal based on current settings. 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Name (via extractor: Name_Comment_Artists) 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Comment (via extractor: Name_Comment_Artists) 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Artist (via extractor: Name_Comment_Artists) 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🎨 Searching for target H2. Current pageType: user-tag-value 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🎨 No query provided; performing initial cleanup of existing elements. 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🎨  Injecting master toggle button and filter container after target header Entities vzell tagged as “high. 
+07:40:09.836 [VZ-ShowAllEntityData: user-tag-value] 🎨 Processing group: "Releases" with 2 rows. 
+07:40:09.837 [VZ-ShowAllEntityData: user-tag-value] 🎨 Creating new table and H3 for group "Releases". 
+07:40:09.837 [VZ-ShowAllEntityData: user-tag-value] 🧹 cleanupHeaders() called → existing headers=[Release] 
+07:40:09.837 [VZ-ShowAllEntityData: user-tag-value] 🧹 No columns were matched for removal based on current settings. 
+07:40:09.837 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Name (via extractor: Name_Comment_Artists) 
+07:40:09.837 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Comment (via extractor: Name_Comment_Artists) 
+07:40:09.837 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Artist (via extractor: Name_Comment_Artists) 
+07:40:09.837 [VZ-ShowAllEntityData: user-tag-value] 🎨 Group "Releases" auto-expand status: true (singleSubTable=true) 
+07:40:09.840 [VZ-ShowAllEntityData: user-tag-value] 🎨 initExpandRGsFeature: injected 4 expand button(s) 
+07:40:09.841 [VZ-ShowAllEntityData: user-tag-value] 📝 initBarcodeHighlight: processed table 0 
+07:40:09.841 [VZ-ShowAllEntityData: user-tag-value] 📝 initCaaPics: request queue created (concurrency=4) 
+07:40:09.841 [VZ-ShowAllEntityData: user-tag-value] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-0 (2 link(s)) 
+07:40:09.841 [VZ-ShowAllEntityData: user-tag-value] 📝 _artCreateOrUpdateRetryButton: created retry btn mb-caa-toggle-btn-retry-0 
+07:40:09.843 [VZ-ShowAllEntityData: user-tag-value] 📝 caaInitBigPics: built bigbox for table 0 with 2 image(s), initially hidden 
+07:40:09.843 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAPics: processed 1 table(s) with CAA column 
+07:40:09.843 [VZ-ShowAllEntityData: user-tag-value] 📝 _artCreateOrUpdateGlobalToggleButton: h2 .mb-row-count-stat not found — deferring 
+07:40:09.843 [VZ-ShowAllEntityData: user-tag-value] 📝 initEAAPics: table 0 — no event links found, skipping bigbox 
+07:40:09.843 [VZ-ShowAllEntityData: user-tag-value] 📝 initEAAPics: processed 0 table(s) with EAA column 
+07:40:09.843 [VZ-ShowAllEntityData: user-tag-value] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+07:40:09.844 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: addCAA column = "Release" 
+07:40:09.844 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: processing table 0, column "Release" at index 0 
+07:40:09.844 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/64b285b7-e2d4-43c7-9bd9-cd02d6eada17/front-250 
+07:40:09.844 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/15d28bcc-742b-4aa7-9338-e62786622410/front-250 
+07:40:09.845 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: done — injected=2 enqueued=2 skipped(done=0 noLink=0 noGuid=0) column="Release" (queue: 4 running, 0 pending) 
+07:40:09.846 [VZ-ShowAllEntityData: user-tag-value] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+07:40:09.846 [VZ-ShowAllEntityData: user-tag-value] 🎨 Finished renderGroupedTable. 
+07:40:09.846 [VZ-ShowAllEntityData: user-tag-value] 📝 Stats snapshot: 2 rows, 0 CAA links, 1 original + 3 extracted + 0 derived + 0 injected cols 
+07:40:09.846 [VZ-ShowAllEntityData: user-tag-value] 🎨 initTreleasesObserver: watching tbody (childList+attributes) 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🎨 Starting updateH2Count: filtered=2, total=2, absoluteTotal=null 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🎨 Searching for target H2. Current pageType: user-tag-value 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🎨 Target element identified: "Entities vzell tagged as “high..." 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🎨 Inserting count span before referenceNode: mb-master-toggle 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🎨 Updated header/target Entities vzell tagged as “high count: (2) 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🧹 Running final cleanup... 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🧹 removeSelector: removed "form:has(select[name="show_downvoted"])". 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🧹 No Sanojjonas elements found during final cleanup. 
+07:40:09.847 [VZ-ShowAllEntityData: user-tag-value] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+07:40:09.848 [VZ-ShowAllEntityData: user-tag-value] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+07:40:09.848 [VZ-ShowAllEntityData: user-tag-value] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+07:40:09.848 [VZ-ShowAllEntityData: user-tag-value] 🎨 Initializing collapsible H2 headers... 
+07:40:09.848 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+07:40:09.848 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Auto-resize button added to controls 
+07:40:09.849 [VZ-ShowAllEntityData: user-tag-value] 📝 Made 4 columns resizable 
+07:40:09.849 [VZ-ShowAllEntityData: user-tag-value] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+07:40:09.850 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Column visibility toggle added to controls 
+07:40:09.850 [VZ-ShowAllEntityData: user-tag-value] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+07:40:09.851 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Density control button added to controls 
+07:40:09.851 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Statistics button added to controls 
+07:40:09.851 [VZ-ShowAllEntityData: user-tag-value] 📝 Keyboard shortcuts initialized 
+07:40:09.851 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Shortcuts help button already exists, skipping 
+07:40:09.851 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Export button with dropdown menu added to controls 
+07:40:09.852 [VZ-ShowAllEntityData: user-tag-value] 🎨 initExpandRGsFeature: injected 4 expand button(s) 
+07:40:09.852 [VZ-ShowAllEntityData: user-tag-value] 📝 initBarcodeHighlight: processed table 0 
+07:40:09.852 [VZ-ShowAllEntityData: user-tag-value] 📝 initPicardTaggerColumn: injected Picard column (th-injected=true) 
+07:40:09.853 [VZ-ShowAllEntityData: user-tag-value] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
+07:40:09.853 [VZ-ShowAllEntityData: user-tag-value] 📝 Unicode character picker initialised 
+07:40:09.853 [VZ-ShowAllEntityData: user-tag-value] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+07:40:09.854 [VZ-ShowAllEntityData: user-tag-value] 🎨 DOM rendering finished in 18.40ms 
+07:40:09.854 [VZ-ShowAllEntityData: user-tag-value] ✅ Process complete. Final Row Count: 2. Total Time: 0.24s 
+07:40:09.857 [VZ-ShowAllEntityData: user-tag-value] 📝 _artOpenIdb: database opened successfully 
+07:40:09.858 [VZ-ShowAllEntityData: user-tag-value] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/64b285b7-e2d4-43c7-9bd9-cd02d6eada17/front-250 
+07:40:09.859 [VZ-ShowAllEntityData: user-tag-value] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/15d28bcc-742b-4aa7-9338-e62786622410/front-250 
+07:40:09.859 [VZ-ShowAllEntityData: user-tag-value] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/64b285b7-e2d4-43c7-9bd9-cd02d6eada17/front-250 
+07:40:09.860 [VZ-ShowAllEntityData: user-tag-value] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+07:40:09.860 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: loaded OK (idb=true memory=false) — //coverartarchive.org/release/64b285b7-e2d4-43c7-9bd9-cd02d6eada17/front-250 
+07:40:09.860 [VZ-ShowAllEntityData: user-tag-value] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/15d28bcc-742b-4aa7-9338-e62786622410/front-250 
+07:40:09.860 [VZ-ShowAllEntityData: user-tag-value] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+07:40:09.860 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: loaded OK (idb=true memory=false) — //coverartarchive.org/release/15d28bcc-742b-4aa7-9338-e62786622410/front-250 
+07:40:10.003 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Auto-focused global filter input after final render 
+07:40:10.509 [VZ-ShowAllEntityData: user-tag-value] 📝 _artIdbSweepExpired: sweep complete — deleted 276 expired record(s) 
+#+end_example
+
+# 9.99.544
+
+#+begin_example
+07:44:01.081 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Userscript (9.99.544+2026-04-26) loaded with external library (3.19.0+2026-04-01) active on MusicBrainz page: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing 
+07:44:01.081 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing 
+07:44:01.081 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL basepath: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing 
+07:44:01.081 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 URL path: /user/vzell/tag/high%20res%20scan%20missing 
+07:44:01.081 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Query parameters:  
+07:44:01.081 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Has "link_type_id": false 
+07:44:01.082 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected pageType: user-tag-value 
+07:44:01.082 [VZ: MusicBrainz - Show All Entity Data In A Consolidated View] 🚀 Detected tableMode: multi 
+07:44:01.082 [VZ-ShowAllEntityData: user-tag-value] 🚀 Initializing script for path: /user/vzell/tag/high%20res%20scan%20missing
+07:44:01.082 [VZ-ShowAllEntityData: user-tag-value] 🚀 Cached entity name at init time: "vzell" 
+07:44:01.084 [VZ-ShowAllEntityData: user-tag-value] 🚀 applyH1CommentSpanRelocation [initial]: no comment span — alias line preserved as-is 
+07:44:01.086 [VZ-ShowAllEntityData: user-tag-value] 🚀 Blurred #headerid-query input on page entry 
+07:44:01.088 [VZ-ShowAllEntityData: user-tag-value] 📝 Changelog source: remote — replaced 0 local entries with 716 remote entries (fromCache=true) 
+07:44:05.042 [VZ-ShowAllEntityData: user-tag-value] 🚀 resolveEntityFeaturesFromH2: H2 entity type = "Entities vzell tagged as “high res scan missing”" 
+07:44:05.042 [VZ-ShowAllEntityData: user-tag-value] 🚀 resolveEntityFeaturesFromH2: no match for "Entities vzell tagged as “high res scan missing”", falling back to "Areas" 
+07:44:05.043 [VZ-ShowAllEntityData: user-tag-value] 🧹 Signalling other scripts to stop... 
+07:44:05.043 [VZ-ShowAllEntityData: user-tag-value] 🚀 applyListToTable: converted h3="Releases" ul → table (2 rows, col="Release", structure="h3-ul"). 
+07:44:05.044 [VZ-ShowAllEntityData: user-tag-value] 📥 Starting fetch process... {show_downvoted: '0'}
+07:44:05.044 [VZ-ShowAllEntityData: user-tag-value] 📥 Context: overrideParams detected. Fetching maxPage with overrides. {show_downvoted: '0'}
+07:44:05.044 [VZ-ShowAllEntityData: user-tag-value] 📥 Fetching maxPage from: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing?show_downvoted=0&page=1 
+07:44:05.044 [VZ-ShowAllEntityData: user-tag-value] 📥 Initiating fetch for URL: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing?show_downvoted=0&page=1 
+07:44:05.262 [VZ-ShowAllEntityData: user-tag-value] ✅ Determined maxPage: 1 
+07:44:05.262 [VZ-ShowAllEntityData: user-tag-value] 📥 Total pages to fetch: 1 
+07:44:05.262 [VZ-ShowAllEntityData: user-tag-value] 🧹 Starting clutter element removal. 
+07:44:05.263 [VZ-ShowAllEntityData: user-tag-value] 📥 Fetching URL for page 1: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing?page=1&show_downvoted=0 
+07:44:05.263 [VZ-ShowAllEntityData: user-tag-value] 📥 Initiating fetch for URL: https://musicbrainz.org/user/vzell/tag/high%20res%20scan%20missing?page=1&show_downvoted=0 
+07:44:05.524 [VZ-ShowAllEntityData: user-tag-value] 📝 Page 1: No li.show-all elements found — nothing to expand. 
+07:44:05.524 [VZ-ShowAllEntityData: user-tag-value] 🚀 applyListToTable: converted h3="Releases" ul → table (2 rows, col="Release", structure="h3-ul"). 
+07:44:05.524 [VZ-ShowAllEntityData: user-tag-value] 📝 No targetHeader provided; returning all tables found in container. 
+07:44:05.524 [VZ-ShowAllEntityData: user-tag-value] 📝 parseDocumentForTables: Found 1 total tables. Target header filter: "none" 
+07:44:05.524 [VZ-ShowAllEntityData: user-tag-value] 📥 Found matching table "[object HTMLTableElement]" on page 1 to process. 
+07:44:05.524 [VZ-ShowAllEntityData: user-tag-value] 📝 Detected indices → mainColIdx=-1 (N/A), extractors=[Name_Comment("Area"@-1)], syntheticExtractors=[none], erasers=[none], renderMultiRow=[none], integerColumns=[none], excluded=[] for pageType: user-tag-value 
+07:44:05.525 [VZ-ShowAllEntityData: user-tag-value] 📥 listToTable category: "Releases". Rows so far: 0 
+07:44:05.525 [VZ-ShowAllEntityData: user-tag-value] 🚀 resolveEntityFeaturesFromH3: matched key "Releases" 
+07:44:05.525 [VZ-ShowAllEntityData: user-tag-value] 🚀 [tag-value per-group rebuild] category="Releases" entityFeaturesKeys=[columnExtractors,addCAA,tooltipColumns] hasInjectedCols=false 
+07:44:05.525 [VZ-ShowAllEntityData: user-tag-value] 🚀 [tag-value per-group rebuild] after rebuild: activeInjectedColumns.length=0 () _tmpDef.features.injectedColumns=undefined _tmpDef.features.addCAA="Release" sa_enable_relationships_column=true 
+07:44:05.526 [VZ-ShowAllEntityData: user-tag-value] 📥 Page 1/1 processed in 0.26s. Rows on page: 2. Total: 2 
+07:44:05.526 [VZ-ShowAllEntityData: user-tag-value] 📥   Summary: Releases: +2 (Total: 2) 
+07:44:05.526 [VZ-ShowAllEntityData: user-tag-value] 🎨 DOM rendering starting... 
+07:44:05.526 [VZ-ShowAllEntityData: user-tag-value] 🎨 Starting renderGroupedTable with 1 categories. Query: "" 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🎨 Cloning table head for template. 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🧹 cleanupHeaders() called → existing headers=[Release] 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🧹 No columns were matched for removal based on current settings. 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Name (via extractor: Name_Comment_Artists) 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Comment (via extractor: Name_Comment_Artists) 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Artist (via extractor: Name_Comment_Artists) 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🎨 Searching for target H2. Current pageType: user-tag-value 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🎨 No query provided; performing initial cleanup of existing elements. 
+07:44:05.527 [VZ-ShowAllEntityData: user-tag-value] 🎨  Injecting master toggle button and filter container after target header Entities vzell tagged as “high. 
+07:44:05.528 [VZ-ShowAllEntityData: user-tag-value] 🎨 Processing group: "Releases" with 2 rows. 
+07:44:05.528 [VZ-ShowAllEntityData: user-tag-value] 🎨 Creating new table and H3 for group "Releases". 
+07:44:05.528 [VZ-ShowAllEntityData: user-tag-value] 🚀 [renderGroupedTable per-group thead rebuild] category="Releases" activeInjectedColumns.length=0 () _td.features.injectedColumns=undefined 
+07:44:05.528 [VZ-ShowAllEntityData: user-tag-value] 🧹 cleanupHeaders() called → existing headers=[Release] 
+07:44:05.528 [VZ-ShowAllEntityData: user-tag-value] 🧹 No columns were matched for removal based on current settings. 
+07:44:05.528 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Name (via extractor: Name_Comment_Artists) 
+07:44:05.528 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Comment (via extractor: Name_Comment_Artists) 
+07:44:05.528 [VZ-ShowAllEntityData: user-tag-value] 🧹 Injecting synthetic header: Artist (via extractor: Name_Comment_Artists) 
+07:44:05.529 [VZ-ShowAllEntityData: user-tag-value] 🎨 Group "Releases" auto-expand status: true (singleSubTable=true) 
+07:44:05.532 [VZ-ShowAllEntityData: user-tag-value] 🎨 initExpandRGsFeature: injected 4 expand button(s) 
+07:44:05.532 [VZ-ShowAllEntityData: user-tag-value] 📝 initBarcodeHighlight: processed table 0 
+07:44:05.532 [VZ-ShowAllEntityData: user-tag-value] 📝 initCaaPics: request queue created (concurrency=4) 
+07:44:05.533 [VZ-ShowAllEntityData: user-tag-value] 📝 caaCreateOrUpdateToggleButton: created btn mb-caa-toggle-btn-0 (2 link(s)) 
+07:44:05.533 [VZ-ShowAllEntityData: user-tag-value] 📝 _artCreateOrUpdateRetryButton: created retry btn mb-caa-toggle-btn-retry-0 
+07:44:05.534 [VZ-ShowAllEntityData: user-tag-value] 📝 caaInitBigPics: built bigbox for table 0 with 2 image(s), initially hidden 
+07:44:05.534 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAPics: processed 1 table(s) with CAA column 
+07:44:05.534 [VZ-ShowAllEntityData: user-tag-value] 📝 _artCreateOrUpdateGlobalToggleButton: h2 .mb-row-count-stat not found — deferring 
+07:44:05.535 [VZ-ShowAllEntityData: user-tag-value] 📝 initEAAPics: table 0 — no event links found, skipping bigbox 
+07:44:05.535 [VZ-ShowAllEntityData: user-tag-value] 📝 initEAAPics: processed 0 table(s) with EAA column 
+07:44:05.535 [VZ-ShowAllEntityData: user-tag-value] 📝 _artCreateOrUpdateGlobalToggleButton: no visible sub-buttons — hiding global btn 
+07:44:05.535 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: addCAA column = "Release" 
+07:44:05.535 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: processing table 0, column "Release" at index 0 
+07:44:05.536 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/64b285b7-e2d4-43c7-9bd9-cd02d6eada17/front-250 
+07:44:05.536 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: will fetch inline thumbnail: //coverartarchive.org/release/15d28bcc-742b-4aa7-9338-e62786622410/front-250 
+07:44:05.536 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: done — injected=2 enqueued=2 skipped(done=0 noLink=0 noGuid=0) column="Release" (queue: 4 running, 0 pending) 
+07:44:05.537 [VZ-ShowAllEntityData: user-tag-value] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+07:44:05.537 [VZ-ShowAllEntityData: user-tag-value] 🎨 Finished renderGroupedTable. 
+07:44:05.538 [VZ-ShowAllEntityData: user-tag-value] 📝 Stats snapshot: 2 rows, 0 CAA links, 1 original + 3 extracted + 0 derived + 0 injected cols 
+07:44:05.538 [VZ-ShowAllEntityData: user-tag-value] 🎨 initTreleasesObserver: watching tbody (childList+attributes) 
+07:44:05.538 [VZ-ShowAllEntityData: user-tag-value] 🎨 Starting updateH2Count: filtered=2, total=2, absoluteTotal=null 
+07:44:05.538 [VZ-ShowAllEntityData: user-tag-value] 🎨 Searching for target H2. Current pageType: user-tag-value 
+07:44:05.538 [VZ-ShowAllEntityData: user-tag-value] 🎨 Target H2 not found by specific type, falling back to document position logic. 
+07:44:05.538 [VZ-ShowAllEntityData: user-tag-value] 🎨 Target element identified: "Entities vzell tagged as “high..." 
+07:44:05.538 [VZ-ShowAllEntityData: user-tag-value] 🎨 Inserting count span before referenceNode: mb-master-toggle 
+07:44:05.539 [VZ-ShowAllEntityData: user-tag-value] 🎨 Updated header/target Entities vzell tagged as “high count: (2) 
+07:44:05.539 [VZ-ShowAllEntityData: user-tag-value] 🧹 Running final cleanup... 
+07:44:05.539 [VZ-ShowAllEntityData: user-tag-value] 🧹 removeSelector: removed "form:has(select[name="show_downvoted"])". 
+07:44:05.539 [VZ-ShowAllEntityData: user-tag-value] 🧹 No Sanojjonas elements found during final cleanup. 
+07:44:05.539 [VZ-ShowAllEntityData: user-tag-value] 🧹 Final cleanup complete: No consecutive <br> tags found. 
+07:44:05.539 [VZ-ShowAllEntityData: user-tag-value] 🚀 applyH1CommentSpanRelocation [final]: no comment span — alias line preserved as-is 
+07:44:05.539 [VZ-ShowAllEntityData: user-tag-value] 📝 Navigation guard installed (anchor + Tab-trap + merge-form; download anchors exempt). 
+07:44:05.539 [VZ-ShowAllEntityData: user-tag-value] 🎨 Initializing collapsible H2 headers... 
+07:44:05.540 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Sticky headers enabled - column headers will remain visible while scrolling 
+07:44:05.540 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Auto-resize button added to controls 
+07:44:05.540 [VZ-ShowAllEntityData: user-tag-value] 📝 Made 4 columns resizable 
+07:44:05.541 [VZ-ShowAllEntityData: user-tag-value] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+07:44:05.542 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Column visibility toggle added to controls 
+07:44:05.542 [VZ-ShowAllEntityData: user-tag-value] 🖥️ No Barcode column detected — barcode highlight button suppressed 
+07:44:05.542 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Density control button added to controls 
+07:44:05.542 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Statistics button added to controls 
+07:44:05.543 [VZ-ShowAllEntityData: user-tag-value] 📝 Keyboard shortcuts initialized 
+07:44:05.543 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Shortcuts help button already exists, skipping 
+07:44:05.543 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Export button with dropdown menu added to controls 
+07:44:05.544 [VZ-ShowAllEntityData: user-tag-value] 🎨 initExpandRGsFeature: injected 4 expand button(s) 
+07:44:05.544 [VZ-ShowAllEntityData: user-tag-value] 📝 initBarcodeHighlight: processed table 0 
+07:44:05.544 [VZ-ShowAllEntityData: user-tag-value] 📝 initPicardTaggerColumn: injected Picard column (th-injected=true) 
+07:44:05.544 [VZ-ShowAllEntityData: user-tag-value] 📝 _loadUnicodeCharsMappings: loaded 20 entries from config table 
+07:44:05.545 [VZ-ShowAllEntityData: user-tag-value] 📝 Unicode character picker initialised 
+07:44:05.545 [VZ-ShowAllEntityData: user-tag-value] 🖥️ applyStickyColumn: idx=0 left=0px table=(no-id) 
+07:44:05.545 [VZ-ShowAllEntityData: user-tag-value] 🎨 DOM rendering finished in 18.80ms 
+07:44:05.545 [VZ-ShowAllEntityData: user-tag-value] ✅ Process complete. Final Row Count: 2. Total Time: 0.28s 
+07:44:05.549 [VZ-ShowAllEntityData: user-tag-value] 📝 _artOpenIdb: database opened successfully 
+07:44:05.550 [VZ-ShowAllEntityData: user-tag-value] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/64b285b7-e2d4-43c7-9bd9-cd02d6eada17/front-250 
+07:44:05.551 [VZ-ShowAllEntityData: user-tag-value] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/15d28bcc-742b-4aa7-9338-e62786622410/front-250 
+07:44:05.552 [VZ-ShowAllEntityData: user-tag-value] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/64b285b7-e2d4-43c7-9bd9-cd02d6eada17/front-250 
+07:44:05.552 [VZ-ShowAllEntityData: user-tag-value] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+07:44:05.552 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: loaded OK (idb=true memory=false) — //coverartarchive.org/release/64b285b7-e2d4-43c7-9bd9-cd02d6eada17/front-250 
+07:44:05.553 [VZ-ShowAllEntityData: user-tag-value] 📝 _artFetchCachedImage: IDB hit — https://coverartarchive.org/release/15d28bcc-742b-4aa7-9338-e62786622410/front-250 
+07:44:05.553 [VZ-ShowAllEntityData: user-tag-value] 📝 _artSetInlineSortKey: td → caa-inline-yes 
+07:44:05.553 [VZ-ShowAllEntityData: user-tag-value] 📝 initCAAInlinePics: loaded OK (idb=true memory=false) — //coverartarchive.org/release/15d28bcc-742b-4aa7-9338-e62786622410/front-250 
+07:44:05.696 [VZ-ShowAllEntityData: user-tag-value] 🖥️ Auto-focused global filter input after final render 
+07:44:05.954 [VZ-ShowAllEntityData: user-tag-value] 📝 _artIdbSweepExpired: sweep complete — deleted 0 expired record(s) 
+#+end_example
+
+
+** still bugs
+
+#+begin_example
+type: 'tag-value'
+#+end_example
+
+1.)
+
+for pageType
+
+#+begin_example
+type: 'user-tag-value'
+#+end_example
+
+the final rendered page is initially OK. Sorting works.
+After global filtering for rows which do not have currently any relationships icons present, so that rows WITH icons are temporarily not shown and then clearing the filter again
+
+2.)
+
+for pageType
+
+#+begin_example
+type: 'user-tag-value-entity'
+#+end_example
+
+the final rendered page is initially OK.
+Sorting works.
+Filtering works.
+
+bug a.)
+
+After clicking "Load from Disk" when on the initial rendered page, initially all looks good, but after sorting or
+filtering the picard icons in the "Picard" column are not rendered anymore.
+
+bug b.)
+
+After clicking "Load from Disk" when on the final rendered page, the "Picard" column header is not rendered
+anymore. When additionally any filter condition is specified the "Picard" column is completely gone.
+
+3.)
+
+for pageType
+
+#+begin_example
+type: 'tag-value-entity'
+#+end_example
+
+the final rendered page is initially OK.
+Sorting works.
+Filtering works.
+
+bug a.)
+
+loading of the "Relationships" column stops as soon as sorting or filtering has benn initiated
+
+* TODO syntheticColumnExtractors not honoured in "type: 'artist-credit'"
 
 why is the
 
@@ -77741,3 +78051,69 @@ in the following pageType not honoured
                 },
             },
 #+end_example
+
+* working: 529 broken: 530
+
+#+begin_example
+modified   ShowAllEntityData.user.js
+@@ -1,7 +1,7 @@
+ // ==UserScript==
+ // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+ // @namespace    https://github.com/vzell/mb-userscripts
+-// @version      9.99.529+2026-04-22
++// @version      9.99.530+2026-04-22
+ // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
+ // @author       vzell
+ // @tag          AI generated
+@@ -25208,7 +25208,19 @@ a { color: #1565c0; }`;
+             // --- RENDERING START ---
+             Lib.debug('render', 'DOM rendering starting...');
+ 
+-            updateH2Count(totalRows, totalRows);
++            // For single-table pages, updateH2Count is called now (before rendering) because
++            // there are no "See all" rows to remove.  For multi-table pages the call is
++            // intentionally deferred until AFTER renderGroupedTable() completes, because
++            // renderGroupedTable() removes "See all N <entities>" trailing rows from each
++            // group.rows in-memory array during rendering.  Calling updateH2Count() here with
++            // the pre-removal groupedRows sum would produce a count that is too high by exactly
++            // the number of groups that had a "See all" row (matching the number of h3 headers
++            // with overflow links).  After rendering, group.rows has the correct post-removal
++            // length, so we recalculate the real total from there.
++            // Affected pageTypes: 'tag-value', 'user-tag-value', 'artist-credit'.
++            if (activeDefinition.tableMode !== 'multi') {
++                updateH2Count(totalRows, totalRows);
++            }
+ 
+             activeBtn.disabled = false;
+             activeBtn.classList.remove('mb-show-all-btn-loading');
+@@ -25233,6 +25245,10 @@ a { color: #1565c0; }`;
+                     finalizeRLCColumnWidths(groupedRows.flatMap(g => g.rows), activeIntegerColumns);
+                 }
+                 await renderGroupedTable(groupedRows, _isReleaseGroupsMultiMode());
++                // Now that renderGroupedTable() has spliced out "See all" rows from every
++                // group.rows, recalculate the true total and update the h2 badge.
++                const totalRowsAfterRender = groupedRows.reduce((acc, g) => acc + g.rows.length, 0);
++                updateH2Count(totalRowsAfterRender, totalRowsAfterRender);
+             } else {
+                 originalAllRows = [...allRows];
+                 // Finalize colon-aligned columns before render so colons line up
+modified   ShowAllEntityData_CHANGELOG.json
+@@ -1,4 +1,16 @@
+ [
++  {
++    "version": "9.99.530",
++    "date": "2026-04-22",
++    "sections": [
++      {
++        "label": "🐛 Fix",
++        "items": [
++          "Fix h2 total row count too high by the number of h3 headers on first render for pageTypes `tag-value`, `user-tag-value`, and `artist-credit` (e.g. `/tag/country` showed 99 instead of 91 with 8 overflow groups; `/user/vzell/tag/live` showed 14 instead of 13 with 1 overflow group): root cause was that `updateH2Count(totalRows, totalRows)` was called in `startFetchingProcess` *before* `renderGroupedTable()` ran. At that point the `groupedRows` sum included the trailing 'See all N …' `<tr>` in each group's `rows` array; `renderGroupedTable()` only splices those rows out of `group.rows` (and removes them from the DOM) during its own execution. The count was therefore inflated by exactly the number of groups that carried a 'See all' row. After save/load the rows were already absent, so the figure was correct — explaining why the bug self-healed on disk round-trip. Fix: for `tableMode === 'multi'` pages, suppressed the pre-render `updateH2Count` call and instead added a deferred call immediately after `await renderGroupedTable()` completes, recalculating the true total via `groupedRows.reduce((acc, g) => acc + g.rows.length, 0)` on the now-correct post-removal arrays."
++        ]
++      }
++    ]
++  },
+   {
+     "version": "9.99.529",
+     "date": "2026-04-22",
+#+end_example
+

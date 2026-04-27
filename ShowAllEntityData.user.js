@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.541+2026-04-23
+// @version      9.99.542+2026-04-26
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -4895,11 +4895,13 @@
             buttons: [ { label: 'Show all Artist-Credit Entities' } ],
             entityFeatures: {
                 'Release groups': {
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release group',
                     extractMainColumn: 'Release group',
                     stickyColumn: 'Release group'
                 },
                 'Releases': {
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release',
                     extractMainColumn: 'Release',
                     stickyColumn: 'Release'
@@ -4935,11 +4937,13 @@
             buttons: [ { label: 'Show all Artist-Credit Uses' } ],
             entityFeatures: {
                 'Release groups': {
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release group',
                     extractMainColumn: 'Release group',
                     stickyColumn: 'Release group'
                 },
                 'Releases': {
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release',
                     extractMainColumn: 'Release',
                     stickyColumn: 'Release'
@@ -5243,11 +5247,13 @@
                 },
                 'Release groups': {
                     columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release group',
                     tooltipColumns: [ 'Name', ['(', 'Comment', ')'], 'Artist' ]
                 },
                 'Releases': {
                     columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release',
                     tooltipColumns: [ 'Name', ['(', 'Comment', ')'], 'Artist' ]
                 },
@@ -5308,11 +5314,13 @@
                 },
                 'Release groups': {
                     columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release group',
                     tooltipColumns: [ 'Name', ['(', 'Comment' , ')'], 'Artist' ]
                 },
                 'Releases': {
                     columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release',
                     tooltipColumns: [ 'Name', ['(', 'Comment' , ')'], 'Artist' ]
                 },
@@ -5371,12 +5379,14 @@
                 },
                 'Release groups': {
                     columnExtractors: [ { sourceColumn: 'Release group', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
                     integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ],
                     addCAA: 'Release group',
                     tooltipColumns: [ 'Name', 'Artist', '---', ['Tag count'] ]
                 },
                 'Releases': {
                     columnExtractors: [ { sourceColumn: 'Release', extractor: 'tagCount_Name_Comment_Artists', syntheticColumns: ['Name', 'Tag count', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
                     integerColumns: [ {sourceColumn: 'Tag count', align: 'R'} ],
                     addCAA: 'Release',
                     tooltipColumns: [ 'Name', 'Artist', '---', ['Tag count'] ]
@@ -5433,11 +5443,13 @@
                 },
                 'Release groups': {
                     columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release group',
                     tooltipColumns: [ 'Name', 'Artist' ]
                 },
                 'Releases': {
                     columnExtractors: [ { sourceColumn: 'Release', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
                     addCAA: 'Release',
                     tooltipColumns: [ 'Name', 'Artist' ]
                 },
@@ -5836,6 +5848,7 @@
                 syntheticColumnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
+                injectedColumns: [ 'Relationships' ],
                 integerColumns: [
 		    {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'},
 		    {sourceColumn: 'Total Tracks', align: 'R'}
@@ -6485,11 +6498,13 @@
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
                 ],
                 columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] },
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'CAA' ],
+                tooltipColumns: [ 'Title', 'Artist', '---', 'Date', 'Attributes' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
@@ -6506,13 +6521,14 @@
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
                 ],
                 columnExtractors: [
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] },
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
                     { sourceColumn: 'Title', extractor: 'caa', syntheticColumns: ['CAA'] }
                 ],
                 injectedColumns: [ 'Relationships' ],
-                integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
+                integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'CAA' ],
-                tooltipColumns: [ 'Title', 'Artist', '---', 'Credited as', 'Attributes' ],
+                tooltipColumns: [ 'Title', 'Artist', '---', 'Length', 'Date', 'Credited as', 'Attributes' ],
                 addCAA: 'Title',
                 extractMainColumn: 'Title',
                 stickyColumn: 'Title'
@@ -27202,6 +27218,15 @@ a { color: #1565c0; }`;
             // mb-re-cell placeholder <td>s are never created for suppressed sub-tables.
             _suppressReleaseEventsIfNoReleaseLinks(table);
 
+            // Guard Relationships column: remove the Relationships <th> and all
+            // .mb-rel-cell <td>s from sub-tables whose tbody contains no link to a
+            // MusicBrainz /release/<mbid> or /release-group/<mbid> page.  Applies the
+            // same data-driven guard used by initPicardTaggerColumn and
+            // _suppressReleaseEventsIfNoReleaseLinks.  Must run before
+            // initRelationshipsColumn() so that mb-rel-cell placeholder <td>s are
+            // never created for suppressed sub-tables.
+            _suppressRelationshipsIfNoReleaseOrReleaseGroupLinks(table);
+
             // After rows are in the DOM: re-apply any active multi-sort tints for this table.
             // This covers the reuse-existing-table branch (query truthy) where
             // makeTableSortableUnified is NOT called, so the trailing restore block never fires.
@@ -33734,6 +33759,98 @@ a { color: #1565c0; }`;
         }
 
         Lib.debug('extract', `applyInjectedColumnExtractors: complete (${activeInjectedColumnExtractors.length} descriptor(s))`);
+    }
+
+    /**
+     * Suppresses the "Relationships" column in `table` when the table's tbody contains
+     * no anchor linking to a MusicBrainz /release/<mbid> or /release-group/<mbid> page
+     * in the "Title" data cells.
+     *
+     * Motivation — on multi-table pages (artist-relationships, place-performances,
+     * label-relationships, artist-releasegroups, releasegroup-releases,
+     * recording-releases, area-releases [Relationships button], and collections-releases
+     * [Release groups entityFeature]) the pageType definition always declares
+     * `injectedColumns: ['Relationships']`, so cleanupHeaders() always injects the
+     * Relationships <th> for every sub-table regardless of whether any row in that
+     * sub-table actually links to a release or release-group.  Sub-tables for
+     * non-release/non-release-group relationship types have no such links and should
+     * therefore not show the column.
+     *
+     * This helper applies the same data-driven guard used by initPicardTaggerColumn
+     * and _suppressReleaseEventsIfNoReleaseLinks: scan tbody data cells for any anchor
+     * whose href contains "/release/" or "/release-group/" (excluding .mb-sticky-col
+     * and .mb-rel-cell cells which are not "Title"-column cells), and if none is found
+     * remove the Relationships <th> (identified by .mb-injected-column +
+     * data-col-name="Relationships"), all .mb-rel-cell <td>s from every body row, and
+     * the corresponding cell from every secondary thead row (filter row etc.).
+     *
+     * Unlike the Release events column, the Relationships column has no ICE synthetic
+     * children (no injectedColumnExtractors), so only one <th> and one <td> per row
+     * need removal.
+     *
+     * Must be called AFTER the table's tbody rows have been appended (so there is data
+     * to inspect) but BEFORE initRelationshipsColumn() (so that mb-rel-cell placeholder
+     * <td>s are never created for suppressed sub-tables).
+     *
+     * @param {HTMLTableElement} table - The rendered table to inspect and potentially suppress.
+     */
+    function _suppressRelationshipsIfNoReleaseOrReleaseGroupLinks(table) {
+        if (!table) return;
+        if (!activeInjectedColumns.length) return; // Relationships not active for this pageType
+
+        // Check whether the tbody contains at least one /release/<mbid> or
+        // /release-group/<mbid> link in a non-sticky, non-rel-cell data cell.
+        // The :not() exclusions mirror the Picard column guard exactly so that
+        // the sticky "Title" cell and the async Relationships cell itself are
+        // not mistakenly counted as evidence of a release link.
+        const _hasLink = !!table.querySelector(
+            'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href*="/release/"],' +
+            'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href*="/release-group/"]'
+        );
+        if (_hasLink) return; // Relationships column is appropriate — leave table untouched.
+
+        Lib.debug('relationships',
+            `_suppressRelationshipsIfNoReleaseOrReleaseGroupLinks: no /release/ or ` +
+            `/release-group/ links in table "${table.id || table.dataset.mbSafeId || '(no-id)'}" ` +
+            `— suppressing Relationships column.`);
+
+        // ── 1. Find the Relationships <th> index in the first header row ─────────
+        const _theadRow = table.querySelector('thead tr:first-child');
+        if (!_theadRow) return;
+
+        let _relThIdx = -1;
+        Array.from(_theadRow.cells).forEach((th, idx) => {
+            if (th.classList.contains('mb-injected-column') &&
+                    (th.dataset.colName === 'Relationships' ||
+                     th.textContent.trim() === 'Relationships')) {
+                _relThIdx = idx;
+            }
+        });
+
+        if (_relThIdx === -1) return; // <th> already absent — nothing to do.
+
+        // ── 2. Remove .mb-rel-cell <td>s from every tbody row ───────────────────
+        // We identify by class rather than column index because the rel-cell is
+        // always the last appended cell and its index may vary if Release events
+        // ICE columns were also suppressed by _suppressReleaseEventsIfNoReleaseLinks
+        // on this same table in the same render pass.
+        table.querySelectorAll('tbody tr').forEach(tr => {
+            const _relTd = tr.querySelector('td.mb-rel-cell');
+            if (_relTd) _relTd.remove();
+        });
+
+        // ── 3. Remove the Relationships <th> from the first header row ───────────
+        _theadRow.deleteCell(_relThIdx);
+
+        // ── 4. Remove the corresponding cell from every other thead row ──────────
+        //       (filter row and any secondary header rows)
+        table.querySelectorAll('thead tr:not(:first-child)').forEach(tr => {
+            if (tr.cells[_relThIdx]) tr.deleteCell(_relThIdx);
+        });
+
+        Lib.debug('relationships',
+            `_suppressRelationshipsIfNoReleaseOrReleaseGroupLinks: removed Relationships ` +
+            `<th> (index ${_relThIdx}) and all .mb-rel-cell <td>s from table.`);
     }
 
     /**

@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.542",
+    "date": "2026-04-26",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Add `_suppressRelationshipsIfNoReleaseOrReleaseGroupLinks(table)` helper that applies the same data-driven guard used by `initPicardTaggerColumn` and `_suppressReleaseEventsIfNoReleaseLinks` to the Relationships injected column. On multi-table pages that declare `injectedColumns: ['Relationships']` — `area-releases` (Relationships button), `place-performances`, `label-relationships`, `artist-relationships`, `artist-releasegroups`, `releasegroup-releases`, `recording-releases`, and `collections-releases` (Release groups entityFeature) — the Relationships `<th>` is unconditionally injected by `cleanupHeaders()` for every sub-table regardless of whether that sub-table's rows link to a release or release-group. The helper scans `tbody td:not(.mb-sticky-col):not(.mb-rel-cell)` cells for any `a[href*=\"/release/\"]` or `a[href*=\"/release-group/\"]` anchor; if none is found it removes the Relationships `<th>` (identified by `.mb-injected-column` + `data-col-name=\"Relationships\"`), all `.mb-rel-cell` `<td>` elements from every body row (matched by class rather than column index so the removal is robust when `_suppressReleaseEventsIfNoReleaseLinks` has already shifted column indices in the same render pass), and the corresponding cell from every secondary `thead tr` (filter row etc.). Unlike the Release events column, the Relationships column has no ICE synthetic children, so only one `<th>` and one `<td>` per row are removed. The helper is hooked into the multi-table group loop immediately after `_suppressReleaseEventsIfNoReleaseLinks(table)`, before `initRelationshipsColumn()`, so that `mb-rel-cell` placeholder `<td>`s are never created for suppressed sub-tables."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.541",
     "date": "2026-04-23",
     "sections": [
