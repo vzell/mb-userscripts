@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.548",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix two bugs with Relationships column rel-icon red-box highlighting introduced in 9.99.546: (1) Sub-table filter (STF): when a row matched via the h3 sub-table filter input, no red border was drawn around the matching relationship icon — root causes were (a) step-2 reset in `applySubFilter` did not clear `.mb-rel-icon-match` classes left by a previous STF pass (fixed: added `table.querySelectorAll('.mb-rel-icon-match').forEach(a => a.classList.remove('mb-rel-icon-match'))` alongside the subtable-filter-highlight clear), (b) `applySubFilter` never called `_highlightRelCellIcons` (fixed: added call after `highlightCrossTag` for every `.mb-rel-cell` td in the hit block), and (c) the STF row-match test used raw `cell.textContent` (which includes ALL hidden DOM text, including CAA/EAA emoji counts, cache-hint glyphs, etc.) rather than `getCleanColumnText(cell)` — switched both the regexp and plain-text STF match paths to use `getCleanColumnText` for consistency with the column-filter and global-regexp paths (the plain-text path now joins `getCleanColumnText` per cell instead of `c.textContent`). (2) Global plain-text filter: the global filter did not match rows when the Relationships column URL was the only matching content — root cause was that the plain-text global path uses `getCleanVisibleText(row)` which deliberately `FILTER_REJECT`s `.mb-rel-filter-key` spans (to prevent URL noise in sort keys), while the regexp global path uses `getCleanColumnText(cell)` per cell which does include the URL text. Fix: after the `getCleanVisibleText` match fails, additionally test each `.mb-rel-cell` via `getCleanColumnText` using a plain `includes()` check, mirroring the same targeted rel-cell fallback already applied to the regexp path."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.547",
     "date": "2026-04-27",
     "sections": [

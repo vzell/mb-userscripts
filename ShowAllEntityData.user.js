@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.547+2026-04-27
+// @version      9.99.548+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22260,6 +22260,24 @@ a { color: #1565c0; }`;
                 matchFound = isCaseSensitive
                     ? text.includes(globalQuery)
                     : text.toLowerCase().includes(globalQuery);
+                // getCleanVisibleText deliberately FILTER_REJECTs .mb-rel-filter-key
+                // spans (by design — their URL content must not pollute sort keys or
+                // the aggregated visible text of non-rel columns).  As a consequence,
+                // plain-text global filter never matches against Relationships column
+                // URLs even though both the column filter and the sub-table filter do.
+                // Fix: when getCleanVisibleText misses, additionally test every
+                // .mb-rel-cell in the row via getCleanColumnText(), which DOES include
+                // .mb-rel-filter-key text (it is not in _CLEAN_STRIP_SEL and is not
+                // excluded by the secondary TreeWalker guard).
+                if (!matchFound) {
+                    matchFound = Array.from(row.cells).some(cell => {
+                        if (!cell.classList.contains('mb-rel-cell')) return false;
+                        const relText = getCleanColumnText(cell);
+                        return isCaseSensitive
+                            ? relText.includes(globalQuery)
+                            : relText.toLowerCase().includes(globalQuery);
+                    });
+                }
             }
             globalHit = isExclude ? !matchFound : matchFound;
         }
@@ -26593,6 +26611,9 @@ a { color: #1565c0; }`;
             table.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
                 n.replaceWith(document.createTextNode(n.textContent));
             });
+            // Also clear rel-icon match-boxes left by a previous STF pass.
+            table.querySelectorAll('.mb-rel-icon-match')
+                .forEach(a => a.classList.remove('mb-rel-icon-match'));
 
             // Nothing to filter — we already restored rows above, so just return.
             if (!raw) {
@@ -26645,14 +26666,23 @@ a { color: #1565c0; }`;
                 let matchFound = false;
                 if (useRx) {
                     try {
+                        // Use getCleanColumnText so .mb-rel-filter-key URL text is
+                        // included in the match (cell.textContent would also work for
+                        // matching but getCleanColumnText is consistent with what the
+                        // column filter and global regexp paths use, and is safe w.r.t.
+                        // decorative glyphs / cache-hint emojis).
                         matchFound = Array.from(row.cells).some(cell =>
-                            new RegExp(raw, useCase ? '' : 'i').test(cell.textContent || '')
+                            new RegExp(raw, useCase ? '' : 'i').test(getCleanColumnText(cell))
                         );
                     } catch (e) {
                         matchFound = false;
                     }
                 } else {
-                    const text = Array.from(row.cells).map(c => c.textContent || '').join('\t');
+                    // getCleanVisibleText deliberately excludes .mb-rel-filter-key
+                    // (URL text must not pollute sort keys).  Mirror the same fix
+                    // applied to the global plain-text path in testRowMatch: fall
+                    // back to per-cell getCleanColumnText for any .mb-rel-cell.
+                    const text = Array.from(row.cells).map(c => getCleanColumnText(c)).join('\t');
                     matchFound = useCase ? text.includes(query) : text.toLowerCase().includes(query);
                 }
 
@@ -26674,6 +26704,13 @@ a { color: #1565c0; }`;
                             // highlightCrossTag sees the full, contiguous text of each node.
                             td.normalize();
                             highlightCrossTag(td, regex, 'mb-subtable-filter-highlight');
+                            // highlightCrossTag cannot produce a visible highlight inside a
+                            // .mb-rel-cell: the filter key lives in a display:none span and
+                            // the icon is an <img>.  Call _highlightRelCellIcons so that
+                            // matching icons get the red outline box (mb-rel-icon-match).
+                            if (td.classList.contains('mb-rel-cell')) {
+                                _highlightRelCellIcons(td, raw, useCase, useRx);
+                            }
                         });
                     }
                 }

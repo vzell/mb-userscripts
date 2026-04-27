@@ -77411,7 +77411,7 @@ Some latest fixes:
 #+end_example
 
 
-* TODO Relationships - not used
+* TODO Relationships on tag pages - NOT USED yet
 ** DONE initial
 
 add some enhancements:
@@ -78169,10 +78169,6 @@ On pageTypes (e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4
 It works in the "Country/Date" column but NOT the "Country". Both render a country flag at the start of the data cells.
 
 
-* TODO regexp filtering on sub-tables in "multi"-table pages
-
-Regexp filtering on sub-tables in "multi"-table pages
-
 * DONE filtering bug and "Relationships" column
 
 On "multi"-table pageTypes when filtering globally and entering a filter condition which filters out ALL rows, then the
@@ -78181,8 +78177,16 @@ that all rows reappear, the actual "Relationships" column values are still prese
 the picard icons for each row are still present but now have no header column.
 
 
-* "Relationships" filtering visually surrounded by a red bordered box/square
-** initial
+* DONE multi-table pages, the "Case Sensitive", "Regex" and "Exclude" check boxes filtering problem
+
+For multi-table pages, the "Case Sensitive", "Regex" and "Exclude" check boxes in the h3 header line per sub-table are
+not honoured when filtering on the column level for specific columns, only the checkbox state from the global h2 filter line.
+
+For multi-table pages, matchCtx.isRegExp is still the global checkbox, but column filters are built with
+_colIsRegExp (per-subtable). But the testRowMatch uses isRegExp from ctx which is the global one. Hmm...
+
+* TODO "Relationships" filtering visually surrounded by a red bordered box/square
+** DONE initial
 
 During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
 tables which actually have that column), the corresponding relationship icon should be visually surrounded by a red
@@ -78205,7 +78209,7 @@ bordered box/square otherwise it's not clear why that specific row actually matc
       </td>
 #+end_example
 
-** bug
+** DONE bug
 
 During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
 tables which actually have that column), the corresponding relationship icons NOW are surrounded by a red bordered
@@ -78223,11 +78227,8 @@ match, but there is NO red border around the relationship icon
 the global filter doesn't filter "Relationships" column cells at all, so even if sub-table filter works, the same
 filterstring on the global filter will not be honoured by the "Relationships" column
 
+** TODO still a bug with "xyz" at https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
-* DONE multi-table pages, the "Case Sensitive", "Regex" and "Exclude" check boxes filtering problem
 
-For multi-table pages, the "Case Sensitive", "Regex" and "Exclude" check boxes in the h3 header line per sub-table are
-not honoured when filtering on the column level for specific columns, only the checkbox state from the global h2 filter line.
 
-For multi-table pages, matchCtx.isRegExp is still the global checkbox, but column filters are built with
-_colIsRegExp (per-subtable). But the testRowMatch uses isRegExp from ctx which is the global one. Hmm...
+
