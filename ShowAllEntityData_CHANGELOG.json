@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.550",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix global plain-text filter still matching all rows whose cells contain a loaded inline thumbnail on both single-table and multi-table pages (e.g. filtering 'nl' selected every row because 'caa-i[nl]ine-yes' was present in the hidden `.mb-inline-art-sort-key` span of every cell with a loaded CAA image): 9.99.549 correctly added `.mb-inline-art-sort-key` to `_CLEAN_STRIP_SEL` — which is consumed only by `getCleanColumnText` — but the global plain-text filter path uses `getCleanVisibleText(row)`, which has its own independent exclusion list and was never updated. Fix: added `.mb-inline-art-sort-key` to the `FILTER_REJECT` conditions inside `getCleanVisibleText`'s TreeWalker `acceptNode` callback, mirroring the `_CLEAN_STRIP_SEL` addition."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.549",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix false-positive filter matches caused by the invisible sentinel text 'caa-inline-yes' / 'caa-inline-no' in `.mb-inline-art-sort-key` spans leaking into general filtering: e.g. filtering for 'nl' matched rows solely because 'caa-i**nl**ine-yes' was present in a cell's hidden sort-key span. Root cause: `.mb-inline-art-sort-key` was deliberately absent from `_CLEAN_STRIP_SEL` (by design, so that `applyUniqVal('caa-inline-yes')` column-filter clicks could drive filtering through the normal `getCleanColumnText` text pipeline without a special bypass). This meant the sentinel text was included in every `getCleanColumnText` call — global regexp filter, global plain-text rel-cell fallback, STF row-match (since 9.99.548), sort keys, and unique-values dropdown counts. Fix: added `.mb-inline-art-sort-key` to `_CLEAN_STRIP_SEL` so it is stripped from all general text-extraction paths. The `applyUniqVal` / column-filter path is preserved via a direct bypass in `testRowMatch`: before the normal `getCleanColumnText` text comparison, the column-filter code now queries `cell.querySelector('.mb-inline-art-sort-key')` directly and performs an exact (case-insensitive or case-sensitive) string equality check against `f.val`; a `match = true` from this check short-circuits the subsequent text comparison. The bypass is intentionally skipped for regexp column filters (regexp matching against sentinel values would be unusual and unreliable). Also added `.mb-inline-art-sort-key` to the element-level `FILTER_REJECT` list in `highlightCrossTag` so that the sentinel text is never wrapped in a highlight span."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.548",
     "date": "2026-04-27",
     "sections": [

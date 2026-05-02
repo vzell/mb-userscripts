@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.548+2026-04-27
+// @version      9.99.550+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -21093,7 +21093,15 @@ a { color: #1565c0; }`;
                     // Skip per-image CAA/EAA rows and rel filter key spans.
                     if (node.classList && (
                         node.classList.contains('mb-caa-art-li-image') ||
-                        node.classList.contains('mb-rel-filter-key')
+                        node.classList.contains('mb-rel-filter-key') ||
+                        // .mb-inline-art-sort-key carries the invisible sentinel text
+                        // 'caa-inline-yes' / 'caa-inline-no' (see _artSetInlineSortKey).
+                        // It is excluded here for the same reason it is in _CLEAN_STRIP_SEL:
+                        // without this guard, any plain-text global filter string that
+                        // happens to be a substring of those sentinels (e.g. "nl" from
+                        // "caa-i[nl]ine-yes") matches every row that has a loaded inline
+                        // thumbnail, producing wholesale false-positive hits.
+                        node.classList.contains('mb-inline-art-sort-key')
                     )) return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
@@ -21146,7 +21154,15 @@ a { color: #1565c0; }`;
         '.mb-caa-inline-ph,.mb-eaa-inline-ph,' +
         '.mb-art-cache-hint-inline,.mb-art-cache-hint-col-wrap,' +
         '.mb-art-cache-hint-col,.mb-caa-count-badge,.mb-eaa-count-badge,' +
-        '.mb-caa-art-li-image,.artwork-icon,.caa-icon,.icon';
+        '.mb-caa-art-li-image,.artwork-icon,.caa-icon,.icon,' +
+        // .mb-inline-art-sort-key carries the invisible sentinel text
+        // 'caa-inline-yes' / 'caa-inline-no' (stamped by _artSetInlineSortKey).
+        // It MUST be stripped here so that ordinary text filter strings (e.g. "nl"
+        // matching "caa-i[nl]ine-yes") do not produce false positives.  The
+        // applyUniqVal('caa-inline-yes') / applyUniqVal('caa-inline-no') column-
+        // filter path bypasses getCleanColumnText entirely and uses a direct
+        // querySelector('.mb-inline-art-sort-key').textContent check in testRowMatch.
+        '.mb-inline-art-sort-key';
 
     /**
      * Extracts visible text from `element` for column filtering, skipping
@@ -21517,7 +21533,8 @@ a { color: #1565c0; }`;
                             cl.contains('mb-caa-art-li-image') ||
                             cl.contains('artwork-icon') ||
                             cl.contains('caa-icon') ||
-                            cl.contains('icon')) return NodeFilter.FILTER_REJECT;
+                            cl.contains('icon') ||
+                            cl.contains('mb-inline-art-sort-key')) return NodeFilter.FILTER_REJECT;
                     }
                     // All other elements: skip (don't return) but visit children.
                     return NodeFilter.FILTER_SKIP;
@@ -22329,18 +22346,42 @@ a { color: #1565c0; }`;
 
             const cellText = getCleanColumnText(row.cells[f.idx]);
             let match = false;
-            if (_fIsRegExp) {
-                try {
-                    match = new RegExp(f.val, _fIsCase ? '' : 'i').test(cellText);
-                } catch (e) {
+
+            // ── Inline-art sort-key bypass ──────────────────────────────────────
+            // .mb-inline-art-sort-key spans are stripped from getCleanColumnText
+            // (they are now in _CLEAN_STRIP_SEL) to prevent sentinel text like
+            // "caa-inline-yes" from leaking into general filter matching.
+            // The applyUniqVal('caa-inline-yes') / applyUniqVal('caa-inline-no')
+            // column-filter path must still work, so we check the span directly
+            // and OR the result into `match` before falling through to the normal
+            // text comparison.  This is intentionally skipped for regexp filters
+            // (which would be odd for these sentinel values) and for exclude mode
+            // (the negation is applied later via _fIsExclude).
+            if (!_fIsRegExp) {
+                const cell = row.cells[f.idx];
+                const sk = cell ? cell.querySelector('.mb-inline-art-sort-key') : null;
+                if (sk) {
+                    const skVal = sk.textContent.trim();
+                    match = _fIsCase
+                        ? skVal === f.val
+                        : skVal.toLowerCase() === f.val.toLowerCase();
+                }
+            }
+
+            if (!match) {
+                if (_fIsRegExp) {
+                    try {
+                        match = new RegExp(f.val, _fIsCase ? '' : 'i').test(cellText);
+                    } catch (e) {
+                        match = _fIsCase
+                            ? cellText.includes(f.val)
+                            : cellText.toLowerCase().includes(f.val);
+                    }
+                } else {
                     match = _fIsCase
                         ? cellText.includes(f.val)
                         : cellText.toLowerCase().includes(f.val);
                 }
-            } else {
-                match = _fIsCase
-                    ? cellText.includes(f.val)
-                    : cellText.toLowerCase().includes(f.val);
             }
             // Respect per-filter exclude flag (may differ from global isExclude on
             // multi-table pages where each sub-table has its own Ex checkbox).

@@ -78230,5 +78230,217 @@ filterstring on the global filter will not be honoured by the "Relationships" co
 ** TODO still a bug with "xyz" at https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
 
+* DONE filter bug with "caa-inline-yes", "caa-inline-no"
+** initial
+
+There is a bug when filtering. The text "caa-inline-yes" in the span 'class="mb-inline-art-sort-key"' (even though it's not getting rendered visually), is taken into account when filtering
+
+#+begin_example
+  <td style="position: sticky; left: 0px; z-index: 1; background: rgb(242, 242, 242);" data-mb-sticky-bg="rgb(242, 242, 242)" class="mb-sticky-col" data-caa-inline-done="1" data-erg-injected="1">
+    <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+    </span>
+    <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+      <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/c2fd02ef-1302-4811-8258-7bb6044ae459">
+      <span class="mb-art-cache-hint-inline" title="IndexedDB cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🗄️
+      </span>
+    </span>
+    <a class="wrap-anywhere" href="/release/fcb2e47d-8787-4bdd-a285-8e860cb5672a">
+      <bdi>Human Touch
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>Italy, “La Repubblica” and “L’Espresso” reissue
+      </bdi>)
+    </span>
+    <span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+    </span>
+  </td>
+#+end_example
+
+so e.g. when filtering for "nl" on https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908 it shows rows which have the following HTML representation
+
+#+begin_example
+  <td style="position: sticky; left: 0px; z-index: 1; background: rgb(242, 242, 242);" data-mb-sticky-bg="rgb(242, 242, 242)" class="mb-sticky-col" data-caa-inline-done="1" data-erg-injected="1">
+    <span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+    </span>
+    <span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;">
+      <img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/c2fd02ef-1302-4811-8258-7bb6044ae459">
+      <span class="mb-art-cache-hint-inline" title="IndexedDB cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🗄️
+      </span>
+    </span>
+    <a class="wrap-anywhere" href="/release/fcb2e47d-8787-4bdd-a285-8e860cb5672a">
+      <bdi>Human Touch
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>Italy, “La Repubblica” and “L’Espresso” reissue
+      </bdi>)
+    </span>
+    <span class="mb-inline-art-sort-key" style="display: none;">caa-i
+      <span class="mb-global-filter-highlight">nl
+      </span>ine-yes
+    </span>
+  </td>
+#+end_example
+
+This text should never been taken into account, see also the following function
+
+#+begin_example
+        /**
+         * Creates and appends a single inline-thumbnail presence entry to synBox.
+         *
+         * Clicking delegates directly to `applyUniqVal` with the invisible sort-key
+         * text ('caa-inline-yes' or 'caa-inline-no') that `_artSetInlineSortKey`
+         * stamps into every settled cell after each load/error path in
+         * `_artInitInlinePics`.  Because `getCleanColumnText()` includes
+         * display:none spans (the `.mb-inline-art-sort-key` class is not in the
+         * strip selector `_CLEAN_STRIP_SEL`), normal text-value matching through
+         * the regular filter pipeline handles filtering, counting, Escape, ✕, and
+         * all "clear" buttons automatically — no bypass mode or DOM walk needed.
+         *
+         * @param {boolean} hasArt  - true = rows WITH a loaded inline thumbnail
+         * @param {string}  label   - Human-readable display text
+         * @param {number}  count   - Number of visible rows matching
+         */
+        const makeInlineArtItem = (hasArt, label, count) => {
+            const item = document.createElement('div');
+            item.className = 'mb-col-uniq-item mb-col-uniq-multirow-item';
+            item.setAttribute('role', 'option');
+            item.title = label;
+
+            const badge = document.createElement('span');
+            badge.className = 'mb-uniq-count-badge';
+            badge.textContent = `(${count})`;
+            badge.setAttribute('aria-hidden', 'true');
+            badge.style.color           = cntColor;
+            badge.style.backgroundColor = cntBg;
+            badge.style.fontWeight      = 'bold';
+            badge.style.fontFamily      = 'monospace';
+            badge.style.borderRadius    = '3px';
+            badge.style.padding         = '0 3px';
+            badge.style.marginRight     = '5px';
+            badge.style.fontSize        = '0.85em';
+            badge.style.display         = 'inline-block';
+            item.appendChild(badge);
+            item.appendChild(document.createTextNode(label));
+
+            item.addEventListener('mousedown', ev => ev.preventDefault());
+            item.addEventListener('click', () => {
+                // Filter by the invisible sort-key text injected by _artSetInlineSortKey.
+                // applyUniqVal writes the value to the column filter input and fires an
+                // 'input' event — runFilter() → getCleanColumnText() picks up the
+                // display:none sort-key span → standard text matching applies.
+                // Clearing works identically to any other text filter (Escape, ✕, clear
+                // buttons) because there is no special bypass dataset attribute involved.
+                applyUniqVal(hasArt ? 'caa-inline-yes' : 'caa-inline-no', table, colIndex);
+                closeUniqDrop();
+            });
+            synBox.appendChild(item);
+        };
+#+end_example
+
+** bug
+
+Still buggy:
+
+1.)
+
+On "single"-table pages like https://musicbrainz.org/series/aa3694d3-a3d0-48ed-8f07-5b576de87908
+when globally filtering for "nl", ALL rows are still selected also onyl the first one should be filtered because of the
+
+#+begin_example
+<td class="mb-rel-cell" data-mbid="f9b529c4-cc82-48a7-8328-dd054143247f" style="" data-rel-done="1">
+<a href="https://www.springsteenlyrics.com/collection.php" title="https://www.springsteenlyrics.com/collection.php" target="_blank" rel="noopener noreferrer" class="mb-rel-icon-match">
+<img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.springsteenlyrics.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+<span class="mb-rel-filter-key" aria-hidden="true" style="display: none;">https://www.springstee
+<span class="mb-global-filter-highlight">nl
+</span>yrics.com/collection.php
+</span>
+</a>
+#+end_example
+
+See also the complete uploaded HTML page "Bruce Springsteen Studio Collection - MusicBrainz.html"
+
+Filtering on the "Release" column with "nl" actually works, and NO row is shown.
+
+2.)
+
+On "multi"-table pages like e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+when filtering for "nl" globally it's also NOT working, it shows rows which should be present.
+
+Filtering for "nl" with the sub-table filter or directly on the "Release" column works so, NO rows are shown.
+
+So it looks like the global filtering is still broken
 
 
+* TODO filter bug with filtering in CAA/EAA column
+** initial
+
+There are filter bugs with filtering in CAA/EAA columns
+
+1.)
+
+On "multi"-table pages like e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+when filtering on the "CAA" column directly, the rows are correctly filtered and the filter string is also correctly highlighted.
+
+Now the bugs
+
+a.)
+
+When filtering with the same filter string on the sub-table, the rows are also correctly filtered but the filterstring is NOT highlighted in the "CAA" column
+
+b.)
+
+When filtering with the same filter string globally, the values in the "CAA" column cells doesn't seem to be taken in to
+account, as NO rows are selected when the effect sholuld actually be like in the previous cases.
+
+2.)
+
+On "single"-table pages like e.g. https://musicbrainz.org/artist/70248960-cb53-4ea4-943a-edb18f7d336f/events
+
+a.)
+
+when filtering on the "EAA" column directly, the rows are correctly filtered but the filter string is NOT highlighted.
+
+b.)
+
+the same for filtering globally
+
+** bug
+
+still a bug:
+
+On "multi"-table pages like e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c filtering now works in general
+for all three filter modes, column level filtering on the "CAA" column, sub-table and global flitering, all rows which match are correctlx shown.
+
+Now another highlight bug:
+
+When switching on the regexp checkbox for sub-table filtering and then use the regexp filterstring "obi|page" on
+sub-table level, the filter string correctly highlights occurences of both "obi" and "page" in some rows.
+
+When additionally filter on the "CAA" column level with lets say the string "in", ONLY that string gets highlighted and
+the "obi" and "page" strings are not highlighted anymore althouhg still present in the select filtered rows
+
+** bug
+
+still a highlight bug:
+
+On "multi"-table pages like e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c lets say we
+have rows which the string "opened gatefold postcard" in the CAA image descriptions in the "CAA column"
+
+1.)
+
+when first filter on the CAA column with "gate" the string "gate" is higlighted OK. When additionally filter on the
+sub-table level with "post", the string "post" is additionally highlighted OK. When clearing the column filter string
+ALL highlightning is gone specifically the "post" is not highlighted anymore, also the rows are still correctly filtered.
+
+2.)
+
+when first filter on the CAA column with "gate" the string "gate" is higlighted OK. When additionally filter on the
+sub-table level with "post", the string "post" is additionally highlighted OK. When additionally filter globally with
+"opened", the strings "opened" and "post" are highlighted, the string "gate" not anymore
+
+
+* Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed
+
+Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed
