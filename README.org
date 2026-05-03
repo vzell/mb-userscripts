@@ -78640,6 +78640,63 @@ The row is shown when using the sub-table filter expression "-01", the "Country/
 
 and there are much more such examples where the filtersring should match but the rows are NOT shown
 
+* DONE extend collapse-toggle-has-match to sub-table filtering
+
+In columns which are configured as
+
+#+begin_example
+renderMultiRowCell: [ 'Label', 'Catalog#' ]
+#+end_example
+
+e.g. on the pageType "type: 'releasegroup-releases'"
+
+when filtering on the global level or directly on one of these columns, and when the filter string matches, but the
+match is actually not displayed because the column data cell is collapsed, there is a visual indication of that fact
+
+#+begin_example
+<span class="mb-cell-collapse-toggle mb-collapse-toggle-has-match" title="Show all multi-row cell items (2)" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed">
+  <span class="mb-cell-collapse-glyph">▶
+  </span>
+  <span class="mb-cell-collapse-count">2
+  </span>
+  <span class="mb-cell-collapse-rack">▤
+  </span>
+</span>
+#+end_example
+
+with the
+
+#+begin_example
+        /* Cell toggle highlighted: a filter match lives inside the collapsed
+           (hidden) list items — signals the user that expanding will reveal
+           matching content.  Class is added/removed by initCollapsableColumns()
+           and the ensureCollapseDelegate() click handler. */
+        .mb-cell-collapse-toggle.mb-collapse-toggle-has-match {
+            opacity: 1;
+            background: ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
+            color: ${Lib.settings.sa_global_filter_highlight_color || 'red'};
+            box-shadow: 0 0 0 2px ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
+        }
+#+end_example
+
+This visual indication is currently not present when filtering on the sub-table level. Please fix
+
+* DONE Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed
+
+Add a visual 'hidden match' indicator also to "CAA" and EAA" columns for the collapsed multi-row cells when filtering on
+column level, sub-table level or global level matches content that is currently hidden inside the collapsed cell. Use
+the same yellow background / red glyph on the ▶ cell-collapse toggle
+
+#+begin_example
+<span data-caa-expand-btn="collapsed" title="Show all CAA cover art images (8) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▶</span>
+#+end_example
+
+like in the case for columns which are configured as
+
+#+begin_example
+renderMultiRowCell: [ 'Label', 'Catalog#' ]
+#+end_example
+
 
 * TODO "Relationships" filtering visually surrounded by a red bordered box/square
 ** DONE initial
@@ -78685,46 +78742,6 @@ filterstring on the global filter will not be honoured by the "Relationships" co
 
 ** TODO still a bug with "xyz" at https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
-* DONE extend collapse-toggle-has-match to sub-table filtering
 
-In columns which are configured as
+* TODO when pressing the "Toggle highlight" buttons the multi-row indicators when filter highlight is in effect should also be toggled
 
-#+begin_example
-renderMultiRowCell: [ 'Label', 'Catalog#' ]
-#+end_example
-
-e.g. on the pageType "type: 'releasegroup-releases'"
-
-when filtering on the global level or directly on one of these columns, and when the filter string matches, but the
-match is actually not displayed because the column data cell is collapsed, there is a visual indication of that fact
-
-#+begin_example
-<span class="mb-cell-collapse-toggle mb-collapse-toggle-has-match" title="Show all multi-row cell items (2)" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed">
-  <span class="mb-cell-collapse-glyph">▶
-  </span>
-  <span class="mb-cell-collapse-count">2
-  </span>
-  <span class="mb-cell-collapse-rack">▤
-  </span>
-</span>
-#+end_example
-
-with the
-
-#+begin_example
-        /* Cell toggle highlighted: a filter match lives inside the collapsed
-           (hidden) list items — signals the user that expanding will reveal
-           matching content.  Class is added/removed by initCollapsableColumns()
-           and the ensureCollapseDelegate() click handler. */
-        .mb-cell-collapse-toggle.mb-collapse-toggle-has-match {
-            opacity: 1;
-            background: ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
-            color: ${Lib.settings.sa_global_filter_highlight_color || 'red'};
-            box-shadow: 0 0 0 2px ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
-        }
-#+end_example
-
-This visual indication is currently not present when filtering on the sub-table level. Please fix
-
-
-* Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed

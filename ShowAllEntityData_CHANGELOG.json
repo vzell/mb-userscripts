@@ -1,5 +1,27 @@
 [
   {
+    "version": "9.99.556",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Add visual 'hidden match' indicator (yellow background / red ▶ glyph) to CAA/EAA art column expand buttons ([data-caa-expand-btn]) when any filter layer (global, column, or sub-table) matches content hidden inside a collapsed art cell. The indicator fires for all three filter modes and is cleared when the cell is expanded or the filter is cleared. Mirrors the existing mb-collapse-toggle-has-match behaviour that already existed for renderMultiRowCell columns (Label, Catalog#).",
+          "Fix dead code in initCollapsableColumns art-cell hidden-match pass: the toggle was looked up via ':scope > .mb-cell-collapse-toggle' but art cells were refactored to use [data-caa-expand-btn] inside li-0 of ul.mb-caa-art-ul, so the old selector never matched and the pass silently did nothing. Replaced with a correct lookup of the [data-caa-expand-btn] span inside the li-0 summary row.",
+          "Extend _syncCollapseHasMatchInTable with a second pass (Pass 2) that re-evaluates mb-collapse-toggle-has-match on all [data-caa-expand-btn] spans in art cells — previously _syncCollapseHasMatchInTable only processed td.mb-has-collapse-toggle cells and completely missed art cells. Pass 2 is called from applySubFilter (after clearing and after stamping STF highlights) and from _artHighlightArtCell (after async art-cell rebuilds).",
+          "Add mb-collapse-toggle-has-match handling to the ensureCollapseDelegate CAA/EAA click branch: when expanding, remove the class; when collapsing, check whether any image li still contains a filter highlight and set/clear accordingly.",
+          "Extend updateSubTableCollapseButton and updateGlobalCollapseButtonHighlight highlight-detection selectors to include 'td .mb-caa-art-ul .<highlight-class>' in addition to the existing 'td.mb-has-collapse-toggle .<highlight-class>' selectors, so the per-sub-table and global collapse button tints also react to highlights inside art cells."
+        ]
+      },
+      {
+        "label": "🎨 Style",
+        "items": [
+          "Add CSS rules '[data-caa-expand-btn].mb-collapse-toggle-has-match' and '[data-caa-expand-btn].mb-collapse-toggle-has-match:hover' with identical yellow-background / red-glyph / box-shadow styling to the existing .mb-cell-collapse-toggle.mb-collapse-toggle-has-match rules. Added border-radius:2px to match the art button's visual style."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.555",
     "date": "2026-04-27",
     "sections": [

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.555+2026-04-27
+// @version      9.99.556+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8295,18 +8295,17 @@
      */
     function _syncCollapseHasMatchInTable(table) {
         if (!table) return;
+
+        // ── Pass 1: regular multi-row cells (.mb-cell-collapse-toggle) ──────────
         table.querySelectorAll('td.mb-has-collapse-toggle').forEach(td => {
             const toggle = td.querySelector(':scope > .mb-cell-collapse-toggle');
             if (!toggle) return;
             if (toggle.getAttribute('aria-expanded') === 'true') {
-                // Expanded: all items are visible — no hidden content, so the
-                // indicator is always off regardless of what highlights are present.
+                // Expanded: all items visible — no hidden match possible.
                 toggle.classList.remove('mb-collapse-toggle-has-match');
                 return;
             }
-            // Collapsed: inspect the hidden list items (all but the first).
-            // Use the closest <ul> as the scope so art cells (which have a <ul>
-            // with a different class) are also covered.
+            // Collapsed: check hidden items (lis[1..n]) for any filter highlight.
             const ul = td.querySelector(':scope > ul');
             if (!ul) return;
             const lis = Array.from(ul.querySelectorAll(':scope > li'));
@@ -8314,6 +8313,26 @@
                 li.querySelector(_COLLAPSE_MATCH_SEL)
             );
             toggle.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
+        });
+
+        // ── Pass 2: CAA/EAA art cells ([data-caa-expand-btn] inside li-0) ───────
+        // Art cells do not carry mb-has-collapse-toggle; their expand button lives
+        // inside the li-0 summary row of ul.mb-caa-art-ul.  All image lis
+        // (li.mb-caa-art-li-image) are the "hidden" items when collapsed.
+        table.querySelectorAll('tbody td').forEach(td => {
+            const artUl = td.querySelector(':scope > ul.mb-caa-art-ul');
+            if (!artUl) return;
+            const li0       = artUl.querySelector(':scope > li.mb-caa-art-li-summary');
+            const expandBtn = li0 ? li0.querySelector('[data-caa-expand-btn]') : null;
+            if (!expandBtn) return;
+            if (expandBtn.dataset.caaExpandBtn === 'expanded') {
+                // All image lis visible — no hidden content.
+                expandBtn.classList.remove('mb-collapse-toggle-has-match');
+                return;
+            }
+            const artLis = Array.from(artUl.querySelectorAll(':scope > li.mb-caa-art-li-image'));
+            const hasHiddenMatch = artLis.some(li => li.querySelector(_COLLAPSE_MATCH_SEL));
+            expandBtn.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
         });
     }
 
@@ -8342,11 +8361,19 @@
 
         // ── Highlight tint ────────────────────────────────────────────────────
         // Scan the whole table (visible + collapsed items) for any highlight span.
+        // Two selectors are needed:
+        //   1. Regular multi-row cells carry mb-has-collapse-toggle on the <td>.
+        //   2. CAA/EAA art cells do NOT carry that class — their image <li> rows
+        //      are direct children of ul.mb-caa-art-ul inside the <td>.
         const hasHighlight = !!table.querySelector(
             'td.mb-has-collapse-toggle .mb-global-filter-highlight, ' +
             'td.mb-has-collapse-toggle .mb-column-filter-highlight, ' +
             'td.mb-has-collapse-toggle .mb-pre-filter-highlight, ' +
-            'td.mb-has-collapse-toggle .mb-subtable-filter-highlight'
+            'td.mb-has-collapse-toggle .mb-subtable-filter-highlight, ' +
+            'td .mb-caa-art-ul .mb-global-filter-highlight, ' +
+            'td .mb-caa-art-ul .mb-column-filter-highlight, ' +
+            'td .mb-caa-art-ul .mb-pre-filter-highlight, ' +
+            'td .mb-caa-art-ul .mb-subtable-filter-highlight'
         );
 
         if (hasHighlight) {
@@ -17697,6 +17724,21 @@ a { color: #1565c0; }`;
             box-shadow: 0 0 0 2px ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
         }
         .mb-cell-collapse-toggle.mb-collapse-toggle-has-match:hover {
+            background: ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
+            filter: brightness(1.12);
+        }
+        /* CAA/EAA expand button (▶ inside li-0 of art cells) hidden-match indicator.
+           Mirrors .mb-cell-collapse-toggle.mb-collapse-toggle-has-match exactly:
+           same yellow background / red glyph / box-shadow so the visual cue is
+           consistent regardless of which type of multi-row cell is collapsed. */
+        [data-caa-expand-btn].mb-collapse-toggle-has-match {
+            opacity: 1;
+            background: ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
+            color: ${Lib.settings.sa_global_filter_highlight_color || 'red'};
+            box-shadow: 0 0 0 2px ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
+            border-radius: 2px;
+        }
+        [data-caa-expand-btn].mb-collapse-toggle-has-match:hover {
             background: ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
             filter: brightness(1.12);
         }
@@ -30318,14 +30360,17 @@ a { color: #1565c0; }`;
         // null → scan the entire document (multi-table mode).
         const scope = table || document;
 
-        // Check every td that carries a collapse toggle — this covers both
-        // the visible first-li content and the hidden collapsed rows, so a
-        // match anywhere (expanded or collapsed) triggers the tint.
+        // Two selectors needed: regular multi-row cells carry mb-has-collapse-toggle
+        // on the <td>; CAA/EAA art cells do not — use .mb-caa-art-ul instead.
         const hasAnyHighlight = !!scope.querySelector(
             'td.mb-has-collapse-toggle .mb-global-filter-highlight, ' +
             'td.mb-has-collapse-toggle .mb-column-filter-highlight, ' +
             'td.mb-has-collapse-toggle .mb-pre-filter-highlight, ' +
-            'td.mb-has-collapse-toggle .mb-subtable-filter-highlight'
+            'td.mb-has-collapse-toggle .mb-subtable-filter-highlight, ' +
+            'td .mb-caa-art-ul .mb-global-filter-highlight, ' +
+            'td .mb-caa-art-ul .mb-column-filter-highlight, ' +
+            'td .mb-caa-art-ul .mb-pre-filter-highlight, ' +
+            'td .mb-caa-art-ul .mb-subtable-filter-highlight'
         );
 
         if (hasAnyHighlight) {
@@ -30539,6 +30584,19 @@ a { color: #1565c0; }`;
                 caaBtn.title = nowExpanding
                     ? `Collapse all ${_artLabel} (${imageLis.length}) in this cell`
                     : `Show all ${_artLabel} (${imageLis.length}) in this cell`;
+                // ── Sync hidden-match indicator ───────────────────────────────
+                // When expanding: all image lis become visible — no hidden content
+                // → always clear the indicator.
+                // When collapsing: the newly-hidden image lis may contain filter
+                // highlights → check and set/clear accordingly.
+                if (nowExpanding) {
+                    caaBtn.classList.remove('mb-collapse-toggle-has-match');
+                } else {
+                    const hasHiddenMatch = imageLis.some(li =>
+                        li.querySelector(_COLLAPSE_MATCH_SEL)
+                    );
+                    caaBtn.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
+                }
                 // Sync expandedCells so the filter / unique-values counter track state.
                 const tr      = caaBtn.closest('tr');
                 const rowIdx  = tr ? tr.dataset.mbRowIdx : undefined;
@@ -30998,27 +31056,32 @@ a { color: #1565c0; }`;
 
             // ── Hidden-match indicator for art cells (CAA/EAA column) ─────────
             // Art cells were skipped in the loop above to avoid duplicate toggles,
-            // but testRowMatch() may have placed filter-highlight spans inside
-            // their collapsed li.mb-caa-art-li-image rows.  Stamp (or clear)
-            // mb-collapse-toggle-has-match on their existing toggle so the visual
-            // cue matches the same logic used for regular collapsable columns.
-            // Only runs when this column is the CAA/EAA column (art uls are
-            // only present in that column's cells).
+            // but testRowMatch() / _artHighlightArtCell() may have placed filter-
+            // highlight spans inside their collapsed li.mb-caa-art-li-image rows.
+            // Stamp (or clear) mb-collapse-toggle-has-match on the [data-caa-expand-btn]
+            // span inside li-0 so the visual cue matches regular collapsable columns.
+            //
+            // NOTE: art cells no longer use .mb-cell-collapse-toggle / mb-has-collapse-
+            // toggle.  The expand button is a [data-caa-expand-btn] span inside the
+            // li-0 summary row of ul.mb-caa-art-ul.  The old lookup for
+            // ':scope > .mb-cell-collapse-toggle' was dead code and is replaced here.
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const td = tr.cells[colIndex];
                 if (!td) return;
                 const artUl = td.querySelector(':scope > ul.mb-caa-art-ul');
                 if (!artUl) return;
-                const toggle = td.querySelector(':scope > .mb-cell-collapse-toggle');
-                if (!toggle || toggle.getAttribute('aria-expanded') === 'true') return; // expanded — no hidden content
-                const artLis = Array.from(artUl.querySelectorAll(':scope > li'));
-                const hasHiddenMatch = artLis.slice(1).some(li => li.querySelector(
-                    '.mb-global-filter-highlight, ' +
-                    '.mb-column-filter-highlight, ' +
-                    '.mb-pre-filter-highlight, ' +
-                    '.mb-subtable-filter-highlight'
-                ));
-                toggle.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
+                // The expand button lives inside the li-0 summary row.
+                const li0       = artUl.querySelector(':scope > li.mb-caa-art-li-summary');
+                const expandBtn = li0 ? li0.querySelector('[data-caa-expand-btn]') : null;
+                if (!expandBtn) return;
+                if (expandBtn.dataset.caaExpandBtn === 'expanded') {
+                    // All image lis are visible — no hidden content possible.
+                    expandBtn.classList.remove('mb-collapse-toggle-has-match');
+                    return;
+                }
+                const artLis = Array.from(artUl.querySelectorAll(':scope > li.mb-caa-art-li-image'));
+                const hasHiddenMatch = artLis.some(li => li.querySelector(_COLLAPSE_MATCH_SEL));
+                expandBtn.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
             });
 
             // ── Set column minimum width ──────────────────────────────────────
@@ -39487,6 +39550,14 @@ a { color: #1565c0; }`;
                     highlightCrossTag(li, _stfRegex, 'mb-subtable-filter-highlight');
                 }
             });
+
+        // ── 6. Sync the hidden-match indicator on the expand button ─────────────
+        // After highlights are stamped (or after an async rebuild replaces li items),
+        // re-evaluate whether the [data-caa-expand-btn] on this artCell should show
+        // the yellow/red indicator.  _syncCollapseHasMatchInTable covers all cells
+        // in the owning table but is called here specifically for the async rebuild
+        // timing path where applySubFilter / initCollapsableColumns have already run.
+        if (_owningTable) _syncCollapseHasMatchInTable(_owningTable);
     }
 
 
