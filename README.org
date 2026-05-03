@@ -78053,7 +78053,6 @@ in the following pageType not honoured
             },
 #+end_example
 
-
 * DONE working: 529 broken: 530 ---> starting from 542
 
 In the newly uploaded userscript "ShowAllEntityData.user.js" (latest version entry in the header: '// @version      9.99.542+2026-04-26') and
@@ -78140,7 +78139,6 @@ please fix
 
 add a changelog entry to the uploaded changelog file
 
-
 * DONE Regexp filtering and highlighting bug
 
 There is a bug with Regexp filtering and highlighting the corresponding resulting filter expression:
@@ -78168,14 +78166,12 @@ On pageTypes (e.g. https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4
 
 It works in the "Country/Date" column but NOT the "Country". Both render a country flag at the start of the data cells.
 
-
 * DONE filtering bug and "Relationships" column
 
 On "multi"-table pageTypes when filtering globally and entering a filter condition which filters out ALL rows, then the
 "Relationships" column header/filter and cell values completely vanishe. When removing the filter condition again so
 that all rows reappear, the actual "Relationships" column values are still present but now under the "Picard" column and
 the picard icons for each row are still present but now have no header column.
-
 
 * DONE multi-table pages, the "Case Sensitive", "Regex" and "Exclude" check boxes filtering problem
 
@@ -78184,51 +78180,6 @@ not honoured when filtering on the column level for specific columns, only the c
 
 For multi-table pages, matchCtx.isRegExp is still the global checkbox, but column filters are built with
 _colIsRegExp (per-subtable). But the testRowMatch uses isRegExp from ctx which is the global one. Hmm...
-
-* TODO "Relationships" filtering visually surrounded by a red bordered box/square
-** DONE initial
-
-During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
-tables which actually have that column), the corresponding relationship icon should be visually surrounded by a red
-bordered box/square otherwise it's not clear why that specific row actually matches
-
-#+begin_example
-      <td class="mb-rel-cell" data-mbid="76415396-cf11-43dc-ad76-a3a5c4c9072d" style="" data-rel-done="1">
-	<a href="http://www.nexyzbb.ne.jp/~kzoo/albums.html" title="http://www.nexyzbb.ne.jp/~kzoo/albums.html" target="_blank" rel="noopener noreferrer">
-	  <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.nexyzbb.ne.jp" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
-	  <span class="mb-rel-filter-key" aria-hidden="true" style="display: none;">http://www.ne
-	    <span class="mb-subtable-filter-highlight">xyz
-	    </span>bb.ne.jp/~kzoo/albums.html
-	  </span>
-	</a>
-	<a href="https://www.discogs.com/release/8874113" title="https://www.discogs.com/release/8874113" target="_blank" rel="noopener noreferrer">
-	  <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.discogs.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
-	  <span class="mb-rel-filter-key" aria-hidden="true" style="display: none;">https://www.discogs.com/release/8874113
-	  </span>
-	</a>
-      </td>
-#+end_example
-
-** DONE bug
-
-During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
-tables which actually have that column), the corresponding relationship icons NOW are surrounded by a red bordered
-box/square but only if the filtering is done on the "Relationships" column itself.
-
-two bugs:
-
-1.)
-
-When filtering on the sub-table itself, the filtering works, so rows show up when the "Relationships" column cells
-match, but there is NO red border around the relationship icon
-
-2.)
-
-the global filter doesn't filter "Relationships" column cells at all, so even if sub-table filter works, the same
-filterstring on the global filter will not be honoured by the "Relationships" column
-
-** TODO still a bug with "xyz" at https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
-
 
 * DONE filter bug with "caa-inline-yes", "caa-inline-no"
 ** initial
@@ -78372,8 +78323,7 @@ Filtering for "nl" with the sub-table filter or directly on the "Release" column
 
 So it looks like the global filtering is still broken
 
-
-* TODO filter bug with filtering in CAA/EAA column
+* DONE filter bug with filtering in CAA/EAA column
 ** initial
 
 There are filter bugs with filtering in CAA/EAA columns
@@ -78447,11 +78397,7 @@ One more hint:
 as soon as the sub-table and global filter are both in effect, colum-level filtering works but the column-level
 filterstring is never highlighted
 
-* Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed
-
-Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed
-
-* sub-filter bug
+* DONE sub-filter bug
 
 There are bugs when filtering in "multi"-table mode e.g. on the URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
 
@@ -78693,3 +78639,92 @@ The row is shown when using the sub-table filter expression "-01", the "Country/
 
 
 and there are much more such examples where the filtersring should match but the rows are NOT shown
+
+
+* TODO "Relationships" filtering visually surrounded by a red bordered box/square
+** DONE initial
+
+During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
+tables which actually have that column), the corresponding relationship icon should be visually surrounded by a red
+bordered box/square otherwise it's not clear why that specific row actually matches
+
+#+begin_example
+      <td class="mb-rel-cell" data-mbid="76415396-cf11-43dc-ad76-a3a5c4c9072d" style="" data-rel-done="1">
+	<a href="http://www.nexyzbb.ne.jp/~kzoo/albums.html" title="http://www.nexyzbb.ne.jp/~kzoo/albums.html" target="_blank" rel="noopener noreferrer">
+	  <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.nexyzbb.ne.jp" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+	  <span class="mb-rel-filter-key" aria-hidden="true" style="display: none;">http://www.ne
+	    <span class="mb-subtable-filter-highlight">xyz
+	    </span>bb.ne.jp/~kzoo/albums.html
+	  </span>
+	</a>
+	<a href="https://www.discogs.com/release/8874113" title="https://www.discogs.com/release/8874113" target="_blank" rel="noopener noreferrer">
+	  <img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.discogs.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+	  <span class="mb-rel-filter-key" aria-hidden="true" style="display: none;">https://www.discogs.com/release/8874113
+	  </span>
+	</a>
+      </td>
+#+end_example
+
+** DONE bug
+
+During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
+tables which actually have that column), the corresponding relationship icons NOW are surrounded by a red bordered
+box/square but only if the filtering is done on the "Relationships" column itself.
+
+two bugs:
+
+1.)
+
+When filtering on the sub-table itself, the filtering works, so rows show up when the "Relationships" column cells
+match, but there is NO red border around the relationship icon
+
+2.)
+
+the global filter doesn't filter "Relationships" column cells at all, so even if sub-table filter works, the same
+filterstring on the global filter will not be honoured by the "Relationships" column
+
+** TODO still a bug with "xyz" at https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+* DONE extend collapse-toggle-has-match to sub-table filtering
+
+In columns which are configured as
+
+#+begin_example
+renderMultiRowCell: [ 'Label', 'Catalog#' ]
+#+end_example
+
+e.g. on the pageType "type: 'releasegroup-releases'"
+
+when filtering on the global level or directly on one of these columns, and when the filter string matches, but the
+match is actually not displayed because the column data cell is collapsed, there is a visual indication of that fact
+
+#+begin_example
+<span class="mb-cell-collapse-toggle mb-collapse-toggle-has-match" title="Show all multi-row cell items (2)" role="button" aria-expanded="false" aria-label="Expand: 2 items are collapsed">
+  <span class="mb-cell-collapse-glyph">▶
+  </span>
+  <span class="mb-cell-collapse-count">2
+  </span>
+  <span class="mb-cell-collapse-rack">▤
+  </span>
+</span>
+#+end_example
+
+with the
+
+#+begin_example
+        /* Cell toggle highlighted: a filter match lives inside the collapsed
+           (hidden) list items — signals the user that expanding will reveal
+           matching content.  Class is added/removed by initCollapsableColumns()
+           and the ensureCollapseDelegate() click handler. */
+        .mb-cell-collapse-toggle.mb-collapse-toggle-has-match {
+            opacity: 1;
+            background: ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
+            color: ${Lib.settings.sa_global_filter_highlight_color || 'red'};
+            box-shadow: 0 0 0 2px ${Lib.settings.sa_global_filter_highlight_bg || '#FFD700'};
+        }
+#+end_example
+
+This visual indication is currently not present when filtering on the sub-table level. Please fix
+
+
+* Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed

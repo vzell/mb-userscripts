@@ -1,5 +1,24 @@
 [
   {
+    "version": "9.99.555",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Add visual 'hidden match' indicator (mb-collapse-toggle-has-match — yellow background / red glyph on the ▶ cell-collapse toggle) for collapsed multi-row cells (renderMultiRowCell columns such as Label / Catalog#) when the sub-table filter (STF) matches content that is currently hidden inside the collapsed cell. Previously this indicator only fired for global-filter and column-filter matches; STF matches in collapsed items were silently invisible to the user."
+        ]
+      },
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "Introduce module-level constant _COLLAPSE_MATCH_SEL as the single authoritative CSS selector string for detecting any filter-highlight span inside a collapse-toggle cell ('.mb-global-filter-highlight, .mb-column-filter-highlight, .mb-pre-filter-highlight, .mb-subtable-filter-highlight'). All six call sites that previously hard-coded the three-class selector string now use this constant, eliminating the risk of future highlight classes being missed in one place.",
+          "Introduce helper function _syncCollapseHasMatchInTable(table) that re-evaluates mb-collapse-toggle-has-match on every .mb-cell-collapse-toggle inside a sub-table. Called from applySubFilter at two points: (1) after step 2 clears STF highlights (removes the indicator from toggles that were lit solely by an STF match), and (2) after step 4 applies new STF highlights (stamps the indicator onto any toggle whose collapsed items now contain an STF match). The helper uses _COLLAPSE_MATCH_SEL so it always reflects the union of all active filter layers regardless of which combination is in effect."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.554",
     "date": "2026-04-27",
     "sections": [

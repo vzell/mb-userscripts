@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.554+2026-04-27
+// @version      9.99.555+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8249,6 +8249,74 @@
      *
      * @param {HTMLTableElement} table
      */
+    /**
+     * CSS selector that matches any filter-highlight span used by any of the three
+     * filter layers (global, column, STF, pre-filter).
+     *
+     * This is the single authoritative definition used everywhere the code needs to
+     * detect whether a filter match is present inside a collapsed multi-row cell:
+     *   - `initCollapsableColumns`        — initial `hasHiddenMatch` check
+     *   - `ensureCollapseDelegate`        — click-handler `hasHiddenMatch` check
+     *   - `updateSubTableCollapseButton`  — per-sub-table button tint
+     *   - `updateGlobalCollapseButtonHighlight` — global button tint
+     *   - `_syncCollapseHasMatchInTable`  — STF post-highlight sync (see below)
+     *
+     * IMPORTANT: keep this list in sync whenever a new highlight class is introduced.
+     */
+    const _COLLAPSE_MATCH_SEL =
+        '.mb-global-filter-highlight, ' +
+        '.mb-column-filter-highlight, ' +
+        '.mb-pre-filter-highlight, ' +
+        '.mb-subtable-filter-highlight';
+
+    /**
+     * Re-evaluates the `mb-collapse-toggle-has-match` class on every
+     * `.mb-cell-collapse-toggle` span inside `table`.
+     *
+     * The class signals the user that a collapsed (hidden) multi-row cell contains
+     * at least one filter-highlight match — expanding the cell will reveal it.
+     *
+     * This helper is needed because `applySubFilter()` runs AFTER
+     * `initCollapsableColumns()` has already stamped the initial `hasHiddenMatch`
+     * state.  The initial stamp only considers global-filter and column-filter
+     * highlights (which exist at that point).  STF highlights are applied later by
+     * `applySubFilter` — so we need a second pass to reflect the STF state:
+     *
+     *   • After step 2 (clearing STF highlights): removes `mb-collapse-toggle-has-match`
+     *     from any toggle whose hidden items no longer contain any highlight span.
+     *   • After step 4 (applying STF highlights): adds `mb-collapse-toggle-has-match`
+     *     to any toggle whose hidden items now contain a `.mb-subtable-filter-highlight`.
+     *
+     * Using `_COLLAPSE_MATCH_SEL` (all four highlight classes) ensures the result is
+     * always the union of ALL active filter layers — whichever combination is currently
+     * in effect.
+     *
+     * @param {HTMLTableElement} table - The sub-table whose toggles are to be synced.
+     */
+    function _syncCollapseHasMatchInTable(table) {
+        if (!table) return;
+        table.querySelectorAll('td.mb-has-collapse-toggle').forEach(td => {
+            const toggle = td.querySelector(':scope > .mb-cell-collapse-toggle');
+            if (!toggle) return;
+            if (toggle.getAttribute('aria-expanded') === 'true') {
+                // Expanded: all items are visible — no hidden content, so the
+                // indicator is always off regardless of what highlights are present.
+                toggle.classList.remove('mb-collapse-toggle-has-match');
+                return;
+            }
+            // Collapsed: inspect the hidden list items (all but the first).
+            // Use the closest <ul> as the scope so art cells (which have a <ul>
+            // with a different class) are also covered.
+            const ul = td.querySelector(':scope > ul');
+            if (!ul) return;
+            const lis = Array.from(ul.querySelectorAll(':scope > li'));
+            const hasHiddenMatch = lis.slice(1).some(li =>
+                li.querySelector(_COLLAPSE_MATCH_SEL)
+            );
+            toggle.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
+        });
+    }
+
     function updateSubTableCollapseButton(table) {
         const h3 = findH3ForTable(table);
         if (!h3 || !h3.classList.contains('mb-toggle-h3')) return;
@@ -8277,7 +8345,8 @@
         const hasHighlight = !!table.querySelector(
             'td.mb-has-collapse-toggle .mb-global-filter-highlight, ' +
             'td.mb-has-collapse-toggle .mb-column-filter-highlight, ' +
-            'td.mb-has-collapse-toggle .mb-pre-filter-highlight'
+            'td.mb-has-collapse-toggle .mb-pre-filter-highlight, ' +
+            'td.mb-has-collapse-toggle .mb-subtable-filter-highlight'
         );
 
         if (hasHighlight) {
@@ -26708,6 +26777,10 @@ a { color: #1565c0; }`;
 
             // Nothing to filter — we already restored rows above, so just return.
             if (!raw) {
+                // Re-evaluate mb-collapse-toggle-has-match now that STF highlights
+                // have been cleared: toggles that were lit solely by a STF match
+                // should go dark; those lit by global/column highlights stay lit.
+                _syncCollapseHasMatchInTable(table);
                 updateSubTableRowCount();
                 return;
             }
@@ -26818,6 +26891,14 @@ a { color: #1565c0; }`;
                     }
                 }
             });
+
+            // ── Step 5: Sync mb-collapse-toggle-has-match on all collapse toggles ──
+            // initCollapsableColumns() ran before applySubFilter() and only knew
+            // about global/column highlights at that point.  Now that STF highlights
+            // have been stamped onto matching rows (step 4 above), re-evaluate every
+            // collapse toggle in the table so the visual "hidden match" cue reflects
+            // all active filter layers (global + column + STF) equally.
+            _syncCollapseHasMatchInTable(table);
 
             updateSubTableRowCount();
             // Sync h2 badge with 3-tier subtable totals
@@ -30243,7 +30324,8 @@ a { color: #1565c0; }`;
         const hasAnyHighlight = !!scope.querySelector(
             'td.mb-has-collapse-toggle .mb-global-filter-highlight, ' +
             'td.mb-has-collapse-toggle .mb-column-filter-highlight, ' +
-            'td.mb-has-collapse-toggle .mb-pre-filter-highlight'
+            'td.mb-has-collapse-toggle .mb-pre-filter-highlight, ' +
+            'td.mb-has-collapse-toggle .mb-subtable-filter-highlight'
         );
 
         if (hasAnyHighlight) {
@@ -30315,7 +30397,8 @@ a { color: #1565c0; }`;
             li.querySelector(
                 '.mb-global-filter-highlight,' +
                 '.mb-column-filter-highlight,' +
-                '.mb-pre-filter-highlight'
+                '.mb-pre-filter-highlight,' +
+                '.mb-subtable-filter-highlight'
             )
         );
         toggle.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
@@ -30531,7 +30614,8 @@ a { color: #1565c0; }`;
                     li.querySelector(
                         '.mb-global-filter-highlight, ' +
                         '.mb-column-filter-highlight, ' +
-                        '.mb-pre-filter-highlight'
+                        '.mb-pre-filter-highlight, ' +
+                        '.mb-subtable-filter-highlight'
                     )
                 );
                 toggle.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
@@ -30894,7 +30978,8 @@ a { color: #1565c0; }`;
                     li.querySelector(
                         '.mb-global-filter-highlight, ' +
                         '.mb-column-filter-highlight, ' +
-                        '.mb-pre-filter-highlight'
+                        '.mb-pre-filter-highlight, ' +
+                        '.mb-subtable-filter-highlight'
                     )
                 );
                 if (hasHiddenMatch) {
@@ -30930,7 +31015,8 @@ a { color: #1565c0; }`;
                 const hasHiddenMatch = artLis.slice(1).some(li => li.querySelector(
                     '.mb-global-filter-highlight, ' +
                     '.mb-column-filter-highlight, ' +
-                    '.mb-pre-filter-highlight'
+                    '.mb-pre-filter-highlight, ' +
+                    '.mb-subtable-filter-highlight'
                 ));
                 toggle.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
             });
