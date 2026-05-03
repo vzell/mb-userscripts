@@ -78745,3 +78745,7 @@ filterstring on the global filter will not be honoured by the "Relationships" co
 
 * TODO when pressing the "Toggle highlight" buttons the multi-row indicators when filter highlight is in effect should also be toggled
 
+* Remove "Relationships" column from place-performaces when no RG present
+
+Remove "Relationships" column from place-performaces when no RG present, e.g.
+https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances?direction=1&link_type_id=693
