@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.554",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix sub-table filter (STF) silently failing to match rows after any previous filter pass has left fragmented text nodes in the live DOM: when applySubFilter step 2 clears mb-subtable-filter-highlight spans it does `n.replaceWith(document.createTextNode(n.textContent))`, which leaves the replacement text node as a sibling of the surrounding text nodes WITHOUT merging them. The browser does not automatically call normalize() on parent elements after replaceWith(). Consequently getCleanColumnText() sees e.g. three sibling text nodes '\"U\"', '\"nited States\"', '\"(US)\"' instead of one contiguous '\"United States (US)\"'. Because getCleanColumnText joins all collected text nodes with a space (textParts.join(' ')), the result is '\"U nited States (US)\"', and '\"Un\"' no longer matches (example 1). The same fragmentation breaks any query token that straddles a previously-highlighted boundary: '\"(Pi\"' fails to match '\"(Pitman pressing)\"' because the '\"(\"' and '\"Pi...\"' fragments get a space inserted between them (example 2); '\"-01-\"' fails to match '\"1973-01-05\"' for the same reason (example 3). Fix: add root.normalize() in getCleanColumnText() immediately after the clone-and-strip step and before the TreeWalker. normalize() merges all adjacent sibling text nodes in the subtree, restoring contiguous text so join(' ') only inserts spaces at genuine inter-element boundaries. Calling normalize() on root (the clone when stripping was needed, or the live element otherwise) is safe — it never alters visible content, only the internal text-node structure."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.553",
     "date": "2026-04-27",
     "sections": [

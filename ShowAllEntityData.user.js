@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.553+2026-04-27
+// @version      9.99.554+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -21198,6 +21198,25 @@ a { color: #1565c0; }`;
             root = element.cloneNode(true);
             root.querySelectorAll(_CLEAN_STRIP_SEL).forEach(el => el.remove());
         }
+
+        // ── Normalize adjacent text nodes ─────────────────────────────────────
+        // After applySubFilter step 2 clears highlight <span> elements via
+        //   n.replaceWith(document.createTextNode(n.textContent))
+        // the replacement bare text nodes are siblings of the surrounding text
+        // nodes — they are NOT automatically merged by the browser.  Without
+        // normalize(), the TreeWalker sees each fragment as a separate text node
+        // and textParts.join(' ') inserts a space between them, splitting e.g.
+        // "United States" → "U" + "nited States" → "U nited States" so that
+        // "Un" no longer matches.  The same fragmentation affects any token that
+        // straddles a previously-highlighted boundary (examples: "(Pi" failing
+        // to match "(Pitman pressing)", "-01-" failing to match "1973-01-05").
+        // normalize() merges all adjacent text-node siblings in the subtree,
+        // restoring the original contiguous text so join(' ') only inserts spaces
+        // at real inter-element boundaries.
+        // Calling it on `root` (which is the clone when stripping was needed, or
+        // the live element otherwise) is safe: it never changes visible content,
+        // only the internal text-node structure.
+        root.normalize();
 
         let textParts = [];
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
