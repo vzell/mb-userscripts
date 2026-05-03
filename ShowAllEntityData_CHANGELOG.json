@@ -1,5 +1,41 @@
 [
   {
+    "version": "9.99.553",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix ALL art-li highlights disappearing whenever both a sub-table filter (STF) and any second filter (global or column) are active simultaneously (regression introduced in 9.99.552): root cause was a `ReferenceError` — the `_artHighlightArtCell` function referenced `highlightEnabled`, which is a closure-local `let` variable declared inside `createSubTableFilterContainer` and completely out of scope at module level. JavaScript short-circuit evaluation masked the bug when `_stfRaw === ''` (the `&&` chain never reached `highlightEnabled`), so the crash only occurred as soon as the STF input had any text, silently aborting the entire highlight loop before column-filter or global-filter marks were applied. Fix: replaced the invalid `highlightEnabled` reference with a live DOM read of the per-sub-table highlight-toggle button's `dataset.highlightEnabled` attribute (set by `createSubTableHighlightButton`), which is the authoritative and always-up-to-date source of the same flag. Falls back to `true` (highlight ON) when the button element cannot be found."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.552",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix sub-table filter (STF) highlights disappearing from CAA/EAA art image `<li>` rows when a column filter is also active on multi-table pages (e.g. STF regexp 'obi|page' highlighted correctly, then column filter 'in' applied → 'obi'/'page' highlights vanished): root cause was a timing race between `applySubFilter()` and the async `_artBuildMultiRowArtCell()` rebuild. When a column filter changes, `runFilter()` calls `renderGroupedTable()` which triggers `_artEnrichIcon` → `_artBuildMultiRowArtCell` (may be async on IDB/network path); then `reapplyAllSubTableFilters()` → `applySubFilter()` applies `mb-subtable-filter-highlight` to art li items. When `_artBuildMultiRowArtCell` fires after `applySubFilter` has already run, it creates fresh `<li>` elements and calls `_artHighlightArtCell` → `_artHighlightImageLi` which only applies `mb-global-filter-highlight` and `mb-column-filter-highlight` — the `mb-subtable-filter-highlight` marks from `applySubFilter` are never stamped onto the new li items. Fix: added Step 3 and Step 5 to `_artHighlightArtCell`: Step 3 reads the active STF query from the h3's `.mb-subtable-filter-container input[type='text']` (using the already-resolved per-sub-table Rx/Case/Ex checkbox values); Step 5 calls `highlightCrossTag(li, _stfRegex, 'mb-subtable-filter-highlight')` on each image li immediately after `_artHighlightImageLi`, ensuring that both column/global highlights and STF highlights are applied atomically at the end of every `_artBuildMultiRowArtCell` rebuild regardless of async timing. The early-bail guard (was: no global + no col) now also checks `!_stfRegex`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.551",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix three bugs with CAA/EAA art-column filtering and highlighting: (1) Global plain-text filter did not match CAA/EAA art cells at all: `getCleanVisibleText(row)` (used by the plain-text global path) deliberately omits `ul.dataset.mbArtSearch` (the image-type/comment search index built by `_artBuildMultiRowArtCell`) to keep sort keys clean; the regexp global path already uses `getCleanColumnText(cell)` per cell which includes the dataset. Fix: added an `mbArtSearch` fallback after the existing rel-cell fallback — when `getCleanVisibleText` misses, each cell is checked for a `ul.mb-caa-art-ul` with a `dataset.mbArtSearch` and a plain `includes()` test is run against it, mirroring the rel-cell pattern. (2) Single-table pages (e.g. artist events): CAA/EAA column-filter and global-filter highlights never appeared in art image `<li>` rows: source rows in `allRows` carry `data-caa-enriched`/`data-eaa-enriched` markers from the initial render; `cloneNode(true)` copies those markers; when `initCaaPics()`/`initEaaPics()` ran after `renderFinalTable()`, `_artEnrichIcon` saw the copied marker and returned early without calling `_artBuildMultiRowArtCell` → `_artHighlightImageLi` — so art li items in filtered clones had no highlight spans. Fix: added `Array.from(clone.cells).forEach(td => _stripTransientCellState(td))` to the single-table clone-map loop, making it identical to the multi-table path; source rows in `allRows` keep their markers so subsequent filter keystrokes are served from cache without re-fetching. (3) Sub-table filter (STF) did not highlight CAA/EAA art image `<li>` rows: `highlightCrossTag(td, regex, ...)` FILTER_REJECTs `.mb-caa-art-li-image` elements when called on the whole `<td>`, so image-row li items were skipped; `applySubFilter` had no fallback for them. Fix: after calling `highlightCrossTag(td, ...)` for each td, query all `ul.mb-caa-art-ul > li.mb-caa-art-li-image` descendants and call `highlightCrossTag(li, regex, 'mb-subtable-filter-highlight')` directly on each one — the FILTER_REJECT only prevents descending INTO `.mb-caa-art-li-image` from a parent, not calling `highlightCrossTag` with the li as the root, so the walk runs freely inside the li."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.550",
     "date": "2026-04-27",
     "sections": [

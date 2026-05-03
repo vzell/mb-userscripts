@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.550+2026-04-27
+// @version      9.99.553+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22282,10 +22282,9 @@ a { color: #1565c0; }`;
                 // the aggregated visible text of non-rel columns).  As a consequence,
                 // plain-text global filter never matches against Relationships column
                 // URLs even though both the column filter and the sub-table filter do.
-                // Fix: when getCleanVisibleText misses, additionally test every
-                // .mb-rel-cell in the row via getCleanColumnText(), which DOES include
-                // .mb-rel-filter-key text (it is not in _CLEAN_STRIP_SEL and is not
-                // excluded by the secondary TreeWalker guard).
+                // Fix: when getCleanVisibleText misses, additionally test each
+                // .mb-rel-cell via getCleanColumnText, mirroring the same targeted
+                // rel-cell fallback already applied to the regexp path.
                 if (!matchFound) {
                     matchFound = Array.from(row.cells).some(cell => {
                         if (!cell.classList.contains('mb-rel-cell')) return false;
@@ -22293,6 +22292,21 @@ a { color: #1565c0; }`;
                         return isCaseSensitive
                             ? relText.includes(globalQuery)
                             : relText.toLowerCase().includes(globalQuery);
+                    });
+                }
+                // getCleanVisibleText also does not include ul.dataset.mbArtSearch
+                // (image types and comments stored by _artBuildMultiRowArtCell), so
+                // filtering for e.g. "Front" or "Booklet" via the global plain-text
+                // filter never matches a CAA/EAA art cell even though the column
+                // filter and global regexp filter do.  Add the same targeted fallback.
+                if (!matchFound) {
+                    matchFound = Array.from(row.cells).some(cell => {
+                        const artUl = cell.querySelector(':scope > ul.mb-caa-art-ul');
+                        if (!artUl || !artUl.dataset.mbArtSearch) return false;
+                        const artText = artUl.dataset.mbArtSearch;
+                        return isCaseSensitive
+                            ? artText.includes(globalQuery)
+                            : artText.toLowerCase().includes(globalQuery);
                     });
                 }
             }
@@ -22670,6 +22684,23 @@ a { color: #1565c0; }`;
             _singleColRxErrors = matchCtx.colFilters._rxErrors || [];
             const filteredRows = allRows.map(row => {
                 const clone = row.cloneNode(true);
+                // Strip CAA/EAA enrichment markers from every cell in the clone.
+                //
+                // Single-table source rows in allRows carry data-caa-enriched / data-eaa-enriched
+                // markers stamped by _artEnrichIcon during the initial render.  cloneNode(true)
+                // copies those markers to the filtered clone.  When initCaaPics() / initEaaPics()
+                // runs after renderFinalTable(), _artEnrichIcon sees the copied marker on each
+                // art anchor and returns early without calling _artBuildMultiRowArtCell — so
+                // the clone keeps the li elements from the source row but never calls
+                // _artHighlightImageLi, leaving art li items un-highlighted after every filter.
+                //
+                // Stripping the markers here ensures _artBuildMultiRowArtCell is called fresh
+                // for each rendered clone, which triggers _artHighlightImageLi to apply the
+                // active filter highlights.  The source rows in allRows keep their markers, so
+                // subsequent runFilter calls (user typing) are still served from the IDB/memory
+                // cache without redundant network calls — exactly the same approach used in the
+                // multi-table path's groupedRows.forEach clone loop.
+                Array.from(clone.cells).forEach(td => _stripTransientCellState(td));
                 // Restore art-cell expand state from the authoritative expandedCells
                 // map.  allRows are detached source rows that never carry live expand
                 // state, so expandedCells is the only way to replay the user's
@@ -26745,6 +26776,18 @@ a { color: #1565c0; }`;
                             // highlightCrossTag sees the full, contiguous text of each node.
                             td.normalize();
                             highlightCrossTag(td, regex, 'mb-subtable-filter-highlight');
+                            // highlightCrossTag FILTER_REJECTs .mb-caa-art-li-image elements
+                            // at the td level so image-row li items are skipped entirely.
+                            // When the match came from ul.dataset.mbArtSearch (image type /
+                            // comment text), no highlight would appear in the expanded li rows.
+                            // Fix: call highlightCrossTag directly on each art image li — the
+                            // FILTER_REJECT only applies to children of the root, not the root
+                            // itself, so the walk runs inside the li without restriction.
+                            td.querySelectorAll(':scope > ul.mb-caa-art-ul > li.mb-caa-art-li-image')
+                                .forEach(li => {
+                                    li.normalize();
+                                    highlightCrossTag(li, regex, 'mb-subtable-filter-highlight');
+                                });
                             // highlightCrossTag cannot produce a visible highlight inside a
                             // .mb-rel-cell: the filter key lives in a display:none span and
                             // the icon is an <img>.  Call _highlightRelCellIcons so that
@@ -39231,6 +39274,13 @@ a { color: #1565c0; }`;
      *   - colFilters: getColFilters() on the <table> that contains artCell — this
      *     always returns the correct per-sub-table column filters regardless of
      *     which group was last processed by runFilter()'s groupedRows.forEach loop
+     *   - STF filter: h3 sub-table filter input for the owning table — needed
+     *     because _artBuildMultiRowArtCell() may fire asynchronously (network/IDB
+     *     path) AFTER reapplyAllSubTableFilters() has already run.  In that timing
+     *     window, applySubFilter() applied mb-subtable-filter-highlight to the old
+     *     li elements; the async rebuild then replaced them with fresh li items that
+     *     carry no STF marks.  Step 5 below re-stamps the STF highlight onto the
+     *     newly created li items so both column-filter and STF highlights coexist.
      *
      * Called from _artEnrichIcon immediately after each _artBuildMultiRowArtCell()
      * call (both the IDB Tier-2 early-return path and the main Tier-1/network path).
@@ -39276,15 +39326,62 @@ a { color: #1565c0; }`;
             ? getColFilters(_owningTable, colIsCase, colIsRegExp, colIsExclude)
             : [];
 
-        // ── 3. Bail out early if nothing is active ───────────────────────────────
+        // ── 3. Read the active STF (sub-table filter) query ──────────────────────
+        // The STF filter string is stored in the h3's `.mb-subtable-filter-container`
+        // text input.  We read it here rather than in _artHighlightImageLi because
+        // the STF regex uses the per-sub-table Rx/Case checkboxes (already resolved
+        // above) rather than the per-column flags embedded in colFilters objects.
+        const _stfInput = _subH3
+            ? _subH3.querySelector('.mb-subtable-filter-container input[type="text"]')
+            : null;
+        const _stfRaw     = _stfInput ? _stfInput.value.trim() : '';
+        const _stfUseEx   = _subExCb   ? _subExCb.checked   : false;
+        // `highlightEnabled` is a closure-local variable of createSubTableFilterContainer
+        // and is NOT visible from this module-level function.  Read the authoritative
+        // state from the per-sub-table highlight-toggle button's dataset instead:
+        // createSubTableHighlightButton() stores dataset.highlightEnabled = 'true'/'false'
+        // and that button is always present in the h3 when a sub-table filter exists.
+        // Fall back to true (highlight ON) when the button cannot be found.
+        const _hlBtn      = _subH3
+            ? _subH3.querySelector('[id$="-toggle-filter-highlight-btn"]')
+            : null;
+        const _hlEnabled  = _hlBtn ? _hlBtn.dataset.highlightEnabled !== 'false' : true;
+        // Only apply STF highlight when the filter is active and not in exclude mode
+        // (exclude mode hides non-matching rows but never highlights matching ones).
+        const _stfActive  = _stfRaw !== '' && !_stfUseEx && _hlEnabled;
+        let   _stfRegex   = null;
+        if (_stfActive) {
+            try {
+                const _stfFlags = colIsCase ? 'g' : 'gi';
+                _stfRegex = colIsRegExp
+                    ? new RegExp(`(${_stfRaw})`, _stfFlags)
+                    : new RegExp(`(${_stfRaw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, _stfFlags);
+            } catch (_) { /* invalid regexp — skip STF highlight */ }
+        }
+
+        // ── 4. Bail out early if nothing is active ───────────────────────────────
         const hasGlobal = globalQueryRaw !== '';
         const hasCol    = colFilters.some(f => !f.isMultiRowFilter);
-        if (!hasGlobal && !hasCol) return;
+        if (!hasGlobal && !hasCol && !_stfRegex) return;
 
-        // ── 4. Build a single context snapshot and highlight every image li ──────
+        // ── 5. Build a single context snapshot and highlight every image li ──────
         const ctxSnap = { globalQueryRaw, colFilters, isCaseSensitive: colIsCase, isRegExp: colIsRegExp };
         artCell.querySelectorAll(':scope > ul.mb-caa-art-ul > li.mb-caa-art-li-image')
-            .forEach(li => _artHighlightImageLi(li, colIdx, ctxSnap));
+            .forEach(li => {
+                // Apply global + column filter highlights via the standard path.
+                _artHighlightImageLi(li, colIdx, ctxSnap);
+                // Re-apply STF highlight on the freshly built li if the sub-table
+                // filter is active.  This handles the async timing race: when
+                // _artBuildMultiRowArtCell fires after applySubFilter() has run,
+                // the fresh li items have no mb-subtable-filter-highlight marks.
+                // highlightCrossTag is safe to call on a root li element — the
+                // FILTER_REJECT for .mb-caa-art-li-image only prevents descending
+                // INTO such elements from a parent, not running with one as the root.
+                if (_stfRegex) {
+                    li.normalize();
+                    highlightCrossTag(li, _stfRegex, 'mb-subtable-filter-highlight');
+                }
+            });
     }
 
 

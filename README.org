@@ -78440,7 +78440,256 @@ when first filter on the CAA column with "gate" the string "gate" is higlighted 
 sub-table level with "post", the string "post" is additionally highlighted OK. When additionally filter globally with
 "opened", the strings "opened" and "post" are highlighted, the string "gate" not anymore
 
+** bug
+
+One more hint:
+
+as soon as the sub-table and global filter are both in effect, colum-level filtering works but the column-level
+filterstring is never highlighted
 
 * Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed
 
 Change the toggle icon to a red one when data-cells in the "CAA" column have matches but the column is collapsed
+
+* sub-filter bug
+
+There are bugs when filtering in "multi"-table mode e.g. on the URL https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+given the following row in the sub-table after the "Official release" h3 heading
+
+#+begin_example
+<tr class="odd" data-mb-row-idx="0" style="">
+<td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" data-mb-sticky-bg="#ffffff" class="mb-sticky-col" data-erg-injected="1" data-caa-inline-done="1">
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+</span>
+<span class="mb-caa-inline-ph" style="display: inline-block; width: 20px; height: 20px; margin-right: 3px; vertical-align: middle; flex-shrink: 0; overflow: hidden; border-radius: 2px; cursor: crosshair; position: relative;" title="8 images found for this release / release-group">
+<img alt="" style="width: 20px; height: 20px; object-fit: cover; display: inline; border-radius: 2px;" src="blob:https://musicbrainz.org/d62d3026-81c7-4b60-9b38-576562b8b844">
+<span class="mb-art-cache-hint-inline" title="Memory cache hit" style="font-size: 0.65em; line-height: 1; position: absolute; top: 0px; left: 0px; user-select: none; cursor: default; pointer-events: none;">🟢
+</span>
+</span>
+<a class="wrap-anywhere" href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60">
+<bdi>Greetings From Asbury Park, N.J.
+</bdi>
+</a>
+<span class="comment">(
+<bdi>Pitman pressing
+</bdi>)
+</span>
+<span class="mb-inline-art-sort-key" style="display: none;">caa-inline-yes
+</span>
+</td>
+<td>
+<bdi>
+<a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+</a>
+</bdi>
+</td>
+<td>12" Vinyl
+</td>
+<td>9
+</td>
+<td>
+<script type="application/json">{"events":[{"country":{"editsPending":false,"country_code":"US","iso_3166_2_codes":[],"begin_date":null,"primary_code":"US","last_updated":"2013-06-15T18:06:39Z","end_date":null,"entityType":"area","typeID":1,"iso_3166_1_codes":["US"],"ended":false,"id":222,"comment":"","iso_3166_3_codes":[],"gid":"489ce91b-6658-3307-9877-795b68554c98","name":"United States"},"date":{"day":5,"month":1,"year":1973}}]}
+</script>
+<div class="release-events-container">
+<ul aria-label="Release events" class="release-events abbreviated">
+<li aria-label="Release event" class="release-event">
+<span class="flag flag-US release-country">
+<a href="/area/489ce91b-6658-3307-9877-795b68554c98">
+<abbr title="United States">US
+</abbr>
+</a>
+</span>
+<span class="release-date">1973-01-05
+<span class="mb-day-of-week non-standard" title="Expected Tuesday for United States, but is Friday." style="cursor: help;">Fri
+</span>
+</span>
+</li>
+</ul>
+</div>
+</td>
+<td>
+<ul>
+<li>
+<a href="/label/011d1192-6f65-45bd-85c4-0400dd45693e">
+<bdi>Columbia
+</bdi>
+</a>
+<span class="comment">(
+<bdi>owned by Sony Music Entertainment, worldwide except JP; formerly owned by CBS between 1938–1990 within US/CA/MX
+</bdi>)
+</span>
+</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>
+<span class="catalog-number">KC 31903
+</span>
+</li>
+</ul>
+</td>
+<td class="barcode-cell">[none]
+</td>
+<td data-caa-multi-built="1">
+<ul class="mb-caa-art-ul" data-mb-art-search="Front  Back  Medium  Medium  Front Other fold‐out postcard sleeve, back  Other fold‐out postcard sleeve, back  Front without postcard sleeve  Other">
+<li class="mb-caa-art-li mb-caa-art-li-summary" data-erg-injected="1">
+<span data-caa-expand-btn="expanded" title="Collapse all CAA cover art images (8) in this cell" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119); user-select: none;">▼
+</span>
+<a href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/cover-art" title="8 images found for this release / release-group" data-caa-enriched="1">
+<span class="artwork-icon caa-icon" title="8 images found for this release / release-group" data-cache-hint="memory" style="background-size: contain; background-image: url(&quot;blob:https://musicbrainz.org/d62d3026-81c7-4b60-9b38-576562b8b844&quot;);">
+</span>
+</a>
+<span class="mb-art-cache-hint-col-wrap">
+<span class="mb-art-cache-hint-col" title="Memory cache hit">🟢
+</span>
+<span class="mb-caa-count-badge" title="8 images found for this release / release-group">8
+</span>
+</span>
+<span class="mb-caa-sort-key" aria-hidden="true" style="display: none;">yes
+</span>
+</li>
+<li class="mb-caa-art-li mb-caa-art-li-image" data-li-tooltip-types="Front" style="">
+<img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475411558-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+<span class="mb-caa-type-badge">
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Front
+</span>
+</span>
+</li>
+<li class="mb-caa-art-li mb-caa-art-li-image" data-li-tooltip-types="Back" style="">
+<img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475412085-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+<span class="mb-caa-type-badge">
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Back
+</span>
+</span>
+</li>
+<li class="mb-caa-art-li mb-caa-art-li-image" data-li-tooltip-types="Medium" style="">
+<img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475412520-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+<span class="mb-caa-type-badge">
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Medium
+</span>
+</span>
+</li>
+<li class="mb-caa-art-li mb-caa-art-li-image" data-li-tooltip-types="Medium" style="">
+<img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475413059-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+<span class="mb-caa-type-badge">
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Medium
+</span>
+</span>
+</li>
+<li class="mb-caa-art-li mb-caa-art-li-image" data-li-tooltip-types="Front / Other" data-li-tooltip-comment="fold‐out postcard sleeve, back" style="">
+<img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475413348-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+<span class="mb-caa-type-badge">
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Front
+</span> /
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Other
+</span>
+</span> –
+<span class="mb-caa-art-comment">fold‐out postcard sleeve, back
+</span>
+</li>
+<li class="mb-caa-art-li mb-caa-art-li-image" data-li-tooltip-types="Other" data-li-tooltip-comment="fold‐out postcard sleeve, back" style="">
+<img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475413935-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+<span class="mb-caa-type-badge">
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Other
+</span>
+</span> –
+<span class="mb-caa-art-comment">fold‐out postcard sleeve, back
+</span>
+</li>
+<li class="mb-caa-art-li mb-caa-art-li-image" data-li-tooltip-types="Front" data-li-tooltip-comment="without postcard sleeve" style="">
+<img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475414567-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+<span class="mb-caa-type-badge">
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Front
+</span>
+</span> –
+<span class="mb-caa-art-comment">without postcard sleeve
+</span>
+</li>
+<li class="mb-caa-art-li mb-caa-art-li-image" data-li-tooltip-types="Other" style="">
+<img src="//coverartarchive.org/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60/31475415091-250.jpg" alt="" loading="lazy" style="cursor: crosshair;">
+<span class="mb-caa-type-badge">
+<span style="display: inline-block; background: rgb(200, 200, 200); color: rgb(34, 34, 34); border-radius: 3px; padding: 1px 5px; font-size: 0.78em; font-weight: 600; line-height: 1.5; white-space: nowrap; cursor: default;">Other
+</span>
+</span>
+</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>
+<span class="flag flag-US release-country">
+<a href="/area/489ce91b-6658-3307-9877-795b68554c98">United States (US)
+</a>
+</span>
+</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>1973-01-05
+</li>
+</ul>
+</td>
+<td style="text-align: center; font-variant-numeric: tabular-nums;" data-mb-int-col-styled="1">
+<span class="mb-ic-val" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">9
+</span>
+</td>
+<td>12" Vinyl
+</td>
+<td style="font-variant-numeric: tabular-nums; text-align: center;" data-mb-int-col-styled="1">
+<span class="mb-ic-val" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">5
+</span>
+</td>
+<td style="font-variant-numeric: tabular-nums; text-align: center;" data-mb-int-col-styled="1">
+<span class="mb-ic-val" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">1
+</span>
+</td>
+<td style="font-variant-numeric: tabular-nums; text-align: center;" data-mb-int-col-styled="1">
+<span class="mb-ic-val" style="display: inline-block; text-align: center; font-variant-numeric: tabular-nums; min-width: 4ch;">1973
+</span>
+</td>
+<td>Friday
+</td>
+<td>January
+</td>
+<td data-erg-injected="1">
+<span data-erg-btn="1" title="Toggle display of underlying entity page" style="cursor: pointer; margin-right: 4px; color: rgb(119, 119, 119);">▶
+</span>
+<a class="wrap-anywhere" href="/release/3ce46b79-5e8c-470a-bcdc-45f301d09f60">
+<bdi>Greetings From Asbury Park, N.J.
+</bdi>
+</a>
+</td>
+<td>Pitman pressing
+</td>
+<td class="mb-rel-cell" data-mbid="3ce46b79-5e8c-470a-bcdc-45f301d09f60" style="" data-rel-done="1">
+<a href="https://www.discogs.com/release/2683678" title="https://www.discogs.com/release/2683678" target="_blank" rel="noopener noreferrer">
+<img src="https://www.google.com/s2/favicons?sz=16&amp;domain=www.discogs.com" style="width: 16px; height: 16px; vertical-align: middle; margin: 1px;">
+<span class="mb-rel-filter-key" aria-hidden="true" style="display: none;">https://www.discogs.com/release/2683678
+</span>
+</a>
+</td>
+<td class="mb-picard-cell" style="text-align: center; vertical-align: middle; padding: 2px 4px;">
+<button type="button" class="mb-picard-btn" title="Send to Picard (release 3ce46b79…)" style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; cursor: pointer; background: none; border: none; padding: 0px; border-radius: 50%; vertical-align: middle;">
+<img src="data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%228%22%20r%3D%228%22%20fill%3D%22%23f0b429%22%2F%3E%3Ctext%20x%3D%228%22%20y%3D%2212%22%20text-anchor%3D%22middle%22%20font-size%3D%2211%22%20font-family%3D%22sans-serif%22%20fill%3D%22white%22%3E%E2%99%AA%3C%2Ftext%3E%3C%2Fsvg%3E" alt="♪" style="width: 16px; height: 16px; display: block;">
+</button>
+</td>
+</tr>
+#+end_example
+
+1.)
+
+The row is shown when using the sub-table filter expression "U" but is NOT shown anymore when using the filter expression "Un", although the "Country" column value "United States (US)" should still match
+
+2.)
+
+The row is shown when using the sub-table filter expression "(P", the "Release" column value in "(Pitman pressing)" is highlighted but is NOT shown anymore when using the filter expression "(Pi", although the "Release" column value should still match
+
+3.)
+
+The row is shown when using the sub-table filter expression "-01", the "Country/Date" column value in "US 1973-01-05 Fri" is highlighted but is NOT shown anymore when using the filter expression "-01-", although the "Country/Date" column value should still match
+
+
+and there are much more such examples where the filtersring should match but the rows are NOT shown
