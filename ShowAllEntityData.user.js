@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.568+2026-04-27
+// @version      9.99.569+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -21278,7 +21278,13 @@ a { color: #1565c0; }`;
                         // happens to be a substring of those sentinels (e.g. "nl" from
                         // "caa-i[nl]ine-yes") matches every row that has a loaded inline
                         // thumbnail, producing wholesale false-positive hits.
-                        node.classList.contains('mb-inline-art-sort-key')
+                        node.classList.contains('mb-inline-art-sort-key') ||
+                        // .mb-caa-sort-key / .mb-eaa-sort-key hold 'yes'/'no' — artwork-
+                        // presence sentinels for the CAA/EAA column quick-filter entries.
+                        // Must be excluded to prevent 'no' (from '✗ no artwork') from
+                        // highlighting inside sort-key spans or matching visible cell text.
+                        node.classList.contains('mb-caa-sort-key') ||
+                        node.classList.contains('mb-eaa-sort-key')
                     )) return NodeFilter.FILTER_REJECT;
                 }
                 return NodeFilter.FILTER_ACCEPT;
@@ -21339,7 +21345,16 @@ a { color: #1565c0; }`;
         // applyUniqVal('caa-inline-yes') / applyUniqVal('caa-inline-no') column-
         // filter path bypasses getCleanColumnText entirely and uses a direct
         // querySelector('.mb-inline-art-sort-key').textContent check in testRowMatch.
-        '.mb-inline-art-sort-key';
+        '.mb-inline-art-sort-key,' +
+        // .mb-caa-sort-key (and analogous .mb-eaa-sort-key) carry the invisible
+        // artwork-presence sentinel 'yes' or 'no' used by the CAA/EAA column
+        // quick-filter entries '✓ has artwork' / '✗ no artwork'.
+        // Without stripping, a column filter value of 'no' (set by applyUniqVal
+        // via makeArtItem) matches 'not readable', 'no artwork', sort-key text, etc.
+        // The applyUniqVal('yes') / applyUniqVal('no') path bypasses
+        // getCleanColumnText and uses a direct .mb-caa-sort-key check in testRowMatch
+        // — exactly mirroring the mb-inline-art-sort-key pattern.
+        '.mb-caa-sort-key,.mb-eaa-sort-key';
 
     /**
      * Extracts visible text from `element` for column filtering, skipping
@@ -21730,7 +21745,12 @@ a { color: #1565c0; }`;
                             cl.contains('artwork-icon') ||
                             cl.contains('caa-icon') ||
                             cl.contains('icon') ||
-                            cl.contains('mb-inline-art-sort-key')) return NodeFilter.FILTER_REJECT;
+                            cl.contains('mb-inline-art-sort-key') ||
+                            // mb-caa-sort-key / mb-eaa-sort-key hold the artwork-presence
+                            // sentinel 'yes'/'no'.  Must be excluded from visible text so
+                            // filter strings like 'no' don't match the sort-key span.
+                            cl.contains('mb-caa-sort-key') ||
+                            cl.contains('mb-eaa-sort-key')) return NodeFilter.FILTER_REJECT;
                     }
                     // All other elements: skip (don't return) but visit children.
                     return NodeFilter.FILTER_SKIP;
@@ -22575,6 +22595,30 @@ a { color: #1565c0; }`;
                     match = _fIsCase
                         ? skVal === f.val
                         : skVal.toLowerCase() === f.val.toLowerCase();
+                }
+            }
+
+            // ── CAA/EAA sort-key bypass ─────────────────────────────────────────
+            // .mb-caa-sort-key (and .mb-eaa-sort-key) hold 'yes' or 'no' — the
+            // artwork-presence sentinel stamped by _artBuildMultiRowArtCell /
+            // initRelGroupings.  These spans are now in _CLEAN_STRIP_SEL so
+            // getCleanColumnText never sees them, preventing filter strings like 'no'
+            // from matching 'not readable', 'known', etc. in the visible cell text.
+            // applyUniqVal('yes') / applyUniqVal('no') (via makeArtItem in the
+            // CAA column unique-values dropdown) must still filter correctly, so we
+            // check the span directly with an exact-match test — same pattern as
+            // the mb-inline-art-sort-key bypass above.
+            if (!_fIsRegExp && !match) {
+                const _cell = row.cells[f.idx];
+                const _csk  = _cell
+                    ? (_cell.querySelector('.mb-caa-sort-key') ||
+                       _cell.querySelector('.mb-eaa-sort-key'))
+                    : null;
+                if (_csk) {
+                    const _skVal = _csk.textContent.trim();
+                    match = _fIsCase
+                        ? _skVal === f.val
+                        : _skVal.toLowerCase() === f.val.toLowerCase();
                 }
             }
 

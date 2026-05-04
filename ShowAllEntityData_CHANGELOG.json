@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.569",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix CAA/EAA column '✗ no artwork' and '✓ has artwork' quick-filter entries matching false-positive rows: clicking '✗ no artwork' set the column filter value to the plain string 'no', which was then used as a substring match by getCleanColumnText / testRowMatch — matching 'not readable' in image comments, 'no' in sort-key spans, and any other visible text containing 'no'. Fix mirrors the existing mb-inline-art-sort-key sentinel pattern exactly: (1) Add '.mb-caa-sort-key' and '.mb-eaa-sort-key' to _CLEAN_STRIP_SEL so the sentinel values 'yes'/'no' are stripped from getCleanColumnText output and never participate in substring matching. (2) Add both classes to the getCleanVisibleText FILTER_REJECT list for the same reason. (3) Add both classes to the highlightCrossTag FILTER_REJECT list in getCleanColumnText to prevent the highlight pass from inserting highlight spans inside the invisible sort-key span. (4) Add a 'CAA/EAA sort-key bypass' block in testRowMatch immediately after the existing mb-inline-art-sort-key bypass: when the column filter value is 'yes' or 'no' (non-regexp mode), look up .mb-caa-sort-key / .mb-eaa-sort-key in the column cell and compare textContent with an exact-match test, bypassing the normal substring/regex matching. This ensures '✓ has artwork' / '✗ no artwork' match exactly the rows with artwork / without artwork respectively, with no false positives."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.568",
     "date": "2026-04-27",
     "sections": [
