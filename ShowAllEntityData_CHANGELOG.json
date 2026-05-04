@@ -1,5 +1,91 @@
 [
   {
+    "version": "9.99.568",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix Relationships rich tooltip showing all filter-layer highlights with the same visual style: _serialiseKeySpan was converting every highlight span (mb-global-filter-highlight, mb-subtable-filter-highlight, mb-column-filter-highlight, mb-pre-filter-highlight) to a generic <mark style=\"...\"> element with a single hardcoded yellow/red inline style, so all three layers appeared identical. Fix: preserve the original class name from the DOM span by emitting <span class=\"{originalClass}\"> instead of <mark>. The per-layer CSS rules already defined in the userscript stylesheet then apply naturally inside the tooltip div (which is part of the same DOM), making each filter layer visually distinct without any additional styling code."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.567",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix ReferenceError: _ensureRelPlainTooltip is not defined — second missing function from the same 9.99.565 cleanup-script accident. The function _ensureRelPlainTooltip (the singleton creator for div#mb-rel-plain-tooltip) was located between the two splice markers used by the cleanup and was therefore deleted along with the stale duplicates. Restored."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.566",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix Relationships column completely empty (cells show MBID but no icons, no data-rel-done attribute) — regression introduced in 9.99.565: the stale-duplicate cleanup script removed the four module-level let declarations (_relTooltipListenersInstalled, _relTooltipTimer, _relTooltipEl, _relPlainTooltipEl) that were between the removed block and _initRelTooltipListeners. Without them, _initRelTooltipListeners() throws ReferenceError: _relTooltipListenersInstalled is not defined on its very first line, which propagates out of the async initRelationshipsColumn() as a rejected promise — aborting the function before any WS2 fetches or cell population can occur. Fix: restore the four let declarations immediately before _initRelTooltipListeners."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.565",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix four related Relationships column highlight bugs (all caused by the tooltip and icon-match systems trying to re-compute filter matches independently instead of reading the authoritative highlight spans already stamped in the DOM): (1) Rich tooltip showed only ONE filter layer — _relGetActiveQuery returned the first non-empty layer and ignored the rest, so with global='discogs' + STF='item=' only 'item=' appeared in the tooltip and 'discogs' was silently dropped. (2) Rich tooltip used wrong highlight span class — _relBuildTooltipHTML re-applied the filter string with its own regex, producing generic <mark> instead of preserving the actual mb-global-filter-highlight / mb-subtable-filter-highlight / mb-column-filter-highlight classes that are already correctly stamped in the .mb-rel-filter-key span by the main highlight pipeline. (3) mb-rel-icon-match (red border on matching icons) was permanently cleared when STF changed — applySubFilter step 2 cleared all mb-rel-icon-match markers from anchors, then the STF hit block only restored them for STF matches; the global and column filter markers set by testRowMatch were never restored. Clearing STF left all icons without the red border even though the global filter was still active and matching. (4) Tooltip gate checked wrong condition — _relQueryMatchesCell re-evaluated filter strings from live inputs rather than inspecting the DOM highlight spans. Fix for all four: _relBuildTooltipHTML now serialises the existing .mb-rel-filter-key child nodes directly (_serialiseKeySpan), converting any highlight span of any class to a <mark> — the complete, accurate union of all active filter layers with no re-computation. _relQueryMatchesCell now checks the DOM for any highlight span inside .mb-rel-filter-key (one querySelectorAll, no regex). _relHasAnyActiveFilter provides a cheap first gate (checks inputs are non-empty). applySubFilter step 2 now immediately re-derives mb-rel-icon-match after clearing: it scans each td.mb-rel-cell anchor's .mb-rel-filter-key for existing mb-global-filter-highlight or mb-column-filter-highlight spans and restores the class if found, so the global/column icon state is preserved across STF changes."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.564",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement / 🐛 Fix",
+        "items": [
+          "Relationships rich HTML tooltip: show only when filter matches (not merely when any filter is active). Previously the rich tooltip appeared whenever a filter string was present on any layer (global, STF, column), even if that filter matched a different column and left the hovered Relationships cell's URLs completely unhighlighted. New helper _relQueryMatchesCell(cell, filterCtx) checks whether the active filter query matches at least one URL in the hovered cell's .mb-rel-filter-key spans; if it does not match, the custom panels are suppressed entirely and the native browser title tooltip is shown instead (the title attribute is no longer blanked on that hover). The native tooltip is now ONLY suppressed when both conditions are true: a filter is active AND it matches this specific cell.",
+          "Relationships rich HTML tooltip: change default colors to white background (#ffffff) and black text (#000000) for both the rich URL-list panel and the plain-text panel. Previously both panels used a dark-navy (#1e1e2e) background with soft-white (#cdd6f4) text. Colors are applied dynamically at show-time (read from settings on each hover) so changes take effect without a page reload.",
+          "Add two new settings to the RELATIONSHIPS COLUMN SECTION of configSchema: 'sa_rel_tooltip_bg' (color_picker, default #ffffff) — background color for the rich HTML Relationships tooltip panels; 'sa_rel_tooltip_color' (color_picker, default #000000) — text color for the same panels. Both apply to both the rich URL-list panel and the plain-text anchor-title panel displayed to its right."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.563",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix / ✨ Enhancement",
+        "items": [
+          "Fix native browser title tooltip overlapping the rich HTML Relationships tooltip (introduced in 9.99.562): the browser's built-in tooltip appears after its own OS-level delay and renders on top of the rich panel in an unpredictable position. Fix: on mouseenter, blank the anchor's title attribute immediately (storing the original in data-rel-title-saved) so the browser never shows its native tooltip; on mouseleave, restore the original value so keyboard-focus tooltips and subsequent hovers still work. Add a second custom plain-text tooltip panel (div#mb-rel-plain-tooltip, same dark-panel aesthetic) that renders the saved title text and is positioned to the top-right of the rich tooltip (8px gap). If the plain panel would overflow the right edge of the viewport it flips to the left side of the rich panel instead. Both panels are hidden together by a shared _hideAll() helper on mouseleave from either the anchor or the cell."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.562",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Add rich HTML tooltip popup to Relationships column icon anchors (td.mb-rel-cell a). Previously, hovering an icon showed the browser's native title-attribute tooltip containing the raw URL or 'relType: Title\\nURL' text. The new tooltip is a styled dark-panel popup (matching the art bigbox tooltip aesthetic) that lists all relationship URLs present in the hovered cell — one per line — each prefixed with the site favicon. If a filter is active on any layer, occurrences of the filter string within each URL are highlighted in yellow/red (matching the global filter highlight colours). Filter query resolution probes three layers in order, using the first non-empty one: (1) column-level filter on the Relationships column (per-sub-table Rx/Case checkboxes respected), (2) sub-table filter (STF) for the owning h3 (per-sub-table Rx/Case checkboxes respected), (3) global filter (global Rx/Case checkboxes used). Ended relationships are shown with a subtle '(ended)' annotation. The tooltip appears after a 300ms hover delay to avoid flicker, follows the anchor horizontally (clamped to viewport), and is dismissed immediately on mouseleave. Implemented as three new helpers (_ensureRelTooltip, _relGetActiveQuery, _relBuildTooltipHTML) and a body-level capture-phase delegation listener (_initRelTooltipListeners) installed idempotently once from initRelationshipsColumn."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.561",
     "date": "2026-04-27",
     "sections": [

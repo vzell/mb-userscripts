@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.561+2026-04-27
+// @version      9.99.568+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -1038,6 +1038,26 @@
             description: 'Maps partial URL strings for streaming and download services '
                          + '(e.g. "open.spotify.com") to MBS CSS class suffixes. '
                          + 'Populates REL_STREAMING_CLASSES.'
+        },
+
+        sa_rel_tooltip_bg: {
+            label: 'Relationships rich tooltip: background color',
+            type: 'color_picker',
+            default: '#ffffff',
+            description: 'Background color of the rich HTML tooltip that appears when hovering '
+                         + 'a Relationships column icon while a filter is active and matches. '
+                         + 'Default: white (#ffffff). Applies to both the rich URL-list panel '
+                         + 'and the plain-text anchor title panel shown to its right.'
+        },
+
+        sa_rel_tooltip_color: {
+            label: 'Relationships rich tooltip: text color',
+            type: 'color_picker',
+            default: '#000000',
+            description: 'Text color of the rich HTML tooltip that appears when hovering '
+                         + 'a Relationships column icon while a filter is active and matches. '
+                         + 'Default: black (#000000). Applies to both the rich URL-list panel '
+                         + 'and the plain-text anchor title panel shown to its right.'
         },
 
         sa_ui_thead_th_injected_bg: {
@@ -26946,8 +26966,22 @@ a { color: #1565c0; }`;
                 n.replaceWith(document.createTextNode(n.textContent));
             });
             // Also clear rel-icon match-boxes left by a previous STF pass.
+            // After clearing, immediately re-derive mb-rel-icon-match from any
+            // existing global-filter or column-filter highlight spans that are
+            // STILL present in .mb-rel-filter-key elements.  Without this,
+            // clearing or changing the STF erases the global/column icon matches
+            // because testRowMatch (which sets them) is not re-run by applySubFilter.
             table.querySelectorAll('.mb-rel-icon-match')
                 .forEach(a => a.classList.remove('mb-rel-icon-match'));
+            table.querySelectorAll('td.mb-rel-cell a').forEach(_ra => {
+                const _rk = _ra.querySelector('.mb-rel-filter-key');
+                if (_rk && _rk.querySelector(
+                    '.mb-global-filter-highlight, .mb-column-filter-highlight, '
+                    + '.mb-pre-filter-highlight'
+                )) {
+                    _ra.classList.add('mb-rel-icon-match');
+                }
+            });
 
             // Nothing to filter — we already restored rows above, so just return.
             if (!raw) {
@@ -34796,9 +34830,370 @@ a { color: #1565c0; }`;
      * Only runs when sa_enable_relationships_column is true and
      * activeInjectedColumns is non-empty.
      */
+    // ── Relationships column — rich HTML tooltip ──────────────────────────────
+
+    /**
+     * Creates (once) and returns the singleton `div#mb-rel-tooltip` element
+     * used to display rich HTML tooltips for Relationships column icon anchors.
+     *
+     * Colors are applied dynamically at show-time from sa_rel_tooltip_bg /
+     * sa_rel_tooltip_color settings so changes take effect without a page reload.
+     *
+     * @returns {HTMLDivElement}
+     */
+    function _ensureRelTooltip() {
+        let tip = document.getElementById('mb-rel-tooltip');
+        if (tip) return tip;
+
+        tip = document.createElement('div');
+        tip.id = 'mb-rel-tooltip';
+        tip.style.cssText =
+            'position:fixed; z-index:99999; pointer-events:none; display:none;' +
+            ' max-width:480px; padding:7px 11px;' +
+            ' background:#ffffff; color:#000000;' +
+            ' border:1px solid #cccccc; border-radius:6px;' +
+            ' font-size:0.82em; font-family:sans-serif; line-height:1.5;' +
+            ' box-shadow:0 4px 16px rgba(0,0,0,0.18);' +
+            ' word-break:break-all;';
+        document.body.appendChild(tip);
+        return tip;
+    }
+
+    /**
+     * Collects the currently active filter query string relevant to the given
+     * Relationships cell (`td.mb-rel-cell`), probing all three filter layers:
+     *
+     *   1. **Column-level filter** — the `.mb-col-filter-input` whose
+     *      `data-col-idx` matches the cell's column index and which belongs to
+     *      the same sub-table.  Checked first because it is the most specific.
+     *
+     *   2. **Sub-table filter (STF)** — the text input inside
+     *      `.mb-subtable-filter-container` in the h3 that owns the cell's table.
+     *
+     *   3. **Global filter** — `#mb-global-filter-input` (prefix stripped).
+     *
+     * Returns `{ raw, isRegExp, isCaseSensitive }` for the first non-empty layer
+     * found, or `{ raw: '' }` when no filter is active.
+     *
+     * @param {HTMLTableCellElement} cell  The `td.mb-rel-cell` that is being hovered.
+     * @returns {{ raw: string, isRegExp: boolean, isCaseSensitive: boolean }}
+     */
+    /**
+     * Returns true when the given `td.mb-rel-cell` contains any filter-highlight
+     * span inside a `.mb-rel-filter-key` element — i.e. when at least one active
+     * filter layer (global, STF, or column) has already highlighted a URL in this
+     * cell via the normal highlight pipeline.
+     *
+     * Used as the gate for the rich HTML tooltip: the tooltip is only shown when
+     * a filter actually matches content in this specific cell.
+     *
+     * Reading directly from the DOM (rather than re-evaluating filter strings)
+     * means ALL active filter layers are automatically reflected — regardless of
+     * which combination is active — without any per-layer special-casing.
+     *
+     * @param {HTMLTableCellElement} cell
+     * @returns {boolean}
+     */
+    function _relQueryMatchesCell(cell) {
+        return !!cell.querySelector(
+            '.mb-rel-filter-key .mb-global-filter-highlight, ' +
+            '.mb-rel-filter-key .mb-subtable-filter-highlight, ' +
+            '.mb-rel-filter-key .mb-column-filter-highlight, ' +
+            '.mb-rel-filter-key .mb-pre-filter-highlight'
+        );
+    }
+
+    /**
+     * Returns true when there is at least one non-empty active filter that could
+     * potentially match Relationships URLs — used as a cheap first gate before the
+     * DOM-based _relQueryMatchesCell check.
+     *
+     * Probes: column-level filter for the cell's column, STF for the owning h3,
+     * and the global filter.  Returns false only when all three are empty.
+     *
+     * @param {HTMLTableCellElement} cell
+     * @returns {boolean}
+     */
+    function _relHasAnyActiveFilter(cell) {
+        const _owningTable = cell.closest('table.tbl');
+        if (_owningTable) {
+            const _colIdx  = cell.cellIndex;
+            const _cfInput = _owningTable.querySelector(
+                `.mb-col-filter-input[data-col-idx="${_colIdx}"]`
+            );
+            if (_cfInput && stripColFilterPrefix(_cfInput.value).trim()) return true;
+
+            const _h3       = findH3ForTable(_owningTable);
+            const _stfInput = _h3
+                ? _h3.querySelector('.mb-subtable-filter-container input[type="text"]')
+                : null;
+            if (_stfInput && _stfInput.value.trim()) return true;
+        }
+        const _gfInput = document.getElementById('mb-global-filter-input');
+        return !!(  _gfInput && stripFilterPrefix(_gfInput.value).trim()  );
+    }
+
+    /**
+     * Builds the HTML content for the Relationships rich tooltip by serialising
+     * the existing DOM highlight spans inside each anchor's `.mb-rel-filter-key`
+     * element directly — rather than re-applying filter strings from scratch.
+     *
+     * This is the authoritative approach because:
+     *   • The highlight pipeline (testRowMatch + applySubFilter + _highlightRelCellIcons)
+     *     already stamps the correct `mb-global-filter-highlight`,
+     *     `mb-subtable-filter-highlight`, and `mb-column-filter-highlight` spans
+     *     onto `.mb-rel-filter-key` text nodes with perfect accuracy.
+     *   • Re-applying filter strings here would only reflect ONE layer (the first
+     *     non-empty one), silently dropping all others.  Reading the DOM gives the
+     *     correct union of ALL active filter layers for free.
+     *
+     * Each `<a>` in the cell contributes one line:
+     *   favicon image  |  URL text with highlight marks  |  (ended) tag if applicable
+     *
+     * @param {HTMLTableCellElement} cell  The `td.mb-rel-cell` being displayed.
+     * @returns {string} Safe HTML string for `innerHTML`.
+     */
+    function _relBuildTooltipHTML(cell) {
+        /**
+         * Escapes a string for safe insertion as HTML text content.
+         * @param {string} s
+         * @returns {string}
+         */
+        const _esc = s => s
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+
+        /**
+         * Serialises the child nodes of a `.mb-rel-filter-key` span into an HTML
+         * string, converting filter-highlight `<span>` elements to `<span>` elements
+         * with the ORIGINAL class name — NOT a generic `<mark>` — so that the
+         * per-layer CSS rules defined in the userscript stylesheet apply inside the
+         * tooltip div and each filter layer is visually distinct.
+         *
+         * Mapping:
+         *   mb-global-filter-highlight   → <span class="mb-global-filter-highlight">
+         *   mb-subtable-filter-highlight → <span class="mb-subtable-filter-highlight">
+         *   mb-column-filter-highlight   → <span class="mb-column-filter-highlight">
+         *   mb-pre-filter-highlight      → <span class="mb-pre-filter-highlight">
+         *   Text node                    → escaped plain text
+         *   Any other element            → escaped textContent (fallback)
+         *
+         * @param {Element} keySpan  The `.mb-rel-filter-key` span element.
+         * @returns {string} HTML string
+         */
+        const _serialiseKeySpan = (keySpan) => {
+            /** @type {Set<string>} */
+            const _hlClasses = new Set([
+                'mb-global-filter-highlight',
+                'mb-subtable-filter-highlight',
+                'mb-column-filter-highlight',
+                'mb-pre-filter-highlight',
+            ]);
+
+            let _out = '';
+            keySpan.childNodes.forEach(node => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    _out += _esc(node.textContent);
+                } else if (node.nodeType === Node.ELEMENT_NODE && node.classList) {
+                    // Find the first matching highlight class on this element.
+                    const _hlClass = [..._hlClasses].find(c => node.classList.contains(c));
+                    if (_hlClass) {
+                        // Preserve the original class name so the per-layer CSS rule
+                        // (e.g. mb-subtable-filter-highlight may use a different bg color
+                        // than mb-global-filter-highlight) applies in the tooltip div.
+                        _out += `<span class="${_hlClass}">${_esc(node.textContent)}</span>`;
+                    } else {
+                        _out += _esc(node.textContent);
+                    }
+                }
+            });
+            return _out || _esc(keySpan.textContent);
+        };
+
+        const _anchors = Array.from(cell.querySelectorAll('a'));
+        if (!_anchors.length) {
+            return `<span style="opacity:0.6;font-style:italic;">No relationships</span>`;
+        }
+
+        const _lines = _anchors.map(a => {
+            const _keySpan = a.querySelector('.mb-rel-filter-key');
+            const _img     = a.querySelector('img');
+            const _imgHtml = _img
+                ? `<img src="${_esc(_img.src)}" style="width:16px;height:16px;` +
+                  `vertical-align:middle;margin-right:5px;flex-shrink:0;">`
+                : '';
+            const _ended    = parseFloat(a.style.opacity || '1') < 0.5;
+            const _endedTag = _ended
+                ? `<span style="margin-left:5px;opacity:0.6;font-style:italic;">(ended)</span>`
+                : '';
+            const _urlHtml  = _keySpan
+                ? _serialiseKeySpan(_keySpan)
+                : _esc(a.href);
+            return `<div style="display:flex;align-items:center;padding:2px 0;">` +
+                   `${_imgHtml}` +
+                   `<span style="flex:1;min-width:0;">${_urlHtml}</span>` +
+                   `${_endedTag}` +
+                   `</div>`;
+        });
+
+        return _lines.join('');
+    }
+
+    /**
+     * Creates (once) and returns the singleton `div#mb-rel-plain-tooltip` element
+     * used to display the plain anchor title text to the right of the rich tooltip.
+     *
+     * The native browser `title` tooltip is suppressed on hover (title attribute
+     * blanked and restored on leave) so that the custom plain tooltip can be
+     * positioned predictably to the right of the rich tooltip panel.
+     *
+     * @returns {HTMLDivElement}
+     */
+    function _ensureRelPlainTooltip() {
+        let tip = document.getElementById('mb-rel-plain-tooltip');
+        if (tip) return tip;
+
+        tip = document.createElement('div');
+        tip.id = 'mb-rel-plain-tooltip';
+        tip.style.cssText =
+            'position:fixed; z-index:99999; pointer-events:none; display:none;' +
+            ' max-width:340px; padding:6px 10px;' +
+            ' background:#ffffff; color:#000000;' +
+            ' border:1px solid #cccccc; border-radius:6px;' +
+            ' font-size:0.82em; font-family:sans-serif; line-height:1.5;' +
+            ' box-shadow:0 4px 16px rgba(0,0,0,0.18);' +
+            ' word-break:break-all; white-space:pre-wrap;';
+        document.body.appendChild(tip);
+        return tip;
+    }
+
+    /** Whether the document-level delegation listeners for rel tooltips are installed. */
+    let _relTooltipListenersInstalled = false;
+
+    /** Timer handle for tooltip show delay. */
+    let _relTooltipTimer = null;
+
+    /** The rich tooltip div element (lazily created by _ensureRelTooltip). */
+    let _relTooltipEl = null;
+
+    /** The plain-text tooltip div element (lazily created by _ensureRelPlainTooltip). */
+    let _relPlainTooltipEl = null;
+
+    function _initRelTooltipListeners() {
+        if (_relTooltipListenersInstalled) return;
+        _relTooltipListenersInstalled = true;
+
+        _relTooltipEl      = _ensureRelTooltip();
+        _relPlainTooltipEl = _ensureRelPlainTooltip();
+
+        document.body.addEventListener('mouseenter', (e) => {
+            const _a = e.target.closest('td.mb-rel-cell a');
+            if (!_a) return;
+
+            const _cell = _a.closest('td.mb-rel-cell');
+            if (!_cell) return;
+
+            clearTimeout(_relTooltipTimer);
+            _relTooltipTimer = setTimeout(() => {
+                // ── Determine whether any active filter matches this cell ─────
+                // Gate 1: cheap — check if any filter layer has a non-empty query.
+                // Gate 2: DOM-based — check if the live highlight spans confirm a
+                //         match in THIS cell.  Together they ensure we show the
+                //         rich tooltip only when a filter is active AND it matches
+                //         at least one URL in this specific cell.
+                if (!_relHasAnyActiveFilter(_cell) || !_relQueryMatchesCell(_cell)) return;
+
+                // ── Suppress the native title tooltip ─────────────────────────
+                // Only done when we are showing our custom panels, so that the
+                // native tooltip is preserved for cells with no matching filter.
+                if (!_a.dataset.relTitleSaved) {
+                    _a.dataset.relTitleSaved = _a.title || '\u00a0';
+                    _a.title = '';
+                }
+
+                // ── Read configurable colors from settings ────────────────────
+                const _bg    = Lib.settings.sa_rel_tooltip_bg    || '#ffffff';
+                const _color = Lib.settings.sa_rel_tooltip_color || '#000000';
+                // Derive a border color: darken bg slightly for the border.
+                // A simple heuristic: if bg is very light (> 0.8 perceived
+                // luminance) use a grey border, otherwise use a lighter shade.
+                const _border = '#cccccc';
+
+                // Apply to both panels before measuring layout.
+                _relTooltipEl.style.background   = _bg;
+                _relTooltipEl.style.color         = _color;
+                _relTooltipEl.style.borderColor   = _border;
+                _relPlainTooltipEl.style.background  = _bg;
+                _relPlainTooltipEl.style.color        = _color;
+                _relPlainTooltipEl.style.borderColor  = _border;
+
+                // ── Rich tooltip ──────────────────────────────────────────────
+                _relTooltipEl.innerHTML = _relBuildTooltipHTML(_cell);
+
+                const _rect  = _a.getBoundingClientRect();
+                const _richW = Math.min(480, window.innerWidth - 20);
+                let   _richL = _rect.left;
+                if (_richL + _richW > window.innerWidth - 10)
+                    _richL = window.innerWidth - _richW - 10;
+                if (_richL < 5) _richL = 5;
+
+                _relTooltipEl.style.display  = 'block';
+                _relTooltipEl.style.left     = `${_richL}px`;
+                _relTooltipEl.style.top      = `${_rect.bottom + 4}px`;
+                _relTooltipEl.style.maxWidth = `${_richW}px`;
+
+                // ── Plain tooltip — right of rich, top-aligned ────────────────
+                const _plainText = (_a.dataset.relTitleSaved || '').replace(/\u00a0/, '').trim();
+                if (_plainText) {
+                    const _richRect  = _relTooltipEl.getBoundingClientRect();
+                    const _plainMaxW = 340;
+                    const _gap       = 8;
+                    let   _plainL    = _richRect.right + _gap;
+                    if (_plainL + _plainMaxW > window.innerWidth - 10)
+                        _plainL = _richRect.left - _plainMaxW - _gap;
+                    if (_plainL < 5) _plainL = 5;
+
+                    _relPlainTooltipEl.textContent = _plainText;
+                    _relPlainTooltipEl.style.display  = 'block';
+                    _relPlainTooltipEl.style.left     = `${_plainL}px`;
+                    _relPlainTooltipEl.style.top      = `${_richRect.top}px`;
+                    _relPlainTooltipEl.style.maxWidth = `${_plainMaxW}px`;
+                } else {
+                    _relPlainTooltipEl.style.display = 'none';
+                }
+            }, 300);
+        }, true);  // capture phase
+
+        const _hideAll = () => {
+            clearTimeout(_relTooltipTimer);
+            if (_relTooltipEl)      _relTooltipEl.style.display      = 'none';
+            if (_relPlainTooltipEl) _relPlainTooltipEl.style.display = 'none';
+        };
+
+        document.body.addEventListener('mouseleave', (e) => {
+            const _a = e.target.closest('td.mb-rel-cell a');
+            if (!_a) return;
+            // Restore the native title so keyboard-focus / next hover still works.
+            if (_a.dataset.relTitleSaved) {
+                _a.title = _a.dataset.relTitleSaved === '\u00a0' ? '' : _a.dataset.relTitleSaved;
+                delete _a.dataset.relTitleSaved;
+            }
+            _hideAll();
+        }, true);
+
+        // Hide immediately when leaving the rel cell altogether.
+        document.body.addEventListener('mouseleave', (e) => {
+            if (e.target.closest('td.mb-rel-cell')) _hideAll();
+        }, true);
+    }
     async function initRelationshipsColumn() {
         if (!Lib.settings.sa_enable_relationships_column) return;
         if (!activeInjectedColumns.length) return;
+
+        // Ensure body-level delegation for rich tooltips is installed once.
+        _initRelTooltipListeners();
 
         // Refresh REL_* maps from user-configured storage tables before each run
         _initRelMappings();
