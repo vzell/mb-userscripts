@@ -77184,7 +77184,7 @@ Why is there a difference between
 https://musicbrainz.org/artist-credit/1488075 - where it's NOT working, and
 https://musicbrainz.org/tag/country - OK
 
-** reorder the following parameters
+** TODO reorder the following parameters: 'Derived column header background color' currently in "ELEMENT UI STYLES"
 
 #+begin_example
         sa_ui_thead_th_derived_bg: {
@@ -77201,6 +77201,12 @@ https://musicbrainz.org/tag/country - OK
                          'Table Details section.'
         },
 #+end_example
+
+** TODO new section: for unique value parameters currently in "TABLE FILTER CONFIGURATION"
+
+** TODO new section: for "Max Page Warning" and "Auto-Expand Rows" (better description for latter, as it looks like just for "Album"
+
+** TODO new section: for "Auto-resize columns after loading from disk"
 
 ** add "Rating" support
 
@@ -78697,6 +78703,30 @@ like in the case for columns which are configured as
 renderMultiRowCell: [ 'Label', 'Catalog#' ]
 #+end_example
 
+* DONE the unicode dialog
+** initial
+
+The unicode dialog, called by pressing "Ctrl+U" when an input field has the focus, has bugs:
+
+1.)
+
+you can't immediately use the "Up" and "Down" arrow keys to move between entries, ONLY after pressing the escape key ONE time
+
+2.)
+
+when opening the dialog with "Ctrl+U" and immediately pressing the escape key, should also close the dialog right
+away. Righ now I have to press the escape key THREE times.
+
+** bug
+
+Another hint, there is a separate "mb.unicodechars" plugin (from which our code is derived) active on the page where our
+code runs. I realized that when opening our unicode dialog with "Ctrl+U", then clicking our "X Close (Esc)" in the upper
+right corner in the dialog. What happens is, our dialog closes immediately, but the dialog from the other plugin is
+present instead (it looks like it was hidden by our dialog) and active in a sense that the Up/down arrow keys and the
+escape key are working right away in this instance of the dialog.
+
+I thought we have precautions in the code to not run the other version of the plugin when pressing "Ctrl+U"
+
 
 * TODO "Relationships" filtering visually surrounded by a red bordered box/square
 ** DONE initial
@@ -78749,3 +78779,4 @@ filterstring on the global filter will not be honoured by the "Relationships" co
 
 Remove "Relationships" column from place-performaces when no RG present, e.g.
 https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances?direction=1&link_type_id=693
+

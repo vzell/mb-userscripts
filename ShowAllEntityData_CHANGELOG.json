@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.557",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix two Unicode character picker keyboard bugs caused by the mb.unicodechars userscript by Smeulf being active on the same MusicBrainz page simultaneously: (1) ArrowUp/Down keys did not navigate the list immediately after opening — only after pressing Escape once; (2) closing the dialog required three Escape presses instead of one. Root cause: mb.unicodechars loads before this script and therefore registers its bubble-phase Ctrl+U and navigation keydown listeners first. When Ctrl+U was pressed, mb.unicodechars opened ITS dialog first (bubble phase, registered earlier), then our bubble-phase handler opened OURS on top — so both dialogs were open simultaneously. With both open, mb.unicodechars navigation handlers fired before ours and called stopImmediatePropagation(), preventing our saUnicodeHandleKey from ever being reached. The three-Escape sequence was: 1st Escape closes mb.unicodechars dialog (their handler fires first, stops propagation), 2nd Escape is caught by the STF/col-filter input Escape handler (clears or blurs, stops propagation), 3rd Escape finally reaches our saUnicodeHandleKey. Fix: move both the Ctrl+U opener and the saUnicodeHandleKey navigation out of the bubble-phase keydown listener and into a new dedicated capture-phase listener (document.addEventListener('keydown', ..., true)). Capture-phase listeners fire before any bubble-phase listener regardless of registration order. saUnicodeHandleKey already calls e.stopImmediatePropagation() for all handled keys (ArrowUp, ArrowDown, Enter, Escape), so once it runs, neither the mb.unicodechars bubble handler nor the STF/col-filter Escape handlers see the event. This is the same strategy already used by the Ctrl+M prefix-key handler to defeat the 'mb. SUPER MIND CONTROL' script's bubble-phase Ctrl+M listener."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.556",
     "date": "2026-04-27",
     "sections": [

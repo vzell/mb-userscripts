@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.556+2026-04-27
+// @version      9.99.557+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -12845,21 +12845,67 @@ ${sections.join('\n')}
                 showShortcutsHelp();
             }
 
-            // Unicode character picker — open on configured shortcut (default Ctrl+U)
-            // when focus is inside a text input or textarea.
-            // Respects the sa_unicode_char_picker enable flag.
+            // NOTE: Unicode character picker open (Ctrl+U) and keyboard navigation
+            // (ArrowUp/Down/Enter/Escape while the menu is open) are intentionally
+            // NOT handled here.  They are registered in the capture phase below so
+            // they fire before the mb.unicodechars plugin by Smeulf, which registers
+            // its own bubble-phase Ctrl+U listener.  See the companion
+            // document.addEventListener('keydown', …, true) below.
+        });
+
+        // ── Unicode character picker — capture-phase listener ─────────────────────
+        // Registered with {capture:true} (third arg = true) so this handler runs
+        // BEFORE any bubbling-phase listener on document — exactly the same strategy
+        // used for the Ctrl+M prefix-key handler above.
+        //
+        // Why capture phase is necessary (both bugs fixed by this change):
+        //
+        //   Bug A — "Arrow keys don't work until after one Escape":
+        //     The mb.unicodechars plugin (by Smeulf) is active on the same MusicBrainz
+        //     page and registers its own Ctrl+U and navigation handlers in the bubble
+        //     phase.  Because it loads BEFORE this script, its listener is registered
+        //     first and therefore fires first.  When Ctrl+U is pressed:
+        //       1. mb.unicodechars listener fires → opens THEIR menu
+        //       2. Our bubble-phase listener fires → opens OUR menu on top
+        //     With both menus open, ArrowDown reaches their navigation handler
+        //     (registered before ours) first; it calls stopImmediatePropagation and
+        //     our saUnicodeHandleKey never fires.  After the user presses Escape once,
+        //     THEIR menu closes (their Escape handler fired first), and only then do
+        //     ArrowDown/Up reach our handler.
+        //
+        //   Bug B — "Need three Escape presses to close":
+        //     1st Escape: mb.unicodechars Escape handler fires first → closes THEIR
+        //       menu, calls stopImmediatePropagation → our handler never fires.
+        //     2nd Escape: our bubble-phase Escape handler in the filter input (STF /
+        //       column filter) fires → clears filter content or blurs, calls
+        //       stopImmediatePropagation → our document handler never fires.
+        //     3rd Escape: document handler fires → saUnicodeHandleKey → closes ours.
+        //
+        // By registering in CAPTURE phase, our handler runs before any bubble-phase
+        // listener regardless of registration order.  stopImmediatePropagation() in
+        // saUnicodeHandleKey / the Ctrl+U block prevents all other listeners (both
+        // remaining capture listeners and the entire bubble phase) from ever seeing
+        // the event when we handle it.
+        document.addEventListener('keydown', (e) => {
+            const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+
+            // ── Navigation while the menu is open ─────────────────────────────────
+            // saUnicodeHandleKey() calls e.preventDefault() + e.stopImmediatePropagation()
+            // for every key it handles (ArrowUp, ArrowDown, Enter, Escape), so once it
+            // returns true no other listener — including the mb.unicodechars plugin and
+            // the STF/column-filter Escape handlers — will see the event.
+            if (_saUnicodeOpen && saUnicodeHandleKey(e)) return;
+
+            // ── Open on Ctrl+U ────────────────────────────────────────────────────
+            // Guard: sa_unicode_char_picker feature flag + focus must be in a text input.
             if (Lib.settings.sa_unicode_char_picker !== false &&
                 isShortcutEvent(e, 'sa_shortcut_unicode_chars', 'Ctrl+U') && isTyping) {
                 e.preventDefault();
-                e.stopImmediatePropagation();
+                e.stopImmediatePropagation(); // prevents mb.unicodechars bubble handler
                 showSaUnicodeCharsMenu(e.target);
                 return;
             }
-
-            // Unicode picker keyboard navigation — delegate to the feature handler
-            // while the menu is open (takes priority over other shortcuts).
-            if (_saUnicodeOpen && saUnicodeHandleKey(e)) return;
-        });
+        }, true); // capture phase
 
         document._mbKeyboardShortcutsInitialized = true;
         Lib.debug('shortcuts', 'Keyboard shortcuts initialized');
