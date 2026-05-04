@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.561",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix ghost column (empty grey cells with no header or filter field) appearing as the last column on pageType 'place-performances' (multi-table mode) and potentially any other multi-table page type that uses both injectedColumns with injectedColumnExtractors and the Release-events suppress guard. Root cause was a four-step race: (1) Initial renderGroupedTable call (query='', new-table path) moves source rows from groupedRows into the tbody and calls _suppressReleaseEventsIfNoReleaseLinks, which finds the ICE <th> elements (Release country, Release date, R-DD, R-MM, R-YYYY, R-Day, R-Month), removes them from the thead, and calls tr.deleteCell() on each source row to remove the corresponding mb-ice-cell <td>s. (2) The async initReleaseEventsColumn() callback fires after render, populates mb-re-cell cells, then calls applyInjectedColumnExtractors(). (3) applyInjectedColumnExtractors calls _ensureIceCells on every source row in groupedRows: it sees the rows have 0 mb-ice-cell cells (suppress already removed them) and re-appends all 7 ICE placeholder cells, then _processRow fills them. (4) On the next render (runFilter or view switch), clones of the re-injected source rows carry 7 mb-ice-cell cells; _suppressReleaseEventsIfNoReleaseLinks finds no ICE <th> in the existing thead (they were removed in step 1), so _indicesToRemove is empty and the function returns early without removing the ICE cells from the clones. The 7 orphan cells render as ghost columns beyond the 13 real header cells. Fix: in _suppressReleaseEventsIfNoReleaseLinks step 2, after deleting ICE cells from each row, stamp data-mb-ice-suppressed='1' on the row. In _ensureIceCells inside applyInjectedColumnExtractors, check for this flag and return immediately without re-adding ICE cells. Since cloneNode(true) copies dataset attributes, the flag propagates to all clones produced on subsequent render passes, so the ghost column never reappears regardless of how many filter/sort/view-switch re-renders occur."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.560",
     "date": "2026-04-27",
     "sections": [

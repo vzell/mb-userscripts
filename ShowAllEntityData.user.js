@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.560+2026-04-27
+// @version      9.99.561+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -34389,6 +34389,13 @@ a { color: #1565c0; }`;
             _sortedDesc.forEach(idx => {
                 if (tr.cells[idx]) tr.deleteCell(idx);
             });
+            // Mark this row so applyInjectedColumnExtractors() / _ensureIceCells()
+            // does not re-append the ICE placeholder <td>s that were just removed.
+            // Without this marker, _ensureIceCells sees the row has 0 mb-ice-cell
+            // elements (correct — they were suppressed) and re-inserts them, causing
+            // ghost columns on the next render when the ICE <th> are no longer in the
+            // thead (having been removed above) so they render without a header.
+            tr.dataset.mbIceSuppressed = '1';
         });
 
         // ── 3. Remove the <th>s from the first header row ────────────────────────
@@ -34546,9 +34553,18 @@ a { color: #1565c0; }`;
          * Rows reconstructed from disk lack these cells (they were excluded from
          * serialization), so we must append them before _processRow fills them.
          * Already-present cells (live-fetch rows) are left untouched.
+         *
+         * Rows marked `data-mb-ice-suppressed='1'` are skipped: they belong to a
+         * sub-table whose Release events column was removed by
+         * _suppressReleaseEventsIfNoReleaseLinks() because the sub-table contains
+         * no /release/ links.  Re-inserting ICE cells on those rows would recreate
+         * the ghost column that suppress already cleaned up.  The flag is propagated
+         * to clones via cloneNode(true) so subsequent runFilter renders are also safe.
+         *
          * @param {HTMLTableRowElement} row
          */
         function _ensureIceCells(row) {
+            if (row.dataset.mbIceSuppressed === '1') return; // suppressed — never re-add ICE cells
             const existing = row.querySelectorAll('td.mb-ice-cell').length;
             const missing  = _iceTotal - existing;
             if (missing <= 0) return;
