@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.559",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix global and column-level filtering in the 'Complete Discography (merged)' view on artist-releasegroups pages: (1) filtering showed only one of the N combined rows (e.g. only the Official match for 'Devils & Dust', missing the Non-Official match); (2) clearing the filter afterwards showed only the Official rows — the merged combination was permanently lost until the user switched views. Root cause: runFilter() iterates groupedRows per-group (group 0 = Album Official: 21 rows, group 1 = Album Non-Official: 2 rows) and builds filteredArray accordingly, then calls renderGroupedTable(filteredArray) which replaces each table's tbody with only that group's matching rows. For the merged view, the first-occurrence 'Album' table's merged tbody (containing all 23 combined rows) was silently replaced with only the 21 Official rows, destroying the merged state. Sub-table filtering was unaffected because applySubFilter operates on the live DOM rows directly without touching groupedRows. Fix: in the runFilter() multi-table forEach loop, when discographyViewState === 'merged', two special cases are applied. (a) Hidden duplicate tables (h3.dataset.mbDiscHidden === 'true'): contribute nothing — an empty rows:[] entry is pushed to filteredArray so renderGroupedTable does not touch their hidden tbody, and their row count is subtracted from totalAbsolute to avoid double-counting in the h2 stat. (b) First-occurrence merged tables: reconstruct the combined row source by collecting all groupedRows entries that share the same category name (mirroring the _mergedFirstIdxByName logic in _applyDiscographyViewFilter), then filter against that combined set. After renderGroupedTable runs, a post-render fixup re-stamps data-mb-merged-tbody='true' on the first-occurrence tables so the restore-from-merged pre-pass in _applyDiscographyViewFilter correctly identifies them when the user next switches views."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.558",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "When switching discography views on artist-releasegroups pages (📋 Complete / 📀 Official / 📼 Non-Official / 🗂️ Complete merged), all filter, sort, highlight, h3-collapse, and CAA/EAA bigbox state is now unconditionally reset to the initial rendered state before the new view is applied. Previously, active filters, sort orders, and highlight spans from one view leaked into the next, causing wrong row counts, stale highlights, incorrect sort indicators, and visual artefacts in the merged view. The reset is performed by the new helper _resetDiscographyViewState(), called at the top of _applyDiscographyViewFilter() before any DOM manipulation. The eight reset steps are: (1) global filter cleared to prefix-only; (2) all column filter inputs cleared; (3) all sub-table filters (STF) cleared — value, STF-hidden row markers, mb-subtable-filter-highlight spans, border/shadow, container visibility, and toggle-icon active state; (4) brute-force removal of any remaining filter-highlight spans (mb-global-filter-highlight, mb-column-filter-highlight, mb-pre-filter-highlight, mb-subtable-filter-highlight); (5) sort state reset — multi-sort column tints cleared, .sort-icon-active stripped from all sort buttons, superscript priority digits removed, mb-sort-status spans blanked, multiTableSortStates and multiSortTintRegistry cleared, and all sub-table tbody rows re-inserted in the original groupedRows order; (6) runFilter() called to re-render all visible tables with the clean filter state; (7) h3 collapse state reset to initial shouldStayOpen logic (expanded for single sub-tables and small album/official groups, collapsed otherwise); (8) all CAA/EAA bigboxes collapsed (display:none) with dataset.caaVisible/eaaVisible set to 'false' so the h3 click handler and _artRestoreBigboxesForTable see the correct collapsed baseline when the user later expands a sub-table."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.557",
     "date": "2026-04-27",
     "sections": [

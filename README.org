@@ -78727,8 +78727,7 @@ escape key are working right away in this instance of the dialog.
 
 I thought we have precautions in the code to not run the other version of the plugin when pressing "Ctrl+U"
 
-
-* TODO "Relationships" filtering visually surrounded by a red bordered box/square
+* DONE "Relationships" filtering visually surrounded by a red bordered box/square
 ** DONE initial
 
 During filtering when rows are matched because the filterstring matches to cell data in the "Relationships" column (for
@@ -78770,7 +78769,58 @@ match, but there is NO red border around the relationship icon
 the global filter doesn't filter "Relationships" column cells at all, so even if sub-table filter works, the same
 filterstring on the global filter will not be honoured by the "Relationships" column
 
-** TODO still a bug with "xyz" at https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+** DONE still a bug with "xyz" at https://musicbrainz.org/release-group/c497fc44-ddaf-3cce-a9b4-bfec958a0f3c
+
+* DONE switching views on pageType type: "'artist-releasegroups'"
+** initial
+
+When switching views on pageType "type: 'artist-releasegroups'" between the following views
+
+#+begin_example
+     *   ① 📋 Complete Discography          — shows ALL h3/table pairs (default)
+     *   ② 📀 Official Discography          — shows only official h3/table pairs
+     *   ③ 📼 Non-Official Discography      — shows only non-official h3/table pairs
+     *   ④ 🗂️ Complete Discography (merged) — deduplicates same-name categories,
+     *                                          combining their rows into one sub-table
+#+end_example
+
+all filter and sorting states should always be reset to the initial state, as if we had just entered the final rendered
+page, and clicked the first time on a specific button for a specific view.
+
+Currently when filtering and/or sorting was enabled for e.g. the "Complete Discography (merged)" view, the rendered
+display was wrong after switching back and forth between views. Also the previous filterstring highlighning was
+sometimes display, somtimes not.
+
+So I would like to always start in a known predictable initial state when switching views, with
+
+- all filters reset (global, sub-table and column level)
+- original sort order on all columns in all sub-tables
+- no filter highlightning present on rows in all sub-tables (except the prefilter highlighning when loading from disk)
+- all h3 sub-sections collapse state should start out as on the intial rendered page
+- the CAA cover art image stripes above each sub-table should always be in a collapsed state when switching views
+
+** bug
+
+bugs when filtering on the "Complete Discography (merged)" view:
+
+There are 23 rows on the first sub-table "Album" with the title "Devils & Dust" in the "Title" column
+
+1.)
+
+When filtering on the global level OR on the column level ("Title" column) for the filter string "Dust", only ONE row gets
+rendered, the one from the "Official" view.
+
+When clearing the filter again, it only shows the 21 rows from the "Official" view, the "Non-Official" view rows are
+completely gone
+
+When switching temporarily to the "Complete" view and back to the "Complete Discography (merged)" view all rows from the
+"Official" and "Non-Official" views show up at least
+
+2.)
+
+The following is OK, when filtering on the sub-table level for the filter string "Dust", BOTH rows gets rendered.
+
+Also when clearing the filter again, all 23 rows are shown again
 
 
 * TODO when pressing the "Toggle highlight" buttons the multi-row indicators when filter highlight is in effect should also be toggled
@@ -78779,4 +78829,71 @@ filterstring on the global filter will not be honoured by the "Relationships" co
 
 Remove "Relationships" column from place-performaces when no RG present, e.g.
 https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances?direction=1&link_type_id=693
+
+
+* TODO when choosing "X no artwork" in the CAA column the filterstring "no" is used in the column filter and filters also image types and comments
+
+when choosing '✗ no artwork' in the CAA column the filterstring 'no' is used in the column filter and filters also on image
+types and comments instead of just rows which have NO images
+
+#+begin_example
+            // When this collapsable column is also a CAA / EAA column (i.e. some
+            // cells carry multiple artwork thumbnails in a ul.mb-caa-art-ul list,
+            // making totalMultiRow > 0 and landing us in this branch), append the
+            // artwork-presence quick-filter entries so the user can still filter
+            // for rows WITH or WITHOUT artwork even alongside the collapse states.
+            if (isCaaOrEaaCol && (caaYesCount > 0 || caaNoCount > 0)) {
+                if (caaYesCount > 0) makeArtItem('yes', '✓ has artwork', caaYesCount);
+                if (caaNoCount  > 0) makeArtItem('no',  '✗ no artwork',  caaNoCount);
+            }
+
+            appendSynDivider();
+        } else if (isCaaOrEaaCol && (caaYesCount > 0 || caaNoCount > 0)) {
+            // CAA / EAA column where isCollapsableCol is false or no structural
+            // counts exist (typical case: all cells have a single artwork icon or
+            // no artwork at all — no ul>li multi-row structure).  Show ONLY the
+            // artwork-presence quick-filter entries under their own section header.
+            const synHdr = document.createElement('div');
+            synHdr.textContent = 'Cell structure';
+            synHdr.style.cssText = [
+                'font-size:0.75em; font-weight:600; color:#555;',
+                'padding:4px 8px 2px 8px; letter-spacing:0.03em; user-select:none;'
+            ].join(' ');
+            synBox.appendChild(synHdr);
+
+            if (caaYesCount > 0) makeArtItem('yes', '✓ has artwork', caaYesCount);
+            if (caaNoCount  > 0) makeArtItem('no',  '✗ no artwork',  caaNoCount);
+#+end_example
+
+
+* TODO add sub-table filter info in "multi"-table mode to the h3 header line for each table
+
+add sub-table filter info in "multi"-table mode to the h3 header line for each table before the
+
+#+begin_example
+<span class="mb-filter-status" data-table-name="Official release" data-table-index="0" style="color: green;">✓ Filtered 39 rows [Format:"cd"]</span>
+#+end_example
+
+* TODO global filter status display should NOT be present when no global filter string is entered in "multi"-table mode
+
+global filter status display should NOT be present when no global filter string is entered in "multi"-table mode
+
+#+begin_example
+<span id="mb-filter-status-display" class="mb-filter-status" style="color: green;">✓ Global filter</span>
+#+end_example
+
+* TODO colors in "single"-table mode for filter and sorting status display should be made configurable
+
+colors in "single"-table mode for filter and sorting status display should be made configurable
+
+#+begin_example
+<span id="mb-status-display" style="font-size: 0.9em; color: rgb(51, 51, 51); display: flex; align-items: center; height: 24px; font-weight: bold; gap: 4px;">
+  <span id="mb-filter-status-display" class="mb-filter-status" style="color: red;">✓ Global filter: 357 rows in 1060ms [global:"bruce", 1 column filter]
+  </span>
+  <span id="mb-sort-status-display" class="mb-sort-status" style="color: orange;">✓ Sorted by column "Format" ▲: 1155 rows in 1159ms
+  </span>
+</span>
+#+end_example
+
+* TODO In the "Relationships" column change the tooltip to an HTML rich tooltip which highlights a filterstring if present
 

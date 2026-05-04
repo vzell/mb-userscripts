@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.557+2026-04-27
+// @version      9.99.559+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -22756,7 +22756,63 @@ a { color: #1565c0; }`;
                     _activeFilterHighlightCtx.isRegExp        = _colIsRegExp;
                     _activeFilterHighlightCtx.isCaseSensitive = _colIsCase;
                 }
-                const matches = group.rows.map(r => {
+
+                // ── Merged-view row source ────────────────────────────────────
+                // In merged view, duplicate h3/table pairs (all but the first
+                // occurrence of each category name) are hidden.  Their rows have
+                // already been combined into the first-occurrence table's tbody by
+                // _applyDiscographyViewFilter.  If we let runFilter use group.rows
+                // (= original per-group source rows) for each groupedRows entry, two
+                // things go wrong:
+                //
+                //   • Filtering: renderGroupedTable replaces the first-occurrence
+                //     merged tbody with only the official matches — the non-official
+                //     rows become invisible even though they also match the query.
+                //
+                //   • Clearing: renderGroupedTable restores each group's original
+                //     rows individually, so the first-occurrence table ends up with
+                //     only its own (official) rows — the merged combination is lost
+                //     until the user switches views.
+                //
+                // Fix: when discographyViewState === 'merged', reconstruct the
+                // combined row set for each category by summing ALL groupedRows
+                // entries that share the same category name.  The first-occurrence
+                // entry (h3.dataset.mbDiscHidden not 'true') uses this combined set
+                // as its filter source; duplicate entries (mbDiscHidden === 'true')
+                // get an empty row set so renderGroupedTable leaves their hidden
+                // tables untouched.
+                //
+                // This mirrors the _mergedRowsByName / _mergedFirstIdxByName logic
+                // in _applyDiscographyViewFilter, but uses groupedRows directly so
+                // no extra DOM state is needed.
+                let _sourceRows = group.rows;
+                if (discographyViewState === 'merged') {
+                    const _h3 = findH3ForTable(_subTable);
+                    if (_h3 && _h3.dataset.mbDiscHidden === 'true') {
+                        // Hidden duplicate — contribute nothing to filteredArray.
+                        // (Its rows are already included in the first-occurrence entry.)
+                        filteredArray.push({ ...group, rows: [] });
+                        // totalAbsolute was already incremented above; subtract to
+                        // avoid double-counting combined rows in the h2 stat.
+                        totalAbsolute -= group.rows.length;
+                        return; // continue forEach
+                    }
+                    // First occurrence: combine rows from every groupedRows entry
+                    // that shares this category name.
+                    const _cat = (groupIdx < h3_all_category_header_array.length)
+                        ? h3_all_category_header_array[groupIdx]
+                        : (group.category || group.key || 'Other');
+                    const _combined = [];
+                    groupedRows.forEach((_g, _gi) => {
+                        const _gCat = (_gi < h3_all_category_header_array.length)
+                            ? h3_all_category_header_array[_gi]
+                            : (_g.category || _g.key || 'Other');
+                        if (_gCat === _cat) _combined.push(..._g.rows);
+                    });
+                    _sourceRows = _combined;
+                }
+
+                const matches = _sourceRows.map(r => {
                     const clone = r.cloneNode(true);
                     // Strip CAA/EAA enrichment markers from every cell in the clone.
                     //
@@ -22802,6 +22858,27 @@ a { color: #1565c0; }`;
                 finalizeRLCColumnWidths(filteredArray.flatMap(g => g.rows), activeIntegerColumns);
             }
             renderGroupedTable(filteredArray, _isReleaseGroupsMultiMode(), globalQuery || 're-run');
+
+            // ── Merged-view post-render fixup ─────────────────────────────────
+            // renderGroupedTable() has just replaced each visible table's tbody
+            // with the filtered combined rows.  We need to re-stamp
+            // data-mb-merged-tbody='true' on those tables so that the
+            // restore-from-merged pre-pass in _applyDiscographyViewFilter (called
+            // when the user switches away from merged view) correctly identifies
+            // them and repopulates their tbodies from groupedRows.
+            // Without this, switching away after filtering would use the filtered
+            // rows (not groupedRows) as the restored content.
+            if (discographyViewState === 'merged') {
+                const _tables = Array.from(document.querySelectorAll('table.tbl'))
+                    .filter(t => t.querySelector('.mb-col-filter-row'));
+                groupedRows.forEach((_g, _gi) => {
+                    const _t  = _tables[_gi];
+                    const _h3 = _t ? findH3ForTable(_t) : null;
+                    if (_t && _h3 && _h3.dataset.mbDiscHidden !== 'true') {
+                        _t.dataset.mbMergedTbody = 'true';
+                    }
+                });
+            }
 
             /* Restore focus & scroll for column filters */
             if (__activeEl && __activeEl.classList.contains('mb-col-filter-input')) {
@@ -28540,6 +28617,228 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Resets all filter, sort, highlight, h3-collapse, and bigbox state to the
+     * initial rendered state before applying a discography view switch.
+     *
+     * Called unconditionally at the top of _applyDiscographyViewFilter() so that
+     * every view switch starts from a known, predictable baseline regardless of
+     * what the user had previously done in the old view.
+     *
+     * Actions performed (in order):
+     *
+     *  1. **Global filter** — reset to prefix-only (mirrors "first press" Escape
+     *     on the global input); highlights removed by step 3.
+     *
+     *  2. **Column filters** — clear value + border tint on every
+     *     `.mb-col-filter-input` across all sub-tables.
+     *
+     *  3. **Sub-table filters (STF)** — for each visible STF input: clear value,
+     *     remove STF-hidden row markers, remove `.mb-subtable-filter-highlight`
+     *     spans, reset border/shadow, hide the container, reset the toggle icon.
+     *
+     *  4. **All filter highlights** — brute-force removal of every
+     *     `mb-global-filter-highlight`, `mb-column-filter-highlight`, and
+     *     `mb-pre-filter-highlight` span left over after the filter re-run in
+     *     step 6.  (`mb-subtable-filter-highlight` spans are already removed in
+     *     step 3, but the pass here catches any edge-case remainders.)
+     *
+     *  5. **Sort state** — clear all column sort tints, strip `.sort-icon-active`
+     *     from every sort button, reset sort-status spans, and clear both
+     *     `multiTableSortStates` and `multiSortTintRegistry`.  Rows are then
+     *     re-inserted in original `groupedRows` order.
+     *
+     *  6. **Run filter** — triggers `runFilter()` which re-renders each visible
+     *     sub-table with cleared filters so row visibility and row counts are
+     *     correct.
+     *
+     *  7. **H3 collapse state** — each h3/table pair is reset to the same
+     *     show/hide state that `renderGroupedTable` computed on initial render:
+     *     expanded when `shouldStayOpen` was true (single sub-table, or
+     *     'album'/'official' category with row count < sa_auto_expand), collapsed
+     *     otherwise.  The `.mb-toggle-icon` glyph is updated accordingly.
+     *
+     *  8. **CAA/EAA bigboxes** — unconditionally collapsed (`display:none`) and
+     *     `dataset.caaVisible` / `dataset.eaaVisible` set to `'false'` so the
+     *     h3 click handler and `_artRestoreBigboxesForTable` see the correct state
+     *     when the user later expands a sub-table.
+     *
+     * @returns {void}
+     */
+    function _resetDiscographyViewState() {
+        const _container = document.getElementById('content') || document.body;
+        const _allH3s    = Array.from(_container.querySelectorAll('h3.mb-toggle-h3'));
+
+        // ── 1. Global filter ──────────────────────────────────────────────────
+        const _gf = document.getElementById('mb-global-filter-input');
+        if (_gf) {
+            const _pfx = getFilterFocusPrefix();
+            _gf.value = _pfx;
+            // Do not fire 'input' here — runFilter() in step 6 handles the re-render.
+        }
+
+        // ── 2. Column filters ─────────────────────────────────────────────────
+        document.querySelectorAll('.mb-col-filter-input').forEach(inp => {
+            inp.value = '';
+            inp.style.backgroundColor = '';
+            inp.style.boxShadow        = '';
+            inp.style.borderColor      = '';
+        });
+
+        // ── 3. Sub-table filters ──────────────────────────────────────────────
+        _allH3s.forEach(_h3 => {
+            const _stfInput = _h3.querySelector(
+                '.mb-subtable-filter-container input[type="text"]'
+            );
+            if (!_stfInput) return;
+
+            // Clear value
+            _stfInput.value = '';
+
+            // Find the owning table
+            const _tbl = (() => {
+                let _w = _h3.nextElementSibling;
+                while (_w && (_w.classList.contains('mb-caa-bigbox') ||
+                               _w.classList.contains('mb-eaa-bigbox'))) {
+                    _w = _w.nextElementSibling;
+                }
+                return (_w && _w.classList.contains('tbl')) ? _w : null;
+            })();
+
+            if (_tbl) {
+                // Remove STF-hidden markers and restore row visibility
+                _tbl.querySelectorAll('tbody tr[data-mb-stf-hidden]').forEach(r => {
+                    r.style.display = '';
+                    delete r.dataset.mbStfHidden;
+                });
+                // Remove STF highlight spans
+                _tbl.querySelectorAll('.mb-subtable-filter-highlight').forEach(n => {
+                    n.replaceWith(document.createTextNode(n.textContent));
+                });
+                // Sync collapse-toggle-has-match on art cells (pass-through after clear)
+                _syncCollapseHasMatchInTable(_tbl);
+            }
+
+            // Reset STF input border/shadow to default
+            _stfInput.style.borderColor   = '';
+            _stfInput.style.boxShadow     = '';
+            _stfInput.style.background    = '';
+
+            // Collapse the STF container and reset the toggle icon glyph
+            const _stfContainer = _h3.querySelector('.mb-subtable-filter-container');
+            if (_stfContainer) {
+                _stfContainer.classList.remove('visible');
+            }
+            const _stfToggleIcon = _h3.querySelector(
+                '.mb-subtable-filter-toggle-icon, [class*="mb-stf"][class*="toggle"]'
+            );
+            if (_stfToggleIcon) {
+                _stfToggleIcon.classList.remove('active');
+            }
+        });
+
+        // ── 4. Brute-force removal of any remaining highlight spans ───────────
+        // Covers global/column/pre-filter highlights left over before runFilter
+        // re-renders.  mb-subtable-filter-highlight removed in step 3.
+        document.querySelectorAll(
+            '.mb-global-filter-highlight, ' +
+            '.mb-column-filter-highlight, ' +
+            '.mb-pre-filter-highlight, ' +
+            '.mb-subtable-filter-highlight'
+        ).forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+
+        // ── 5. Sort state ─────────────────────────────────────────────────────
+        // (a) Clear multi-sort column tints
+        if (typeof multiSortTintRegistry !== 'undefined') {
+            multiSortTintRegistry.forEach(({ clearTints }) => {
+                try { clearTints(); } catch (_) { /* table may be mid-rebuild */ }
+            });
+        }
+        // (b) Strip active-sort CSS from all sort buttons
+        document.querySelectorAll('.sort-icon-btn').forEach(btn => {
+            btn.classList.remove('sort-icon-active');
+            // Remove superscript priority digits (¹²³…)
+            btn.textContent = btn.textContent.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '');
+        });
+        // (c) Clear sort-status span text
+        document.querySelectorAll('.mb-sort-status').forEach(el => { el.textContent = ''; });
+        // (d) Reset in-memory sort state (this prevents makeTableSortableUnified
+        //     from treating any column as still-sorted on the next render pass)
+        if (typeof multiTableSortStates !== 'undefined') multiTableSortStates.clear();
+        if (typeof multiSortTintRegistry !== 'undefined') multiSortTintRegistry.clear();
+        // (e) Re-insert rows in original groupedRows order for every visible table
+        _allH3s.forEach((_h3, _idx) => {
+            if (!groupedRows || !groupedRows[_idx]) return;
+            const _tbl = (() => {
+                let _w = _h3.nextElementSibling;
+                while (_w && (_w.classList.contains('mb-caa-bigbox') ||
+                               _w.classList.contains('mb-eaa-bigbox'))) {
+                    _w = _w.nextElementSibling;
+                }
+                return (_w && _w.classList.contains('tbl')) ? _w : null;
+            })();
+            if (!_tbl) return;
+            // Skip tables whose tbody was replaced by the merged-view pass —
+            // those will be restored by the pre-pass in _applyDiscographyViewFilter.
+            if (_tbl.dataset.mbMergedTbody === 'true') return;
+            const _tbody = _tbl.querySelector('tbody');
+            if (!_tbody) return;
+            const _frag = document.createDocumentFragment();
+            groupedRows[_idx].rows.forEach(r => _frag.appendChild(r));
+            _tbody.appendChild(_frag);
+        });
+
+        // ── 6. Re-run global filter (clears filter state from DOM) ────────────
+        // Must run AFTER sort rows are restored so the correct rows are visible.
+        // Passing an empty global query ensures every row is un-hidden and any
+        // column-filter highlights are removed.
+        if (typeof runFilter === 'function') runFilter();
+
+        // ── 7. H3 collapse state ──────────────────────────────────────────────
+        // Reset every h3/table pair to the same expanded/collapsed state that
+        // renderGroupedTable chose on initial render (shouldStayOpen logic).
+        _allH3s.forEach((_h3, _idx) => {
+            if (!groupedRows || !groupedRows[_idx]) return;
+            const _grp    = groupedRows[_idx];
+            const _catLow = (_grp.category || _grp.key || '').toLowerCase();
+            const _single = _allH3s.length === 1;
+            const _autoEx = Lib.settings.sa_auto_expand;
+            const _shouldOpen = _single ||
+                ((_catLow === 'album' || _catLow === 'official') &&
+                 _grp.rows.length < _autoEx);
+
+            // Walk to the table
+            const _tbl = (() => {
+                let _w = _h3.nextElementSibling;
+                while (_w && (_w.classList.contains('mb-caa-bigbox') ||
+                               _w.classList.contains('mb-eaa-bigbox'))) {
+                    _w = _w.nextElementSibling;
+                }
+                return (_w && _w.classList.contains('tbl')) ? _w : null;
+            })();
+
+            const _icon = _h3.querySelector('.mb-toggle-icon');
+            if (_icon) _icon.textContent = _shouldOpen ? '▼' : '▲';
+            if (_tbl) _tbl.style.display = _shouldOpen ? '' : 'none';
+        });
+
+        // ── 8. CAA/EAA bigboxes — unconditionally collapse ────────────────────
+        // The spec says: "CAA cover art image stripes should always be in a
+        // collapsed state when switching views."  Set both the DOM visibility and
+        // the dataset flag so the h3 click-handler / _artRestoreBigboxesForTable
+        // see the correct 'false' state when the user later expands a sub-table.
+        document.querySelectorAll('.mb-caa-bigbox, .mb-eaa-bigbox').forEach(box => {
+            box.style.display = 'none';
+            if (box.classList.contains('mb-caa-bigbox')) {
+                box.dataset.caaVisible = 'false';
+            } else {
+                box.dataset.eaaVisible = 'false';
+            }
+        });
+
+        Lib.debug('render', '_resetDiscographyViewState: filter/sort/collapse/bigbox state reset');
+    }
+
+    /**
      * Applies (or clears) the discography view filter for artist-releasegroups pages.
      *
      * Sections:
@@ -28566,6 +28865,13 @@ a { color: #1565c0; }`;
      */
     function _applyDiscographyViewFilter(section) {
         discographyViewState = section;
+
+        // ── Reset all filter / sort / highlight / collapse / bigbox state ─────
+        // Always start from a clean baseline so every view switch is predictable,
+        // regardless of what filters, sorts, or collapse toggles were active in
+        // the previous view.  This prevents stale highlights, wrong row counts,
+        // and out-of-order rows from leaking across view transitions.
+        _resetDiscographyViewState();
 
         // ── Update button tints ───────────────────────────────────────────────
         _applyDiscButtonTints(section);
