@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.569+2026-04-27
+// @version      9.99.571+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -29926,8 +29926,8 @@ a { color: #1565c0; }`;
                 th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' ');
             return name === 'CAA' || name === 'EAA';
         })();
-        const caaYesCount = isCaaOrEaaCol ? (valueCounts.get('yes') || 0) : 0;
-        const caaNoCount  = isCaaOrEaaCol ? (valueCounts.get('no')  || 0) : 0;
+        const caaYesCount = 0; // unused after 9.99.569 — artwork-presence filtered via makeSynItem rename
+        const caaNoCount  = 0;
 
         // Is this a synthetic Country column produced by splitCountryDate,
         // splitLocation, or splitArea?  Detected by column header name so that
@@ -30328,39 +30328,17 @@ a { color: #1565c0; }`;
             ].join(' ');
             synBox.appendChild(synHdr);
 
-            // "empty cells" pinned first; remaining entries in ascending complexity order
-            if (emptyCellCount > 0)         makeSynItem('empty',     '○ empty cells',               emptyCellCount);
-            if (singleRowCount > 0)         makeSynItem('single',    '• single-row cells',           singleRowCount);
-            if (multiRowCollapsedCount > 0) makeSynItem('collapsed', '▶ collapsed multi-row cells',  multiRowCollapsedCount);
-            if (multiRowExpandedCount > 0)  makeSynItem('expanded',  '◀ expanded multi-row cells',   multiRowExpandedCount);
-            if (totalMultiRow > 1)          makeSynItem('any',       '▶◀ any multi-row cells',       totalMultiRow);
-
-            // When this collapsable column is also a CAA / EAA column (i.e. some
-            // cells carry multiple artwork thumbnails in a ul.mb-caa-art-ul list,
-            // making totalMultiRow > 0 and landing us in this branch), append the
-            // artwork-presence quick-filter entries so the user can still filter
-            // for rows WITH or WITHOUT artwork even alongside the collapse states.
-            if (isCaaOrEaaCol && (caaYesCount > 0 || caaNoCount > 0)) {
-                if (caaYesCount > 0) makeArtItem('yes', '✓ has artwork', caaYesCount);
-                if (caaNoCount  > 0) makeArtItem('no',  '✗ no artwork',  caaNoCount);
-            }
-
-            appendSynDivider();
-        } else if (isCaaOrEaaCol && (caaYesCount > 0 || caaNoCount > 0)) {
-            // CAA / EAA column where isCollapsableCol is false or no structural
-            // counts exist (typical case: all cells have a single artwork icon or
-            // no artwork at all — no ul>li multi-row structure).  Show ONLY the
-            // artwork-presence quick-filter entries under their own section header.
-            const synHdr = document.createElement('div');
-            synHdr.textContent = 'Cell structure';
-            synHdr.style.cssText = [
-                'font-size:0.75em; font-weight:600; color:#555;',
-                'padding:4px 8px 2px 8px; letter-spacing:0.03em; user-select:none;'
-            ].join(' ');
-            synBox.appendChild(synHdr);
-
-            if (caaYesCount > 0) makeArtItem('yes', '✓ has artwork', caaYesCount);
-            if (caaNoCount  > 0) makeArtItem('no',  '✗ no artwork',  caaNoCount);
+             // "empty cells" pinned first; remaining entries in ascending complexity order.
+            // For CAA/EAA columns the generic structural labels are replaced with more
+            // descriptive artwork-presence labels that match user intent:
+            //   '○ empty cells'          → '✗ no artwork'
+            //   '▶◀ any multi-row cells' → '✓ has artwork'
+            // The underlying multirow-mode filtering logic is unchanged.
+            if (emptyCellCount > 0)         makeSynItem('empty',     isCaaOrEaaCol ? '✗ no artwork'           : '○ empty cells',            emptyCellCount);
+            if (singleRowCount > 0)         makeSynItem('single',    '• single-row cells',                                                    singleRowCount);
+            if (multiRowCollapsedCount > 0) makeSynItem('collapsed', '▶ collapsed multi-row cells',                                           multiRowCollapsedCount);
+            if (multiRowExpandedCount > 0)  makeSynItem('expanded',  '◀ expanded multi-row cells',                                            multiRowExpandedCount);
+            if (totalMultiRow > 1)          makeSynItem('any',       isCaaOrEaaCol ? '✓ has artwork'           : '▶◀ any multi-row cells',    totalMultiRow);
 
             appendSynDivider();
         } else if (emptyCellCount > 0) {

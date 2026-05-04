@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.571",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement / 🐛 Fix",
+        "items": [
+          "Revert 9.99.570 (caaYesCount/caaNoCount IIFE computation and makeArtItem calls) — it re-introduced the substring false-positive bug fixed in 9.99.569. The correct solution (requested by user after testing) is purely cosmetic: for CAA/EAA columns only, rename the two existing makeSynItem cell-structure labels to artwork-presence equivalents — '○ empty cells' → '✗ no artwork', '▶◀ any multi-row cells' → '✓ has artwork'. The underlying multirow-mode filtering (applyMultiRowMode / testRowMatch isMultiRowFilter path) is completely unchanged; the new labels simply make the intent clearer for image columns. Also remove the now-dead else-if branch that showed the old makeArtItem entries under a separate 'Cell structure' header for non-collapsable CAA/EAA columns (those cases are now fully handled by the renamed makeSynItem entries in the main collapsable block)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.570",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix '✓ has artwork' and '✗ no artwork' entries disappearing from the CAA/EAA column unique-values dropdown after 9.99.569 added '.mb-caa-sort-key' to _CLEAN_STRIP_SEL: caaYesCount and caaNoCount were computed from valueCounts.get('yes') and valueCounts.get('no'), but valueCounts is built by iterating getCleanColumnText on each cell — which now strips .mb-caa-sort-key, so 'yes'/'no' are never accumulated and both counts are always 0. Fix: compute caaYesCount and caaNoCount by directly querying '.mb-caa-sort-key' / '.mb-eaa-sort-key' in each visible tbody cell and checking textContent === 'yes' or 'no', bypassing getCleanColumnText entirely."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.569",
     "date": "2026-04-27",
     "sections": [
