@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.572",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Global filter status display: append ' cleared' to the mode label when the global filter string is empty AND no column filters are active, so the status reads '✓ Global filter cleared' (or '✓ Regexp filter cleared', etc.) instead of the ambiguous bare '✓ Global filter'. The suffix is only added when the cleared state is the sole active state — if column filters are still active the label stays as-is so the user knows filtering is still in effect. Applied to both the multi-table path (mb-filter-status-display in the header bar) and the single-table path (where the status also includes row-count and timing)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.571",
     "date": "2026-04-27",
     "sections": [

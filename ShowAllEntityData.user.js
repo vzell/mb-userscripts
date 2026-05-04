@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.571+2026-04-27
+// @version      9.99.572+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -23124,7 +23124,12 @@ a { color: #1565c0; }`;
                     ? activeModeParts.join(' ') + ' filter'
                     : 'Global filter';
 
-                filterStatusDisplay.textContent = `✓ ${modeLabel}${globalFilterInfo}`;
+                // Append ' cleared' when the global filter was just cleared and no
+                // column filters are active — so the status reads "✓ Global filter cleared"
+                // rather than the ambiguous bare "✓ Global filter".
+                const _mlSuffix = (!globalQuery && activeColCount === 0) ? ' cleared' : '';
+
+                filterStatusDisplay.textContent = `✓ ${modeLabel}${_mlSuffix}${globalFilterInfo}`;
                 filterStatusDisplay.style.color = 'green';
 
                 // Update each sub-table filter status display with its specific info
@@ -23180,7 +23185,10 @@ a { color: #1565c0; }`;
                     filterStatusDisplay.textContent = _singleColRxErrors[0];
                     filterStatusDisplay.style.color = filterBorderError();
                 } else {
-                    filterStatusDisplay.textContent = `✓ ${singleModeLabel}: ${rowCount} ${rowCount === 1 ? 'row' : 'rows'} in ${filterDuration}ms${filterInfo}`;
+                    // Append ' cleared' when the global filter was just cleared and no
+                    // column filters are active — disambiguates the status from the active state.
+                    const _smlSuffix = (!globalQuery && activeColCount === 0) ? ' cleared' : '';
+                    filterStatusDisplay.textContent = `✓ ${singleModeLabel}${_smlSuffix}: ${rowCount} ${rowCount === 1 ? 'row' : 'rows'} in ${filterDuration}ms${filterInfo}`;
                     filterStatusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
                 }
             }
