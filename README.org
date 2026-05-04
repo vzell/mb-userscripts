@@ -78825,9 +78825,9 @@ Also when clearing the filter again, all 23 rows are shown again
 
 * TODO when pressing the "Toggle highlight" buttons the multi-row indicators when filter highlight is in effect should also be toggled
 
-* Remove "Relationships" column from place-performaces when no RG present
+* Remove "Relationships" column from place-performances when no RG present
 
-Remove "Relationships" column from place-performaces when no RG present, e.g.
+Remove the "Relationships" column from pageType "type: 'place-performances-filtered'" when no release or release-group type column is present, e.g.
 https://musicbrainz.org/place/6a59a67c-fcc5-491f-949c-bfc45bc97463/performances?direction=1&link_type_id=693
 
 
@@ -78896,4 +78896,422 @@ colors in "single"-table mode for filter and sorting status display should be ma
 #+end_example
 
 * TODO In the "Relationships" column change the tooltip to an HTML rich tooltip which highlights a filterstring if present
+
+* rendering bug
+
+There is still a rendering bug on pageType "type: 'place-performances'"
+
+There is a ghost column as the last column which renders with empty baclground greyed empty cells, but without column header and column filter field
+
+#+begin_example
+<thead>
+  <tr>
+    <th class="mb-original-column" data-col-name="Date" style="cursor: default; position: relative; min-width: 127px;">
+      <div class="mb-col-hdr-flex">Date
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 13 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 13 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">13
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th class="mb-original-column mb-sticky-col" data-col-name="Title" style="cursor: default; position: sticky; left: 0px; z-index: 101; background: rgb(186, 186, 186); min-width: 692px;">
+      <div class="mb-col-hdr-flex">Title
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 77 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 77 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">77
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th class="mb-original-column" data-col-name="Attributes" style="cursor: default; position: relative; min-width: 149px;">
+      <div class="mb-col-hdr-flex">Attributes
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show unique values for this column" title="Show unique values for this column">
+	  <span class="mb-col-uniq-count">
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th class="mb-original-column" data-col-name="Artist" style="cursor: default; position: relative; min-width: 421px;">
+      <div class="mb-col-hdr-flex">Artist
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 9 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 9 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">9
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th class="treleases mb-original-column" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO" style="text-shadow: yellow 0px 0px 2px; cursor: default; position: relative; min-width: 140px;" data-col-name="Length">
+      <div class="mb-col-hdr-flex">Length
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 62 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 62 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">62
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th data-col-name="Video" class="mb-extracted-column" title="Extracted from 'Title': the video indicator icon, moved here from the 'Title' column. Filter/sort values: 'video' or 'audio'." style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 127px;">
+      <div class="mb-col-hdr-flex">Video
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 1 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 1 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">1
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th data-col-name="DD" class="mb-extracted-column" title="Derived from 'Date': the numeric day-of-month (1–31)." style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 117px;">
+      <div class="mb-col-hdr-flex">DD
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 10 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 10 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">10
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th data-col-name="MM" class="mb-extracted-column" title="Derived from 'Date': the numeric month number (1–12)." style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 114px;">
+      <div class="mb-col-hdr-flex">MM
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 8 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 8 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">8
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th data-col-name="YYYY" class="mb-extracted-column" title="Derived from 'Date': the 4-digit year." style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 125px;">
+      <div class="mb-col-hdr-flex">YYYY
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 6 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 6 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">6
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th data-col-name="Day" class="mb-extracted-column" title="Derived from 'Date': the day-of-week name (Monday–Sunday), computed when full YYYY-MM-DD date is available." style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 116px;">
+      <div class="mb-col-hdr-flex">Day
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 6 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 6 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">6
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th data-col-name="Month" class="mb-extracted-column" title="Derived from 'Date': the full month name (January–December)." style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 131px;">
+      <div class="mb-col-hdr-flex">Month
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 8 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 8 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">8
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th data-col-name="MB-Name" class="mb-extracted-column" title="Extracted from 'Title': the entity name, split from the 'Title' column. The original column retains links and supplementary markup." style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 319px;">
+      <div class="mb-col-hdr-flex">MB-Name
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 72 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 72 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">72
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+    <th data-col-name="Comment" class="mb-extracted-column" title="Extracted from 'Title': the disambiguation comment, split from the 'Title' column." style="background-color: rgb(184, 200, 184); cursor: default; position: relative; min-width: 371px;">
+      <div class="mb-col-hdr-flex">Comment
+	<span class="sort-icon-btn" title="Restore original sort order (clears multi-sort columns)">⇅
+	</span>
+	<span class="sort-icon-btn" title="Sort ascending — Ctrl+Click to add to multi-column sort">▲
+	</span>
+	<span class="sort-icon-btn" title="Sort descending — Ctrl+Click to add to multi-column sort">▼
+	</span>
+	<span class="mb-col-uniq-wrap" tabindex="0" role="button" aria-label="Show the 14 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry" title="Show the 14 different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing &quot;Enter&quot; on an entry">
+	  <span class="mb-col-uniq-count">14
+	  </span>
+	  <span class="mb-col-uniq-btn">📊
+	  </span>
+	</span>
+      </div>
+      <div class="column-resizer" style="position: absolute; right: 0px; top: 0px; width: 8px; height: 100%; cursor: col-resize; user-select: none; z-index: 1; background: transparent;">
+      </div>
+    </th>
+  </tr>
+  <tr class="mb-col-filter-row">
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="0">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th class="mb-sticky-col" style="position: sticky; left: 0px; z-index: 101; background: rgb(209, 209, 209);">
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="1">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="2">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="3">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="4">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="5">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="6">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="7">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="8">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="9">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="10">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="11">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+    <th>
+      <span class="mb-col-filter-wrapper">
+	<input type="text" placeholder="…" title="Enter column filter string (the first column in a table can be focused by 'Ctrl+C', use 'Ctrl+U' for unicode character map" class="mb-col-filter-input" data-col-idx="12">
+	<span class="mb-col-filter-clear" title="Clear column filter">✕
+	</span>
+      </span>
+    </th>
+  </tr>
+</thead>
+<tr class="odd" data-mb-row-idx="0">
+  <td>1976-05-30
+  </td>
+  <td style="position: sticky; left: 0px; z-index: 1; background: rgb(255, 255, 255);" data-mb-sticky-bg="#ffffff" class="mb-sticky-col">
+    <span class="recordinglink">
+    </span>
+    <a href="/recording/2679845e-722b-49d7-bdb4-b7464f9b47d9">
+      <bdi>Havin’ a Party
+      </bdi>
+    </a>
+    <span class="comment">(
+      <bdi>live, 1976‐05‐30: The Stone Pony, Asbury Park, NJ, USA
+      </bdi>)
+    </span>
+  </td>
+  <td>
+  </td>
+  <td>
+    <bdi>
+      <a href="/artist/70248960-cb53-4ea4-943a-edb18f7d336f" title="Springsteen, Bruce">Bruce Springsteen
+      </a> with
+      <a href="/artist/f826b4d1-2dc3-4c4f-ba70-69b472320338" title="Southside Johnny">Southside Johnny
+      </a>
+    </bdi>
+  </td>
+  <td class="treleases" title="SUPER&nbsp;MIND&nbsp;CONTROL&nbsp;Ⅱ&nbsp;X&nbsp;TURBO" style="text-align: center;" data-mb-int-col-styled="1">
+    <span class="mb-ic-wrap" style="display: inline-block; white-space: nowrap;">
+      <span class="mb-ic-left" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">8
+      </span>
+      <span class="mb-ic-sep">:
+      </span>
+      <span class="mb-ic-right" style="display: inline-block; text-align: left; font-variant-numeric: tabular-nums; min-width: 6ch;">27.000
+      </span>
+    </span>
+  </td>
+  <td>
+    <span class="mb-video-sort-key" aria-hidden="true" style="display: none;">audio
+    </span>
+  </td>
+  <td style="font-variant-numeric: tabular-nums; text-align: center;" data-mb-int-col-styled="1">
+    <span class="mb-ic-val" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">30
+    </span>
+  </td>
+  <td style="font-variant-numeric: tabular-nums; text-align: center;" data-mb-int-col-styled="1">
+    <span class="mb-ic-val" style="display: inline-block; text-align: right; font-variant-numeric: tabular-nums; min-width: 2ch;">5
+    </span>
+  </td>
+  <td style="font-variant-numeric: tabular-nums; text-align: center;" data-mb-int-col-styled="1">
+    <span class="mb-ic-val" style="display: inline-block; text-align: center; font-variant-numeric: tabular-nums; min-width: 4ch;">1976
+    </span>
+  </td>
+  <td>Sunday
+  </td>
+  <td>May
+  </td>
+  <td>
+    <a href="/recording/2679845e-722b-49d7-bdb4-b7464f9b47d9">
+      <bdi>Havin’ a Party
+      </bdi>
+    </a>
+  </td>
+  <td>live, 1976‐05‐30: The Stone Pony, Asbury Park, NJ, USA
+  </td>
+  <td class="mb-ice-cell" style="background-color: rgba(184, 184, 208, 0.133);">
+  </td>
+  <td class="mb-ice-cell" style="background-color: rgba(184, 184, 208, 0.133);">
+  </td>
+  <td class="mb-ice-cell" style="background-color: rgba(184, 184, 208, 0.133);">
+  </td>
+  <td class="mb-ice-cell" style="background-color: rgba(184, 184, 208, 0.133);">
+  </td>
+  <td class="mb-ice-cell" style="background-color: rgba(184, 184, 208, 0.133);">
+  </td>
+  <td class="mb-ice-cell" style="background-color: rgba(184, 184, 208, 0.133);">
+  </td>
+  <td class="mb-ice-cell" style="background-color: rgba(184, 184, 208, 0.133);">
+  </td>
+</tr>
+#+end_example
 

@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.560",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Remove the Relationships column from pageType 'place-performances-filtered' (and any other single-table pageType that injects Relationships) when no /release/ or /release-group/ link is present in the table — e.g. https://musicbrainz.org/place/.../performances?direction=1&link_type_id=693. Root cause: _suppressRelationshipsIfNoReleaseOrReleaseGroupLinks() was only called in the multi-table path inside renderGroupedTable(). The single-table path in renderFinalTable() already called the parallel _suppressReleaseEventsIfNoReleaseLinks() but was missing the Relationships guard. Fix: add the missing _suppressRelationshipsIfNoReleaseOrReleaseGroupLinks(mainTable) call in renderFinalTable() immediately after _suppressReleaseEventsIfNoReleaseLinks(), before initRelationshipsColumn() creates mb-rel-cell placeholder <td>s."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.559",
     "date": "2026-04-27",
     "sections": [

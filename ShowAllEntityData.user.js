@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.559+2026-04-27
+// @version      9.99.560+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -26033,6 +26033,15 @@ a { color: #1565c0; }`;
                 // but before initReleaseEventsColumn() (so no mb-re-cell tds are created
                 // for suppressed tables).
                 if (mainTable) _suppressReleaseEventsIfNoReleaseLinks(mainTable);
+
+                // Guard Relationships column for single-table pages (e.g.
+                // place-performances-filtered, artist-relationships-filtered):
+                // when the table contains no /release/ or /release-group/ links
+                // there is no useful data to display, so remove the column exactly
+                // as the multi-table path does in renderGroupedTable.
+                // Must run before initRelationshipsColumn() so that mb-rel-cell
+                // placeholder <td>s are never created for suppressed tables.
+                if (mainTable) _suppressRelationshipsIfNoReleaseOrReleaseGroupLinks(mainTable);
 
                 if (mainTable) makeTableSortableUnified(mainTable, 'main_table');
 
