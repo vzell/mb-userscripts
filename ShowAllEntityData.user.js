@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.573+2026-04-27
+// @version      9.99.574+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -23116,11 +23116,29 @@ a { color: #1565c0; }`;
                 filterParts.push(`global:"${globalQuery}"`);
             }
 
-            // Count active column filters
+            // Count active column filters and build a detail string
             const activeColFilters = document.querySelectorAll('.mb-col-filter-input');
-            const activeColCount = Array.from(activeColFilters).filter(inp => stripColFilterPrefix(inp.value)).length;
+            const activeColInputs  = Array.from(activeColFilters).filter(inp => stripColFilterPrefix(inp.value));
+            const activeColCount   = activeColInputs.length;
             if (activeColCount > 0) {
-                filterParts.push(`${activeColCount} column filter${activeColCount > 1 ? 's' : ''}`);
+                // For single-table pages, include column names and values in the summary.
+                // For multi-table pages, per-table column details are shown in the h3 status.
+                if (activeDefinition.tableMode === 'single') {
+                    const colDetail = activeColInputs.map(inp => {
+                        const mainTable = document.querySelector('table.tbl');
+                        const headers   = mainTable
+                            ? mainTable.querySelectorAll('thead tr:first-child th')
+                            : [];
+                        const colIdx  = parseInt(inp.dataset.colIdx, 10);
+                        const colName = headers[colIdx]
+                            ? headers[colIdx].textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim()
+                            : `Col ${colIdx}`;
+                        return `"${colName}":"${stripColFilterPrefix(inp.value)}"`;
+                    }).join(', ');
+                    filterParts.push(`${activeColCount} column filter${activeColCount > 1 ? 's' : ''} [${colDetail}]`);
+                } else {
+                    filterParts.push(`${activeColCount} column filter${activeColCount > 1 ? 's' : ''}`);
+                }
             }
 
             const filterInfo = filterParts.length > 0 ? ` [${filterParts.join(', ')}]` : '';
@@ -32077,12 +32095,13 @@ a { color: #1565c0; }`;
                                     sortStatusDisplay.textContent = `✓ Multi-sorted by: ${colNames} (${rowCount} rows in ${durationMs}ms)`;
                                     sortStatusDisplay.style.color = colorByDuration;
                                 } else {
-                                    // Single-column (including the single-entry Ctrl+Click chain)
+                                    // Single-column (including the single-entry Ctrl+Click chain).
+                                    // Format mirrors multi-sort: "✓ Sorted by: "Col"▲ (N rows in Xms)"
                                     const col = state.multiSortColumns.length === 1 ? state.multiSortColumns[0] : null;
                                     const dispIdx  = col ? col.colIndex : index;
                                     const dispIcon = col ? (col.direction === 1 ? '▲' : '▼')
                                                          : (state.sortState === 1 ? '▲' : '▼');
-                                    sortStatusDisplay.textContent = `✓ Sorted by column "${getCleanColName(headers[dispIdx])}" ${dispIcon}: ${rowCount} rows in ${durationMs}ms`;
+                                    sortStatusDisplay.textContent = `✓ Sorted by: "${getCleanColName(headers[dispIdx])}"${dispIcon} (${rowCount} rows in ${durationMs}ms)`;
                                     sortStatusDisplay.style.color = colorByDuration;
                                 }
                             }

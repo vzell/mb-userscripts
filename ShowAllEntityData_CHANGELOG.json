@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.574",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Single-table sort status: reformat single-column sort to match the multi-sort style — '✓ Sorted by: \"Catalog#\"▲ (7 rows in 42ms)' instead of the old '✓ Sorted by column \"Catalog#\" ▲: 7 rows in 42ms'. This makes single and multi-column sort statuses visually consistent.",
+          "Single-table filter status: expand the column-filter summary from '2 column filters' to '2 column filters [\"Catalog#\":\"to\", \"Barcode\":\"val\"]', listing each active column filter's column name and current value. Column names are derived from the thead th elements (sort/unique-values glyphs stripped). Multi-table pages are unchanged — per-table column details continue to appear in the h3 sort-status span."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.573",
     "date": "2026-04-27",
     "sections": [
