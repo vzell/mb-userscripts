@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.573",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Add syntheticColumnExtractors with extractor 'eventParts' on sourceColumn 'Comment' and syntheticColumns ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] to five page type definitions: artist-recordings, instrument-recordings, area-recordings-filtered, area-recordings, work-recordings."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.572",
     "date": "2026-04-27",
     "sections": [
