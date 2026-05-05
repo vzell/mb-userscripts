@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.574+2026-04-27
+// @version      9.99.576+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -26956,7 +26956,15 @@ a { color: #1565c0; }`;
             ev.stopPropagation();
             filterInput.value = '';
             _syncStfClearBtn();
-            filterInput.dispatchEvent(new Event('input', { bubbles: false }));
+            // Call clearSubFilter() directly (like the Escape handler does) rather
+            // than dispatching a debounced 'input' event.  The debounced path only
+            // calls applySubFilter() which, for an empty input, takes the !raw
+            // early-return branch and restores table rows but NEVER calls
+            // caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable — so the bigbox
+            // keeps showing the stale filtered-state (e.g. 3 images instead of 4
+            // after clearing a "jp" filter).  clearSubFilter() explicitly syncs
+            // the bigbox at the end, which is the correct and complete clear path.
+            clearSubFilter();
             filterInput.focus();
         });
 
@@ -27075,6 +27083,24 @@ a { color: #1565c0; }`;
                 // should go dark; those lit by global/column highlights stay lit.
                 _syncCollapseHasMatchInTable(table);
                 updateSubTableRowCount();
+                // Sync the CAA/EAA bigbox: when the filter is cleared by typing
+                // (backspace/delete keystroke path), this is the only call site that
+                // runs — clearSubFilter() is NOT called by debouncedApply().
+                // Without this, rows become visible again but their bigbox anchors
+                // remain hidden (display:none set by the previous applySubFilter pass).
+                const _rawAllTbls = Array.from(document.querySelectorAll('table.tbl'));
+                const _rawTblIdx  = _rawAllTbls.indexOf(table);
+                if (_rawTblIdx !== -1) {
+                    caaUpdateBigBoxForTable(table, _rawTblIdx);
+                    eaaUpdateBigBoxForTable(table, _rawTblIdx);
+                }
+                // Hide the per-subtable "Clear all filters" and global "Clear ALL filters"
+                // buttons now that the STF is empty.  clearSubFilter() calls this too;
+                // it must also be called here because the delete/backspace path routes
+                // through debouncedApply() → applySubFilter(), not clearSubFilter().
+                if (typeof window.updateFilterButtonsVisibility === 'function') {
+                    window.updateFilterButtonsVisibility();
+                }
                 return;
             }
 

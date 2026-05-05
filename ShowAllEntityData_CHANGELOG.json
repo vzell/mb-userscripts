@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.576",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix 'mb-subtable-clear-btn' (Clear all filters) and 'mb-clear-all-filters-btn' (Clear ALL filters) buttons remaining visible after clearing the sub-table filter via Delete/Backspace keystroke: the applySubFilter !raw early-return branch (added in 9.99.575) was missing the window.updateFilterButtonsVisibility() call that clearSubFilter() performs. Added the call to the !raw branch so all three clear paths (Escape key, ✕ button, and Delete/Backspace) correctly hide those buttons when no filter is active."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.575",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix CAA/EAA bigbox (image stripe) not restoring all images after clearing the sub-table filter (STF) on multi-table pages: after filtering (e.g. 'jp' → 3 images shown), clearing the filter correctly restored all 4 rows but the bigbox still showed only 3 images (the non-matching row's anchor kept display:none from the previous applySubFilter pass). Root cause: two separate clear paths both failed to call caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable. (1) The STF ✕ clear button click handler called filterInput.dispatchEvent(new Event('input')) which routed through debouncedApply() → applySubFilter(). When applySubFilter runs with an empty input, it takes the !raw early-return branch which restores table rows but has no bigbox sync call — only clearSubFilter() (called by Escape key) performed the bigbox sync. Fix: change the ✕ click handler to call clearSubFilter() directly, matching the Escape key handler. (2) The delete-key/backspace path also went through debouncedApply() → applySubFilter() → !raw branch with no bigbox sync. Fix: add caaUpdateBigBoxForTable / eaaUpdateBigBoxForTable calls to the applySubFilter !raw early-return block so that the bigbox is always resync'd when the filter is cleared regardless of which input method was used."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.574",
     "date": "2026-04-27",
     "sections": [
