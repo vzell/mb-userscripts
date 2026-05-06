@@ -1,5 +1,41 @@
 [
   {
+    "version": "9.99.579",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Filter/sort status display — three format changes applied consistently to both single-table and multi-table modes: (1) Sort status: column names now use single quotes instead of double quotes — '\"Country/Date\"▲' → '\\'Country/Date\\'▲' — for both multi-sort (mb-sort-status span) and single-sort (Sorted by:) paths in both multi-table per-h3 and single-table main status displays. Also fixed the multi-table single-sort format to use the 'Sorted by:' form with parenthesised row count, matching the already-correct single-table single-sort path. (2) Filter status: column names in COLUMN FILTER entries no longer include multi-sort superscript suffixes (¹ ² ³ etc.) — the col-name strip regex at all filter-status build sites is extended to also remove Unicode superscript digits (⁰¹²³⁴⁵⁶⁷⁸⁹) so '\\'Title ¹\\':\"II\"' renders as '\\'Title\\':\"II\"'. (3) Single-table filter status: changed '✓ Global filter: N rows in Xms' to '✓ Filtered N rows in Xms' to be symmetric with the multi-table per-h3 format. The mode label (Regexp filter, Case-sensitive filter, etc.) that previously appeared as the prefix is now dropped — the filter details inside the brackets already convey that information via the mode flags."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.578",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Standardise filter status display format across single-table and multi-table modes: (1) Filter type labels are now UPPERCASE — 'GLOBAL:', 'SUB-TABLE:', 'N COLUMN FILTER(S)' — making them visually distinct from the quoted filter values. (2) Column filter entries are now always symmetric regardless of count — '1 COLUMN FILTER [\\'Format\\':\"vinyl\"]' uses the same bracketed list format as '2 COLUMN FILTERS [\\'Format\\':\"vinyl\\', \\'Country\\':\"JP\"]'. (3) Column names are always enclosed in single quotes — '\\'Format\\':\\\"vinyl\\\"' — distinguishing them from the double-quoted filter values. All three changes are applied consistently to both call sites in multi-table mode (runFilter per-h3 block and applySubFilter per-h3 block) and the single-table filterParts / filterInfo block."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.577",
+    "date": "2026-04-27",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Add sub-table filter (STF) info to the per-h3 filter status span in multi-table mode. Previously the span (class mb-filter-status, sibling to the mb-sort-status span in the h3 header) only showed column filter details and was completely blank when only a global or STF filter was active. The status now mirrors the single-table h2 format: '✓ Filtered N rows [global:\"x\", sub-table:\"y\", ColA:\"z\"]', listing all active filter layers for this specific sub-table. Mode flags (case, rx, ex) are appended in parentheses when active: e.g. 'sub-table:(rx) \"jp.*\"'. Single column filter shown inline ('ColA:\"val\"'), multiple as '2 col filters [ColA:\"v1\", ColB:\"v2\"]'. The update happens in two call sites: runFilter() (covers global/column filter changes that do not trigger applySubFilter) and applySubFilter() at the end of step 5 (covers STF-only filtering which never calls runFilter). The status is cleared in both the !raw early-return branch and clearSubFilter()."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.576",
     "date": "2026-04-27",
     "sections": [

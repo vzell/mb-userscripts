@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.576+2026-04-27
+// @version      9.99.579+2026-04-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8838,7 +8838,7 @@
 
         // Create checkbox for each column
         headers.forEach((th, index) => {
-            const colName = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim();
+            const colName = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
             if (!colName) return; // Skip empty headers
 
             const wrapper = document.createElement('div');
@@ -9196,7 +9196,7 @@
 
         if (headerRow) {
             Array.from(headerRow.cells).forEach((th, index) => {
-                const colName = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim();
+                const colName = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
                 if (!colName) return;
 
                 const wrapper = document.createElement('div');
@@ -23113,7 +23113,7 @@ a { color: #1565c0; }`;
             // Build filter info string
             const filterParts = [];
             if (globalQuery) {
-                filterParts.push(`global:"${globalQuery}"`);
+                filterParts.push(`GLOBAL:"${globalQuery}"`);
             }
 
             // Count active column filters and build a detail string
@@ -23131,13 +23131,13 @@ a { color: #1565c0; }`;
                             : [];
                         const colIdx  = parseInt(inp.dataset.colIdx, 10);
                         const colName = headers[colIdx]
-                            ? headers[colIdx].textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim()
+                            ? headers[colIdx].textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
                             : `Col ${colIdx}`;
-                        return `"${colName}":"${stripColFilterPrefix(inp.value)}"`;
+                        return `'${colName}':"${stripColFilterPrefix(inp.value)}"`;
                     }).join(', ');
-                    filterParts.push(`${activeColCount} column filter${activeColCount > 1 ? 's' : ''} [${colDetail}]`);
+                    filterParts.push(`${activeColCount} COLUMN FILTER${activeColCount > 1 ? 'S' : ''} [${colDetail}]`);
                 } else {
-                    filterParts.push(`${activeColCount} column filter${activeColCount > 1 ? 's' : ''}`);
+                    filterParts.push(`${activeColCount} COLUMN FILTER${activeColCount > 1 ? 'S' : ''}`);
                 }
             }
 
@@ -23146,7 +23146,7 @@ a { color: #1565c0; }`;
             // On multi-table pages: show only global filter info in main status
             // On single-table pages: show all filter info
             if (activeDefinition.tableMode === 'multi') {
-                const globalFilterInfo = globalQuery ? ` [global:"${globalQuery}"]` : '';
+                const globalFilterInfo = globalQuery ? ` [GLOBAL:"${globalQuery}"]` : '';
 
                 // Build a label that reflects the active filter modes
                 const activeModeParts = [];
@@ -23178,21 +23178,60 @@ a { color: #1565c0; }`;
                             // overwrite it with a success message — leave the error visible.
                             if (subFilterStatus.dataset.colRxError) return;
 
-                            // Count active column filters in this specific table
-                            const tableColFilters = Array.from(table.querySelectorAll('.mb-col-filter-input'))
-                                .filter(inp => stripColFilterPrefix(inp.value));
-
                             const group = filteredArray[tableIdx];
                             const rowsInTable = group ? group.rows.length : 0;
 
+                            // ── Collect all active filter layers for this table ───────
+                            const infoParts = [];
+
+                            // 1. Global filter
+                            if (globalQuery) {
+                                const _gMods = [];
+                                if (isCaseSensitive) _gMods.push('case');
+                                if (isRegExp)        _gMods.push('rx');
+                                if (isExclude)       _gMods.push('ex');
+                                const _gMod = _gMods.length ? `(${_gMods.join(',')}) ` : '';
+                                infoParts.push(`GLOBAL:${_gMod}"${globalQuery}"`);
+                            }
+
+                            // 2. Sub-table filter (STF) for this h3
+                            const _stfInput = h3.querySelector(
+                                '.mb-subtable-filter-container input[type="text"]'
+                            );
+                            const _stfVal = _stfInput ? _stfInput.value.trim() : '';
+                            if (_stfVal) {
+                                const _stfRxCb   = h3.querySelector('.mb-subtable-filter-container input[id$="-rx-checkbox"]');
+                                const _stfCaseCb = h3.querySelector('.mb-subtable-filter-container input[id$="-case-checkbox"]');
+                                const _stfExCb   = h3.querySelector('.mb-subtable-filter-container input[id$="-ex-checkbox"]');
+                                const _stfMods   = [];
+                                if (_stfCaseCb && _stfCaseCb.checked) _stfMods.push('case');
+                                if (_stfRxCb   && _stfRxCb.checked)   _stfMods.push('rx');
+                                if (_stfExCb   && _stfExCb.checked)   _stfMods.push('ex');
+                                const _stfMod = _stfMods.length ? `(${_stfMods.join(',')}) ` : '';
+                                infoParts.push(`SUB-TABLE:${_stfMod}"${_stfVal}"`);
+                            }
+
+                            // 3. Column filters for this table
+                            const tableColFilters = Array.from(
+                                table.querySelectorAll('.mb-col-filter-input')
+                            ).filter(inp => stripColFilterPrefix(inp.value));
+
                             if (tableColFilters.length > 0) {
-                                const colFilterInfo = tableColFilters.map(inp => {
-                                    const colIdx = parseInt(inp.dataset.colIdx, 10);
+                                const colDetails = tableColFilters.map(inp => {
+                                    const colIdx  = parseInt(inp.dataset.colIdx, 10);
                                     const headers = table.querySelectorAll('thead tr:first-child th');
-                                    const colName = headers[colIdx] ? headers[colIdx].textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim() : `Col ${colIdx}`;
-                                    return `${colName}:"${stripColFilterPrefix(inp.value)}"`;
-                                }).join(', ');
-                                subFilterStatus.textContent = `✓ Filtered ${rowsInTable} ${rowsInTable === 1 ? 'row' : 'rows'} [${colFilterInfo}]`;
+                                    const colName = headers[colIdx]
+                                        ? headers[colIdx].textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
+                                        : `Col ${colIdx}`;
+                                    return `'${colName}':"${stripColFilterPrefix(inp.value)}"`;
+                                });
+                                const _nColA = tableColFilters.length;
+                                infoParts.push(`${_nColA} COLUMN FILTER${_nColA > 1 ? 'S' : ''} [${colDetails.join(', ')}]`);
+                            }
+
+                            if (infoParts.length > 0) {
+                                const _rowWord = rowsInTable === 1 ? 'row' : 'rows';
+                                subFilterStatus.textContent = `✓ Filtered ${rowsInTable} ${_rowWord} [${infoParts.join(', ')}]`;
                                 subFilterStatus.style.color = 'green';
                             } else {
                                 subFilterStatus.textContent = '';
@@ -23221,7 +23260,7 @@ a { color: #1565c0; }`;
                     // Append ' cleared' when the global filter was just cleared and no
                     // column filters are active — disambiguates the status from the active state.
                     const _smlSuffix = (!globalQuery && activeColCount === 0) ? ' cleared' : '';
-                    filterStatusDisplay.textContent = `✓ ${singleModeLabel}${_smlSuffix}: ${rowCount} ${rowCount === 1 ? 'row' : 'rows'} in ${filterDuration}ms${filterInfo}`;
+                    filterStatusDisplay.textContent = `✓ Filtered ${rowCount} ${rowCount === 1 ? 'row' : 'rows'} in ${filterDuration}ms${filterInfo}`;
                     filterStatusDisplay.style.color = filterDuration > 1000 ? 'red' : (filterDuration > 500 ? 'orange' : 'green');
                 }
             }
@@ -23578,7 +23617,7 @@ a { color: #1565c0; }`;
         // are skipped — they produce no cells and need no header.
         activeColumnExtractors.forEach(entry => {
             if (entry.colIdx === -1) return; // column absent from this page
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim());
             entry.syntheticColumns.forEach(colName => {
                 if (!headersText.includes(colName)) {
                     const th = document.createElement('th');
@@ -23613,7 +23652,7 @@ a { color: #1565c0; }`;
         activeSyntheticColumnExtractors.forEach(entry => {
             // Skip if the source synthetic column was not produced on this page.
             if (!_resolvedPrimaryCols.has(entry.sourceColumn)) return;
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim());
             entry.syntheticColumns.forEach(colName => {
                 if (!headersText.includes(colName)) {
                     const th = document.createElement('th');
@@ -23635,7 +23674,7 @@ a { color: #1565c0; }`;
 
         // On pages where the configuration is enabled, create the "MB-Name" and "Comment" columns
         if (isMainColEnabled) {
-            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim());
+            const headersText = Array.from(theadRow.cells).map(th => th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim());
             if (!headersText.includes('MB-Name')) {
                 const thN = document.createElement('th');
                 thN.textContent = 'MB-Name';
@@ -27101,6 +27140,13 @@ a { color: #1565c0; }`;
                 if (typeof window.updateFilterButtonsVisibility === 'function') {
                     window.updateFilterButtonsVisibility();
                 }
+                // Clear the per-h3 filter status — STF is gone; any remaining
+                // global/column filter status will be re-stamped by the next runFilter().
+                {
+                    const _h3c = findH3ForTable(table);
+                    const _stc = _h3c ? _h3c.querySelector('.mb-filter-status') : null;
+                    if (_stc && !_stc.dataset.colRxError) _stc.textContent = '';
+                }
                 return;
             }
 
@@ -27220,6 +27266,68 @@ a { color: #1565c0; }`;
             _syncCollapseHasMatchInTable(table);
 
             updateSubTableRowCount();
+
+            // ── Update per-h3 filter status span ─────────────────────────────
+            // runFilter() updates this span for global/column filter changes, but
+            // STF-only filtering never calls runFilter() — so we update it here.
+            // Mirror the same format used in the runFilter() multi-table block:
+            //   ✓ Filtered N rows [global:"x", sub-table:"y", ColA:"z"]
+            {
+                const _h3s = findH3ForTable(table);
+                const _sts = _h3s ? _h3s.querySelector('.mb-filter-status') : null;
+                if (_sts && !_sts.dataset.colRxError) {
+                    const _infoParts = [];
+
+                    // Global filter
+                    const _gfEl  = document.getElementById('mb-global-filter-input');
+                    const _gfVal = _gfEl ? stripFilterPrefix(_gfEl.value).trim() : '';
+                    if (_gfVal) {
+                        const _gMods = [];
+                        if (caseCheckbox && caseCheckbox.checked) _gMods.push('case');
+                        if (regexpCheckbox && regexpCheckbox.checked) _gMods.push('rx');
+                        const _gMod = _gMods.length ? `(${_gMods.join(',')}) ` : '';
+                        _infoParts.push(`GLOBAL:${_gMod}"${_gfVal}"`);
+                    }
+
+                    // STF
+                    if (raw) {
+                        const _stfMods = [];
+                        if (useCase) _stfMods.push('case');
+                        if (useRx)   _stfMods.push('rx');
+                        if (useEx)   _stfMods.push('ex');
+                        const _stfMod = _stfMods.length ? `(${_stfMods.join(',')}) ` : '';
+                        _infoParts.push(`SUB-TABLE:${_stfMod}"${raw}"`);
+                    }
+
+                    // Column filters
+                    const _colInputs = Array.from(table.querySelectorAll('.mb-col-filter-input'))
+                        .filter(inp => stripColFilterPrefix(inp.value));
+                    if (_colInputs.length > 0) {
+                        const _colDetails = _colInputs.map(inp => {
+                            const _ci  = parseInt(inp.dataset.colIdx, 10);
+                            const _ths = table.querySelectorAll('thead tr:first-child th');
+                            const _cn  = _ths[_ci]
+                                ? _ths[_ci].textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim()
+                                : `Col ${_ci}`;
+                            return `'${_cn}':"${stripColFilterPrefix(inp.value)}"`;
+                        });
+                        const _nColB = _colInputs.length;
+                        _infoParts.push(`${_nColB} COLUMN FILTER${_nColB > 1 ? 'S' : ''} [${_colDetails.join(', ')}]`);
+                    }
+
+                    // Row count: visible rows only (STF-hidden excluded)
+                    const _visRows = Array.from(table.querySelectorAll('tbody tr'))
+                        .filter(r => r.style.display !== 'none').length;
+
+                    if (_infoParts.length > 0) {
+                        const _rw = _visRows === 1 ? 'row' : 'rows';
+                        _sts.textContent = `✓ Filtered ${_visRows} ${_rw} [${_infoParts.join(', ')}]`;
+                        _sts.style.color = 'green';
+                    } else {
+                        _sts.textContent = '';
+                    }
+                }
+            }
             // Sync h2 badge with 3-tier subtable totals
             if (typeof updateH2CountFromSubtables === 'function') updateH2CountFromSubtables();
             // Show/hide the per-subtable "Clear all filters" and "Toggle highlighting"
@@ -31911,7 +32019,7 @@ a { color: #1565c0; }`;
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'default';
 
-            const colName = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim();
+            const colName = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
             th.innerHTML = ''; // clear for new icon layout
 
             const createIcon = (char, targetState) => {
@@ -32095,7 +32203,7 @@ a { color: #1565c0; }`;
                                             } else if (state.multiSortColumns.length > 1) {
                                                 const colNames = state.multiSortColumns.map(c => {
                                                     const n = getCleanColName(headers[c.colIndex]);
-                                                    return `"${n}"${c.direction === 1 ? '▲' : '▼'}`;
+                                                    return `'${n}'${c.direction === 1 ? '▲' : '▼'}`;
                                                 }).join(', ');
                                                 subSortStatus.textContent = `✓ Multi-sorted by: ${colNames} (${rowCount} rows in ${durationMs}ms)`;
                                                 subSortStatus.style.color = colorByDuration;
@@ -32104,7 +32212,7 @@ a { color: #1565c0; }`;
                                                 const dispIdx  = col ? col.colIndex : index;
                                                 const dispIcon = col ? (col.direction === 1 ? '▲' : '▼')
                                                                      : (state.sortState === 1 ? '▲' : '▼');
-                                                subSortStatus.textContent = `✓ Sorted by column "${getCleanColName(headers[dispIdx])}" ${dispIcon}: ${rowCount} rows in ${durationMs}ms`;
+                                                subSortStatus.textContent = `✓ Sorted by: '${getCleanColName(headers[dispIdx])}'${dispIcon} (${rowCount} rows in ${durationMs}ms)`;
                                                 subSortStatus.style.color = colorByDuration;
                                             }
                                         }
@@ -32116,7 +32224,7 @@ a { color: #1565c0; }`;
                                 } else if (state.multiSortColumns.length > 1) {
                                     const colNames = state.multiSortColumns.map(c => {
                                         const n = getCleanColName(headers[c.colIndex]);
-                                        return `"${n}"${c.direction === 1 ? '▲' : '▼'}`;
+                                        return `'${n}'${c.direction === 1 ? '▲' : '▼'}`;
                                     }).join(', ');
                                     sortStatusDisplay.textContent = `✓ Multi-sorted by: ${colNames} (${rowCount} rows in ${durationMs}ms)`;
                                     sortStatusDisplay.style.color = colorByDuration;
@@ -32127,7 +32235,7 @@ a { color: #1565c0; }`;
                                     const dispIdx  = col ? col.colIndex : index;
                                     const dispIcon = col ? (col.direction === 1 ? '▲' : '▼')
                                                          : (state.sortState === 1 ? '▲' : '▼');
-                                    sortStatusDisplay.textContent = `✓ Sorted by: "${getCleanColName(headers[dispIdx])}"${dispIcon} (${rowCount} rows in ${durationMs}ms)`;
+                                    sortStatusDisplay.textContent = `✓ Sorted by: '${getCleanColName(headers[dispIdx])}'${dispIcon} (${rowCount} rows in ${durationMs}ms)`;
                                     sortStatusDisplay.style.color = colorByDuration;
                                 }
                             }
@@ -39012,7 +39120,7 @@ a { color: #1565c0; }`;
         return Array.from(headerRow.children).findIndex(th => {
             const named = th.dataset && th.dataset.colName;
             if (named) return named === name;
-            const txt = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9]/g, '').trim();
+            const txt = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
             return txt === name;
         });
     }
