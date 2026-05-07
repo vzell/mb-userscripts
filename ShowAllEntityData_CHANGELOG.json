@@ -1,5 +1,41 @@
 [
   {
+    "version": "9.99.583",
+    "date": "2026-05-07",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fix per-h3 filter-status going blank after pressing the H3 sub-table 'Clear all filters' button (.mb-subtable-clear-btn) when a global filter is still active: replaced the dispatchEvent('input') call (which scheduled a debounced applySubFilter() that fired after runFilter() and wiped the status span) with a direct DOM lookup of the STF ✕ button (id ending in '-clear' inside .mb-stf-input-wrap) to hide it without triggering applySubFilter()"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.582",
+    "date": "2026-05-07",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Remove unconditional filter-status overwrite ('✓ All column filters cleared') triggered by the H3 sub-table 'Clear all filters' button (clearSubTableColumnFilters), which wiped the filter status display even when a global filter was still active; debug log message for the button press is retained"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.581",
+    "date": "2026-05-07",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Remove unconditional filter-status overwrite ('✓ All filters cleared' / '✓ All column filters cleared') triggered by the 'Clear ALL column filters' and 'Clear ALL filters' buttons in the H2 header bar, which incorrectly replaced the current filter status even when filters were still active; debug log messages for both button presses are retained"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.580",
     "date": "2026-05-07",
     "sections": [

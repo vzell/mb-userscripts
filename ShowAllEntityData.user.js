@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.580+2026-05-07
+// @version      9.99.583+2026-05-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -10992,13 +10992,6 @@ ${sections.join('\n')}
         }
 
         Lib.debug('shortcuts', 'All filters cleared');
-
-        // Show feedback in filter status
-        const filterStatusDisplay = document.getElementById('mb-filter-status-display');
-        if (filterStatusDisplay) {
-            filterStatusDisplay.textContent = '✓ All filters cleared';
-            filterStatusDisplay.style.color = 'green';
-        }
     }
 
     /**
@@ -17235,13 +17228,6 @@ a { color: #1565c0; }`;
         }
 
         Lib.debug('filter', 'All column filters cleared');
-
-        // Show feedback in filter status
-        const filterStatusDisplay = document.getElementById('mb-filter-status-display');
-        if (filterStatusDisplay) {
-            filterStatusDisplay.textContent = '✓ All column filters cleared';
-            filterStatusDisplay.style.color = 'green';
-        }
     };
     filterContainer.appendChild(clearColumnFiltersBtn);
 
@@ -17437,7 +17423,16 @@ a { color: #1565c0; }`;
             const stfInput = h3stf.querySelector('.mb-subtable-filter-container input[type="text"]');
             if (stfInput && stfInput.value.trim() !== '') {
                 stfInput.value = '';
-                stfInput.dispatchEvent(new Event('input', { bubbles: false })); // syncs ✕ button
+                // Sync the STF ✕ button visibility directly instead of dispatching
+                // an 'input' event.  Dispatching 'input' would schedule a debounced
+                // applySubFilter() that fires AFTER the synchronous runFilter() call
+                // below; applySubFilter() clears the per-h3 .mb-filter-status span on
+                // empty input (expecting a subsequent runFilter() to refill it), which
+                // causes the status to go blank even though the global filter is still
+                // active.  The ✕ button id is always "${pfx}-clear" (mb-stf-<safeId>-clear)
+                // and lives inside .mb-stf-input-wrap, so it is reliably locatable.
+                const _stfXBtn = h3stf.querySelector('.mb-stf-input-wrap [id$="-clear"]');
+                if (_stfXBtn) _stfXBtn.style.display = 'none';
                 // Restore rows hidden by the stf filter
                 table.querySelectorAll('tbody tr[data-mb-stf-hidden]').forEach(row => {
                     row.style.display = '';
@@ -17459,20 +17454,6 @@ a { color: #1565c0; }`;
         }
 
         Lib.debug('filter', `Column filters cleared for table: ${tableName}`);
-
-        // Show feedback in the sub-table specific filter status display
-        const h3 = findH3ForTable(table);
-        if (h3 && h3.classList.contains('mb-toggle-h3')) {
-            const filterStatusDisplay = h3.querySelector('.mb-filter-status');
-            if (filterStatusDisplay) {
-                filterStatusDisplay.textContent = `✓ All column filters cleared`;
-                filterStatusDisplay.style.color = 'green';
-                // Auto-clear the message after 2 seconds
-                setTimeout(() => {
-                    filterStatusDisplay.textContent = '';
-                }, 2000);
-            }
-        }
     }
 
     controlsContainer.insertBefore(stopBtn, initialDivider);
