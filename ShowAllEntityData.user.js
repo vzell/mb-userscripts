@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View
+// @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.579+2026-04-27
+// @version      9.99.580+2026-05-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -42,8 +42,6 @@
 // ==/UserScript==
 
 /*
- * VZ: MusicBrainz - Show All Entity Data In A Consolidated View
- *
  * A userscript which accumulates paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events,
  * Recordings, Releases, Works, etc.) into a single view with real-time multi-column sorting and filtering.
  *
@@ -53,6 +51,92 @@
  *
  * NOTICE: This script has only been tested with Tampermonkey (>=v5.4.1) on Vivaldi, Chrome, Firefox, Opera and Brave.
  */
+
+/*
+ * This script uses functionality originally included in the following user scripts, thx to the original authors...
+ *
+ */
+
+// ============================================================================================================================================
+// @name         mb. SUPER MIND CONTROL Ⅱ X TURBO
+// @description  musicbrainz.org power-ups: RELEASE_CLONER. copy/paste releases / DOUBLE_CLICK_SUBMIT / CONTROL_ENTER_SUBMIT / TRACKLIST_TOOLS. search→replace, track length parser, remove recording relationships, set selected recording dates / LAST_SEEN_EDIT. handy for subscribed entities / COOL_SEARCH_LINKS / COPY_TOC / ROW_HIGHLIGHTER / SPOT_CAA / SPOT_AC / RECORDING_LENGTH_COLUMN / RELEASE_EVENT_COLUMN / WARN_NEW_WINDOW / SERVER_SWITCH / TAG_TOOLS / USER_STATS / EASY_DATE. paste full dates in one go / STATIC_MENU / SLOW_DOWN_RETRY / CENTER_FLAGS / RATINGS_ON_TOP / HIDE_RATINGS / UNLINK_ENTITY_HEADER / MARK_PENDING_EDIT_MEDIUMS
+// @version      2026.1.9
+// @author       jesus2099
+// @licence      CC-BY-NC-SA-4.0; https://creativecommons.org/licenses/by-nc-sa/4.0/
+// @licence      GPL-3.0-or-later; http://www.gnu.org/licenses/gpl-3.0.txt
+// @downloadURL  https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js
+//
+//   uses just: RELEASE_EVENT_COLUMN ==> Displays release dates in label relationships page
+// ============================================================================================================================================
+// @name         mb. FUNKEY ILLUSTRATED RECORDS
+// @description  musicbrainz.org: CAA front cover art archive pictures/images (release groups and releases) Big illustrated discography and/or inline everywhere possible without cluttering the pages
+// @version      2026.1.12
+// @author       jesus2099
+// @licence      CC-BY-NC-SA-4.0; https://creativecommons.org/licenses/by-nc-sa/4.0/
+// @licence      GPL-3.0-or-later; http://www.gnu.org/licenses/gpl-3.0.txt
+// @downloadURL  https://github.com/jesus2099/konami-command/raw/master/mb_FUNKEY-ILLUSTRATED-RECORDS.user.js
+// ============================================================================================================================================
+// @name         MusicBrainz: Expand/collapse release groups
+// @description  See what's inside a release group without having to follow its URL. Also adds convenient edit links for it.
+// @version      2022.1.6.1
+// @author       Michael Wiencek <mwtuea@gmail.com>
+// @license      GPL
+// @downloadURL  https://raw.githubusercontent.com/murdos/musicbrainz-userscripts/master/expand-collapse-release-groups.user.js
+// ============================================================================================================================================
+// @name         Display shortcut for relationships on MusicBrainz
+// @description  Display icon shortcut for relationships of release-group, release, recording and work: e.g. Amazon, Discogs, Wikipedia, ... links. This allows to access some relationships without opening the entity page.
+// @version      2026.1.21
+// @author       Aurelien Mino <aurelien.mino@gmail.com>
+// @licence      GPL (http://www.gnu.org/copyleft/gpl.html)
+// @downloadURL  https://raw.github.com/murdos/musicbrainz-userscripts/master/mb_relationship_shortcuts.user.js
+// ============================================================================================================================================
+// @name        MusicBrainz: Highlight identical barcodes and toggle merge checkboxes
+// @description Highlights sets of identical barcodes and toggles checkboxes for merging on click
+// @version     1.4.0
+// @author      chaban
+// @license     MIT
+// @downloadURL https://update.greasyfork.org/scripts/536998/MusicBrainz%3A%20Highlight%20identical%20barcodes%20and%20toggle%20merge%20checkboxes.user.js
+// ============================================================================================================================================
+// @name         mb.unicodechars
+// @description  Ctrl+M on MusicBrainz input text or textarea controls shows context menu for unicode characters. Just click on the menu line to send the character or close with Escape key.
+// @version      0.10.4
+// @author       Smeulf
+// ============================================================================================================================================
+// @name         MusicBrainz: add release(group) links from level above
+// @description  add release(group) links from an artist, label or series page
+// @version      0.9
+// @author       RandomMushroom128
+// @license      GPL
+//
+// this script uses some code from "MusicBrainz: Expand/collapse release groups" (https://raw.githubusercontent.com/murdos/musicbrainz-userscripts/master/expand-collapse-release-groups.user.js) which is also GPL licensed
+// ============================================================================================================================================
+// @name          MusicBrainz Magic Tagger Button
+// @description   Automatically enable the green tagger button on MusicBrainz.org depending on whether Picard is running.
+// @version       0.7.14
+// @author        Philipp Wolfer
+// @license       MIT
+// @downloadURL   https://raw.githubusercontent.com/phw/musicbrainz-magic-tagger-button/main/mb-magic-tagger-button.user.js
+//
+// MusicBrainz Magic Tagger Button - Copyright (c) 2021-2025 Philipp Wolfer
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// ============================================================================================================================================
 
 (function() {
     'use strict';
@@ -221,6 +305,30 @@
             type: 'color_picker',
             default: '#cdd6f4',
             description: 'Text color of the rich row-count stat tooltip box. Default: soft white (#cdd6f4).'
+        },
+
+        sa_ui_row_count_color: {
+            label: 'Row-count stat tooltip: count text color',
+            type: 'color_picker',
+            default: '#111111',
+            description: 'Text color of the numeric count pills rendered inside the rich H2/H3 row-count ' +
+                         'hover tooltips (the colored inline spans produced by _mbttCount, e.g. the "109" ' +
+                         'in "There are 109 rows total …"). ' +
+                         'This does NOT affect the (N) / (N of M) span on the H2/H3 line itself — ' +
+                         'that span always inherits its color from the header element. ' +
+                         'Default: dark black (#111111).'
+        },
+
+        sa_ui_row_count_bg: {
+            label: 'Row-count stat tooltip: count background color',
+            type: 'color_picker',
+            default: '#e8e8e8',
+            description: 'Background color of the numeric count pills rendered inside the rich H2/H3 row-count ' +
+                         'hover tooltips (the colored inline spans produced by _mbttCount, e.g. the "109" ' +
+                         'in "There are 109 rows total …"). ' +
+                         'This does NOT affect the (N) / (N of M) span on the H2/H3 line itself — ' +
+                         'that span always inherits its background from the header element. ' +
+                         'Default: light grey (#e8e8e8).'
         },
 
         // ============================================================
@@ -524,6 +632,14 @@
             description: "Decorative prefix prepended to any filter field (global or column) while it has focus (stripped before the value is used as a filter string)"
         },
 
+        // ============================================================
+        // UNIQUE COLUMN VALUES DROP DOWN CONFIGURATION SECTION
+        // ============================================================
+        divider_unique_column_values_drop_down: {
+            type: 'divider',
+            label: '#₁ UNIQUE COLUMN VALUES DROP DOWN CONFIGURATION'
+        },
+
         sa_uniq_quickfilter_highlight_color: {
             label: "Unique-Values Quickfilter Highlight Color",
             type: "color_picker",
@@ -550,6 +666,27 @@
             type: "color_picker",
             default: "#fffacd",
             description: "Background color for the (n) occurrence count badge rendered in front of each unique-values dropdown entry"
+        },
+
+        // ============================================================
+        // THRESHOLD SECTION
+        // ============================================================
+        divider_thresholds: {
+            type: 'divider',
+            label: 'Σ THRESHOLD SETTINGS'
+        },
+
+        sa_max_page: {
+            label: "Max Page Warning",
+            type: "number",
+            default: 50,
+            description: "Warning threshold for page fetching"
+        },
+        sa_auto_expand: {
+            label: "Auto-Expand Rows in Multi-Table page types",
+            type: "number",
+            default: 50,
+            description: "Row count threshold to auto-expand tables of 'album'/'official' category in multi-table page types"
         },
 
         // ============================================================
@@ -606,19 +743,6 @@
             min: 1000,
             max: 100000,
             description: "Show progress indicator when sorting tables with more than this many rows"
-        },
-
-        sa_max_page: {
-            label: "Max Page Warning",
-            type: "number",
-            default: 50,
-            description: "Warning threshold for page fetching"
-        },
-        sa_auto_expand: {
-            label: "Auto-Expand Rows",
-            type: "number",
-            default: 50,
-            description: "Row count threshold to auto-expand tables"
         },
 
         // ============================================================
@@ -1069,30 +1193,6 @@
                          + 'Default #b8b8d0 (cool blue-grey), distinct from extracted (#b8c8b8) '
                          + 'and derived (#c8c8b0). Also used as the row-tint color in the '
                          + 'Statistics panel Table Details section and as the td loading background.'
-        },
-
-        sa_ui_row_count_color: {
-            label: 'Row-count stat tooltip: count text color',
-            type: 'color_picker',
-            default: '#111111',
-            description: 'Text color of the numeric count pills rendered inside the rich H2/H3 row-count ' +
-                         'hover tooltips (the colored inline spans produced by _mbttCount, e.g. the "109" ' +
-                         'in "There are 109 rows total …"). ' +
-                         'This does NOT affect the (N) / (N of M) span on the H2/H3 line itself — ' +
-                         'that span always inherits its color from the header element. ' +
-                         'Default: dark black (#111111).'
-        },
-
-        sa_ui_row_count_bg: {
-            label: 'Row-count stat tooltip: count background color',
-            type: 'color_picker',
-            default: '#e8e8e8',
-            description: 'Background color of the numeric count pills rendered inside the rich H2/H3 row-count ' +
-                         'hover tooltips (the colored inline spans produced by _mbttCount, e.g. the "109" ' +
-                         'in "There are 109 rows total …"). ' +
-                         'This does NOT affect the (N) / (N of M) span on the H2/H3 line itself — ' +
-                         'that span always inherits its background from the header element. ' +
-                         'Default: light grey (#e8e8e8).'
         },
 
         // ============================================================
@@ -32629,8 +32729,9 @@ a { color: #1565c0; }`;
 
     // ── end CDtoc tracklist toggle feature ───────────────────────────────────
 
-    /** the consolidated
-     * data-table h2 to immediately before it, preserving their original order.
+    /**
+     * Moves any h2 sections that MusicBrainz rendered AFTER the consolidated
+     * data-table to immediately before it, preserving their original order.
      *
      * Idempotent: sections that are already before the data h2 are skipped.
      * Must be called AFTER the .mb-row-count-stat span has been inserted into
