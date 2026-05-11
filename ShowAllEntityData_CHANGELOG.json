@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.584",
+    "date": "2026-05-07",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fix spurious filter/highlight matches in multi-row cells (Catalog#, Label, …): the 'mb-cell-collapse-toggle' UI widget ('▶ 2 ▤') was included in the filterable text, causing cross-tag matches between the last character(s) of a cell value and the numeric item-count badge (e.g. filter '12' matched trailing '1' of 'DT 0017-1311' plus '2' of the count badge); fixed by adding '.mb-cell-collapse-toggle' to _CLEAN_STRIP_SEL (getCleanColumnText clone-and-strip pass), to the FILTER_REJECT list in the highlightCrossTag TreeWalker, and to the secondary guard in getCleanColumnText's own TreeWalker"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.583",
     "date": "2026-05-07",
     "sections": [

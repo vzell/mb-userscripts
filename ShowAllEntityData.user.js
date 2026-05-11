@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.583+2026-05-07
+// @version      9.99.584+2026-05-07
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -21450,7 +21450,14 @@ a { color: #1565c0; }`;
         // The applyUniqVal('yes') / applyUniqVal('no') path bypasses
         // getCleanColumnText and uses a direct .mb-caa-sort-key check in testRowMatch
         // — exactly mirroring the mb-inline-art-sort-key pattern.
-        '.mb-caa-sort-key,.mb-eaa-sort-key';
+        '.mb-caa-sort-key,.mb-eaa-sort-key,' +
+        // .mb-cell-collapse-toggle is the UI widget injected into multi-row cells
+        // (Catalog#, Label, …) that shows "▶ 2 ▤" (glyph + item-count + rack icon).
+        // Its text content — especially the numeric count such as "2" — must never
+        // be included in filter text or highlight matching: a filter for "12" would
+        // otherwise cross-tag-match the trailing "1" of a catalog number with the
+        // "2" of the adjacent count badge, producing a spurious highlight span.
+        '.mb-cell-collapse-toggle';
 
     /**
      * Extracts visible text from `element` for column filtering, skipping
@@ -21528,7 +21535,10 @@ a { color: #1565c0; }`;
                         node.classList.contains('mb-art-cache-hint-col-wrap') ||
                         node.classList.contains('mb-art-cache-hint-col') ||
                         node.classList.contains('mb-caa-count-badge') ||
-                        node.classList.contains('mb-eaa-count-badge')
+                        node.classList.contains('mb-eaa-count-badge') ||
+                        // mb-cell-collapse-toggle ("▶ 2 ▤") must be excluded so
+                        // the count digit never enters filter text or highlight matching.
+                        node.classList.contains('mb-cell-collapse-toggle')
                     )) {
                         return NodeFilter.FILTER_REJECT;
                     }
@@ -21846,7 +21856,14 @@ a { color: #1565c0; }`;
                             // sentinel 'yes'/'no'.  Must be excluded from visible text so
                             // filter strings like 'no' don't match the sort-key span.
                             cl.contains('mb-caa-sort-key') ||
-                            cl.contains('mb-eaa-sort-key')) return NodeFilter.FILTER_REJECT;
+                            cl.contains('mb-eaa-sort-key') ||
+                            // mb-cell-collapse-toggle is the "▶ 2 ▤" UI widget injected
+                            // into multi-row cells (Catalog#, Label, …).  Its count text
+                            // (e.g. "2") must never enter fullText — otherwise a filter
+                            // like "12" can cross-tag-match the trailing "1" of a catalog
+                            // number with the "2" of the count badge, producing spurious
+                            // highlight spans inside mb-cell-collapse-count.
+                            cl.contains('mb-cell-collapse-toggle')) return NodeFilter.FILTER_REJECT;
                     }
                     // All other elements: skip (don't return) but visit children.
                     return NodeFilter.FILTER_SKIP;
