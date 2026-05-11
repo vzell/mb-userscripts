@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.585+2026-05-11
+// @version      9.99.586+2026-05-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -33588,36 +33588,41 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Fetches HTML content from a URL using GM_xmlhttpRequest.
+     * Fetches HTML content from a URL using the browser's native fetch() API.
      *
-     * Explicitly forwards the browser's current User-Agent so that the server
-     * receives the same UA that was used for the normal page load.  This is
-     * critical on Firefox for Android when "Request Desktop Site" is enabled:
-     * Firefox overrides the UA to a desktop string for normal navigation (and
-     * navigator.userAgent reflects that override), but Tampermonkey's
-     * GM_xmlhttpRequest sends the raw mobile UA by default, causing MusicBrainz
-     * to return a mobile-layout page that contains no <table class="tbl"> elements.
-     * Passing navigator.userAgent here is a no-op on desktop browsers (where the
-     * UA is already correct), but fixes the mobile case transparently.
+     * All URLs fetched here are same-origin MusicBrainz pages, so CORS is not
+     * a concern.  Using fetch() instead of GM_xmlhttpRequest is critical for
+     * correctness across all browsers:
      *
-     * @param {string} url - The URL to fetch
-     * @returns {Promise<string>} Promise that resolves with the HTML response text
+     *   • fetch() executes in the **page/content-script context**, sharing the
+     *     active tab's cookie jar, Accept-Encoding handling, and network stack
+     *     exactly as a normal browser navigation would.
+     *
+     *   • GM_xmlhttpRequest in Tampermonkey for Firefox for Android executes in
+     *     the **extension background context**, which does NOT share the
+     *     foreground tab's session cookies.  MusicBrainz therefore receives an
+     *     unauthenticated (or differently-authenticated) request and may return
+     *     a different HTML response — confirmed experimentally: a page-context
+     *     fetch() to the same URL returns 425 KB of HTML that includes
+     *     <table class="tbl">, while GM_xmlhttpRequest returns HTML that
+     *     parseDocumentForTables() finds 0 tables in.
+     *
+     *   • On Chromium-based browsers (Chrome, Edge, Kiwi for Android) and
+     *     Firefox Desktop, GM_xmlhttpRequest happened to share the cookie jar
+     *     with the foreground tab, so the bug was invisible there.
+     *
+     * @param {string} url - The URL to fetch (must be same-origin).
+     * @returns {Promise<string>} Promise that resolves with the HTML response text.
      */
     function fetchHtml(url) {
         Lib.debug('fetch', `Initiating fetch for URL: ${url}`);
-        return new Promise((resolve, reject) => {
-            GM_xmlhttpRequest({
-                method: 'GET',
-                url: url,
-                headers: {
-                    // Mirror the browser's active User-Agent (respects the
-                    // "Request Desktop Site" override on Firefox for Android).
-                    'User-Agent': navigator.userAgent
-                },
-                onload: (res) => resolve(res.responseText),
-                onerror: reject
+        return fetch(url, { credentials: 'same-origin' })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status} ${res.statusText} for ${url}`);
+                }
+                return res.text();
             });
-        });
     }
 
     /**

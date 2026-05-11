@@ -1,5 +1,17 @@
 [
   {
+    "version": "9.99.586",
+    "date": "2026-05-11",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fix artist-releasegroups (and all other fetched pages) returning 0 tables on Firefox for Android: root cause identified via console fetch() test — a page-context fetch() to the same URL returned 425 KB of correct HTML with tables, while GM_xmlhttpRequest returned different content with no tables; GM_xmlhttpRequest in Tampermonkey for Firefox Android runs in the extension background context which does NOT share the foreground tab's cookie jar, so MusicBrainz served a different response; fixed by replacing GM_xmlhttpRequest with native fetch(url, {credentials:'same-origin'}) in fetchHtml(), which runs in the page context sharing the same session cookies and network stack as normal browser navigation; also reverts the incorrect navigator.userAgent header workaround added in 9.99.585 which was based on a wrong diagnosis"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.585",
     "date": "2026-05-11",
     "sections": [
