@@ -6,7 +6,7 @@
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 ---
 - [MusicBrainz - MB Page Enhancer](#mb_page_enhancer)
-- [MusicBrainz - Show All Entity Data In A Consolidated View](#mb_show_all_entity_data)
+- [MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities](#mb_show_all_entity_data)
 - [MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](#mb_show_all_consolidated)
 ---
 - [MusicBrainz - Auto-Select External Link Types](#mb_auto_select_discography_link_type)
@@ -74,7 +74,7 @@ Adds a "NO Label" & "NO Catalognumber" button to the MusicBrainz release editor.
 [![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/NoLabelAndCatnoButtons.user.js)
 [![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/NoLabelAndCatnoButtons.user.js)
 
-## <a name="mb_show_all_entity_data"></a> MusicBrainz - Show All Entity Data In A Consolidated View
+## <a name="mb_show_all_entity_data"></a> MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 
 Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting.
 
