@@ -10,6 +10,63 @@ MusicBrainz paginates most entity lists to 100 rows per page. This userscript fe
 
 One click on the action button (e.g. **🧮¹ Artist RGs**) starts the fetch. A live progress bar tracks it. When complete the full dataset is immediately filterable and sortable.
 
+There are three distinct fetch/render modes, each determined by the structure of the source page:
+
+---
+
+### Mode 1 — Paginated flat list → single-table view
+
+**Example pages:** Artist Events, Artist Recordings, Label Releases, Recording Releases, Work Recordings, …
+
+The native MB page shows one flat table with 100 rows per page and numbered pagination at the bottom. The script reads the total page count from the pagination bar, then fetches all remaining pages in sequence using native `fetch()` (same-origin, same cookie session as the active tab). Rows from every page are merged into one flat array, and a single consolidated table is rendered in place of the original.
+
+```
+Native:   Artist Events — Page 1 of 7 (100 rows) [2] [3] [4] … [7]
+Script:   Artist Events — (683 rows)  ← one table, fully filterable
+```
+
+Each row always represents exactly one entity (one event, one recording, etc.). There is only one filter bar and one column-header row. This is **single-table mode**.
+
+---
+
+### Mode 2 — Paginated multi-category source → multi-table view
+
+**Example pages:** Artist Release Groups, Artist Releases (with Official / Unofficial split), Release Group Releases, …
+
+The native MB page already has its rows grouped under `<h3>` section headings (e.g. *Album*, *Single*, *EP*, *Live*, *Compilation*, *Other*), each with its own sub-table on every page. The script fetches all pages — each fetched page contains the same set of section headings — and merges the rows from matching sections across pages together. The result is a set of independent per-category sub-tables, each under its own collapsible `<h3>` header.
+
+```
+Native (page 1 of 4):           Script (all pages merged):
+  h3 Album       (25 rows)        h3 Album       (87 rows)  ← sub-table with own filter/sort
+  h3 Single      (25 rows)        h3 Single      (143 rows) ← sub-table with own filter/sort
+  h3 EP          (4 rows)         h3 EP          (12 rows)  ← sub-table with own filter/sort
+  …                               …
+```
+
+Every sub-table gets its own independent sub-table filter (STF) input, column filters, sort chain, and filter-status display. There is also a shared global filter that narrows all sub-tables simultaneously. This is **multi-table mode**.
+
+For Artist Release Groups specifically, a pre-fetch pass first determines which release-group categories are present in the "Official" view, and the script merges Official and Non-Official sections of the same name (e.g. two separate "Album" sections) into a single unified sub-table, optionally with a *Complete (merged)* button.
+
+---
+
+### Mode 3 — Non-paginated multi-section source → multi-table view with overflow buttons
+
+**Example pages:** Artist Relationships, Label Relationships, Place Performances, Recording Releases (relationship view), …
+
+The native MB page is **not paginated** — there is only ever one page. Instead, it contains one large table whose rows are grouped under `<h3>` headings by relationship type (e.g. *member of band*, *collaborates with*, *produced*, *remixed*). MusicBrainz caps each section at **100 rows** and adds a *"See all N recordings"* link at the bottom of any section that has more. There is no traditional page-N pagination.
+
+The script fetches the single page (maxPage = 1), parses all its sections, and renders them as individual sub-tables under collapsible `<h3>` headers — exactly as in Mode 2. For any section that was truncated by MB's 100-row cap, the trailing "See all N rows" link is converted into a styled **"Show all N rows"** button in that sub-table's `<h3>` header line. Clicking that button either navigates to the full paginated list for that relationship type or opens it in a new tab (configurable), where the script will fetch all pages in Mode 1.
+
+```
+Native (1 page, capped):              Script (rendered):
+  h3 member of band  (12 rows)          h3 member of band  (12 rows)
+  h3 collaborates    (100 rows + link)  h3 collaborates    (100 rows) [Show all 347 rows →]
+  h3 produced        (100 rows + link)  h3 produced        (100 rows) [Show all 1,204 rows →]
+  …                                     …
+```
+
+The overflow buttons are colour-coded: configurable initial colour (default warm amber) changes to a different colour (default light green) after being clicked, providing a clear visual record of which sections have already been expanded in a separate tab.
+
 ---
 
 ## Supported pages
