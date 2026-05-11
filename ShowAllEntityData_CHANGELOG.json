@@ -1,5 +1,18 @@
 [
   {
+    "version": "9.99.585",
+    "date": "2026-05-11",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fix artist-releasegroups fetch returning 0 tables on Firefox for Android (Tampermonkey): GM_xmlhttpRequest was sending the raw Android mobile User-Agent instead of the browser's active UA; when 'Request Desktop Site' is enabled in Firefox, navigator.userAgent is overridden to a desktop UA for normal page loads but GM_xmlhttpRequest did not inherit that override, causing MusicBrainz to serve a mobile-layout page with no <table class=\"tbl\"> elements; fixed by explicitly forwarding navigator.userAgent as the 'User-Agent' header in every GM_xmlhttpRequest call in fetchHtml()",
+          "Replace blocking alert('No tables found to resize') in toggleAutoResizeColumns() with a Lib.warn()-only path; the alert was confusing on mobile and could appear as a side-effect of any empty-fetch condition (e.g. mobile UA mismatch) rather than as a direct result of a user resize action"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.584",
     "date": "2026-05-07",
     "sections": [

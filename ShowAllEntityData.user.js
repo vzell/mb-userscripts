@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.584+2026-05-07
+// @version      9.99.585+2026-05-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -15740,8 +15740,12 @@ a { color: #1565c0; }`;
         const tables = document.querySelectorAll('table.tbl');
 
         if (tables.length === 0) {
-            alert('No tables found to resize');
-            Lib.warn('resize', 'No tables found for auto-resize');
+            // No tables in the DOM — most likely the fetch returned no data (e.g. a
+            // mobile UA mismatch causing the server to return a layout without tables).
+            // Log the condition but do NOT show a blocking alert: the popup is
+            // misleading to the user and cannot be dismissed on some mobile browsers
+            // without disrupting the ongoing page state.
+            Lib.warn('resize', 'No tables found for auto-resize — skipping (page may have no data yet)');
             return;
         }
 
@@ -33584,7 +33588,18 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Fetches HTML content from a URL using GM_xmlhttpRequest
+     * Fetches HTML content from a URL using GM_xmlhttpRequest.
+     *
+     * Explicitly forwards the browser's current User-Agent so that the server
+     * receives the same UA that was used for the normal page load.  This is
+     * critical on Firefox for Android when "Request Desktop Site" is enabled:
+     * Firefox overrides the UA to a desktop string for normal navigation (and
+     * navigator.userAgent reflects that override), but Tampermonkey's
+     * GM_xmlhttpRequest sends the raw mobile UA by default, causing MusicBrainz
+     * to return a mobile-layout page that contains no <table class="tbl"> elements.
+     * Passing navigator.userAgent here is a no-op on desktop browsers (where the
+     * UA is already correct), but fixes the mobile case transparently.
+     *
      * @param {string} url - The URL to fetch
      * @returns {Promise<string>} Promise that resolves with the HTML response text
      */
@@ -33592,7 +33607,13 @@ a { color: #1565c0; }`;
         Lib.debug('fetch', `Initiating fetch for URL: ${url}`);
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
-                method: 'GET', url: url,
+                method: 'GET',
+                url: url,
+                headers: {
+                    // Mirror the browser's active User-Agent (respects the
+                    // "Request Desktop Site" override on Firefox for Android).
+                    'User-Agent': navigator.userAgent
+                },
                 onload: (res) => resolve(res.responseText),
                 onerror: reject
             });
