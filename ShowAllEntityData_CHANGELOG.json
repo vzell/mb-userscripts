@@ -1,5 +1,29 @@
 [
   {
+    "version": "9.99.587",
+    "date": "2026-05-11",
+    "sections": [
+      {
+        "label": "🧹 Cleanup",
+        "items": [
+          "Remove unused _eplGlyphs arrow function (defined in the Pinned Filter List editor closure but never called — _eplRender uses plain ✓ checkmarks instead of HTML badge spans)",
+          "Remove unused _relFetchFaviconUrl function (dead code; also used GM_xmlhttpRequest which was replaced by fetch() in 9.99.586)"
+        ]
+      },
+      {
+        "label": "📝 Documentation",
+        "items": [
+          "Add JSDoc to updateSubTableCollapseButton: documents collapse-button visibility logic and highlight tinting",
+          "Add JSDoc to _syncGfClearBtn: documents global-filter ✕ button visibility sync",
+          "Add JSDoc to _initRelTooltipListeners: documents idempotent tooltip delegation installer",
+          "Add JSDoc to initRelationshipsColumn: documents full execution flow (cache hierarchy, cell injection, WS2 fetch)",
+          "Add JSDoc to _artInitInlinePics: documents CAA/EAA inline thumbnail injection with ctx/cacheBust/targetTable params",
+          "Resync ShowAllEntityData_HELP.txt against current codebase: add FILTER STATUS DISPLAY section (✓ Filtered N rows [GLOBAL/SUB-TABLE/COLUMN FILTER format]), add HIDDEN-MATCH INDICATOR ON MULTI-ROW COLLAPSE BUTTONS section, expand RELATIONSHIPS COLUMN section with rich filter-aware tooltip and filter-match highlighting"
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.586",
     "date": "2026-05-11",
     "sections": [

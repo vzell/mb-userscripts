@@ -75,7 +75,31 @@ FILTERING
 • Escape  — first press clears the focused filter, second press removes focus
 • 🎨 Toggle highlighting — toggle highlight colours on/off for active filters
 
-FILTER INPUT STATES & BORDER COLORS
+FILTER STATUS DISPLAY
+---------------------
+A filter status span below each sub-table header (and next to the global filter
+bar on single-table pages) shows a real-time summary of active filters and the
+resulting row count:
+
+  ✓ Filtered 55 rows [GLOBAL:"bruce", SUB-TABLE:"vinyl"]
+  ✓ Filtered 19 rows [GLOBAL:"bruce", SUB-TABLE:"vinyl", 1 COLUMN FILTER ['Release':"version"]]
+  ✓ Sorted by: "Year"▲ (133 rows)
+
+• Global, sub-table, and column filters are shown together in one compact line.
+• Column filter details are expanded when exactly one column filter is active;
+  when multiple are active they are shown as a count only.
+• The status clears automatically when all filters are removed.
+
+HIDDEN-MATCH INDICATOR ON MULTI-ROW COLLAPSE BUTTONS
+-----------------------------------------------------
+When a filter is active and its highlighted match is hidden inside a collapsed
+multi-row cell (Catalog#, Label, …) the ▶ expand button for that cell turns
+yellow with a red glyph, signalling that relevant content is hidden.  The same
+tinting is applied to the sub-table-level "Expand all multi-row cells" button
+when any collapsed cell in the sub-table contains a hidden match.  Clicking the
+button expands the cells and reveals the highlighted content.
+
+
 -------------------------------------
 Every filter input transitions through three visual states:
 • Idle (empty)  — configurable border color (global default: black,
@@ -409,7 +433,19 @@ RELATIONSHIPS COLUMN  (🔗 in ⚙️ Settings)
 --------------------------------------------
 On pages that declare injectedColumns:["Relationships"] the script injects
 a "Relationships" column populated asynchronously from the MusicBrainz
-Web Service.  Relationship icons appear after the table renders.
+Web Service.  Relationship icons (favicons) appear after the table renders.
+
+• Rich filter-aware tooltip — when a filter is active and it matches content
+  in a Relationships cell, hovering an icon in that cell opens a rich HTML
+  tooltip showing the full URL.  The tooltip is suppressed when no active
+  filter matches that specific cell, to avoid intrusive popups during normal
+  browsing.
+• Filter match highlighting — when a filter expression matches a URL in the
+  Relationships cell, the corresponding relationship icon is highlighted with
+  a coloured border/background so the match is immediately visible.
+• Relationship data is cached in IndexedDB (7-day TTL) to avoid re-fetching
+  on repeated visits.  Retry buttons (⟳) force a fresh network fetch with
+  IDB cache invalidation.
 
 H1 ALIAS LINE
 -------------

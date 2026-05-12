@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.586+2026-05-11
+// @version      9.99.587+2026-05-11
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -8471,6 +8471,20 @@
         });
     }
 
+    /**
+     * Refreshes the collapse/expand state and highlight tint of the
+     * `.mb-subtable-collapse-btn` button inside the h3 header row that
+     * belongs to `table`.
+     *
+     * - Hides the button when no multi-row cells exist in the table.
+     * - Shows the button and applies an active-color tint (matching the STF
+     *   input border) when any filter highlight span is detected inside a
+     *   collapsed multi-row cell or CAA/EAA art cell; clears the tint otherwise.
+     *
+     * Called after every filter/sort cycle and after cell-collapse toggling.
+     *
+     * @param {HTMLTableElement} table - The `<table class="tbl">` element to update.
+     */
     function updateSubTableCollapseButton(table) {
         const h3 = findH3ForTable(table);
         if (!h3 || !h3.classList.contains('mb-toggle-h3')) return;
@@ -17050,6 +17064,11 @@ a { color: #1565c0; }`;
     gfHistAnchor.appendChild(_gfHistWidget.dropdownAnchor);
 
     // Sync the ✕ clear button visibility whenever the filter input content changes
+    /**
+     * Shows or hides the global-filter ✕ clear button based on whether the
+     * filter input currently contains non-empty text (excluding the decorative
+     * focus prefix).  Called on every `input` event of the global filter field.
+     */
     const _syncGfClearBtn = () => {
         const hasContent = stripFilterPrefix(filterInput.value).trim() !== '';
         filterClear.style.display = hasContent ? 'block' : 'none';
@@ -19125,14 +19144,6 @@ a { color: #1565c0; }`;
         let editingIdx = -1; // -1 = adding new, >=0 = editing existing
         /** @type {Set<number>} origIdx values currently marked for bulk removal via Tab */
         let markedSet = new Set();
-
-        const _eplGlyphs = (e) => {
-            const g = [];
-            if (e.useCase)    g.push('<span style="color:#1976D2;font-size:0.78em;font-weight:700;border:1px solid #1976D2;border-radius:2px;padding:0 2px;">Cs</span>');
-            if (e.useRegex)   g.push('<span style="color:#7B1FA2;font-size:0.78em;font-weight:700;border:1px solid #7B1FA2;border-radius:2px;padding:0 2px;">Re</span>');
-            if (e.useExclude) g.push('<span style="color:#c62828;font-size:0.78em;font-weight:700;border:1px solid #c62828;border-radius:2px;padding:0 2px;">Ex</span>');
-            return g.join(' ') || '<span style="color:#ccc;">—</span>';
-        };
 
         const _eplHighlight = (text, needle) => {
             if (!needle) return text.replace(/&/g,'&amp;').replace(/</g,'&lt;');
@@ -34438,30 +34449,6 @@ a { color: #1565c0; }`;
         cell.appendChild(a);
     }
 
-    /**
-     * HEAD-probes https then http favicon.ico for targetUrl;
-     * checks REL_DISCOGRAPHY_MAPPINGS override table first.
-     * Falls back to a generic question-mark icon.
-     * @param {string} targetUrl
-     * @returns {Promise<string>}
-     */
-    function _relFetchFaviconUrl(targetUrl) {
-        const DEFAULT = 'https://volkerzell.de/favicons/questionmark.ico';
-        let domain;
-        try { domain = new URL(targetUrl).hostname; } catch { return Promise.resolve(DEFAULT); }
-        for (const k of Object.keys(REL_DISCOGRAPHY_MAPPINGS)) {
-            if (domain === k || domain.startsWith(k)) return Promise.resolve(REL_DISCOGRAPHY_MAPPINGS[k]);
-        }
-        const tryUrl = u => new Promise(res => {
-            GM_xmlhttpRequest({ method:'HEAD', url:u,
-                onload:  r => res(r.status === 200 ? u : null),
-                onerror: () => res(null) });
-        });
-        return tryUrl(`https://${domain}/favicon.ico`)
-            .then(u => u || tryUrl(`http://${domain}/favicon.ico`))
-            .then(u => u || DEFAULT);
-    }
-
     /** Cache: '${entityType}:${mbid}' → Promise<Object|null> */
     const _relWs2Cache = new Map();
 
@@ -35404,6 +35391,17 @@ a { color: #1565c0; }`;
     /** The plain-text tooltip div element (lazily created by _ensureRelPlainTooltip). */
     let _relPlainTooltipEl = null;
 
+    /**
+     * Installs body-level mouseenter/mouseleave delegation for the Relationships
+     * column rich-tooltip and plain-tooltip overlays.
+     *
+     * Idempotent — guarded by `_relTooltipListenersInstalled`.  Must be called
+     * once before any mb-rel-cell can show tooltips; called automatically by
+     * `initRelationshipsColumn()` on its first invocation.
+     *
+     * Side-effects: creates (lazily) `_relTooltipEl` and `_relPlainTooltipEl`
+     * and sets `_relTooltipListenersInstalled = true`.
+     */
     function _initRelTooltipListeners() {
         if (_relTooltipListenersInstalled) return;
         _relTooltipListenersInstalled = true;
@@ -35511,6 +35509,28 @@ a { color: #1565c0; }`;
             if (e.target.closest('td.mb-rel-cell')) _hideAll();
         }, true);
     }
+    /**
+     * Populates the injected "Relationships" column for every `td.mb-rel-cell`
+     * element currently in the DOM.
+     *
+     * Execution flow:
+     *   1. Early-exits when the Relationships column is disabled in settings,
+     *      when no injected-column definition is active, or when all cells are
+     *      already populated.
+     *   2. Installs body-level tooltip delegation (once) via
+     *      `_initRelTooltipListeners()`.
+     *   3. Refreshes REL_* mapping tables from user-configured settings.
+     *   4. Groups unpopulated `td.mb-rel-cell` elements by MBID.
+     *   5. For each unique MBID, fetches WS2 relationship data (memory cache →
+     *      IndexedDB cache → live network, with optional `_relRetryActive`
+     *      bypass), then calls `_populateCells()` to inject relationship icons.
+     *
+     * Also ensures `td.mb-rel-cell` elements exist in both the live DOM and in
+     * the `groupedRows`/`allRows` source arrays so that filter re-renders do
+     * not lose the populated icons.
+     *
+     * @returns {Promise<void>}
+     */
     async function initRelationshipsColumn() {
         if (!Lib.settings.sa_enable_relationships_column) return;
         if (!activeInjectedColumns.length) return;
@@ -43523,6 +43543,28 @@ a { color: #1565c0; }`;
         });
     }
 
+    /**
+     * Injects 20×20 px inline artwork thumbnail placeholders into every cell
+     * of the column named in `activeDefinition.features[ctx.addFeature]`, then
+     * enqueues background image loads (via the art-request queue) for each
+     * release/release-group GUID found in those cells.
+     *
+     * Supports both CAA (Cover Art Archive) and EAA (Event Art Archive) via the
+     * `ctx` descriptor object.
+     *
+     * @param {{ key: string, addFeature: string, fetchUrl: function,
+     *            archiveBase: string }} ctx
+     *   Context descriptor — `key` is the log category ("caa" or "eaa"),
+     *   `addFeature` is the `features` property name whose value gives the
+     *   target column name, `fetchUrl` builds the archive API URL for a GUID,
+     *   and `archiveBase` is the archive hostname used for thumbnail `src`.
+     * @param {boolean} [cacheBust=false]
+     *   When `true`, bypasses the IndexedDB and memory caches and forces a
+     *   fresh network fetch for every thumbnail (used by the ⟳ retry button).
+     * @param {HTMLTableElement|null} [targetTable=null]
+     *   When non-null, restricts processing to that specific `<table class="tbl">`
+     *   element (used by per-sub-table retry).  When `null` all tables are processed.
+     */
     function _artInitInlinePics(ctx, cacheBust = false, targetTable = null) {
         if (!Lib.settings.sa_enable_caa_pics) return;
         if (!Lib.settings.sa_caa_pics_inline) return;
