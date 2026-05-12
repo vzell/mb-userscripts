@@ -69,7 +69,85 @@ The overflow buttons are colour-coded: configurable initial colour (default warm
 
 ---
 
-## Supported pages
+### Mode 4 — Non-table source pages: `<ul>` list conversion → single or multi-table view
+
+**Example pages:** User Tags, Tag Value pages, Artist Credit overview/entity, User Subscribers, Most Popular Tags, …
+
+Several MusicBrainz pages render their data in `<ul>` lists under `<h2>` or `<h3>` headings rather than as `<table class="tbl">` elements. The standard fetch/filter/sort pipeline requires actual tables, so the script runs a pre-processing step (`applyListToTable`) that rewrites the live DOM before the pipeline begins. Seven distinct source-HTML structures (A–G) are recognised and each is converted to `<table class="tbl">`.
+
+Because the source structure varies so much, these pages produce either a single-table or multi-table result, and may or may not involve pagination. The concrete examples you asked about:
+
+---
+
+**`/user/vzell/tags` — User Tags (two-column tables, multi-table, one page)**
+
+The page has `<h3>Genres</h3><div id="genres"><ul>` and `<h3>Tags</h3><div id="tags"><ul>` (Structure A). Two buttons are offered — *Tags upvoted* and *Tags downvoted* — each fetching with `?show_downvoted=0/1`. Each `<ul>` becomes a two-column `(Genre/Tag | Tag count)` sub-table. The vote/sort form is removed after rendering since the buttons replace it. The vote/sort form on the native page is removed after rendering.
+
+```
+Native:   h3 Genres  <ul> (n genre links with vote counts)
+          h3 Tags    <ul> (m tag links with vote counts)
+
+Script:   h3 Genres  <table> (Genre | Tag count)
+          h3 Tags    <table> (Tag   | Tag count)
+          ← each fully filterable + sortable, two buttons for ↑ / ↓ votes
+```
+
+---
+
+**`/user/vzell/tag/live` — User Tag Value (per-entity-type sub-tables, multi-table, paginated)**
+
+The page has `<h2>Entities tagged as "live"</h2>` followed by a series of `<h3>Artists</h3><ul>`, `<h3>Releases</h3><ul>`, `<h3>Events</h3><ul>` … pairs (Structure D). Each `<h3>+<ul>` is converted to a single-column table whose header is the singular form of the h3 text (*Artist*, *Release*, *Event*, …). The page may be paginated. Two buttons (*Tag for Entities upvoted / downvoted*) apply a `show_downvoted` param. Per-entity-type column extractors inject synthetic columns (e.g. *Name*, *Comment*, *Artist* split from a composite cell; date part columns *DD/MM/YYYY/Day/Month* for Events; CAA/EAA artwork).
+
+```
+Native (one of possibly N pages):    Script (all pages merged):
+  h2 Entities tagged as "live"         h3 Artist  <table> (Artist | …) ← own filter/sort
+  h3 Artists   <ul> (10 items + link)  h3 Release <table> (Release | …) [Show all 347 rows →]
+  h3 Releases  <ul> (10 items + link)  h3 Event   <table> (Event | …)  ← date parts, EAA art
+  h3 Events    <ul> (10 items + link)  …
+```
+
+Sections truncated by MB's 10-row cap get the same **"Show all N rows"** overflow button in their `<h3>` header as in Mode 3.
+
+---
+
+**`/user/vzell/tag/live/events` — User Tag Value Entity (single table, paginated)**
+
+A sub-page showing only one entity type for a tag (e.g. only Events). The page has `<h2>Events vzell tagged as "live"</h2><ul>…</ul>` (Structure C) — a single h2 anchor followed by one flat `<ul>`. Converted to a one-column table then fetched across all pages exactly as in Mode 1.
+
+---
+
+**`/musicbrainz.org/artist-credit/<id>` — Artist Credit overview (multi-table, one page, overflow buttons)**
+
+The page has `<h2>Uses</h2>` followed by `<h3>Release groups</h3><ul>`, `<h3>Releases</h3><ul>`, `<h3>Recordings</h3><ul>` pairs (Structure F). Each `<ul>` holds at most 10 rows; longer sections carry a trailing *"See all N release groups"* `<em><a>` link. Each `<h3>+<ul>` is converted to a one-column table whose header is the singular form of the h3 text. Sections with the trailing "See all" link get an overflow button in the `<h3>` header; the trailing row is removed from the table so the row count display stays accurate. CAA art and Relationships columns are injected per the `entityFeatures` configuration.
+
+```
+Native:                                Script:
+  h2 Uses                                h3 Release group  <table> (10 rows) [Show all 47 rows →]
+    h3 Release groups  <ul> (10 items)   h3 Release        <table> (10 rows) [Show all 312 rows →]
+    h3 Releases        <ul> (10 items)   h3 Recording      <table> (10 rows) [Show all 1,204 rows →]
+    h3 Recordings      <ul> (10 items)   ← each with CAA art, Relationships column
+```
+
+---
+
+**`/artist-credit/<id>/release-groups` — Artist Credit entity sub-page (single table, paginated)**
+
+A sub-page showing only one entity type (e.g. just Release Groups) for a given artist credit. The page has a bare `<ul>` without id or class (Structure G), which is converted to a single-column table whose header is derived from the URL's last path segment (`release-groups` → *Release group*). Then fetched across all pages exactly as in Mode 1. Entity-specific features (CAA art, Relationships column, column extractors) are applied from the `entityFeatures` map.
+
+---
+
+**`/user/vzell/subscribers` — User Subscribers (single table, one page)**
+
+The page has `<h2>Subscribers</h2><ul>…</ul>` (Structure C). Converted to a one-column table (*Subscribers*) and rendered in single-table mode. No pagination.
+
+---
+
+**`/tags` — Most Popular Tags (two-column tables, multi-table, one page)**
+
+The page has `<h2>Genres</h2><ul>` and `<h2>Other Tags</h2><ul>` (the h2 headings are first renamed to h3 so Structure E applies). Each `<ul>` becomes a two-column `(Genre/Tag | Tag count)` sub-table. A single button — *Show most popular tags* — fetches with `?show_list=1`.
+
+---
+
 
 72 page types across every major MusicBrainz entity:
 
