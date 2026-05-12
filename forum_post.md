@@ -1,4 +1,4 @@
-# VZ: Show All Entity Data — Consolidated View with Filtering & Multi-Sorting
+# [VZ: Show All Entity Data — Consolidated View with Filtering & Multi-Sorting](https://github.com/vzell/mb-userscripts/tree/master?tab=readme-ov-file#mb_show_all_entity_data)
 
 **Userscript for Tampermonkey / Greasemonkey · Works on all major desktop browsers + Firefox/Kiwi on Android**
 
@@ -162,6 +162,16 @@ The page has `<h2>Genres</h2><ul>` and `<h2>Other Tags</h2><ul>` (the h2 heading
 
 ---
 
+## Page section toggle framework
+
+Every `<h2>` and `<h3>` heading on the rendered page becomes a collapsible toggle, letting you hide sections you are not interested in without losing your filter/sort state:
+
+- **Mouse** — click anywhere on the heading text to collapse/expand; the `▶/▼` glyph at the start shows the current state
+- **Keyboard** — `Ctrl+2` collapses/expands all `<h2>` headings at once; `Ctrl+3` does the same for all `<h3>` sub-table headings (both shortcuts are configurable)
+- **Sidebar toggle** — a tab handle is injected on the right edge of the MB sidebar. Clicking it collapses the sidebar with a smooth CSS transition and expands the content area to full width, giving wide tables more room. An optional setting starts every page with the sidebar already collapsed.
+
+---
+
 ## Core features
 
 ### Filtering
@@ -173,17 +183,20 @@ The page has `<h2>Genres</h2><ul>` and `<h2>Other Tags</h2><ul>` (the h2 heading
 - **Filter status display** — live summary per sub-table:
   `✓ Filtered 19 rows [GLOBAL:"bruce", SUB-TABLE:"vinyl", 1 COLUMN FILTER ['Release':"version"]]`
 - **Hidden-match indicator** — when a match is inside a collapsed multi-row cell (Label, Catalog#, …) the `▶` expand button turns yellow/red as a signal
+- **Clearing filters** — dedicated *Clear ALL filters* and *Clear ALL column filters* buttons in the header bar; `Ctrl+Shift+G` clears all filters; `Shift+Esc` clears column filters only; pressing `Escape` inside any focused filter input first clears that field, then on a second press removes focus; the ✕ button inside each filter input clears that single input
+- **🎨 Toggle highlighting** — a per-sub-table button temporarily strips filter highlights from the table without re-running the filter; useful for reading cell content that is obscured by highlight colours; the button reappears automatically whenever a filter is active
 - **Filter history + Pinned Filters** — LRU dropdown of recent expressions; permanently pin any expression that never ages out
 
 ### Sorting
 - Click any column header to sort ▲/▼; click ⇅ again to restore original order
 - **Multi-column sort** — Ctrl+Click adds a column to the chain; superscript numbers (¹²³) show priority
+- **Sort group colorization** — each column in the sort chain is tinted in its own hue (amber, sky-blue, mint, mauve, …); within each column the tint alternates between two shades of that hue whenever the cell value changes, making equal-value runs immediately visible without reading every cell
 - Async chunked merge-sort with progress indicator for large tables
 
 ### Cover Art (CAA/EAA)
-- **Icon column** — tiny thumbnail in the CAA/EAA column
-- **Big picture strip** — horizontal scrollable strip of large images above each sub-table; per-strip 🖼️ toggle
-- **Inline thumbnails** — 20×20 px thumbnail inside every Release/Title cell with hover tooltip
+- **Icon column** — each cell starts collapsed, showing a count badge (e.g. `▶ 3`) indicating the total number of available images; clicking `▶` expands the cell inline to show every image at thumbnail size; the expand button gains the yellow/red hidden-match indicator when a collapsed cell contains a filter highlight
+- **Big picture strip** — horizontal scrollable strip of large images above each sub-table; hovering a strip image highlights the matching table row, and hovering a table row highlights its strip image; per-strip 🖼️ toggle
+- **Inline thumbnails** — 20×20 px thumbnail inside every Release/Title cell; hovering any thumbnail — in the icon column, the big strip, or the inline position — opens a floating full-size popup preview (same size as the strip images, positioned to the right of the cursor or flipped left near the viewport edge)
 - Three-tier cache: memory → IndexedDB (configurable TTL) → network
 - Cache-hint indicators (🟢 memory / 🔵 IDB / 🟡 network / ⚠️ unknown) on images and badges
 
@@ -196,6 +209,14 @@ The page has `<h2>Genres</h2><ul>` and `<h2>Other Tags</h2><ul>` (the h2 heading
 ### Expand Release Groups
 - Inline ▶/▼ toggle on every release-group link expands a sub-table of all releases for that RG
 - Each release row gets its own ▶/▼ for track listings
+- Every release row receives an inline CAA thumbnail; hovering it opens the same floating full-size popup preview as the main CAA artwork columns
+
+### Collapsible multi-row columns
+Multi-row cells (Label, Catalog#, …) show only the first value by default with a compact `▶ N ▤` widget in the top-right corner indicating how many values are hidden. Clicking the widget expands all values inline.
+
+- The numeric count in the `▶ N ▤` widget is intentionally excluded from filter matching so that it can never produce spurious matches
+- When a filter is active and a hidden value inside a collapsed cell matches the expression, the `▶ N ▤` widget turns yellow with a red glyph — the same visual signal as the CAA expand button — indicating that expanding the cell will reveal matching content
+- A per-column header button `▶▤/▼▤` collapses or expands all cells in that column at once; the sub-table "Expand all" button does the same across the entire sub-table
 
 ### Pre-filter Load (offline cache)
 - **Save to Disk** — gzip-compressed JSON (~60–80% smaller than plain JSON); filename encodes page type, row count, and timestamp
@@ -213,6 +234,11 @@ The page has `<h2>Genres</h2><ul>` and `<h2>Other Tags</h2><ul>` (the h2 heading
 
 ### Unique-values dropdown (📊 in every column header)
 - Lists all distinct non-empty values in that column with occurrence counts; click any to apply it as a column filter instantly
+- **Cell-structure section** — below the regular values, a *Cell structure* group offers structural quick-filters that are not literal cell values:
+  - `○ empty cells` — rows where this column is empty
+  - `• single-row cells` / `▶ collapsed multi-row cells` / `◀ expanded multi-row cells` / `▶◀ any multi-row cells` — filter by collapse state in columns like Label or Catalog#
+  - On **CAA/EAA columns** the structural labels are replaced with artwork-presence entries: `✗ no artwork` and `✓ has artwork` — one click shows only releases that have cover art, or only those that don't
+- **Relationships column** — shows a *Relationship icons* group listing every distinct favicon/domain present in that column with counts, so you can instantly filter to all rows linked to a specific external service
 
 ### Settings (⚙️)
 - 70+ configurable options across 20+ groups: keyboard shortcuts, colours, CAA sizes, debounce timers, density, column alignment, filter history limits, and more
@@ -253,7 +279,53 @@ The page has `<h2>Genres</h2><ul>` and `<h2>Other Tags</h2><ul>` (the h2 heading
 
 ---
 
-## Installation
+### Picard tagger integration
+
+An optional **Picard** column can be injected into every rendered table, giving you a one-click send-to-Picard button on every row — no need to open the entity page first.
+
+- Supports **Release**, **Release Group**, and **Recording** rows
+- On first click the script auto-detects which local port Picard is listening on (probes ports 8000–8010 by default, configurable); subsequent clicks reuse the detected port for the session
+- **Visual feedback** — the button icon changes: yellow ♪ (idle) → green ✓ (successfully sent) → red ✕ (Picard not running or returned an error)
+- Picard must be running locally with *browser integration* enabled (*Preferences → Advanced → Network → Browser integration*)
+- Based on the [**MusicBrainz Magic Tagger Button**](https://github.com/phw/musicbrainz-magic-tagger-button) userscript by **Philipp Wolfer** (MIT licence)
+
+---
+
+## Credits
+
+This script builds on, enhances, and integrates functionality from several existing MusicBrainz userscripts. Many thanks to the original authors:
+
+| Userscript | Author | What is used |
+|---|---|---|
+| [**mb. SUPER MIND CONTROL Ⅱ X TURBO**](https://github.com/jesus2099/konami-command/raw/master/mb_SUPER-MIND-CONTROL-II-X-TURBO.user.js) | **jesus2099** | `RELEASE_EVENT_COLUMN` — displays release dates in label relationships pages |
+| [**mb. FUNKEY ILLUSTRATED RECORDS**](https://github.com/jesus2099/konami-command/raw/master/mb_FUNKEY-ILLUSTRATED-RECORDS.user.js) | **jesus2099** | CAA/EAA cover art loading pipeline — small inline icons and large picture strip above tables (CC-BY-NC-SA-4.0 / GPL-3.0-or-later) |
+| [**MusicBrainz: Expand/collapse release groups**](https://raw.githubusercontent.com/murdos/musicbrainz-userscripts/master/expand-collapse-release-groups.user.js) | **Michael Wiencek** | Inline ▶/▼ expand/collapse of release groups and track listings (GPL) |
+| [**Display shortcut for relationships on MusicBrainz**](https://raw.github.com/murdos/musicbrainz-userscripts/master/mb_relationship_shortcuts.user.js) | **Aurelien Mino** | Relationship icon shortcuts (favicon links) in the injected Relationships column (GPL) |
+| [**MusicBrainz: Highlight identical barcodes and toggle merge checkboxes**](https://update.greasyfork.org/scripts/536998/MusicBrainz%3A%20Highlight%20identical%20barcodes%20and%20toggle%20merge%20checkboxes.user.js) | **chaban** | Barcode highlighting and merge-checkbox toggle applied post-render to the consolidated table (MIT) |
+| **mb.unicodechars** | **Smeulf** | `Ctrl+U` Unicode character picker integrated into every filter input field |
+| **MusicBrainz: add release(group) links from level above** | **RandomMushroom128** | Release/release-group link injection from artist, label, and series pages (GPL) |
+| [**MusicBrainz Magic Tagger Button**](https://github.com/phw/musicbrainz-magic-tagger-button) | **Philipp Wolfer** | Picard local-port detection and one-click send-to-Picard tagger buttons (MIT) |
+
+---
+
+## ⚠️ Replacing the old version
+
+An earlier release of this script was announced in the MusicBrainz community forum at:
+https://community.metabrainz.org/t/a-new-musicbrainz-user-script-was-released/77897/204
+
+**That old version is now obsolete and must be removed or disabled before installing the new one.**
+
+The new script is published under a different internal name (*VZ: MusicBrainz — Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities*) while the old one used a shorter name. Because Tampermonkey identifies scripts by name, having both installed simultaneously will result in both running on every MB page, causing conflicts.
+
+To upgrade:
+1. Open Tampermonkey → Dashboard
+2. Find the old *Show All Entity Data* entry and click **Delete** (or disable it)
+3. Install the new script from the link in the Installation section below
+4. Reload any open MusicBrainz tabs
+
+---
+
+
 
 Requires [Tampermonkey](https://www.tampermonkey.net/) (or compatible userscript manager).
 
