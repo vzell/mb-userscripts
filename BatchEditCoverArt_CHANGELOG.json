@@ -1,0 +1,56 @@
+[
+  {
+    "version": "2.6",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fixed root cause of missing metadata: GM_xmlhttpRequest was replaced with fetch() (credentials: same-origin) throughout fetchImageData, getFormPayload, and postEdit. GM_xmlhttpRequest bypasses the browser cookie jar, so MusicBrainz's bot-challenge middleware (/__meb_verify proof-of-work) intercepted every request and returned a 1394-byte challenge page instead of the actual edit form — yielding empty comments and no checked types for every image.",
+          "Removed @grant GM_xmlhttpRequest from the userscript header since it is no longer used.",
+          "Removed temporary debug logging added in v2.5.1."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2.5.1",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🔍 Debug",
+        "items": [
+          "Added comprehensive console.group debug logging to fetchImageData: raw HTTP status and response length, first 3000 chars of raw HTML, all named inputs when comment selector misses, every type checkbox with raw and normalised textContent and checked state, and the final resolved comment/types values.",
+          "Added debug logging in the fetch loop: logs the normalised originalData stored per image id.",
+          "Added debug logging in the imperative restore phase: logs per-row orig values, each checkbox before/after checked state, and comment input before/after value. All output is prefixed [BatchEditCoverArt] for easy DevTools console filtering."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2.5",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fixed checkboxes not being pre-selected: type labels from the MusicBrainz edit-cover-art page are now normalised by collapsing all interior whitespace to a single space before comparison, making extraction robust against extra newlines/tabs introduced by React server-side rendering.",
+          "Fixed comment field not being pre-populated: comment and checkbox values are now applied imperatively as DOM properties after innerHTML injection, preventing the page JavaScript framework from resetting them to empty/default state.",
+          "Stored original types are also normalised at fetch time, ensuring change-detection in submitAll compares consistently normalised values."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "2.4",
+    "date": "2026-01-21",
+    "sections": [
+      {
+        "label": "🎉 Release",
+        "items": [
+          "First official release"
+        ]
+      }
+    ]
+  }
+]

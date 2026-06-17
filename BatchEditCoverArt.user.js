@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.4+2026-01-21
+// @version      2.6+2026-06-17
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell (elephant editor functionality by chaban, jesus2099)
 // @tag          AI generated
@@ -11,7 +11,6 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
 // @match        *://*.musicbrainz.org/release/*/cover-art
 // @match        *://*.musicbrainz.org/release/*/add-cover-art
-// @grant        GM_xmlhttpRequest
 // @run-at       document-idle
 // ==/UserScript==
 
@@ -874,7 +873,13 @@
 
         for (const img of images) {
             const data = await fetchImageData(img.editUrl);
-            originalData[img.id] = data;
+            // Normalise stored types to collapsed-whitespace form so that
+            // change-detection in submitAll uses the same representation as
+            // the imperatively-restored checkbox values.
+            originalData[img.id] = {
+                comment: data.comment,
+                types: data.types.map(t => t.replace(/\s+/g, " ").trim()).sort()
+            };
 
             html += `
                 <tr style="border-bottom: 2px solid #ddd;" class="batch-row" data-id="${img.id}" data-edit-url="${img.editUrl}">
@@ -895,7 +900,7 @@
                         </div>
                         <div style="margin-top: 10px;">
                             <strong style="color: #555;">Comment:</strong>
-                            <input type="text" class="batch-comment" autocomplete="off" style="width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;" value="${data.comment}">
+                            <input type="text" class="batch-comment" autocomplete="off" style="width: 100%; padding: 6px; margin-top: 5px; border: 1px solid #ccc; border-radius: 3px;" data-initial-comment="${encodeURIComponent(data.comment)}">
                         </div>
                     </td>
                 </tr>`;
@@ -912,6 +917,39 @@
             </div>`;
 
         batchContainer.innerHTML = html;
+
+        // ---------------------------------------------------------------
+        // Imperatively restore checkbox states and comment values.
+        //
+        // Setting `checked` or `value` purely via HTML attributes is not
+        // reliable on MusicBrainz because the page's JavaScript framework
+        // may re-initialise inputs after insertion and reset them to their
+        // default/empty state.  Setting the DOM *properties* here, after
+        // innerHTML has been parsed, guarantees the correct values survive
+        // any framework post-processing.
+        // ---------------------------------------------------------------
+        batchContainer.querySelectorAll('.batch-row').forEach(row => {
+            const id = row.getAttribute('data-id');
+            const orig = originalData[id];
+            if (!orig) return;
+
+            // Restore type checkboxes — normalise whitespace on both sides
+            // of the comparison so minor page formatting changes do not cause
+            // misses.
+            row.querySelectorAll('.type-checkboxes input[type="checkbox"]').forEach(cb => {
+                const normalised = cb.value.replace(/\s+/g, " ").trim();
+                cb.checked = orig.types.some(t => t.replace(/\s+/g, " ").trim() === normalised);
+            });
+
+            // Restore comment via DOM property (immune to framework resets).
+            // The URI-encoded value is carried in data-initial-comment so that
+            // special characters survive the innerHTML round-trip safely.
+            const commentInput = row.querySelector('.batch-comment');
+            if (commentInput) {
+                const encoded = commentInput.getAttribute('data-initial-comment') || '';
+                commentInput.value = decodeURIComponent(encoded);
+            }
+        });
 
         // Initialize Elephant Editor after the HTML is injected
         const editNoteTextarea = document.getElementById('batch-edit-note');
@@ -997,21 +1035,46 @@
         return images.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
     };
 
-    const fetchImageData = (url) => {
-        return new Promise((resolve) => {
-            GM_xmlhttpRequest({
-                method: "GET",
-                url: url,
-                onload: (res) => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(res.responseText, "text/html");
-                    const comment = doc.querySelector('input[name="edit-cover-art.comment"]')?.value || "";
-                    const checkedCheckboxes = doc.querySelectorAll('input[name="edit-cover-art.type_id"]:checked');
-                    const types = Array.from(checkedCheckboxes).map(cb => cb.parentElement.textContent.trim()).sort();
-                    resolve({ comment, types });
-                }
-            });
-        });
+    /**
+     * Fetch and parse the edit-cover-art page for a given image to extract its
+     * current comment and selected type labels.
+     *
+     * Uses the page-context fetch() API so that the browser's session cookie
+     * (musicbrainz_server_session) is sent automatically.  GM_xmlhttpRequest
+     * was previously used here but it bypasses the normal cookie jar, causing
+     * MusicBrainz's bot-challenge middleware to intercept every request and
+     * return a proof-of-work page instead of the actual edit form.
+     *
+     * Type label text is normalised by collapsing interior whitespace to a
+     * single space so minor formatting changes in the page do not break
+     * matching against the TYPES constant.
+     *
+     * @param {string} url - The edit-cover-art page URL to fetch.
+     * @returns {Promise<{comment: string, types: string[]}>} Resolved with the
+     *   current comment string and a sorted array of active type label strings.
+     *   Resolves with empty values on network error rather than rejecting.
+     */
+    const fetchImageData = async (url) => {
+        try {
+            const res = await fetch(url, { credentials: 'same-origin' });
+            const text = await res.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(text, "text/html");
+
+            const commentInput = doc.querySelector('input[name="edit-cover-art.comment"]');
+            const comment = commentInput ? commentInput.value : "";
+
+            const checkedCheckboxes = doc.querySelectorAll('input[name="edit-cover-art.type_id"]:checked');
+            const types = Array.from(checkedCheckboxes).map(cb => {
+                const raw = cb.parentElement ? cb.parentElement.textContent : "";
+                return raw.replace(/\s+/g, " ").trim();
+            }).sort();
+
+            return { comment, types };
+        } catch (err) {
+            console.error('[BatchEditCoverArt] fetchImageData error for', url, err);
+            return { comment: "", types: [] };
+        }
     };
 
     const submitAll = async () => {
@@ -1114,35 +1177,48 @@
         setTimeout(() => window.location.reload(), 1000);
     };
 
-    const getFormPayload = (url) => {
-        return new Promise((resolve) => {
-            GM_xmlhttpRequest({
-                method: "GET",
-                url: url,
-                onload: (res) => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(res.responseText, "text/html");
-                    const hiddenFields = Array.from(doc.querySelectorAll('form input[type="hidden"]'))
-                        .map(input => ({ name: input.name, value: input.value }));
-                    const typeMapping = Array.from(doc.querySelectorAll('input[name="edit-cover-art.type_id"]'))
-                        .map(input => ({
-                            name: input.parentElement.textContent.trim(),
-                            id: input.value
-                        }));
-                    resolve({ hiddenFields, typeMapping });
-                }
-            });
-        });
+    /**
+     * Fetch the edit-cover-art form page and extract the hidden fields and
+     * type-id→name mapping needed to build the POST payload.
+     *
+     * Uses fetch() with same-origin credentials for the same reason as
+     * fetchImageData — GM_xmlhttpRequest omits session cookies and hits the
+     * bot-challenge page.
+     *
+     * @param {string} url - The edit-cover-art page URL.
+     * @returns {Promise<{hiddenFields: {name:string,value:string}[],
+     *   typeMapping: {name:string,id:string}[]}>}
+     */
+    const getFormPayload = async (url) => {
+        const res = await fetch(url, { credentials: 'same-origin' });
+        const text = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, "text/html");
+        const hiddenFields = Array.from(doc.querySelectorAll('form input[type="hidden"]'))
+            .map(input => ({ name: input.name, value: input.value }));
+        const typeMapping = Array.from(doc.querySelectorAll('input[name="edit-cover-art.type_id"]'))
+            .map(input => ({
+                name: input.parentElement.textContent.replace(/\s+/g, " ").trim(),
+                id: input.value
+            }));
+        return { hiddenFields, typeMapping };
     };
 
-    const postEdit = (url, formData) => {
-        return new Promise((resolve) => {
-            GM_xmlhttpRequest({
-                method: "POST",
-                url: url,
-                data: formData,
-                onload: () => resolve()
-            });
+    /**
+     * POST the assembled FormData to the edit-cover-art endpoint.
+     *
+     * Uses fetch() with same-origin credentials so the session cookie is
+     * included and MusicBrainz accepts the submission.
+     *
+     * @param {string} url - The edit-cover-art page URL (POST target).
+     * @param {FormData} formData - The fully assembled form payload.
+     * @returns {Promise<void>}
+     */
+    const postEdit = async (url, formData) => {
+        await fetch(url, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
         });
     };
 
