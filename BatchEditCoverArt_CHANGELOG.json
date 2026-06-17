@@ -1,5 +1,17 @@
 [
   {
+    "version": "2.7",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "✨ Improvements",
+        "items": [
+          "Added descriptive title tooltips to all six toolbar buttons: Configure immutable comments, Configure regexps, Copy 1st types, Copy 1st comment, Clear all types, and Reset to original. Tooltips appear on hover and explain the purpose and effect of each action."
+        ]
+      }
+    ]
+  },
+  {
     "version": "2.6",
     "date": "2026-06-17",
     "sections": [

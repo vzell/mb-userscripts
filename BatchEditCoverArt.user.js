@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Batch Edit Cover Art
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      2.6+2026-06-17
+// @version      2.7+2026-06-17
 // @description  Batch edit types and comments of cover art images with keyboard-navigable autocomplete and searchable sorted immutable comments
 // @author       Gemini with vzell (elephant editor functionality by chaban, jesus2099)
 // @tag          AI generated
@@ -859,14 +859,14 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <h3 style="margin:0;">Batch Edit Cover Art</h3>
-                    <button id="config-immutable" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">⚙️ Configure immutable comments</button>
-                    <button id="config-regex" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">⚙️ Configure regexps</button>
+                    <button id="config-immutable" title="Manage your list of immutable (pinned) comments. Immutable comments are always shown at the top of the autocomplete dropdown and are never automatically saved to the browsing history — useful for frequently-used standard phrases you want to keep permanently." style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">⚙️ Configure immutable comments</button>
+                    <button id="config-regex" title="Manage a list of regular expression patterns. Any comment that matches one of these patterns will be blocked from being saved to the browsing history — useful for preventing sensitive or one-off strings from being suggested in future sessions." style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">⚙️ Configure regexps</button>
                 </div>
                 <div style="display: flex; gap: 5px; flex-wrap: wrap;">
-                    <button id="copy-first-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types</button>
-                    <button id="copy-first-comment" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st comment</button>
-                    <button id="clear-all-types" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Clear all types</button>
-                    <button id="reset-batch" style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Reset to original</button>
+                    <button id="copy-first-types" title="Copy the type checkboxes of the first image to all other images in this list. Useful when all cover art shares the same type (e.g. all are Front)." style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st types</button>
+                    <button id="copy-first-comment" title="Copy the comment of the first image to all other images in this list. Useful when all cover art should share the same comment." style="cursor:pointer; padding: 4px 8px; font-size: 0.85em;">Copy 1st comment</button>
+                    <button id="clear-all-types" title="Uncheck all type checkboxes for every image in this list. Use with caution — this removes all type assignments at once." style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Clear all types</button>
+                    <button id="reset-batch" title="Discard all unsaved changes and revert every image back to the types and comment originally loaded from MusicBrainz." style="cursor:pointer; padding: 4px 8px; font-size: 0.85em; background: #fff; border: 1px solid #999;">Reset to original</button>
                 </div>
             </div>
             <table style="width:100%; border-collapse: collapse; background: white; border: 1px solid #ccc;">`;
