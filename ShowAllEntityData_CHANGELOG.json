@@ -1,5 +1,1109 @@
 [
   {
+    "version": "9.99.674",
+    "date": "2026-06-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed sticky column header cell remaining see-through when sort value-change shading is active (follow-up to v9.99.673 which fixed the body rows). The `mb-mscol-hdr-*` header tint classes also use `rgba() !important` (at alpha 0.60), which overrides the inline `background` shorthand set by `applyStickyColumn`'s header loop, making the sticky column header see-through on horizontal scroll. Fix: added module-level `_MSCOL_HDR_TINT_RGBA` lookup (alpha 0.60 for each of the 8 hues). In `applyStickyColumn`'s header-row loop, store `dataset.mbStickyBg = headerBg` and apply the same detect-remove-read-restore pattern as the body-row fix: if a hdr-tint class is already active, temporarily remove it, set the true header background, restore the class, compute an opaque blended colour via `_blendSortTint`, apply it with `setProperty('background-color', …, 'important')`, and record `dataset.mbStickyRestBg`. In `applyMultiSortColumnTints`, after adding `hdrCls` to the main header `<th>`, if the cell is `mb-sticky-col`, blend the header tint onto `mbStickyBg` and apply the opaque result the same way. `clearMultiSortColumnTints` already queries `thead tr:first-child th` and restores from `mbStickyRestBg`, so no change there."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.673",
+    "date": "2026-06-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed sticky column remaining see-through after sort tints are applied (complete rewrite of v9.99.672 fix). Root cause: `renderFinalTable` calls `applyTints()` on freshly cloned rows before `runFilter()` calls `applyStickyColumn`. When `applyStickyColumn` then reads `getComputedStyle(cell).backgroundColor`, the sort-tint class's `rgba() !important` rule is already winning the cascade — the browser returns the semi-transparent tint colour as the computed background, which `applyStickyColumn` stores as `mbStickyBg`. When the sort handler later calls `applyMultiSortColumnTints()`, it blends the tint onto the already-tinted rgba value, producing a doubly-wrong result, and the sticky cell stays see-through. Additionally, the `mouseleave` handler set `cell.style.background = mbStickyBg` (non-important shorthand), which cleared the cascade-winning `!important` flag previously set by `applyMultiSortColumnTints`, allowing the tint class to win again and make the cell see-through on every hover-out. Fix: (1) Move the tint RGBA lookup table to module scope as `_MSCOL_TINT_RGBA` and add a shared `_blendSortTint(tint, restBg)` helper so both `applyStickyColumn` and `applyMultiSortColumnTints` use the same data. (2) In `applyStickyColumn`'s body-row loop, detect any active tint class, temporarily remove it and any inline `background-color !important`, read the true opaque zebra background via `getComputedStyle`, then restore the tint class; if a tint was present, apply the opaque blended colour via `setProperty` and record `mbStickyRestBg`. (3) In the `mouseleave` handler, when `mbStickyRestBg` is set (tint is active), re-apply the blended colour via `setProperty('background-color', …, 'important')` after setting the background shorthand so the opaque value wins over the tint class. (4) In `mouseenter`, same treatment for the hover colour on tinted sticky cells. (5) `applyMultiSortColumnTints` now uses the shared `_MSCOL_TINT_RGBA` / `_blendSortTint` instead of its former local copies."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.672",
+    "date": "2026-06-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed sticky column becoming see-through when sort value-change shading is active. The `mb-mscol-*` tint classes use `background-color: rgba(…) !important`, which overrides the inline opaque `background` applied by `applyStickyColumn`. On a `position:sticky` cell, the browser composites that semi-transparent background against the scrolled content behind the cell (not against the DOM parent), making columns behind the sticky one visible through it. Fix: in `applyMultiSortColumnTints`, when adding a tint class to a `mb-sticky-col` cell, alpha-blend the tint's RGBA values (from a new precomputed `_tintRGBA` lookup table matching the CSS definitions) onto the cell's current opaque rest background, and apply the resulting opaque `rgb()` colour via `cell.style.setProperty('background-color', …, 'important')`. An inline `!important` declaration wins over class `!important` at the same specificity level, ensuring the sticky cell always paints opaquely. The original rest background is preserved in `dataset.mbStickyRestBg`; `dataset.mbStickyBg` is updated to the blended colour so the `mouseleave` handler continues to restore the correct tinted colour on hover-out. `clearMultiSortColumnTints` is extended to remove the inline important `background-color` and restore the original rest background for sticky cells when tints are cleared."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.671",
+    "date": "2026-06-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed collapse-toggle extra-space over-estimation in `toggleAutoResizeColumns` PASS 2. The formula `extra = max(0, toggleWidth + 16 − thPaddingRight)` subtracted the `<th>` right padding as the baseline, but since v9.99.668 `columnWidths[colIndex]` is set to `th.offsetWidth` from the live-table nowrap pass — which already includes the actual `<td>` right padding (≈22px), not the `<th>` right padding (≈5px). Subtracting the smaller `thPaddingRight` over-estimated `extra` by roughly `tdPaddingRight − thPaddingRight ≈ 17px`, making columns with collapse-toggle widgets unnecessarily wider. Fix: read `getComputedStyle(cell).paddingRight` from the sampled `<td>` cell (already available in `_colToggleSample`) and use that as the baseline (`tdPaddingRight`) instead."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.670",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Sort by column value length: Alt+Click on the ▲ or ▼ sort icon now sorts the column by the visible text length of each cell (ascending or descending) instead of by the text value. This is a single-column sort and clears any active multi-sort chain. The sort-icon tooltips for ▲ and ▼ have been updated to document the Alt+Click modifier alongside the existing Ctrl+Click multi-sort hint. The sort-status display appends '(by length)' when a length-sort is active."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.669",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed auto-resize not applying to initially-collapsed sub-tables in multi-table mode. The v9.99.668 live-table measurement reads `th.offsetWidth` directly from the live table, but a table with `style.display = 'none'` returns `offsetWidth = 0` for all cells — giving every column a 20px minimum instead of the true content width. The symptom: after the initial auto-resize, the resize button showed 'Restore' (resize appeared to succeed) but collapsed sub-tables had useless 20px column widths; expanding them produced mis-sized columns, and toggling Restore/Resize while they remained collapsed could not fix them. Fix: in the measurement loop, if `table.style.display === 'none'`, temporarily set it to `''` before adding `mb-measure-nowrap`, read `th.offsetWidth`, then restore `display: none` immediately after removing `mb-measure-nowrap`. Both mutations are synchronous with no `await` between them, so the browser never paints the intermediate visible state. This applies both to the initial `sa_auto_resize_columns` auto-trigger and to subsequent manual Resize button clicks."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.668",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed persistent line break before the last word of disambiguation comments in auto-resize mode (Bug 1) — final root cause. The v9.99.667 NBSP-outside-anchor approach correctly eliminated the `overflow-wrap:anywhere` interaction, but the bug persisted because the column minimum-width computed by the old offscreen-div measurement was too narrow. The old PASS 1 applied `getComputedStyle(th).padding` to the measurement div so that `div.offsetWidth = th_pad_left + content + th_pad_right`; it then set `th.style.minWidth` to that value. In the live table, however, `<td>` padding is larger than `<th>` padding, so `td_available_content = th.minWidth - td_pad_left - td_pad_right` was narrower than the measured content width, leaving insufficient room and forcing a wrap. Fix: replace the offscreen-div PASS 1 entirely with a live-table measurement — add class `mb-measure-nowrap` (`white-space:nowrap !important; overflow-wrap:normal !important; word-break:normal !important`) to the table itself so the browser expands every column to its single-line natural width, then read `th.offsetWidth` (border-box, includes actual TD padding from the widest cell in each column). Because `th.offsetWidth` in nowrap mode equals the max border-box width across all cells in the column, the resulting `minWidth` is always sufficient to hold the widest cell without wrapping. All mutations are synchronous (no `await` between `classList.add` and `classList.remove`), so the browser never paints the intermediate full-width state. The unused `colStyleCache` variable (a relic of the offscreen approach) was removed."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.667",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed persistent line break before the last word of disambiguation comments in auto-resize mode (Bug 1). Previous fix (v9.99.666) placed U+00A0 (NBSP) inside the anchor's `<bdi>` to prevent the soft-wrap between anchor text and comment. However, `<a class=\"wrap-anywhere\">` carries `overflow-wrap:anywhere`, which Chrome can use to allow a break at any code-point boundary inside the element — including at a NBSP inside `<bdi>` at a bidi-run boundary. The root fix: move the NBSP outside `<a>` entirely. `normalizeCommentSpans` now REPLACES the whitespace text node between `</a>` and `<span class=\"comment\">` with a single U+00A0 text node (or INSERTS one if none exists, covering Variant A). Because this NBSP is a sibling of `<a>` in the `<td>` — not inside any `overflow-wrap:anywhere` element — only the standard Unicode GL rule applies: no break before or after U+00A0. The GL SP-exception (\"no break before GL unless preceded by SP\") is neutralised by the companion trimEnd on the anchor `<bdi>`, which removes any trailing U+0020 SPACE so the character directly before the NBSP is always a letter or punctuation. Together these two operations guarantee that anchor text and comment remain on the same line at the auto-resize minimum width."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.666",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed column resize minimum creeping upward after each drag (Bug 2). The drag-minimum width (`_minWidth`) was previously recomputed on every `mousedown` from `_hdrFlex.scrollWidth + 8`. After the user dragged a column wider, `_hdrFlex` had stretched to fill the enlarged column, so `scrollWidth` returned the CURRENT (wider) column width instead of the original header-content minimum — making it impossible to drag the column narrower again. The fix moves the computation to `makeColumnsResizable` initialisation time (before any drag has occurred), when the column is still at its natural layout width and `scrollWidth` correctly reflects the intrinsic minimum of the header widget (colName + sort icons + unique-values button + optional extras). The value is cached in `th.dataset.mbResizeMin` so that subsequent `makeColumnsResizable` calls (e.g. the re-call inside `toggleAutoResizeColumns` after auto-resize has already modified column widths, and the re-call after the Restore button removes and re-adds handles) reuse the pre-resize minimum rather than recomputing from a stretched layout.",
+          "Fixed line break before the last word of disambiguation comments in auto-resize mode (Bug 1) and residual anchor→comment line break (Bug 3). After v9.99.665 removed the whitespace text node between `</a>` and `<span class=\"comment\">`, the visual gap between title and comment was still provided by the trailing `\\n  ` whitespace at the end of the `<bdi>` element inside `<a class=\"wrap-anywhere\">`. That trailing whitespace collapsed to a regular space, which — being inside the anchor's `<bdi>` boundary with `overflow-wrap:anywhere` active — was still a soft-wrap opportunity. The browser could break there, pushing the comment to a new line and potentially causing the comment text to wrap internally. The fix: `normalizeCommentSpans` now replaces any trailing whitespace in the last text node of such `<bdi>` elements with a single U+00A0 (NON-BREAKING SPACE). U+00A0 has Unicode line-break class GL (Glue) — it is prohibited as a break point even under `overflow-wrap:anywhere` — so the anchor text and immediately-following comment are guaranteed to remain on the same line at the auto-resize minimum width. The visual gap is preserved (U+00A0 renders with the same metrics as a regular space). Only `<a>` elements whose next element sibling is `<span class=\"comment\">` are affected. The operation is idempotent because ECMAScript `trimEnd()` treats U+00A0 as whitespace and strips it, so a second pass re-applies exactly one U+00A0."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.665",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed two remaining soft-wrap break points in `normalizeCommentSpans` that were exposed after the nowrap-style removal in v9.99.664. (1) Trailing whitespace inside `<bdi>` content: MusicBrainz emits a `\\n      ` sequence before `</bdi>` (Variant B), which collapses to a single space in rendering and creates a wrap opportunity at the end of the bdi text — causing the last word of a disambiguation comment (e.g. `reissue)`) to break to a new line in narrower columns. The fix trims trailing whitespace from the last text node inside `<bdi>` after all other normalization steps. (2) Whitespace between `</a>` and `<span class=\"comment\">`: MusicBrainz emits a `\\n    ` text node as a sibling between the closing `</a>` and the opening `<span class=\"comment\">` at the `<td>` level. That text node collapses to a space and, combined with `overflow-wrap:anywhere` on `.wrap-anywhere` anchors, created a break opportunity between the anchor text and the leading `(` of the comment — the \"magic minimum column width\" that prevented resize below the anchor-plus-first-word width. The fix removes that inter-element whitespace text node from every `<td>` as a second pass in `normalizeCommentSpans`. Both fixes are pure DOM mutations with no style mutations on live elements."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.664",
+    "date": "2026-06-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Removed all `white-space: nowrap` style mutations from `normalizeCommentSpans`. Previous versions (introduced progressively in v9.99.639–9.99.651) applied `white-space: nowrap` as inline styles to live DOM elements — `span.comment`, `<bdi>`, and the containing `<td>` or `<li>` — to prevent disambiguation text from breaking away from its anchor. This forced the min-content width of every affected cell to the full single-line text width of the longest comment, making columns such as Release and Label unexpectedly wide in `table-layout:auto` even without auto-resize, and also made it impossible to drag those columns narrower than their longest single-line content (text overflowed instead of wrapping). The function now performs only the interior DOM normalisation it originally set out to do: removing pure-whitespace text nodes around `<bdi>`, consolidating Variant-A `(` / `)` orphans into `<bdi>`, and moving any trailing text node after `</bdi>` into `<bdi>` to eliminate the bidi-boundary soft-wrap point. No style properties are mutated on any live element. The auto-resize measurement sandbox is unaffected (it uses `white-space:nowrap !important` via `.mb-measure-nowrap`). At the auto-resize minimum width the full content fits on one line so the browser inserts no unnecessary breaks; if the user drags a column narrower, the browser's natural line-breaking applies — which is the intended behaviour."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.663",
+    "date": "2026-06-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed minimum drag width for the Picard tagger column. The Picard `<th>` is injected by `initPicardTaggerColumn` after `makeTableSortableUnified` runs and therefore carries no `.mb-col-hdr-flex` element. The previous fallback was 30 px, which allowed the column to be dragged to a width where the word \"Picard\" was completely clipped. The fallback now uses `th.scrollWidth` — the cell's natural content width including its padding — so the column name stays fully visible at minimum width."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.662",
+    "date": "2026-06-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed manual column resize breaking all column widths on mousedown. Switching to `table-layout:fixed` without first locking every `<col>` to its current rendered width caused the browser to redistribute all column widths equally, making all columns jump to the same size at the moment of click. The fix snapshots every `th.offsetWidth` before any style mutation, writes those values to all `<col>` elements, clears `th.style.minWidth` (set by auto-resize) so cell constraints cannot override the explicit col widths, and removes the fixed `table.style.width`/`table.style.minWidth` set by auto-resize so the table is free to grow when a column is widened. This eliminates both the sudden jump-on-click and the zero-sum behavior where widening one column compressed all others. The fix applies equally whether auto-resize is active or not.",
+          "Replaced the hardcoded 30 px minimum drag width with a per-column header content minimum. At `mousedown`, `hdrFlex.scrollWidth + 8` is measured from the live `.mb-col-hdr-flex` element (colName + ⇅▲▼ sort icons + unique-values widget + optional collapse-toggle + optional CAA/EAA column-header button). The +8 accounts for the 8 px resizer handle. A column can no longer be dragged narrower than its own header requires. For columns without `.mb-col-hdr-flex` (e.g. the Picard tagger column, which is injected after the sort UI is built and carries only plain text), `th.scrollWidth` is used as the floor instead, ensuring the column name remains fully visible."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.661",
+    "date": "2026-06-16",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Reordered cover-art fetch queue so inline thumbnails (entity title column) are enqueued first, small CAA/EAA column icons second, the big-picture hover strip third, and JSON-API enrichment (count badges, multi-row art cells) last. Users who start filtering immediately now see visual feedback sooner because the most visible images load first. Implemented by extracting queue creation from `initCaaPics` into a new `_artInitQueue()` helper; all four render-completion call sites (`runFilter` single-table, `startFetchingProcess` single-table, `renderGroupedTable` tail, `_artRebuildBigPicsForTable` drain) now call `_artInitQueue()` → `initCaaInlinePics()` / `initEaaInlinePics()` → `initCaaPics()` / `initEaaPics()`.",
+          "Moved `_artEnrichTable` (JSON-API enrichment) from the first `tables.forEach` pass inside `_artInitPics` to a dedicated second pass that runs after all image-fetch tasks are enqueued. This ensures small icons, inline thumbnails, and the big-picture strip always have priority in `_caaQueue` over count-badge and multi-row-cell population."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.660",
+    "date": "2026-06-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "On `releasegroup-releases` pages, inline cover art thumbnails in the first (sticky) column were absent after loading data from disk. Root cause: the disk-load path unconditionally set `group.colName = category` (e.g. `\"Official release\"`) for every multi-table group, but the network fetch path only sets `colName` for `listToTable`/`groupByH3` page types. For standard multi-table pages (`releasegroup-releases` uses the generic `else` fetch branch), `group.colName` is left `undefined`. When `colName` was incorrectly set on disk-load, `renderGroupedTable` patched the first `<th>` of each sub-table from `\"Release\"` to `\"Official release\"`, causing `caaFindColumnByName('Release')` to return `-1` and `_artInitInlinePics` to skip all sub-tables. Fixed by guarding the `colName` derivation behind a check for `activeDefinition.features.listToTable || activeDefinition.features.groupByH3`, mirroring the network-path condition exactly."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.659",
+    "date": "2026-06-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "`applyMultiSortColumnTints` used `cell.textContent.trim()` to compare successive cell values when determining shade-flip boundaries. Cells that embed a `<script type=\"application/json\">` block (e.g. the Country/Date column on release-group pages) produced different `textContent` strings for visually identical values because the embedded JSON uses varying property-key order, causing the shade to flip on every row even when the visible value was unchanged. Fixed by replacing `cell.textContent.trim()` with `getCleanColumnText(cell)`, which already skips `<script>` and `<style>` nodes via its TreeWalker filter."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.658",
+    "date": "2026-06-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Prefix-mode `A` (and column-filter `Ctrl+A`) now also finds EAA per-table toggle buttons (`mb-eaa-toggle-btn-N`) in addition to CAA (`mb-caa-toggle-btn-N`). Previously, on pages that show EAA event art (e.g. place/events), pressing `Ctrl+M` then `A` had no effect. Updated `ctrlMFunctionMap['a']` description to 'Toggle Cover Art Images (CAA/EAA)'.",
+          "Stop button tooltip now mentions the `Ctrl+M, then O` prefix-mode shortcut."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.657",
+    "date": "2026-06-15",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Global and column filter input tooltips incorrectly mentioned 'Ctrl+M then U' as an alternative for the unicode character map shortcut. The unicode picker (`Ctrl+U`) is handled in the capture phase and is never suppressed, so the tooltip now simply shows the configured `sa_shortcut_unicode_chars` shortcut (default `Ctrl+U`) without a prefix-mode alternative.",
+          "Barcode highlight button tooltip no longer shows the direct `Ctrl+B` shortcut when `sa_enable_direct_ctrl_char_shortcuts` is off. It now uses the new `buildShortcutHint` helper (same as other action buttons).",
+          "Added `buildShortcutHint(settingKey, fallback, prefixKey)` utility: always emits the prefix-mode form (`Ctrl+M, then X`); appends the direct shortcut (`or Ctrl+X`) only when `sa_enable_direct_ctrl_char_shortcuts` is on, or when the shortcut key is not a `Ctrl+<a–z>` letter (e.g. `Ctrl+,`) and is therefore never suppressed.",
+          "All action-button tooltips (Save, Load, Resize/Restore, Visible, Density, Statistics, Export, Keyboard Shortcuts, Settings) now use `buildShortcutHint` so the direct `Ctrl+X` shortcut is shown only when enabled. `Ctrl+,` (Settings) is always shown because it is not a letter shortcut. App Help shows prefix-mode only (no direct `Ctrl+H` shortcut exists)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.656",
+    "date": "2026-06-15",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Prefix-mode tooltip (`showCtrlMTooltip`): split the Functions list into a regular section and a 'Col-filter context' section for `o`/`q`/`a`. The column-context section is shown in green when a column filter is currently focused and grey with a '⚠ focus col filter first' warning otherwise. Added `colContext: true` flag to the `o`/`q`/`a` entries in `ctrlMFunctionMap` to enable this split.",
+          "Moved 'b — Toggle Barcode Highlighting' to appear immediately after 'v — Open Visible Columns Menu' in the prefix-mode function map (and therefore in the tooltip), matching the visual order in the controls bar.",
+          "Barcode highlight button tooltip now includes the prefix shortcut (`Ctrl+M` then `B`) and the configured direct shortcut (`Ctrl+B`) in both active and inactive states.",
+          "Global filter input tooltip now honours `sa_enable_direct_ctrl_char_shortcuts`: when the setting is off, shows the prefix-mode alternative (`Ctrl+M` then `G`) and mentions that the direct `Ctrl+G` can be re-enabled in Settings.",
+          "Column filter input tooltip similarly honours `sa_enable_direct_ctrl_char_shortcuts`: shows `Ctrl+M` then `C` prefix-mode hint when direct shortcuts are off.",
+          "Sort-icon tooltips for ⇅, ▲, ▼ now mention the keyboard shortcuts `Ctrl+#`, `Ctrl+↑`, `Ctrl+↓` (column filter focused) using `getShortcutDisplay` so they reflect any user-configured bindings.",
+          "Unique-values (📊) wrapper tooltip now mentions `Ctrl+M` then `Q` and, when direct shortcuts are enabled, also `Ctrl+Q` (col filter focused).",
+          "Multi-row collapse header button (▤) tooltip now mentions `Ctrl+M` then `O` and, when direct shortcuts are enabled, also `Ctrl+O` (col filter focused); hint is kept in sync on both creation and toggle.",
+          "Per-table CAA toggle button tooltip now mentions `Ctrl+M` then `A` (col filter focused) and, when direct shortcuts are enabled, also `Ctrl+A`; hint is kept in sync on both creation and click-toggle."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.655",
+    "date": "2026-06-15",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Extended `sa_enable_direct_ctrl_char_shortcuts=false` (the default) to suppress ALL `Ctrl+<a–z>` shortcuts everywhere — not just while an input field has focus or a UI dialog is open. `Ctrl+2` and `Ctrl+3` (number keys, not letters) are never affected. When a column filter is focused, `Ctrl+↑`, `Ctrl+↓`, and `Ctrl+#` are also never affected.",
+          "The configured `sa_keyboard_shortcut_prefix` (default `Ctrl+M`) is handled in the capture phase with `stopImmediatePropagation` and therefore always works — it is never suppressed regardless of the `sa_enable_direct_ctrl_char_shortcuts` setting.",
+          "Added permanent `ctrlMFunctionMap` entries for `o` (Toggle Multi-Row Cell Collapse), `q` (Show Unique Values Dropdown), and `a` (Toggle CAA Cover Art Images) — available via prefix mode (`Ctrl+M` → `o`/`q`/`a`). These operate on the last focused column filter (tracked via a `focusin` listener on `.mb-col-filter-input`). The `o` entry is temporarily overwritten by 'Stop fetching' during an active fetch and restored afterwards.",
+          "Updated the Keyboard Shortcuts help dialog and the bottom note to reflect the new global suppression behaviour, removed 'blocked while typing' wording, and added prefix-mode entries for `O`, `Q`, `A`.",
+          "Updated debug log strings in prefix-mode entry to list `o`/`q`/`a` function shortcuts with their current descriptions."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.654",
+    "date": "2026-06-01",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "`applyRenderMultiRowCells` did not split the 'Relationship types' column on instrument-* pages (instrument-releases, instrument-artists, instrument-recordings). Root cause: the splitting loop only recognised standalone comma text nodes (`/^\\s*,\\s*$/`) as separators — correct for element-separated columns like Catalog# whose HTML has `<span>…</span>,<span>…</span>` — but MusicBrainz renders Relationship types as a single plain text node (`instrument (as \"lead guitar\"), instrument (as \"rhythm guitar\")`), so no standalone comma node exists. Fixed by replacing the simple `if`/`else` check with a depth-aware top-level-comma finder: for every text node the loop now finds all comma positions at parenthesis depth 0 and splits there, creating one synthetic text node per part. Commas inside parentheses (e.g. `vocal (as \"soprano, alto\")`) are left intact."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.653",
+    "date": "2026-06-01",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Adjust 'Auto-resize columns threshold' to 10000 now that we have a much faster implementation."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.652",
+    "date": "2026-06-01",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Auto-resize: collapse-toggle reservation increased — the offset constant in `extra = max(0, toggleWidth + offset − thPaddingRight)` was raised from 4px (the toggle's CSS `right` value) to 16px (+12px safety buffer). v9.99.651's 4px offset left ≈1–3px of visual overlap with the closing character of long disambiguation comments; the larger offset ensures a ≥12px gap between the text right edge and the toggle left edge even with sub-pixel font rendering differences between the measurement context and the live page."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.651",
+    "date": "2026-06-01",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Auto-resize: collapse-toggle overlap in collapsable columns — corrected formula and added fix to sub-table resize path. v9.99.650 computed `extra = toggleWidth + 4 − cellPaddingRight` (subtracting the td's 22px), but the measurement `_div` uses the `<th>` padding, so the correct baseline is `extra = toggleWidth + 4 − thPaddingRight`. With a typical th right-padding of ~5px this raises the extra from 12px to ~29px, providing a 20px safety margin between text and toggle. The same fix is now also applied in `toggleSubTableAutoResize` (per-sub-table ↔ button on multi-table pages), which previously had no toggle compensation at all."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.649",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Three regressions from v9.99.648's DOM-wrapping approach: (1) double '▶' button — `normalizeCommentSpans` wrapped `<a>+<span.comment>` in `mb-nowrap-pair` before ERG injection ran; ERG then found the `<a>` inside the wrapper and prepended another `▶` inside it, producing two buttons; (2) `<a>+<span.comment>` pairs inside `<ul><li>` were not wrapped because Part A only walked direct `<td>` children; (3) `mb-nowrap-pair` wrapper boundaries between multiple pairs in the same cell were still wrap points. Replaced DOM-wrapping entirely with a container `white-space: nowrap` approach: Part A normalises `span.comment` interiors (same as before); Part B sets `white-space: nowrap` on each `<td>` that directly contains a `span.comment` child, and on each `<li>` that directly contains a `span.comment` child. This is safe because the measurement sandbox already uses `white-space: nowrap !important` — `th.style.minWidth` is already the full single-line width — so setting nowrap on the live container makes it match the measurement exactly, with no min-content change or re-layout."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.648",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Comment-span wrap still occurring after v9.99.647 in two new ways: (1) wrap between `</a>` and `<span class=\"comment\">` — the `\\n    ` text node between them was not being removed reliably (Step 1's guard was too strict), causing the entire comment block to drop to a new row after the title anchor; (2) cells with multiple `<a>+<span.comment>` pairs separated by `,` text nodes (e.g. Label column with CBS, Columbia, Legacy, Sony Music) — Step 1 never fires for those pairs because the preceding sibling of each `<span.comment>` is the `,\\n  ` text node (not pure-whitespace), leaving every comment wrappable. Rewrote `normalizeCommentSpans` with a new Part A: walks each `<td>`'s direct children and wraps each `<a>` + its immediately-following `<span class=\"comment\">` (plus any pure-whitespace text nodes between them) in a `<span class=\"mb-nowrap-pair\" style=\"white-space:nowrap\">`. This robustly prevents the break between any anchor and its comment, handles multiple pairs per cell, and is idempotent (guards on the `mb-nowrap-pair` class). Part B (interior normalisation of `span.comment`) is retained: removes whitespace-only child text nodes, consolidates Variant-A `(` / `)` into `<bdi>`, and applies `white-space:nowrap` to `span.comment` and `<bdi>`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.647",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Comment-span wrap still occurring after v9.99.646: debug HTML revealed that `normalizeCommentSpans` was not handling the second MusicBrainz DOM variant for `span.comment`. Variant A (assumed so far) has `(` and `)` as separate text-node siblings of `<bdi>`. Variant B (the actual failing cases) has all content already inside `<bdi>`, with only pure-whitespace text nodes (`\\n      `) surrounding it — these collapse to spaces and create wrap opportunities before and after the `<bdi>`. Steps 2–4 were guarded by `node.textContent.trim() !== ''` which correctly skipped pure-whitespace nodes but left them in place, causing the browser to still break there. Rewrote `normalizeCommentSpans` to explicitly remove ALL pure-whitespace text-node children of `span.comment` (Step 2), handle Variant A leading/trailing text (Steps 3–4), and then apply `white-space: nowrap` to both `span.comment` and its `<bdi>` child (Step 5). The `white-space: nowrap` is now safe because: (a) all whitespace-only text nodes have been removed so no wrap opportunities remain internally, and (b) the `<bdi>` content's min-content width is unchanged — only surrounding whitespace nodes were removed. Also fixed `totalWidth` rounding in `toggleAutoResizeColumns`: the reduce now uses `Math.ceil(w + 20)` to match `th.style.minWidth`, preventing the table from being set narrower than the sum of its column `minWidth` constraints."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.646",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Syntax error in v9.99.645: a Python string `\\n` in the inline comment for Step 2 of `normalizeCommentSpans` was written as a literal newline into the JS source, splitting the `//` comment across two lines and leaving a bare string token that the JS parser rejected. Fixed by escaping to `\\\\n` in the comment text.",
+          "Step 2 of `normalizeCommentSpans` improved: instead of merely stripping trailing whitespace from the `(\\n    ` text node preceding `<bdi>` (which left `(` as a standalone text sibling still able to create a break at the span boundary), Step 2 now moves the trimmed `(` content into the front of the `<bdi>` and removes the text node entirely. The resulting structure is `<span class=\"comment\"><bdi>(disambiguation text)</bdi></span>` — the entire comment content is inside a single `<bdi>`, with no text nodes outside it and no break opportunities remaining inside `span.comment`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.645",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Comment-span wrap still occurring after v9.99.644: the provided post-normalisation HTML revealed a third break point that was not being fixed. The full MusicBrainz `span.comment` source structure contains three independent soft-wrap opportunities: (A) a pure-whitespace text node between `</a>` and `<span class=\"comment\">` — fixed in v9.99.644 Pass 1; (B) whitespace inside `span.comment` between the opening `(` text node and the `<bdi>` child, i.e. `(\\n    <bdi>` — the newline+spaces collapse to a space giving a break between `(` and the text; (C) the `</bdi>)` bidi-boundary from earlier fixes. `normalizeCommentSpans` is now rewritten as a single consolidated per-span loop handling all three: Step 1 removes (A) as before; Step 2 strips trailing whitespace from any text node immediately preceding a `<bdi>` inside `span.comment` (turning `(\\n    ` into `(`), eliminating break point (B); Step 3 moves non-empty text after `</bdi>` into the `<bdi>`, eliminating (C). The function is still idempotent and still called before the measurement batch in `toggleAutoResizeColumns`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.644",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Column wrap still occurring after v9.99.643: `normalizeCommentSpans` only fixed the `</bdi>)` bidi-boundary break inside `span.comment`, but a second independent break point remained — the whitespace-only text node (`\\n    `) between `</a>` and `<span class=\"comment\">`, which collapses to a space and gives the browser a valid line-break opportunity before the entire comment block. Added Pass 1 to `normalizeCommentSpans`: for every `span.comment` whose immediately preceding sibling is a pure-whitespace text node preceded by an element, that text node is removed, making `</a>` and `<span class=\"comment\">` adjacent with no intervening break point. Also added a `normalizeCommentSpans(table)` call inside `toggleAutoResizeColumns` before the measurement batch phase, so the source DOM is normalised before nodes are cloned into the measurement sandbox — ensuring the measured column width exactly matches the width the live cell needs after normalisation."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.643",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Infinite loop / 100% CPU hang introduced in v9.99.642: `normalizeCommentSpans()` used `Array.from(commentSpan.childNodes)` to snapshot child nodes, then decremented the loop index `i--` after moving a text node into its preceding `<bdi>`. Because `children` is a static array, the already-moved text node remained at `children[i+1]` after `appendChild`; the `i--` caused the same `<bdi>`/text-node pair to be re-evaluated on every iteration, looping forever. Fixed by removing the `i--`: after `node.appendChild(next)` the loop's own `i++` advances to `children[i+1]` (the now-detached text node), which cannot match `tagName === 'BDI'`, so the condition is safely false and the loop continues to `children[i+2]`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.642",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bidi-boundary `</bdi>)` wrap — third and final fix (supersedes v9.99.639–641): the CSS approach used in v9.99.641 (`table.tbl td span.comment { white-space: nowrap }`) was fundamentally flawed: applying `white-space: nowrap` to `span.comment` in the live table changes those spans' min-content width to their full single-line text width, causing `table-layout: auto` to re-redistribute column widths on every layout pass — squeezing other columns or leaving the comment column too narrow, so the entire comment block dropped to a new row. Replaced with DOM normalisation: a new `normalizeCommentSpans(table)` function walks every `td span.comment`, finds any non-empty text node that immediately follows a `<bdi>` child (the orphan `)`), and moves it inside the preceding `<bdi>`. This removes the inter-element boundary that the browser's bidi-isolate algorithm treats as a soft wrap opportunity, without altering any inline metrics or triggering layout recalculation side-effects. Called at all three post-render sites (filter/sort path, main render end, grouped-table/CAA path) alongside `applyZebraStriping`. The CSS rule from v9.99.641 and the per-cell JS from v9.99.640 were both removed."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.641",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Bidi-boundary `</bdi>)` wrap in non-sticky columns (e.g. 'Release title') — the fix from v9.99.639/640 only covered sticky column `<td>` cells via JS in `applyStickyColumn._apply()`. Non-sticky cells (e.g. Release title on recording pages) suffered the same `</bdi>)` wrap: the closing \")\" after the `<bdi>` in `<span class=\"comment\">` broke to a new visual row because `<bdi>`'s `unicode-bidi:isolate` UA-stylesheet property terminates the bidi run and creates a soft wrap opportunity before the \")\" text node. Fixed by replacing the per-cell JS approach with a single global CSS rule injected in `applyStickyHeaders()`: `table.tbl td span.comment { white-space: nowrap }`. This covers all cells — sticky and non-sticky — in one declaration. The column measurement sandbox already uses `white-space:nowrap` via `.mb-measure-nowrap`, so measured column widths already account for the full single-line comment width; the CSS rule makes the live cell match. The obsolete `cell.style.whiteSpace = 'nowrap'` statement on sticky `<td>` cells (v9.99.640) was removed."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.640",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Sticky column content wrap — second fix (supersedes v9.99.639): the v9.99.639 fix applied `white-space: nowrap` only to `span.comment` elements, which stopped the `</bdi>)` bidi-boundary break but exposed a second, outer wrap point: the whitespace text node between `</a>` and `<span class=\"comment\">` allowed the entire comment block to drop to a new visual row. Root cause: two independent wrap opportunities exist in sticky Title/Name/Recording cells — (1) the inter-element whitespace between the title anchor and the comment span, and (2) the `unicode-bidi: isolate` bidi-boundary inside `span.comment` before the trailing `)`. The measurement div correctly captures the full single-line width under `white-space: nowrap`, but the live `<td>` had no such constraint. Fix: apply `white-space: nowrap` directly to the sticky `<td>` cell in `applyStickyColumn._apply()`, eliminating all wrap opportunities in one declaration. Safe because sticky column cells contain only inline content (anchors, bdi, span.comment) and never block-level elements."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.639",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Sticky column (Title/Name/etc.) optimal width not properly calculated for cells containing `<span class=\"comment\">(<bdi>…text…</bdi>)</span>`: the closing \")\" text node after `</bdi>` was wrapping to a new visual line due to the browser treating the `unicode-bidi: isolate` boundary of `<bdi>` as a soft wrap opportunity. Fixed by applying `white-space: nowrap` to every `span.comment` element inside sticky body cells in `applyStickyColumn._apply()`, preventing the `</bdi>)` bidi-boundary line-break in the live table. Affects all multi-table relationship pages (e.g. artist/relationships) where recording titles include live-event disambiguation comments."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.638",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Single-column sorts now show the same value-change shade banding as multi-column sorts: `applyMultiSortColumnTints()` synthesises a one-entry column list from `state.lastSortIndex` / `state.sortState` when `multiSortColumns` is empty, so the amber alternating tint (classes `mb-mscol-0a` / `mb-mscol-0b`) is applied to the sorted column and the column header is tinted whenever any single column is sorted. Tints are cleared on sort restore. The re-apply path after re-renders also covers the single-sort case."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.637",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Removed auto-clearing `setTimeout` calls from the retry-eviction (`mb-info-display-rel`) and IDB-sweep (`mb-info-display-generic`) toasts. Messages now persist in their sub-container until overwritten by the next message in the same slot, instead of disappearing after a fixed delay."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.636",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added async 'IndexedDB Cache' section (🗄️) to the Stats panel between Global Statistics and Table Details, showing: record counts for all three IDB stores (`images`, `metadata`, `rel-ws2`) fetched via `IDBObjectStore.count()`; L1 art memory cache size; L1 rel WS2 memory cache size; last sweep timestamp and deleted-record count; TTL eviction count (read-time); retry eviction count (user-initiated).",
+          "Added `_artIdbCountStore(storeName)` helper: opens the shared IDB and returns `objectStore.count()` as a Promise, resolving to 0 on any error.",
+          "Extended `_artIdbSweepExpired()` to also sweep the `rel-ws2` store (using `_REL_IDB_TTL_MS`); records the total deleted count and timestamp in module-level `_artIdbLastSweep`; fires a `mb-info-display-generic` toast ('🗄️ Sweep: removed N expired IDB records') cleared after 6 s when any records were deleted.",
+          "Added module-level `_relIdbTtlEvictCount` counter: incremented in `_relIdbGet()` whenever a record fails the TTL check and is deleted.",
+          "Added module-level `_relIdbRetryEvictCount` counter: incremented in `_relRetryMbids()` by the number of MBIDs whose IDB records were force-deleted; fires a `mb-info-display-rel` toast ('🔗 Retry: evicted N IDB records') cleared after 5 s."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.635",
+    "date": "2026-05-27",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "keyboard shortcuts (bug 1): make Ctrl+K ('Show keyboard shortcuts help') configurable — replaced the hard-wired e.key==='K' check with isShortcutEvent(e, 'sa_shortcut_show_shortcuts_help', 'Ctrl+K'); new setting sa_shortcut_show_shortcuts_help (default: Ctrl+K) added before sa_shortcut_open_settings in the configurable-direct-shortcuts block.",
+          "keyboard shortcuts (bug 4): apply the direct-Ctrl+letter guard inside the column-filter-focused shortcuts section too — Ctrl+O, Ctrl+Q, Ctrl+A, Ctrl+R, and Ctrl+V are now blocked when sa_enable_direct_ctrl_char_shortcuts is false (the target is an INPUT, so the same rule that applies globally applies in the column filter context). Ctrl+ArrowUp, Ctrl+ArrowDown, and Ctrl+# are non-letter keys and remain unaffected.",
+          "keyboard shortcuts popup (bug 4): annotate column-filter-focused shortcuts Ctrl+O/Q/A/R/V with '— blocked when direct Ctrl+letter shortcuts are disabled' to match the actual runtime behaviour."
+        ]
+      },
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "keyboard shortcuts (bug 2): add sa_toggle_barcode_highlighting (default: Ctrl+B) — new configurable shortcut that emulates clicking the #mb-barcode-highlight-btn button to toggle barcode row highlighting. Added before sa_shortcut_open_density in the configurable-direct-shortcuts block and handled in initKeyboardShortcuts.",
+          "keyboard shortcuts (bug 3): add 'b' → Toggle Barcode Highlighting to ctrlMFunctionMap so the action is also reachable via the prefix key followed by B.",
+          "keyboard shortcuts popup: add Ctrl+B (barcode toggle) to the 'View & Layout' section; update the prefix-mode sub-key list to include B."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.634",
+    "date": "2026-05-22",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "keyboard shortcuts: suppress direct Ctrl+<letter> (a–z) shortcuts while an input field has focus or a UI dialog is open (default new behaviour) — prevents conflicts with well-known browser/OS shortcuts and avoids accidental triggers while typing in filter fields. Ctrl+M (prefix key) and Ctrl+U (unicode picker) are explicitly excluded from this guard. Non-letter shortcuts (Ctrl+,, Ctrl+2, Ctrl+3, Ctrl+Shift+G, etc.) and column-filter-focused shortcuts are also unaffected.",
+          "keyboard shortcuts: add new boolean setting 'Enable Direct Ctrl+Letter Shortcuts' (sa_enable_direct_ctrl_char_shortcuts, default: false) in the KEYBOARD SHORTCUTS section to restore the previous unrestricted behaviour.",
+          "keyboard shortcuts: add G (focus global filter) and C (cycle column filter) to the prefix-mode function map (ctrlMFunctionMap) so these actions are always reachable via Ctrl+M, G / Ctrl+M, C even when direct Ctrl+<letter> shortcuts are suppressed.",
+          "keyboard shortcuts: move _colFilterTableIndex to module scope (renamed from local currentTableIndex) so the column-filter cycling state is accessible to both the keydown handler and the new prefix-mode entry.",
+          "keyboard shortcuts: add isSpecialDialogOpen() helper that detects whether any of the script's modal dialogs (shortcuts help, app help, stats panel, export/save/load dialogs, settings overlay) is currently in the DOM.",
+          "keyboard shortcuts: update the 'Show Keyboard Shortcuts' popup — note at the bottom now reflects the active mode; 'Filter & Search' and 'View & Layout' entries annotate which shortcuts are blocked while typing and list their prefix-mode equivalents; a new 'Keyboard Shortcuts' entry lists all prefix-mode letter sub-keys."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.633",
+    "date": "2026-05-22",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "status line: add a muted '|' divider (#mb-status-divider) between #mb-global-status-display and #mb-info-display; automatically shown/hidden by _setInfoSub() whenever any info sub-span becomes visible or is cleared."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.632",
+    "date": "2026-05-22",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "status line: add meaningful tooltips to all #mb-info-display-generic write sites — auto-resize (column measurement details, toggle hint), manual column resize (size + resize-button hint), restore widths, table density (cycle hint), export (format + row count), serialized to disk (load-from-disk hint), load from disk (pre-filter context or explore hint). showDownloadNotification gains a statusTip parameter so showExportNotification can pass a format-aware tooltip."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.631",
+    "date": "2026-05-22",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "status line: split #mb-info-display into three independent sub-spans — #mb-info-display-caa (CAA/EAA artwork completion), #mb-info-display-rel (Relationships completion), #mb-info-display-generic (everything else). All three can coexist without overwriting each other. Added _setInfoSub(id, text, tip) helper to manage visibility (display:none when empty). CAA and Rels sub-displays use the same compact format and tooltips as the global status segments. All sub-displays are cleared on each new render start."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.630",
+    "date": "2026-05-21",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "status line: simplify 🔗Rels and 🎨CAA/EAA segments to show only the elapsed time (e.g. '🔗Rels: 11s', '🎨CAA: 9s') — detailed tier breakdown moved to tooltip only. CAA label now reflects the active archive ('CAA' or 'EAA') via _getActiveArtCtx()."
+        ]
+      },
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "fix: 🔗Rels segment was appended to the global status line multiple times when repeating a filter operation. Added _relGlobalStatusDone guard (mirroring the existing _caaGlobalStatusDone pattern) so the segment is only appended once per load."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.629",
+    "date": "2026-05-20",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "fix: barcode highlighting — cells appeared only bold (no background color). Four root causes fixed: (1) barcodeProcessTable used th.textContent.trim() === 'Barcode' to find the Barcode column index; after makeTableSortableUnified wraps headers in .mb-col-hdr-flex with sort icons and a count badge, textContent includes '⇅▲▼📊' so the match always failed (barcodeColIdx = -1). Fixed by using _cleanColHeaderText(th) which reads th.dataset.colName. Same fix applied to addBarcodeHighlightToggleButton's hasBarcodeColumn check. (2) In runFilter and renderGroupedTable, initBarcodeHighlight ran before applyStickyColumn; applyStickyColumn calls td.style.background = '' on non-sticky cells which clears any inline background-color. Fixed by moving initBarcodeHighlight to after applyStickyColumn in both call sites. (3) startFetchingProcess has a second 'RENDERING END' applyStickyColumn pass (shared by both table modes) that ran after initBarcodeHighlight in the individual mode paths, wiping barcode colors on every initial render. Fixed by adding initBarcodeHighlight() after this final sticky pass. (4) The applyStickyColumn _leave hover handler did td.style.background = '' on non-sticky cells, which wiped barcode backgroundColor after any hover-out. Fixed: _leave now restores from td.dataset.mbRestBg when set; barcodeProcessTable updates mbRestBg to the barcode color when highlighting and deletes it when un-highlighting, so _leave correctly restores barcode colors after hover."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.628",
+    "date": "2026-05-20",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "fix: CAA/EAA image loading stalls after column filter — root cause: initCaaPics() recreated _caaQueue on every filter run but left the old queue (from the initial 8100-row render) running in the background, saturating the browser connection pool and causing the new queue's img.load events to be silently dropped by the browser. Fix: makeCaaQueue() gains a cancel() method that drops all pending tasks and marks the queue inert; initCaaPics() now calls _caaQueue.cancel() before replacing the queue, limiting the old queue to at most sa_caa_fetch_concurrency in-flight requests at the moment of cancellation. Additionally: _artGmFetchBlob gains timeout:30000 and an onabort handler so GM_xmlhttpRequest aborts/hangs reject the promise instead of deadlocking the queue; native img load path gains a 30-second watchdog timer that resolves the task if the browser silently drops the request."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.627",
+    "date": "2026-05-20",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "perf: incremental filter narrowing (Pattern 1) — single-table mode now tracks the last full testRowMatch scan result; when the new globalQuery is a plain-text extension of the previous query and all flags/column-filters are unchanged, only the previous match set is re-tested instead of all of allRows. Reduces O(8100) scan to O(prev_matches) for each additional character typed. Disabled automatically for regex and exclude modes (non-monotonic semantics). Invalidated by fetch, sort, disk-load, and any flag or column-filter change.",
+          "perf: rAF chunked render (Pattern 4) — renderRowsChunked now yields between chunks via requestAnimationFrame instead of setTimeout(0), guaranteeing one browser paint per chunk so the progress counter is always visible on screen. The abort-token generation check runs immediately after each rAF yield as before."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.626",
+    "date": "2026-05-20",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "fix: eliminate forced synchronous layout (FSL) reflows in initCollapsableColumns — the inner multiRowCells.forEach loop previously did write(whiteSpace=nowrap) → read(scrollWidth) → write(whiteSpace=prevWS) per cell, causing one full-table layout reflow per multi-row cell (thousands of reflows = 100–200 s freeze on 8 k+ row tables). Now all DOM writes are completed first, then a single batch pass sets whiteSpace:nowrap on all first-<li> elements, reads all scrollWidths in one pass (triggering exactly one layout flush per column instead of one per cell), then resets whiteSpace. Reduces O(cells) FSLs to O(columns) FSLs, eliminating the Chrome 'Page Unresponsive' freeze."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.625",
+    "date": "2026-05-20",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "fix: initCollapsableColumns perf — three targeted changes eliminate the 30–120 s post-render freeze on 8 k+ row tables: (1) both _updateAllColHeaderCounts(table) call sites deferred via setTimeout(0) so the O(rows × columns) getCleanColumnText scan runs after the browser paints the rendered rows instead of blocking the event loop; (2) five separate querySelectorAll cleanup passes consolidated into one combined selector walk, saving ~4 full DOM traversals (≈ 2–8 s on 65 k+ element tables); (3) Array.from(table.querySelectorAll('tbody tr')) hoisted above collapsableColumns.forEach so the tbody snapshot is computed once instead of once per collapsable column, eliminating O(N × C) redundant DOM walks. Chrome 'Page Unresponsive' dialog no longer appears and reported rendering time drops to reflect only actual row-insertion cost."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.624",
+    "date": "2026-05-20",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "fix: render-generation abort token — adds module-level _renderGeneration counter incremented at the start of every renderFinalTable and renderGroupedTable call. renderRowsChunked accepts a generation parameter and checks _renderGeneration after each setTimeout(0) yield; if superseded it removes the progress overlay and returns immediately. Fixes a race where comfortable-speed typing produced interleaved highlights: runFilter('cook') rendered 27 correct rows via the fast synchronous path, but an older renderRowsChunked continuation (from runFilter('c'), ~1500 rows → chunked) was still queued and kept appending stale rows with 'c' highlights to the same tbody after its first setTimeout(0) yielded. renderGroupedTable also increments the counter (so any concurrent single-table renderRowsChunked aborts) and guards its post-render hook block (initExpandRGsFeature, initBarcodeHighlight, initCaaPics, initEaaPics, etc.) behind a generation check for future-proofing."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.623",
+    "date": "2026-05-19",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "perf: filter result cache — _filterResultCache (Map, max 50 entries, oldest evicted) caches the set of source TR elements that pass each unique filter configuration. On cache hit the O(N) testRowMatch(matchOnly=true) pass is skipped; cloning, highlighting, and rendering always run fresh. Cache is keyed on normalised query + flags + per-column filter specs (JSON). Invalidated on fetch start, disk-load, and sort completion via _invalidateFilterCache(). Both single-table and per-group multi-table paths are covered."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.622",
+    "date": "2026-05-19",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "perf: adaptive debounce delay — _adaptiveFilterDelay() computes the debounce interval as max(floor, 0.05 ms × rows_above_500, capped at 1000 ms). The user-configured sa_filter_debounce_delay becomes the floor (minimum), not a fixed value. debounce() now accepts a factory function for its wait argument so the delay is re-evaluated on every keystroke. All three filter debounce sites (global, column, sub-table) use the adaptive delay."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.621",
+    "date": "2026-05-19",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "perf: two-phase column filter matching in testRowMatch() — plain-text cellText.includes() (cheap, cached) is now checked first; querySelector for sentinel sort-key spans (.mb-inline-art-sort-key, .mb-caa-sort-key, .mb-eaa-sort-key) only runs when the plain check misses. Regexp filters bypass phase 1 and go directly to regexp.test(). Also adds a global short-circuit: the column filter loop is skipped entirely when the global filter has already rejected the row."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.620",
+    "date": "2026-05-19",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "perf: WeakMap text cache for source rows in testRowMatch() — getCleanVisibleText and getCleanColumnText results are now cached per source row in a WeakMap (_rowTextCache) and reused across filter keystrokes. Cache entries are populated lazily (_cachedFullText / _cachedColText) on the matchOnly=true pass and are GC'd automatically when allRows / groupedRows are replaced on a new fetch."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.619",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "perf: test-before-clone in runFilter() — source rows are now matched with testRowMatch(matchOnly=true) before cloneNode(), so only passing rows are cloned. testRowMatch gains a matchOnly parameter that skips all DOM mutations (highlight reset and application) for use on source rows; highlights are applied on the clone in a second call."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.618",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "CAA/EAA segment in mb-global-status-display was appended after every filter re-render because _showCaaCompletionToast fires on every _caaQueue.onIdle(). Fix: add _caaGlobalStatusDone flag; only the first call per page load appends to globalStatusDisplay. Flag resets when globalStatusDisplay.innerHTML is cleared at load start.",
+          "Rels tooltip was using CAA-style emojis (🟢/🗄️/🔵) instead of the compact-display emojis (📦/💾/🌐). Fixed to use consistent 📦 IDB / 💾 cache / 🌐 net throughout.",
+          "Compact status display segments (🔗Rels and 🎨CAA) showed all tier counts including zeros. Now only non-zero tiers are included in the compact string.",
+          "Tooltips for both 🔗Rels and 🎨CAA segments now always show all tiers (zero-count tiers explicitly shown as ':0' rather than suppressed)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.617",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Compact Rels status display: remove 'entities'/'cells' labels and spacing; format is now '🔗Rels: N/N·📦N/💾N/🌐N·Xms' (entities/cells · tier counts · time).",
+          "Rels tooltip now uses the 4-tier CAA convention (🟢 Memory cache / 🗄️ IndexedDB cache / 🔵 Network fetch) with zero-count tiers suppressed, replacing the previous 📦/💾/🌐 labels.",
+          "Add CAA/EAA artwork segment to mb-global-status-display after 📐Measuring (and before 🔗Rels), in a mirrored compact format '🎨CAA: icon/inline·🟢N/🗄️N/🔵N/🌐N·Xms', with a multi-line tooltip showing the full per-tier icon+inline breakdown. The mb-info-display '🎨 CAA/EAA: N images in Xms' line is unchanged."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.616",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Redesign mb-global-status-display as structured tooltip-aware spans. Each segment (Loaded, Fetching, Rendering, Measuring, Rels) is now a separate <span title='…'> child, making the text more compact and adding hover tooltips: 'Loaded N pages (M rows)' explains the source is the MusicBrainz database; 'Fetching' and 'Rendering' explain the timing stages; '📐Measuring' explains sa_auto_resize_columns; '🔗Rels' shows a multi-line tooltip breaking down 📦 IDB / 💾 memory cache / 🌐 live WS2 API fetch counts.",
+          "Condense status display text: 'from MusicBrainz' moved to tooltip; separators changed to '; ' / ', '; labels shortened to 'Fetching:', 'Rendering:', '📐Measuring:', '🔗Rels:'; tier emojis 📦/💾/🌐 replace verbose 'IDB:'/'cache:'/'net:' labels.",
+          "Add _sdAppend(text, sep, tip) helper to globalStatusDisplay creation scope for appending structured segments from any call site."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.615",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Relationship load-complete toast now shows a per-tier fetch breakdown: 📦 IDB (Phase-1 IndexedDB hits), 💾 cache (L1 memory cache hits during Phase-2), and 🌐 net (live network fetches during Phase-2). The tier line is omitted when all counts are zero.",
+          "When all relationships have finished loading, append a condensed summary to the mb-global-status-display status line after 'Columnsize measuring time', e.g. '🔗 Rels: 50 entities · 50 cells · IDB:35·cache:2·net:13 · 55.2s'."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.614",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix Relationship column correctness when the user types in the filter while the Phase-2 fetch queue is still mid-flight (race condition between the throttled MBID queue and runFilter's DOM rebuild). Three-part fix: (1) _populateCells now syncs icon HTML to source-row cells (groupedRows/allRows) immediately after each MBID completes, so runFilter clones already carry the correct content; the premature relDone='1' stamp on source cells (before icons were built) is removed and moved to the correct position after the sync. (2) runFilter calls initRelationshipsColumn() after renderFinalTable/renderGroupedTable whenever any td.mb-rel-cell without data-rel-done='1' is found, so cells cloned from not-yet-processed MBIDs are populated in the freshly rendered DOM. (3) The queue.then() bulk sync is kept as a safety net but skips source cells whose innerHTML already matches the DOM cell, avoiding redundant work."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.613",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix batch measurement producing identical widths for every column (bugs 1–3): the previous <table>+<tr><td> approach placed all cells in a single table column, so the browser collapsed every offsetWidth to the same value — the maximum across the entire table. Replace with a plain <div> container holding display:inline-block wrappers; each wrapper is independently sized to its own content, giving correct per-column maximum widths.",
+          "Empty columns now correctly take the header width (sort icons, collapse button, CAA/EAA flex header) since headers are measured in the same batch and no longer share their width with data-row cells."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.612",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Replace per-cell reflow measurement with a single-reflow batch approach: all cells are cloned into a DocumentFragment (zero reflows during build), identical content is deduplicated per column via a per-column Set, the entire fragment is appended to a shared offscreen <table> in one call, and all offsetWidth values are read in a single pass (one layout recalculation for the whole table). Eliminates O(N) forced layouts — previously 375s on an 8 000-row table.",
+          "Remove the per-100-row await yield (no longer needed); yield once before the loop starts so the overlay renders, then run the batch measurement synchronously.",
+          "Clean up the shared offscreen measurement table in the finally block."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.611",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Column resize overlay: heading line now updates every 100 rows to show elapsed time and estimated time remaining — '📐 Measuring column widths… 2.3s (5.1s left)'.",
+          "Change auto-resize duration display from milliseconds to seconds (2 decimal places) in the info-display status message and the resize debug log line."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.610",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Make toggleAutoResizeColumns() async: show a fixed-centre overlay (📐 Measuring column widths…) matching the renderRowsChunked style; chunk the inner row measurement loop at 100 rows with a yield between chunks to keep the page responsive and prevent a Chrome 'page unresponsive' dialog on large tables.",
+          "Disable the Resize button during the measurement pass and re-enable it in a finally block so it is always restored even if an error occurs.",
+          "Update the auto-resize-on-load setTimeout callback to async/await so the column-size timing measurement captures the full async duration correctly."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.609",
+    "date": "2026-05-18",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Add setting 'sa_auto_resize_columns_threshold' (default 2000): auto-resize on load is now skipped when the rendered row count exceeds this threshold, preventing slow measurement passes on large datasets. Set to 0 to always resize regardless of row count.",
+          "Auto-resize on load now appends 'Columnsize measuring time: N.NNs' to the global status display (after 'Rendering time') so the measurement cost is visible in the timing summary.",
+          "Auto-resize on load debug log now includes the row count and threshold for easier diagnosis."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.608",
+    "date": "2026-05-17",
+    "sections": [
+      {
+        "label": "✨ Enhancement",
+        "items": [
+          "Make 'Lyrics languages'column collapsable in pageType 'artist-works'"
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.607",
+    "date": "2026-05-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix row hover highlight regressing to sticky-column-only after the MutationObserver scope fix in 9.99.604: the MusicBrainz native `tr:hover > td` CSS rule is silently defeated by inline style.background values on <td> elements (sticky cell, mb-re-cell, mb-rel-cell, mb-ice-cell injected cells all receive inline backgrounds), and the broad body-level observer had been incidentally propping up Vivaldi's hover-state evaluation via continuous reflows. Fix: extend applyStickyColumn's existing JS hover approach from the sticky cell only to every <td> in each row — at _apply() time, every non-sticky cell's inline background is cleared so CSS zebra striping drives the colour and the computed rest-state is snapshotted into dataset.mbRestBg; the shared _enter handler sets hoverBgColor (default #e2e2e2, configurable via sa_ui_row_hover_bg) on all cells; _leave restores sticky cells to dataset.mbStickyBg and non-sticky cells to '' so CSS zebra takes over. hoverBgColor is evaluated once per _apply() call outside the forEach loop."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.606",
+    "date": "2026-05-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix SyntaxError 'Unexpected token )' at line 18738 (installed): the str_replace that rewrote the subtable toggleSubTableAutoResize measurement loop in 9.99.604 left an orphaned tail fragment — a duplicate measureDiv.appendChild(liClone) and closing }); pair after the correctly-closed querySelectorAll('ul > li').forEach block, producing an unmatched closing parenthesis. Removed the two orphaned lines. Node.js --input-type=module parse confirms file is syntax-clean."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.605",
+    "date": "2026-05-17",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix colStyleCache construction in toggleAutoResizeColumns (global loop) calling Array.prototype.indexOf.call(headers, th) on a NodeList — NodeList is not an Array, making indexOf unreliable across engines, and the index was already available as the second parameter of the .map() callback. Changed map(th => ...) to map((th, i) => ...) and replaced the indexOf call with the i parameter directly."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.604",
+    "date": "2026-05-17",
+    "sections": [
+      {
+        "label": "⚡ Performance",
+        "items": [
+          "Column resize drag: throttle onMouseMove writes to one requestAnimationFrame per frame via a _dragRafPending flag, capping col.style.width DOM writes to 60 fps regardless of mouse-event rate and eliminating the per-pixel synchronous reflow storm during drag.",
+          "Column resize drag: cache the target <col> element in _targetCol at mousedown time so onMouseMove never re-queries the DOM; table.style.tableLayout='fixed' is also set once at mousedown instead of on every mousemove. _targetCol falls back to setColumnWidth() if the element is detached by a concurrent re-render.",
+          "Auto-resize measurement loops (toggleAutoResizeColumns and toggleSubTableAutoResize): hoist getComputedStyle reads outside the row loop into a colStyleCache array built once per column header, reducing getComputedStyle calls from O(rows×cols) to O(cols).",
+          "Auto-resize measurement loops: replace per-element measureDiv.querySelectorAll('*').forEach(el => el.style.setProperty(...)) loops (a micro-reflow per cloned element per cell) with a single .mb-measure-nowrap CSS class on the measureDiv. The class is injected into the sticky-header stylesheet with white-space:nowrap !important, overflow-wrap:normal !important, word-break:normal !important covering the div and all its descendants, eliminating all per-element style loops in both the global and subtable measurement paths including the CAA/EAA art-li section.",
+          "Sidebar MutationObserver: change observe target from document.body (childList+subtree — fired on every DOM mutation anywhere on the page, including every cell clone appended during auto-resize) to sidebar (childList+subtree+attributes, attributeFilter:['class','style']). Add _sidebarRafPending deduplication guard so bursts of sidebar mutations only queue one getBoundingClientRect() read per animation frame.",
+          "window.scroll listener on sidebar handle: throttle with _scrollRafPending rAF guard (same pattern) to cap getBoundingClientRect() reads to one per paint cycle during scroll."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.603",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix saveTableDataToDisk(): when the user saves at the render-threshold dialog without rendering, the serialized headers now reflect the final rendered column layout instead of the native pre-render DOM structure. Detection: absence of mb-original-column class on any <th> (stamped by cleanupHeaders() only after rendering). Fix: clone the native thead and run cleanupHeaders() on the detached clone — this removes checkbox/Relationships/Tagger/Rating columns and injects all synthetic headers (CAA, Country, Date, Total Tracks, DD/MM/YYYY/Day/Month, MB-Name, Comment, injected Relationships) that the active column pipeline would produce, so that the stored headers are aligned with the already-correctly-processed row data in allRows."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.602",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix makeH2sCollapsible(): bare text nodes between an <h2> and the next <h2> (e.g. 'No one has reviewed … yet.' in the Reviews section on ratings-entity pages) were not captured by the nextElementSibling walk and therefore not hidden on collapse. Changed to walk nextSibling instead, wrapping non-empty text nodes in a <span> in-place so they participate in the same show/hide mechanism as element siblings."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.601",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Rename first column from 'Ratings' (plural) to 'Rating' (singular) for pageTypes 'user-ratings' (all sub-tables) and 'user-ratings-type' (single table): updated Structure H _colHeaders array, both pageType integerColumns sourceColumn references, the Events entityFeatures integerColumns entry, and all related comments."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.600",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Add pageType 'ratings-entity' for /<entity>/<mbid>/ratings pages (e.g. /work/<mbid>/ratings): Structure I in applyListToTable converts the <h2>Ratings</h2>+<ul> to a 2-column table (Rating | User); the optional private-rating paragraph and average-rating widget are moved from after the list to between the h2 and the rendered table; integerColumns center-aligns the Rating column; button label is dynamically set to 'Show all Ratings for <Entity>' via a new labelFromPathEntity flag that reads the first URL path segment.",
+          "Add 'ratings' to the @include sub-path directive so Tampermonkey injects the script on entity ratings URLs.",
+          "Add labelFromPathEntity: true button flag and rendering block (parallel to labelFromPath / labelFromH2 / labelFromType) that reads the first URL path segment as the entity type (e.g. 'work' → 'Work', 'release-group' → 'Release group')."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.599",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "editor-subscribers: fix 'Plus N other anonymous users' row reappearing after sort — the row was removed from the DOM in finalCleanup but not from the in-memory allRows / originalAllRows arrays; sort rebuilt the tbody from those arrays, re-inserting the row. Added splice calls (same pattern as the 'View all ratings' fix) to remove it from both arrays immediately after DOM removal.",
+          "editor-subscribers: rename column header from 'Subscribers' (plural h2 text) to 'Subscriber' (singular) by applying _toSingular() in Structure C column-name derivation, consistent with how tag-value-entity and user-tag-value-entity pages singularise their column names."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.598",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "user-ratings-type: action button label is now dynamic — the last URL path segment (e.g. 'recording') is converted to its plural entityFeatures key ('Recordings') and the button reads 'Show Ratings for Recordings' instead of a hardcoded string. Implemented via a new labelFromPath: true button flag and a corresponding rendering block (parallel to the existing labelFromH2 / labelFromType mechanisms)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.597",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Add column-header tooltip for the 'Event-Additional-Info' synthetic column in the eventParts tooltip switch, consistent with the existing tooltips for Event-Type, Event-Date, Event-Detail, Event-Venue, Event-Venue-Detail, Event-City, Event-State, and Event-Country."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.596",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "eventParts extractor: split 'Event-Country' on the first ';' to capture trailing text (e.g. 'USA; intro' → Country='USA', Additional-Info='intro') into a new ninth synthetic column 'Event-Additional-Info'. Updated all nine syntheticColumnExtractors declarations across pageType definitions, the JSDoc, the array length (8→9), and the sa_enable_event_parts_extractor settings description."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.595",
+    "date": "2026-05-16",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Add missing extractors to rating pages.",
+          "Center align the 'Ratings' integer column."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.594",
+    "date": "2026-05-15",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix user-ratings-type list-to-table conversion: entity-specific ratings pages (/user/<username>/ratings/<entity>) use the same <h2>+<ul> DOM structure as the overview page, not a native table.tbl. Add listToTable: [''] to user-ratings-type features and extend the Structure H trigger from 'user-ratings'-only to 'user-ratings' || 'user-ratings-type' so applyListToTable converts the single <h2>+<ul> pair into a table.tbl before renderFinalTable runs. Also replace the hardcoded 'user-ratings' string in the Structure H debug log with the pageType variable."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.593",
+    "date": "2026-05-15",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Add missing @match directive for user-ratings-type pages (*://*.musicbrainz.org/user/*/ratings/*) so Tampermonkey injects the script on entity-specific ratings URLs (e.g. /user/vzell/ratings/recording).",
+          "Remove unused 'params' parameter from the user-ratings match function signature (body only tests the path regex, consistent with other path-only matchers)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.592",
+    "date": "2026-05-15",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Complete user-ratings-type pageType for /user/<username>/ratings/<entity> pages (e.g. /user/vzell/ratings/event, /user/vzell/ratings/work): fix match regex (was requiring an extra path segment, now correctly matches /user/[^/]+/ratings/[^/]+$); add features.integerColumns for the Ratings column; add resolveEntityFeaturesFromH2 [user-ratings-type] block that maps the singular URL slug (recording, event, release-group, …) to the plural entityFeatures key (Recordings, Events, Release groups, …), giving each entity page the same column structure as the corresponding sub-table on the user-ratings overview page; extend both Ratings-column removal guards to also cover user-ratings-type so the script's own Ratings column is never treated as a native MB Rating column."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.591",
+    "date": "2026-05-15",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix video icon appearing in an extra phantom column on user-ratings Recordings rows: the 'Recordings' entityFeatures was using Name_Comment_Artists (syntheticColumns: ['Name','Comment','Artist']), which appended a redundant Artist <td> even though 'Artist' already exists as an original column in the recording-ratings table. Changed to Name_Comment (syntheticColumns: ['Name','Comment']) so no duplicate Artist cell is emitted; moved the video extractor first so the column order is Ratings | Recording | Artist | Video | Name | Comment."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.590",
+    "date": "2026-05-15",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Wire up entityFeatures on user-ratings pages to work like tag-value: (1) Structure H stores mbEntityFeaturesKey (_entityType+'s') so the fetch loop can resolve entityFeatures by plural key ('Artists', 'Events', etc.) even though the h3 category text is 'Artist ratings'; (2) the per-group extractor rebuild (tag-value path) now also runs for user-ratings, re-resolving activeColumnExtractors/integerColumns from the group's entity-specific feature set; (3) the user-ratings per-group thead builder in renderGroupedTable now also rebuilds extractors from group.entityFeatures, resolves colIdx from the freshly built thead cells, and calls cleanupHeaders to inject synthetic <th>s (Name, Comment, Date, etc.); (4) cleanupHeaders gains a user-ratings guard on the sa_remove_rating loop so the custom 'Ratings' column is never removed."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.589",
+    "date": "2026-05-15",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix one-position column name shift on user-ratings pages: the Structure H while loop in applyListToTable now stops traversal when it encounters an H3 or H2 heading, preventing the injected <h2>Ratings</h2> from crossing past 'Artist ratings' h3 to steal its UL. Previously every section received the previous section's entity type as column 2 (e.g. 'Artist ratings' showed col2='Ratings', 'Event ratings' showed col2='Artist')."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.588",
+    "date": "2026-05-15",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Add pageType 'user-ratings' for /user/<username>/ratings pages: new @match directive, page definition with renameH2ToH3 + insertH2 'Ratings' features, and Structure H in applyListToTable that walks h3+ul pairs and builds 2-column tables (Ratings | EntityType) for sections without artist credit (e.g. Artist ratings, Work ratings) and 3-column tables (Ratings | EntityType | Artist) for sections containing '</span> by' or '</a> by' (e.g. Recording ratings, Release group ratings). The trailing 'View all ratings' list item becomes a mb-show-all-subtable-btn overflow button in the h3 header via a new renderGroupedTable block. Per-group thead width is driven by dataset.mbColHeaders (JSON) propagated from applyListToTable through the fetch-loop group object. The sa_remove_rating exclusion is guarded to avoid incorrectly stripping the custom 'Ratings' column on user-ratings pages."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.587",
     "date": "2026-05-11",
     "sections": [

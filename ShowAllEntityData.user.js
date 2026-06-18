@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.587+2026-05-11
+// @version      9.99.674+2026-06-18
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14,11 +14,13 @@
 // @require      https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js
 // @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
 // @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections)(?:\?.*)?$/
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections|ratings)(?:\?.*)?$/
 // @match        *://*.musicbrainz.org/search?query=*
 // @match        *://*.musicbrainz.org/user/*/subscriptions/*
 // @match        *://*.musicbrainz.org/user/*/subscribers
 // @match        *://*.musicbrainz.org/user/*/collections
+// @match        *://*.musicbrainz.org/user/*/ratings/*
+// @match        *://*.musicbrainz.org/user/*/ratings
 // @match        *://*.musicbrainz.org/user/*/tags*
 // @match        *://*.musicbrainz.org/tags*
 // @match        *://*.musicbrainz.org/user/*/tag/*
@@ -197,7 +199,7 @@
             label: "Enable 'Event Parts' synthetic column extractor",
             type: "checkbox",
             default: true,
-            description: "Parse the recording 'Comment' field as structured live-performance metadata, splitting it into synthetic columns: Event-Type, Event-Date, Event-Detail, Event-Venue, Event-Venue-Detail, Event-City, Event-State, Event-Country. Only active on pages that declare the 'eventParts' extractor (e.g. Work-Recordings pages). Disable to suppress these extra columns entirely."
+            description: "Parse the recording 'Comment' field as structured live-performance metadata, splitting it into synthetic columns: Event-Type, Event-Date, Event-Detail, Event-Venue, Event-Venue-Detail, Event-City, Event-State, Event-Country, Event-Additional-Info. Event-Additional-Info captures any text after a ';' in the last location segment (e.g. 'USA; intro' → Country='USA', Additional-Info='intro'). Only active on pages that declare the 'eventParts' extractor (e.g. Work-Recordings pages). Disable to suppress these extra columns entirely."
         },
 
         // ============================================================
@@ -404,6 +406,17 @@
             description: "Keyboard shortcut prefix key combination (expects a second key press to be complete, e.g. Ctrl+M, Ctrl+., Alt+X, Ctrl+Shift+,)"
         },
 
+        sa_enable_direct_ctrl_char_shortcuts: {
+            label: 'Enable Direct Ctrl+Letter Shortcuts',
+            type: 'checkbox',
+            default: false,
+            description: 'When enabled, direct Ctrl+<letter> shortcuts (Ctrl+S, Ctrl+L, Ctrl+R, etc.) fire globally at all times. ' +
+                         'When disabled (default), ALL Ctrl+<a-z> shortcuts are suppressed everywhere — ' +
+                         'Ctrl+2 and Ctrl+3 (number keys, not letters) are never affected. ' +
+                         'When a column filter is focused, Ctrl+↑/↓ and Ctrl+# are also never affected. ' +
+                         'Use the Keyboard Shortcut Prefix (default: Ctrl+M) and a second key instead of blocked Ctrl+letter shortcuts.'
+        },
+
         // ---- Configurable direct shortcuts ----
         // Every entry below controls a single-chord shortcut (no prefix second-key needed).
         // Use the 🎹 Capture button to record a new combination. Changes take effect after Save.
@@ -436,6 +449,13 @@
             description: "Open the Visible Columns menu (default: Ctrl+V)"
         },
 
+        sa_toggle_barcode_highlighting: {
+            label: "Shortcut: Toggle Barcode Highlighting",
+            type: "keyboard_shortcut",
+            default: "Ctrl+B",
+            description: "Toggle barcode row highlighting on/off — emulates clicking the barcode highlight button (default: Ctrl+B)"
+        },
+
         sa_shortcut_open_density: {
             label: "Shortcut: Open Density Menu",
             type: "keyboard_shortcut",
@@ -455,6 +475,13 @@
             type: "keyboard_shortcut",
             default: "Ctrl+E",
             description: "Open the Export menu (CSV / JSON / Org-Mode / HTML) (default: Ctrl+E)"
+        },
+
+        sa_shortcut_show_shortcuts_help: {
+            label: "Shortcut: Show Keyboard Shortcuts Help",
+            type: "keyboard_shortcut",
+            default: "Ctrl+K",
+            description: "Open the keyboard shortcuts help dialog (default: Ctrl+K)"
         },
 
         sa_shortcut_open_settings: {
@@ -703,7 +730,7 @@
             default: 300,
             min: 0,
             max: 2000,
-            description: "Delay before applying filter after typing stops"
+            description: "Minimum delay before applying filter after typing stops. For large row sets the actual delay scales automatically with row count (0.05 ms/row above 500 rows, capped at 1000 ms) so this setting acts as a floor, not a fixed override."
         },
 
         sa_sort_chunk_size: {
@@ -1217,6 +1244,17 @@
             description: 'When enabled, automatically triggers the "↔️ Resize" button ' +
                          '(same as clicking it manually) immediately after the table is rendered, ' +
                          'so columns are fitted to their content on every page load without manual clicks.'
+        },
+
+        sa_auto_resize_columns_threshold: {
+            label: 'Auto-resize columns threshold (rows)',
+            type: 'number',
+            default: 10000,
+            description: 'Maximum number of rows for which the auto-resize-on-load feature ' +
+                         'will run. When the final rendered table contains more rows than this ' +
+                         'value, auto-resize is skipped to avoid a slow measurement pass on large ' +
+                         'datasets. Set to 0 to disable the threshold (always resize). ' +
+                         'Only has effect when "Auto-resize columns on load" is enabled.'
         },
 
         // ============================================================
@@ -3184,19 +3222,22 @@
         /**
          * eventParts — parses a MusicBrainz recording "Comment" field that encodes
          * live-performance metadata as a free-form comma/colon-delimited string and
-         * splits it into eight dedicated synthetic columns.
+         * splits it into nine dedicated synthetic columns.
          *
          * Expected source format (all segments are optional):
-         * [Event-Type][, Event-Date][, Event-Detail][: Venue[, Venue-Detail][, City][, State][, Country]]
+         * [Event-Type][, Event-Date][, Event-Detail][: Venue[, Venue-Detail][, City][, State][, Country[; Additional-Info]]]
          *
          * Location Parsing Rules:
          * - USA / Canada / UK:
          * - 5 parts: [Venue, Venue-Detail, City, State, Country]
          * - 4 parts: [Venue, City, State, Country] (Venue-Detail empty)
          * - Default: Right-to-Left fallback (Country, City, Venue, Venue-Detail)
+         * Additional-Info: if the last location segment contains '; extra text',
+         * the country is split at the first ';' — the trimmed left part goes into
+         * Event-Country, the trimmed right part into Event-Additional-Info.
          */
         eventParts(sourceCell) {
-            const tds = Array.from({ length: 8 }, () => document.createElement('td'));
+            const tds = Array.from({ length: 9 }, () => document.createElement('td'));
 
             if (!sourceCell) return tds;
 
@@ -3226,7 +3267,10 @@
             if (postPart) {
                 const loc = postPart.split(', ').map(s => s.trim()).filter(s => s.length > 0);
                 const n = loc.length;
-                const country = n >= 1 ? loc[n - 1] : '';
+                const countryRaw     = n >= 1 ? loc[n - 1] : '';
+                const _semiIdx       = countryRaw.indexOf(';');
+                const country        = _semiIdx !== -1 ? countryRaw.slice(0, _semiIdx).trim() : countryRaw;
+                const additionalInfo = _semiIdx !== -1 ? countryRaw.slice(_semiIdx + 1).trim() : '';
 
                 if (country === 'USA' || country === 'Canada' || country === 'UK') {
                     tds[7].textContent = country; // Country
@@ -3242,11 +3286,12 @@
                     }
                 } else {
                     // Default Right-to-Left fallback
-                    if (n >= 1) tds[7].textContent = loc[n - 1]; // Country
+                    if (n >= 1) tds[7].textContent = country; // Country (stripped of '; …' suffix)
                     if (n >= 2) tds[5].textContent = loc[n - 2]; // City
                     if (n >= 3) tds[3].textContent = loc[n - 3]; // Event-Venue
                     if (n >= 4) tds[4].textContent = loc[n - 4]; // Event-Venue-Detail
                 }
+                if (additionalInfo) tds[8].textContent = additionalInfo; // Event-Additional-Info
             }
 
             return tds;
@@ -4004,6 +4049,7 @@
 
                         // Column name derivation:
                         //   area-users:       full h2 text (e.g. "Users")
+                        //   subscribers:      singular of h2 text (e.g. "Subscribers" → "Subscriber")
                         //   tag-value-entity: first word before "tagged" in the h2 text
                         //                     e.g. "Labels tagged as «country»" → "Labels"
                         const _h2Text = _h2.textContent.trim();
@@ -4021,6 +4067,9 @@
                             // → everything before "tagged", then singularise: "Release groups" → "Release group".
                             const _beforeTagged = _h2Text.split(/\s+tagged\b/i)[0].trim();
                             _colName = _toSingular(_beforeTagged || _h2Text);
+                        } else if (_isSubscribers) {
+                            // "Subscribers" → "Subscriber"
+                            _colName = _toSingular(_h2Text);
                         } else {
                             _colName = _h2Text;
                         }
@@ -4166,6 +4215,229 @@
                             ` (${_tbody.rows.length} rows, col="${_colName}", structure="popular-tags-h3-ul").`);
                     });
                     return; // Structure E handled all h3+ul pairs for this entry
+                }
+
+                // ── Structure H: user-ratings /user/<username>/ratings ────────────────
+                // Triggered for pageType 'user-ratings' and 'user-ratings-type'.
+                // Both page types share the same <h2>+<ul> DOM structure:
+                //   user-ratings      — multiple h2+ul pairs (one per entity type);
+                //                       renameH2ToH3 has already demoted them to <h3>
+                //   user-ratings-type — single <h2>+<ul> pair (one entity type, no
+                //                       renameH2ToH3 needed; Structure H handles both
+                //                       h2 and h3 via its querySelector)
+                // Each <h3>+<ul> (or <h2>+<ul>) pair is converted to either:
+                //   2-col table — Rating | <EntityType>
+                //     for sections with no "by" in the list (e.g. Artists, Works)
+                //   3-col table — Rating | <EntityType> | Artist
+                //     for sections where any <li> has "</span> by" or "</a> by"
+                //     (e.g. Recordings, Release groups)
+                // The trailing "View all ratings" <li> (overview page only) is preserved
+                // as the last row so renderGroupedTable can convert it into an overflow
+                // button; entity-specific pages have no such row.
+                // dataset.mbColHeaders (JSON) stores the column names for this group
+                // so renderGroupedTable can build a per-group thead of the correct width.
+                if (pageType === 'user-ratings' || pageType === 'user-ratings-type') {
+                    Array.from(_root.querySelectorAll('h3, h2')).forEach(_h3 => {
+                        let _next = _h3.nextElementSibling, _steps = 0, _ul = null;
+                        while (_next && _steps < 5) {
+                            if (_next.tagName === 'UL') { _ul = _next; break; }
+                            if (_next.tagName === 'H3' || _next.tagName === 'H2') break;
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_ul) return;
+
+                        const _h3Text     = _h3.textContent.trim();
+                        // "Artist ratings" → "Artist", "Release group ratings" → "Release group"
+                        const _entityType = _h3Text.replace(/\s+ratings$/i, '').trim() || _h3Text;
+                        // 3-col when any li html contains "</span> by" or "</a> by"
+                        const _has3Cols   = /(<\/span>|<\/a>)\s+by\b/i.test(_ul.innerHTML);
+                        const _colHeaders = _has3Cols
+                            ? ['Rating', _entityType, 'Artist']
+                            : ['Rating', _entityType];
+
+                        const _table = docContext.createElement('table');
+                        _table.className = 'tbl';
+                        _table.dataset.mbOriginalColName = _entityType;
+                        _table.dataset.mbEntityFeaturesKey = _entityType + 's';
+                        _table.dataset.mbColHeaders = JSON.stringify(_colHeaders);
+
+                        // thead
+                        const _thead = docContext.createElement('thead');
+                        const _hr    = docContext.createElement('tr');
+                        _colHeaders.forEach(label => {
+                            const _th = docContext.createElement('th');
+                            _th.textContent = label;
+                            _hr.appendChild(_th);
+                        });
+                        _thead.appendChild(_hr);
+                        _table.appendChild(_thead);
+
+                        // tbody — one row per <li>
+                        const _tbody = docContext.createElement('tbody');
+                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                            const _tr         = docContext.createElement('tr');
+                            if (li.className) _tr.className = li.className;
+
+                            const _ratingSpan = li.querySelector('span.inline-rating');
+                            // "View all ratings" li: no inline-rating, text starts with "View all"
+                            const _isViewAll  = !_ratingSpan
+                                && /^\s*view all ratings/i.test(li.textContent.trim());
+
+                            if (_isViewAll) {
+                                // Put the link in the first cell; pad remaining cells empty
+                                const _td0 = docContext.createElement('td');
+                                Array.from(li.childNodes).forEach(n => _td0.appendChild(n.cloneNode(true)));
+                                _tr.appendChild(_td0);
+                                _colHeaders.slice(1).forEach(() =>
+                                    _tr.appendChild(docContext.createElement('td')));
+                            } else {
+                                // Rating cell: numeric value from .current-user-rating
+                                const _td0      = docContext.createElement('td');
+                                const _ratingEl = _ratingSpan
+                                    ? _ratingSpan.querySelector('.current-user-rating')
+                                    : null;
+                                _td0.textContent = _ratingEl ? _ratingEl.textContent.trim() : '';
+                                _tr.appendChild(_td0);
+
+                                // Collect child nodes after the inline-rating span and separator
+                                const _afterNodes = [];
+                                let _pastRating = !_ratingSpan;
+                                let _pastSep    = !_ratingSpan;
+                                for (const node of li.childNodes) {
+                                    if (!_pastRating) {
+                                        if (node === _ratingSpan) _pastRating = true;
+                                        continue;
+                                    }
+                                    if (!_pastSep) {
+                                        // Skip the " - " separator text node
+                                        if (node.nodeType === Node.TEXT_NODE) {
+                                            _pastSep = true;
+                                            continue;
+                                        }
+                                    }
+                                    _afterNodes.push(node);
+                                }
+
+                                if (!_has3Cols) {
+                                    // 2-column: entity cell gets all remaining content
+                                    const _td1 = docContext.createElement('td');
+                                    _afterNodes.forEach(n => _td1.appendChild(n.cloneNode(true)));
+                                    _tr.appendChild(_td1);
+                                } else {
+                                    // 3-column: split on the " by " text node
+                                    const _td1 = docContext.createElement('td');
+                                    const _td2 = docContext.createElement('td');
+                                    let _inArtist = false;
+                                    for (const node of _afterNodes) {
+                                        if (!_inArtist && node.nodeType === Node.TEXT_NODE
+                                                && /\bby\b/i.test(node.textContent)) {
+                                            _inArtist = true;
+                                            continue; // skip the "by" text itself
+                                        }
+                                        (_inArtist ? _td2 : _td1).appendChild(node.cloneNode(true));
+                                    }
+                                    _tr.appendChild(_td1);
+                                    _tr.appendChild(_td2);
+                                }
+                            }
+                            _tbody.appendChild(_tr);
+                        });
+                        _table.appendChild(_tbody);
+
+                        _ul.parentNode.replaceChild(_table, _ul);
+                        Lib.debug('init',
+                            `applyListToTable: ${pageType}: converted h3="${_h3Text}" ul → table` +
+                            ` (${_tbody.rows.length} rows, cols="${_colHeaders.join(' | ')}", structure="user-ratings").`);
+                    });
+                    return; // Structure H handled all h3+ul pairs
+                }
+
+                // ── Structure I: ratings-entity /<entity>/<mbid>/ratings ─────────────
+                // Triggered for pageType 'ratings-entity'.
+                // Finds <h2>Ratings</h2> and the immediately following <ul>, converts
+                // each <li> to a two-column row: Rating | User.
+                //   Rating — numeric value from <span class="current-rating">
+                //   User   — <a href="/user/…"> link (with avatar img and bdi name)
+                // After list→table replacement, moves any trailing private-rating
+                // paragraph and average-rating widget (if present) from after the
+                // table to between the <h2> and the <table> so they appear as a
+                // caption-like block above the data rows.
+                if (pageType === 'ratings-entity') {
+                    Array.from(_root.querySelectorAll('h2')).forEach(_h2 => {
+                        if (_h2.textContent.trim().toLowerCase() !== 'ratings') return;
+
+                        let _next = _h2.nextElementSibling, _steps = 0, _ul = null;
+                        while (_next && _steps < 5) {
+                            if (_next.tagName === 'UL') { _ul = _next; break; }
+                            if (_next.tagName === 'H2') break;
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_ul) return;
+
+                        // Build 2-column table: Rating | User
+                        const _table = docContext.createElement('table');
+                        _table.className = 'tbl';
+
+                        const _thead = docContext.createElement('thead');
+                        const _hr    = docContext.createElement('tr');
+                        ['Rating', 'User'].forEach(col => {
+                            const _th = docContext.createElement('th');
+                            _th.textContent = col;
+                            _hr.appendChild(_th);
+                        });
+                        _thead.appendChild(_hr);
+                        _table.appendChild(_thead);
+
+                        const _tbody = docContext.createElement('tbody');
+                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                            const _tr = docContext.createElement('tr');
+
+                            // Rating cell: numeric value from .current-rating
+                            const _td0      = docContext.createElement('td');
+                            const _ratingEl = li.querySelector('.current-rating');
+                            _td0.textContent = _ratingEl ? _ratingEl.textContent.trim() : '';
+                            _tr.appendChild(_td0);
+
+                            // User cell: the /user/ link (avatar + bdi username)
+                            const _td1      = docContext.createElement('td');
+                            const _userLink = li.querySelector('a[href*="/user/"]');
+                            if (_userLink) _td1.appendChild(_userLink.cloneNode(true));
+                            _tr.appendChild(_td1);
+
+                            _tbody.appendChild(_tr);
+                        });
+                        _table.appendChild(_tbody);
+
+                        // Replace <ul> with <table>
+                        _ul.parentNode.replaceChild(_table, _ul);
+
+                        // Move the private-rating notice and average-rating widget (if
+                        // present) from after the table to between <h2> and <table>.
+                        // Collect sibling nodes after the table until the next <h2>.
+                        // Stop after the first <span class="inline-rating"> found
+                        // (that is the average-rating widget — the last element of the block).
+                        const _infoNodes = [];
+                        let _cur = _table.nextSibling;
+                        while (_cur) {
+                            const _nextCur = _cur.nextSibling;
+                            if (_cur.nodeType === Node.ELEMENT_NODE && _cur.tagName === 'H2') break;
+                            _infoNodes.push(_cur);
+                            if (_cur.nodeType === Node.ELEMENT_NODE &&
+                                    _cur.classList && _cur.classList.contains('inline-rating')) {
+                                break; // average-rating span — last node of the block
+                            }
+                            _cur = _nextCur;
+                        }
+                        _infoNodes.forEach(n => _table.parentNode.insertBefore(n, _table));
+
+                        Lib.debug('init',
+                            `applyListToTable: ${pageType}: converted h2="Ratings" ul → table ` +
+                            `(${_tbody.rows.length} rows, cols="Rating | User", ` +
+                            `${_infoNodes.length} info node(s) moved before table).`);
+                    });
+                    return; // Structure I handled
                 }
 
                 // ── Structure F: artist-credit overview pages ────────────────────────
@@ -4840,11 +5112,23 @@
      *
      * Splitting strategy:
      *   The function walks the top-level child nodes of each target <td>.
-     *   A text node whose content matches /^\s*,\s*$/ (i.e. only a comma with
-     *   optional surrounding whitespace) is treated as a separator between
-     *   logical rows.  All other nodes between two separators are collected into
-     *   a single <li> item.  Leading and trailing whitespace-only text nodes
-     *   within each group are dropped before appending to the <li>.
+     *   Separators are detected in two complementary ways:
+     *
+     *   1. Element-separated cells (e.g. Catalog#): a text node whose entire
+     *      content matches /^\s*,\s*$/ (only a comma with optional surrounding
+     *      whitespace) is a separator.  Nodes between two such separators are
+     *      collected into a single <li> item.
+     *
+     *   2. Plain-text cells (e.g. Relationship types): MusicBrainz renders some
+     *      columns as a single text node — e.g. `instrument (as "lead guitar"),
+     *      instrument (as "rhythm guitar")`.  Here no standalone comma text node
+     *      exists.  The function finds every comma that sits at parenthesis
+     *      depth 0 (not inside `(…)`) and splits on those positions, creating
+     *      one synthetic text node per part.  Commas inside parentheses — e.g.
+     *      `vocal (as "soprano, alto")` — are left intact.
+     *
+     *   Leading and trailing whitespace-only text nodes within each group are
+     *   dropped before appending to the <li>.
      *
      *   - Cells with zero logical rows (empty cells) are left unchanged.
      *   - All non-empty cells — including those with exactly one logical row —
@@ -4888,12 +5172,35 @@
             let current    = [];
 
             for (const node of children) {
-                if (node.nodeType === Node.TEXT_NODE && /^\s*,\s*$/.test(node.textContent)) {
-                    // Comma separator — flush current group
-                    groups.push(current);
-                    current = [];
-                } else {
+                if (node.nodeType !== Node.TEXT_NODE) {
                     current.push(node);
+                    continue;
+                }
+                // Text node: locate every top-level comma (not inside parentheses)
+                const text   = node.textContent;
+                let   depth  = 0;
+                const splits = [];
+                for (let i = 0; i < text.length; i++) {
+                    const ch = text[i];
+                    if      (ch === '(') depth++;
+                    else if (ch === ')') depth--;
+                    else if (ch === ',' && depth === 0) splits.push(i);
+                }
+                if (splits.length === 0) {
+                    // No top-level commas — ordinary text node
+                    current.push(node);
+                } else {
+                    // Split into groups at each top-level comma
+                    let s = 0;
+                    for (const sp of splits) {
+                        const part = text.slice(s, sp);
+                        if (part.trim()) current.push(document.createTextNode(part));
+                        groups.push(current);
+                        current = [];
+                        s = sp + 1;
+                    }
+                    const tail = text.slice(s);
+                    if (tail.trim()) current.push(document.createTextNode(tail));
                 }
             }
             groups.push(current);
@@ -5031,7 +5338,7 @@
                         { sourceColumn: 'Recording', extractor: 'video', syntheticColumns: ['Video'] }
                     ],
                     syntheticColumnExtractors: [
-                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
                     ],
                     extractMainColumn: 'Recording',
                     stickyColumn: 'Recording'
@@ -5073,7 +5380,7 @@
                         { sourceColumn: 'Recording', extractor: 'video', syntheticColumns: ['Video'] }
                     ],
                     syntheticColumnExtractors: [
-                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
                     ],
                     extractMainColumn: 'Recording',
                     stickyColumn: 'Recording'
@@ -5301,6 +5608,155 @@
             },
             tableMode: 'multi'
         },
+        // Entity ratings pages (/<entity>/<mbid>/ratings e.g. /work/<mbid>/ratings)
+        // DOM structure (Structure I):
+        //   <h2>Ratings</h2>
+        //   <ul>
+        //     <li><span class="inline-rating">…5…</span> - <a href="/user/…">…</a></li>
+        //   </ul>
+        //   [<p>N private rating not listed.</p> Average rating: <!-- --> <span.inline-rating>]
+        //
+        // The private-rating/average-rating block (if present) is moved by Structure I
+        // to appear between the <h2> and the rendered table.
+        {
+            type: 'ratings-entity',
+            match: (path) => path.match(/\/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\/ratings$/),
+            buttons: [ { label: 'Show all Ratings', labelFromPathEntity: true } ],
+            features: {
+                listToTable: [ '' ],
+                integerColumns: [ { sourceColumn: 'Rating', align: 'C' } ]
+            },
+            tableMode: 'single'
+        },
+        // Entity-specific user ratings pages (/user/<username>/ratings/<entity>)
+        // Triggered by the "View all ratings" overflow button on user-ratings sub-tables.
+        // URL examples: /user/vzell/ratings/recording, /user/vzell/ratings/event
+        // The entity slug (last path segment, singular) is mapped to the plural
+        // entityFeatures key via resolveEntityFeaturesFromH2 [user-ratings-type].
+        // Column structure mirrors the corresponding sub-table on the user-ratings page.
+        {
+            type: 'user-ratings-type',
+            match: (path) => path.match(/\/user\/[^/]+\/ratings\/[^/]+$/),
+            buttons: [
+                { label: 'Show Ratings', labelFromPath: true }
+            ],
+            features: {
+                listToTable: [ '' ],
+                integerColumns: [ { sourceColumn: 'Rating', align: 'C' } ]
+            },
+            entityFeatures: {
+                'Artists': {
+                    columnExtractors: [ { sourceColumn: 'Artist', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Events': {
+                    columnExtractors: [
+			{ sourceColumn: 'Event',    extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] },
+                        { sourceColumn: 'Event',    extractor: 'cancelledEvent',    syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event',    extractor: 'primaryAlias',      syntheticColumns: ['Primary Alias'] },
+		    ],
+                    syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
+                    addEAA: 'Event',
+                    tooltipColumns: [ 'Name', ['(', 'Comment', ')'], '---', 'Date' ]
+                },
+                'Labels': {
+                    columnExtractors: [ { sourceColumn: 'Label', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Places': {
+                    columnExtractors: [ { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Release groups': {
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
+                    addCAA: 'Release group',
+                    tooltipColumns: [ 'Name', 'Artist' ]
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Recording', extractor: 'video',         syntheticColumns: ['Video'] },
+                        { sourceColumn: 'Recording', extractor: 'Name_Comment',  syntheticColumns: ['Name', 'Comment'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
+                    ],
+                },
+                'Works': {
+                    columnExtractors: [ { sourceColumn: 'Work', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                }
+            },
+            tableMode: 'single'
+        },
+        // User ratings pages (/user/<username>/ratings e.g. /user/vzell/ratings)
+        // Page structure (after renameH2ToH3 + insertH2):
+        //   <h2>Ratings</h2>  ← inserted by insertH2
+        //   <h3>Artist ratings</h3>  → 2-col table: Rating | Artist
+        //   <h3>Recording ratings</h3>  → 3-col table: Rating | Recording | Artist
+        //   <h3>Release group ratings</h3>  → 3-col table: Rating | Release group | Artist
+        //   <h3>Work ratings</h3>  → 2-col table: Rating | Work
+        //   (any section containing "</span> by" or "</a> by" gets 3 columns)
+        //
+        // Processing pipeline:
+        //   1. renameH2ToH3 — demotes existing <h2> section headings to <h3>
+        //   2. insertH2     — inserts new <h2>Ratings</h2> anchor after .tabs
+        //   3. listToTable  — Structure H: walks <h3>+<ul> pairs, builds 2-col or
+        //                     3-col tables; "View all ratings" li becomes an overflow
+        //                     button in renderGroupedTable
+        {
+            type: 'user-ratings',
+            match: (path) => path.match(/\/user\/[^/]+\/ratings$/),
+            buttons: [
+                { label: 'Show Ratings for User' }
+            ],
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Ratings',
+                listToTable: [ '' ],
+                integerColumns: [ { sourceColumn: 'Rating', align: 'C' } ],
+                extractMainColumn: null,
+                stickyColumn: null,
+            },
+            entityFeatures: {
+                'Artists': {
+                    columnExtractors: [ { sourceColumn: 'Artist', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Events': {
+                    columnExtractors: [
+			{ sourceColumn: 'Event',    extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] },
+                        { sourceColumn: 'Event',    extractor: 'cancelledEvent',    syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event',    extractor: 'primaryAlias',      syntheticColumns: ['Primary Alias'] },
+		    ],
+                    syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
+                    integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, { sourceColumn: 'Rating', align: 'C' } ],
+                    addEAA: 'Event',
+                    tooltipColumns: [ 'Name', ['(', 'Comment', ')'], '---', 'Date' ]
+                },
+                'Labels': {
+                    columnExtractors: [ { sourceColumn: 'Label', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Places': {
+                    columnExtractors: [ { sourceColumn: 'Place', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                },
+                'Release groups': {
+                    columnExtractors: [ { sourceColumn: 'Release group', extractor: 'Name_Comment_Artists', syntheticColumns: ['Name', 'Comment', 'Artist'] } ],
+                    injectedColumns: [ 'Relationships' ],
+                    addCAA: 'Release group',
+                    tooltipColumns: [ 'Name', 'Artist' ]
+                },
+                'Recordings': {
+                    columnExtractors: [
+                        { sourceColumn: 'Recording', extractor: 'video',         syntheticColumns: ['Video'] },
+                        { sourceColumn: 'Recording', extractor: 'Name_Comment',  syntheticColumns: ['Name', 'Comment'] }
+                    ],
+                    syntheticColumnExtractors: [
+                        { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
+                    ],
+                },
+                'Works': {
+                    columnExtractors: [ { sourceColumn: 'Work', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
+                }
+            },
+            tableMode: 'multi'
+        },
         // Most popular tags in MusicBrainz (/tags)
         // Page structure:
         //   <h1>…</h1>
@@ -5350,7 +5806,11 @@
                     columnExtractors: [ { sourceColumn: 'Artist', extractor: 'Name_Comment', syntheticColumns: ['Name', 'Comment'] } ]
                 },
                 'Events': {
-                    columnExtractors: [ { sourceColumn: 'Event', extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] } ],
+                    columnExtractors: [
+			{ sourceColumn: 'Event',    extractor: 'Name_Date_Comment', syntheticColumns: ['Name', 'Date', 'Comment'] },
+                        { sourceColumn: 'Event',    extractor: 'cancelledEvent',    syntheticColumns: ['Cancelled'] },
+                        { sourceColumn: 'Event',    extractor: 'primaryAlias',      syntheticColumns: ['Primary Alias'] },
+		    ],
                     syntheticColumnExtractors: [ { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] } ],
                     integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                     addEAA: 'Event',
@@ -5728,7 +6188,8 @@
                     ],
                     injectedColumns: [ 'Relationships' ],
                     integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Total Tracks', align: 'R'} ],
-                    collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'CAA' ],
+                    renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                    collapsableColumns: [ 'Country/Date', 'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Artist', '---', ['Format', '(', 'Tracks', ')'], 'Country/Date', ['Label', '-', 'Catalog#'], 'Barcode' ],
                     addCAA: 'Release',
                     extractMainColumn: 'Release',
@@ -5947,6 +6408,8 @@
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
                 ],
+                renderMultiRowCell: [ 'Relationship types' ],
+                collapsableColumns: [ 'Relationship types' ],
                 extractMainColumn: 'Artist', // Specific header
                 stickyColumn: 'Artist'
             },
@@ -5973,7 +6436,8 @@
 		    {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'},
 		    {sourceColumn: 'Total Tracks', align: 'R'}
 		],
-                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#' ],
+                renderMultiRowCell: [ 'Label', 'Catalog#', 'Relationship types' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'Relationship types' ],
                 addCAA: 'Release',
                 extractMainColumn: 'Release',
                 stickyColumn: 'Release'
@@ -5989,9 +6453,10 @@
                     { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
                 syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
                 ],
-                collapsableColumns: [ 'ISRCs' ],
+                renderMultiRowCell: [ 'Relationship types' ],
+                collapsableColumns: [ 'ISRCs', 'Relationship types' ],
                 integerColumns: [
                     { sourceColumn: 'Length', align: ':' }
                 ],
@@ -6211,7 +6676,7 @@
                     { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
                 ],
                 integerColumns: [
 		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
@@ -6232,7 +6697,7 @@
                     { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
                 syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
                 ],
                 integerColumns: [
 		    {sourceColumn: 'DD',     align: 'R'}, {sourceColumn: 'MM',   align: 'R'}, {sourceColumn: 'YYYY',   align: 'C'},
@@ -6592,7 +7057,7 @@
                     { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] }
                 ],
                 syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
                 ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'} ],
                 extractMainColumn: 'Title',
@@ -6610,7 +7075,7 @@
                     { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] }
                 ],
                 syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
                 ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'} ],
                 extractMainColumn: 'Title',
@@ -6783,7 +7248,7 @@
                     { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
                 ],
                 syntheticColumnExtractors: [
-                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country'] }
+                    { sourceColumn: 'Comment', extractor: 'eventParts', syntheticColumns: ['Event-Type', 'Event-Date', 'Event-Detail', 'Event-Venue', 'Event-Venue-Detail', 'Event-City', 'Event-State', 'Event-Country', 'Event-Additional-Info'] }
                 ],
                 integerColumns: [ {sourceColumn: 'Length', align: ':'} ],
                 collapsableColumns: [ 'Release groups', 'CAA' ],
@@ -6799,7 +7264,7 @@
             match: (path) => path.includes('/works'),
             buttons: [ { label: 'Show all Works for Artist' } ],
             features: {
-                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Attributes' ],
+                collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Lyrics languages', 'Attributes' ],
                 extractMainColumn: 'Work',
                 stickyColumn: 'Work'
             },
@@ -6919,7 +7384,8 @@
                 ],
                 injectedColumns: [ 'Relationships' ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'}, {sourceColumn: 'Length', align: ':'}, {sourceColumn: '#', align: '.'} ],
-                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'CAA' ],
+                renderMultiRowCell: [ 'Label', 'Catalog#' ],
+                collapsableColumns: [ 'Country/Date' ,'Country', 'Date', 'Label', 'Catalog#', 'CAA' ],
                 tooltipColumns: [ 'Release title', 'italic:Comment', 'Release Artist', 'Release group type', '---', ['#', 'Title', '(', 'Length', ')'], 'Track artist', 'Country/Date', ['Label', '-', 'Catalog#'] ],
                 addCAA: 'Release title',
                 extractMainColumn: 'Release title',
@@ -6976,6 +7442,26 @@
     let ctrlMModeTimeout;
     let ctrlMFunctionMap = {}; // Will be populated after functions are defined
     let ctrlMTooltipElement = null;
+    let _colFilterTableIndex = -1; // module-level cycling state for focus-column-filter shortcut
+    let _lastFocusedColFilterInput = null; // last .mb-col-filter-input that received focus — used by prefix-mode o/q/a shortcuts
+
+    /**
+     * Returns true when one of the script's modal dialogs is currently in the DOM.
+     * Used to suppress direct Ctrl+letter shortcuts while a dialog is open so that
+     * dialog keyboard navigation (Escape, Tab, arrows) is never shadowed.
+     * @returns {boolean}
+     */
+    function isSpecialDialogOpen() {
+        return !!(
+            document.getElementById('mb-shortcuts-help')     ||
+            document.getElementById('mb-app-help-dialog')    ||
+            document.getElementById('mb-stats-panel')        ||
+            document.getElementById('sa-export-dialog-overlay') ||
+            document.getElementById('sa-save-dialog-overlay')   ||
+            document.getElementById('sa-load-dialog-overlay')   ||
+            document.getElementById(`${SCRIPT_ID}-settings-overlay`)
+        );
+    }
 
     /**
      * Parse a shortcut prefix string such as "Ctrl+M", "Ctrl+.", "Alt+Shift+X"
@@ -7063,6 +7549,29 @@
     }
 
     /**
+     * Builds a keyboard shortcut hint string for button tooltips.
+     * Always includes the prefix-mode form (e.g. "Ctrl+M, then S").
+     * Appends the direct shortcut (e.g. "or Ctrl+S") only when
+     * `sa_enable_direct_ctrl_char_shortcuts` is on, or when the shortcut is not
+     * a Ctrl+<a–z> key (e.g. Ctrl+,) and is therefore never suppressed.
+     * @param {string} settingKey  configSchema key for the direct shortcut
+     * @param {string} fallback    default direct shortcut string
+     * @param {string} prefixKey   single key label used after the prefix (e.g. 'S', ',')
+     * @returns {string}  e.g. "Ctrl+M, then S" or "Ctrl+M, then S, or Ctrl+S"
+     */
+    function buildShortcutHint(settingKey, fallback, prefixKey) {
+        const directKey = getShortcutDisplay(settingKey, fallback);
+        const prefixHint = `${getPrefixDisplay()}, then ${prefixKey}`;
+        const p = parsePrefixShortcut(directKey);
+        const isBlockedLetter = p.ctrl && !p.alt && !p.shift
+                             && p.key.length === 1
+                             && p.key.toLowerCase() >= 'a' && p.key.toLowerCase() <= 'z';
+        const directOn = typeof Lib !== 'undefined' && Lib.settings
+                      && Lib.settings.sa_enable_direct_ctrl_char_shortcuts;
+        return (!isBlockedLetter || directOn) ? `${prefixHint}, or ${directKey}` : prefixHint;
+    }
+
+    /**
      * Displays a floating tooltip listing all Ctrl+M prefix-mode shortcuts.
      * Shows numbered button shortcuts (1–9 / a–z) and named function shortcuts
      * from ctrlMFunctionMap. Positions the tooltip in the upper-right corner of the
@@ -7116,10 +7625,28 @@
             tooltipHTML += '<br/>';
         }
 
-        // Function shortcuts
+        // Split entries: column-context functions (o/q/a with colContext:true) vs regular
+        const _colCtxEntries     = Object.entries(ctrlMFunctionMap).filter(([, e]) => e.colContext);
+        const _regularEntries    = Object.entries(ctrlMFunctionMap).filter(([, e]) => !e.colContext);
+        const _colFilterFocused  = !!(
+            (document.activeElement && document.activeElement.matches('.mb-col-filter-input')) ||
+            _lastFocusedColFilterInput
+        );
+
+        // Regular function shortcuts
         tooltipHTML += '<strong>Functions:</strong><br/>';
-        for (const [key, entry] of Object.entries(ctrlMFunctionMap)) {
+        for (const [key, entry] of _regularEntries) {
             tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${entry.description}</div>`;
+        }
+
+        // Column-context shortcuts (o/q/a) — shown separately with focus status
+        if (_colCtxEntries.length > 0) {
+            const _ccColor  = _colFilterFocused ? '#006600' : '#999999';
+            const _ccStatus = _colFilterFocused ? '✓ col filter active' : '⚠ focus col filter first';
+            tooltipHTML += `<br/><strong style="color:${_ccColor}">Col-filter context (${_ccStatus}):</strong><br/>`;
+            for (const [key, entry] of _colCtxEntries) {
+                tooltipHTML += `<div style="margin-left: 4px; color:${_ccColor};"><strong>${key}</strong>: ${entry.description}</div>`;
+            }
         }
 
         ctrlMTooltipElement.innerHTML = tooltipHTML;
@@ -7217,7 +7744,7 @@
                         Lib.debug('shortcuts', `  ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                Lib.debug('shortcuts', 'Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                Lib.debug('shortcuts', 'Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings, o=' + (ctrlMFunctionMap['o'] && ctrlMFunctionMap['o'].description === 'Stop fetching' ? 'Stop' : 'Toggle Multi-Row Collapse') + ', q=Unique Values Dropdown, a=CAA Toggle');
                 Lib.debug('shortcuts', 'Press any key or Escape to cancel');
             } else {
                 if (buttonKeys.length > 0) {
@@ -7227,7 +7754,7 @@
                         console.log(`[VZ-${SCRIPT_BASE_NAME}]   ${key}: ${btn.textContent.trim()}`);
                     });
                 }
-                console.log('[VZ-${SCRIPT_BASE_NAME}] Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings' + (ctrlMFunctionMap['o'] ? ', o=Stop' : ''));
+                console.log(`[VZ-${SCRIPT_BASE_NAME}] Function shortcuts: r=Resize, i=Statistics, s=Save, d=Density, v=Visible, e=Export, l=Load, k=Shortcuts Help, h=App Help, ,=Settings, o=` + (ctrlMFunctionMap['o'] && ctrlMFunctionMap['o'].description === 'Stop fetching' ? 'Stop' : 'Toggle Multi-Row Collapse') + `, q=Unique Values Dropdown, a=CAA Toggle`);
             }
 
             // Auto-exit after 5 seconds
@@ -7342,7 +7869,8 @@
      * Debounce utility function - delays execution until after wait milliseconds have elapsed
      * since the last time the debounced function was invoked.
      * @param {Function} func - The function to debounce
-     * @param {number} wait - The number of milliseconds to delay
+     * @param {number|()=>number} wait - Milliseconds to delay, or a factory function called on
+     *   each invocation to get the current delay (enables adaptive/dynamic debounce intervals).
      * @param {boolean} immediate - If true, trigger the function on the leading edge instead of trailing
      * @returns {Function} The debounced function
      */
@@ -7350,13 +7878,14 @@
         let timeout;
         return function executedFunction(...args) {
             const context = this;
+            const delay = typeof wait === 'function' ? wait() : wait;
             const later = function() {
                 timeout = null;
                 if (!immediate) func.apply(context, args);
             };
             const callNow = immediate && !timeout;
             clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
+            timeout = setTimeout(later, delay);
             if (callNow) func.apply(context, args);
         };
     }
@@ -7478,12 +8007,18 @@
      * @param {number} index - Column index
      * @param {boolean} isAscending - Sort direction
      * @param {boolean} isNumeric - Whether to use numeric comparison
+     * @param {boolean} [byLength=false] - When true, sort by visible text length instead of value
      * @returns {Function} Comparison function
      */
-    function createSortComparator(index, isAscending, isNumeric) {
+    function createSortComparator(index, isAscending, isNumeric, byLength = false) {
         return (a, b) => {
             const valA = getCleanVisibleText(a.cells[index]).trim().toLowerCase() || '';
             const valB = getCleanVisibleText(b.cells[index]).trim().toLowerCase() || '';
+
+            if (byLength) {
+                const result = valA.length - valB.length;
+                return isAscending ? result : -result;
+            }
 
             if (isNumeric) {
                 const numA = parseFloat(valA.replace(/[^0-9.-]/g, '')) || 0;
@@ -7590,6 +8125,21 @@
             table.tbl thead th {
                 will-change: transform;
             }
+
+            /*
+             * Measurement sandbox class used by the auto-resize measurement loops.
+             * Applied once to the measureDiv so that all cloned descendants inherit
+             * non-wrapping text layout without needing per-element querySelectorAll
+             * style writes (which trigger micro-reflows for every cell measured).
+             * !important beats MusicBrainz stylesheet rules such as .wrap-anywhere.
+             */
+            .mb-measure-nowrap,
+            .mb-measure-nowrap * {
+                white-space:   nowrap  !important;
+                overflow-wrap: normal  !important;
+                word-break:    normal  !important;
+            }
+
         `;
 
         document.head.appendChild(style);
@@ -7617,6 +8167,183 @@
      *
      * @param {HTMLTableElement} table
      */
+    /**
+     * Normalise the interior of every `<span class="comment">` in `table`.
+     *
+     * **What this does (DOM structure only — no style mutations)**
+     *
+     * For each `span.comment`:
+     *   1. Remove pure-whitespace text-node children (`\n    ` around `<bdi>`).
+     *   2. Move a leading non-empty text node (Variant A's `(`) into `<bdi>`.
+     *   3. Move a trailing non-empty text node (Variant A's `)`) into `<bdi>`,
+     *      eliminating the bidi-boundary soft-wrap opportunity after `</bdi>`.
+     *   4. Trim trailing whitespace from the last text node inside `<bdi>` (Variant B
+     *      emits `\n      ` before `</bdi>`; that collapses to a space and creates a
+     *      wrap point within the bdi content, e.g. "reissue)" breaking to a new line).
+     *
+     * For each `<td>`:
+     *   5. Replace the text node immediately between `</a>` and `<span class="comment">`
+     *      with U+00A0 (NBSP), inserting one if none exists.  Placing the NBSP OUTSIDE
+     *      `<a>` is critical: `<a class="wrap-anywhere">` carries `overflow-wrap:anywhere`,
+     *      which can allow a break at any code-point boundary inside the element —
+     *      including a NBSP inside `<bdi>` at a bidi-run boundary.  A NBSP that lives
+     *      as a sibling text node of `<a>` is governed only by the standard Unicode
+     *      Line Break Algorithm.  Unicode GL class (NBSP) prohibits a break point both
+     *      before AND after it, with one exception: "no break before GL unless preceded
+     *      by SP" (U+0020).  Step 6 ensures no trailing space is present, so the GL
+     *      rule is always in full effect.
+     *   6. Trim trailing whitespace from the last text node of `<a>`'s `<bdi>`.  A
+     *      trailing U+0020 SPACE would trigger the GL SP-exception, allowing a break
+     *      between the anchor text and the NBSP.  Pure trimming is sufficient — the
+     *      NBSP text node outside `<a>` provides the visual gap.
+     *
+     * **What this intentionally does NOT do**
+     * No `white-space: nowrap` is written to any live DOM element (`span.comment`,
+     * `<bdi>`, `<td>`, `<li>`).  Previous versions set nowrap on containers to
+     * prevent the anchor→comment line break, but that forced the min-content width
+     * of every cell in `table-layout:auto` to the full single-line text width of
+     * the longest disambiguation comment — making columns like Release and Label
+     * unexpectedly wide even without auto-resize, and preventing manual drag-resize
+     * from allowing text to wrap at narrower widths.
+     *
+     * The auto-resize measurement sandbox uses `white-space:nowrap !important` via
+     * `.mb-measure-nowrap`, so measured column widths are unaffected by this change.
+     * At the auto-resize minimum width the full content fits on one line and the
+     * browser will not insert unnecessary breaks.  If the user drags a column
+     * narrower than that minimum, the browser's natural line-breaking takes over —
+     * which is the desired behaviour.
+     *
+     * Idempotent.  Also called in `toggleAutoResizeColumns` before measurement.
+     *
+     * @param {HTMLTableElement} table
+     */
+    function normalizeCommentSpans(table) {
+        if (!table) return;
+
+        // ── Normalise span.comment interiors ─────────────────────────────────
+        //
+        // For each span.comment:
+        //   • Remove pure-whitespace text-node children (\n    around <bdi>).
+        //   • Move a leading non-empty text node (Variant A's "(") into <bdi>.
+        //   • Move a trailing non-empty text node (Variant A's ")") into <bdi>,
+        //     eliminating the bidi-boundary soft-wrap point after </bdi>.
+
+        table.querySelectorAll('td span.comment').forEach(commentSpan => {
+
+            // Snapshot children; DOM is mutated inside the loop.
+            Array.from(commentSpan.childNodes).forEach(node => {
+                if (node.nodeType !== Node.TEXT_NODE) return;
+
+                if (node.textContent.trim() === '') {
+                    // Pure whitespace before/after <bdi> → remove.
+                    node.remove();
+                    return;
+                }
+
+                // Non-empty leading text (Variant A "(") before a <bdi>:
+                // prepend into <bdi> then remove.
+                const nextEl = node.nextSibling;
+                if (
+                    nextEl &&
+                    nextEl.nodeType === Node.ELEMENT_NODE &&
+                    nextEl.tagName   === 'BDI'
+                ) {
+                    const trimmed = node.textContent.trim();
+                    if (
+                        nextEl.firstChild &&
+                        nextEl.firstChild.nodeType === Node.TEXT_NODE
+                    ) {
+                        nextEl.firstChild.textContent =
+                            trimmed + nextEl.firstChild.textContent;
+                    } else {
+                        nextEl.insertBefore(
+                            document.createTextNode(trimmed),
+                            nextEl.firstChild
+                        );
+                    }
+                    node.remove();
+                }
+            });
+
+            // Non-empty trailing text node after </bdi> (Variant A ")"):
+            // append into <bdi> to kill the bidi-boundary break.
+            const bdi = commentSpan.querySelector(':scope > bdi');
+            if (bdi) {
+                const afterBdi = bdi.nextSibling;
+                if (
+                    afterBdi &&
+                    afterBdi.nodeType === Node.TEXT_NODE &&
+                    afterBdi.textContent.trim() !== ''
+                ) {
+                    bdi.appendChild(afterBdi);
+                }
+
+                // Trim trailing whitespace from the last text node inside <bdi>
+                // (Variant B: MusicBrainz emits `\n      ` before </bdi> which
+                // collapses to a single space and creates a soft-wrap point at the
+                // end of the bdi content — e.g. "reissue)" breaking to a new line).
+                if (bdi.lastChild && bdi.lastChild.nodeType === Node.TEXT_NODE) {
+                    bdi.lastChild.textContent = bdi.lastChild.textContent.trimEnd();
+                }
+            }
+        });
+
+        // ── Place NBSP between </a> and <span.comment> ──────────────────────────
+        //
+        // MusicBrainz emits a `\n    ` text node between </a> and <span.comment>.
+        // We REPLACE that text node with U+00A0 (NBSP), or INSERT one if absent.
+        //
+        // The NBSP is placed OUTSIDE <a> intentionally.  <a class="wrap-anywhere">
+        // carries `overflow-wrap:anywhere`, which Chrome can use to allow a break
+        // at any code-point boundary inside the element — including at a NBSP inside
+        // `<bdi>` at a bidi-run boundary.  A NBSP that lives as a sibling text node
+        // of <a> is not inside any `overflow-wrap:anywhere` element, so only the
+        // standard Unicode GL rule applies: no break before or after it, provided
+        // the preceding character is not U+0020 SPACE (ensured by trimEnd below).
+        //
+        // Idempotent: on a second pass the NBSP text node is already present;
+        // setting its textContent to '\u00A0' again is a no-op.
+        table.querySelectorAll('td').forEach(td => {
+            td.querySelectorAll('span.comment').forEach(commentSpan => {
+                const prevEl = commentSpan.previousElementSibling;
+                if (!prevEl || prevEl.tagName !== 'A') return;
+
+                const prev = commentSpan.previousSibling;
+                if (prev && prev.nodeType === Node.TEXT_NODE) {
+                    // Variant B: whitespace text node present — replace with NBSP.
+                    prev.textContent = '\u00A0';
+                } else if (prev === prevEl) {
+                    // Variant A: no text node — insert a NBSP text node.
+                    prevEl.after(document.createTextNode('\u00A0'));
+                }
+            });
+        });
+
+        // ── Trim trailing whitespace from <a><bdi> ────────────────────────────────
+        //
+        // With NBSP now OUTSIDE <a>, the anchor's <bdi> must NOT end with U+0020
+        // SPACE.  The Unicode GL rule has an SP-exception: "no break before GL
+        // unless preceded by SP" — a trailing space inside <bdi> would allow a
+        // line break between that space and the NBSP text node.  Pure trimEnd()
+        // removes any trailing whitespace without adding a new character; the
+        // visual gap is provided by the NBSP outside <a>.
+        table.querySelectorAll('td a').forEach(anchor => {
+            if (
+                !anchor.nextElementSibling ||
+                !anchor.nextElementSibling.classList.contains('comment')
+            ) return;
+            const bdi = anchor.querySelector(':scope > bdi');
+            if (!bdi) return;
+            const last = bdi.lastChild;
+            if (last && last.nodeType === Node.TEXT_NODE) {
+                const trimmed = last.textContent.trimEnd();
+                if (trimmed !== last.textContent) {
+                    last.textContent = trimmed;
+                }
+            }
+        });
+    }
+
     /**
      * Resets the MusicBrainz `even`/`odd` CSS class on every visible `<tbody>` row
      * in `table` according to the row's current visual position.
@@ -7648,6 +8375,73 @@
             tr.classList.add(visIdx % 2 === 0 ? 'odd' : 'even');
             visIdx++;
         });
+    }
+
+    /**
+     * RGBA components for each sort-tint class, matching the CSS `mb-mscol-*`
+     * `background-color` definitions.  Declared at module scope so both
+     * `applyStickyColumn` (which may run after `applyTints` placed tint classes on
+     * fresh clone rows) and `applyMultiSortColumnTints` (which runs from the sort
+     * handler) can share the same data without duplicating it.
+     * @type {Object.<string, [number,number,number,number]>}
+     */
+    const _MSCOL_TINT_RGBA = {
+        'mb-mscol-0a': [255, 200,  80, 0.22], 'mb-mscol-0b': [255, 200,  80, 0.44],
+        'mb-mscol-1a': [ 80, 180, 255, 0.22], 'mb-mscol-1b': [ 80, 180, 255, 0.44],
+        'mb-mscol-2a': [120, 230, 120, 0.22], 'mb-mscol-2b': [120, 230, 120, 0.44],
+        'mb-mscol-3a': [230, 120, 230, 0.22], 'mb-mscol-3b': [230, 120, 230, 0.44],
+        'mb-mscol-4a': [255, 160, 100, 0.22], 'mb-mscol-4b': [255, 160, 100, 0.44],
+        'mb-mscol-5a': [100, 230, 210, 0.22], 'mb-mscol-5b': [100, 230, 210, 0.44],
+        'mb-mscol-6a': [180, 160, 255, 0.22], 'mb-mscol-6b': [180, 160, 255, 0.44],
+        'mb-mscol-7a': [255, 220, 180, 0.22], 'mb-mscol-7b': [255, 220, 180, 0.44],
+    };
+
+    /**
+     * RGBA components for the header sort-tint classes (`mb-mscol-hdr-*`), matching
+     * the CSS definitions (alpha = 0.60).  Used by `applyStickyColumn` and
+     * `applyMultiSortColumnTints` to compute opaque blended backgrounds for the
+     * sticky column header cell, for the same reason as `_MSCOL_TINT_RGBA`.
+     * @type {Object.<string, [number,number,number,number]>}
+     */
+    const _MSCOL_HDR_TINT_RGBA = {
+        'mb-mscol-hdr-0': [255, 200,  80, 0.60],
+        'mb-mscol-hdr-1': [ 80, 180, 255, 0.60],
+        'mb-mscol-hdr-2': [120, 230, 120, 0.60],
+        'mb-mscol-hdr-3': [230, 120, 230, 0.60],
+        'mb-mscol-hdr-4': [255, 160, 100, 0.60],
+        'mb-mscol-hdr-5': [100, 230, 210, 0.60],
+        'mb-mscol-hdr-6': [180, 160, 255, 0.60],
+        'mb-mscol-hdr-7': [255, 220, 180, 0.60],
+    };
+
+    /**
+     * Alpha-blends a sort-tint colour onto an opaque base background and returns
+     * an opaque `rgb()` string suitable for use as an inline style on a sticky cell.
+     *
+     * The CSS `mb-mscol-*` classes use `rgba() !important` which overrides the
+     * inline opaque background that `applyStickyColumn` sets, making the sticky
+     * cell semi-transparent so scrolled content shows through.  Calling this
+     * function and applying the result via `setProperty('background-color', …,
+     * 'important')` produces an opaque colour that wins the cascade while still
+     * visually matching the translucent tint class.
+     *
+     * @param {[number,number,number,number]} tint - `[R, G, B, alpha]` of the tint.
+     * @param {string} restBg - Opaque CSS colour string (`#rrggbb` or `rgb(r,g,b)`).
+     * @returns {string} Opaque `rgb(r,g,b)` result.
+     */
+    function _blendSortTint(tint, restBg) {
+        let rb = 255, gb = 255, bb = 255;
+        const hm = restBg.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+        if (hm) {
+            rb = parseInt(hm[1], 16);
+            gb = parseInt(hm[2], 16);
+            bb = parseInt(hm[3], 16);
+        } else {
+            const rm = restBg.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+            if (rm) { rb = +rm[1]; gb = +rm[2]; bb = +rm[3]; }
+        }
+        const [r, g, b, a] = tint;
+        return `rgb(${Math.round(r * a + rb * (1 - a))},${Math.round(g * a + gb * (1 - a))},${Math.round(b * a + bb * (1 - a))})`;
     }
 
     /**
@@ -7725,7 +8519,29 @@
                 cell.style.position  = 'sticky';
                 cell.style.left      = leftPx;
                 cell.style.zIndex    = '101';
-                cell.style.background = isFilter ? bgFilter : bgHeader;
+
+                const headerBg = isFilter ? bgFilter : bgHeader;
+
+                // Main header only: detect any active hdr-tint class, temporarily
+                // remove it so we can set the true base background uncontested, then
+                // restore it with an opaque blended colour (same pattern as the body
+                // row fix — the class uses rgba() !important which beats the inline
+                // background shorthand and makes the sticky header cell see-through).
+                const _activeHdrTint = isFilter ? null
+                    : Object.keys(_MSCOL_HDR_TINT_RGBA).find(cls => cell.classList.contains(cls));
+                if (_activeHdrTint) {
+                    cell.classList.remove(_activeHdrTint);
+                    cell.style.removeProperty('background-color');
+                }
+                cell.style.background   = headerBg;
+                cell.dataset.mbStickyBg = headerBg;
+                if (_activeHdrTint) {
+                    cell.classList.add(_activeHdrTint);
+                    const blended = _blendSortTint(_MSCOL_HDR_TINT_RGBA[_activeHdrTint], headerBg);
+                    cell.dataset.mbStickyBg     = blended;
+                    cell.dataset.mbStickyRestBg = headerBg;
+                    cell.style.setProperty('background-color', blended, 'important');
+                }
                 cell.classList.add('mb-sticky-col');
             });
 
@@ -7745,21 +8561,93 @@
             // on leave we restore the original zebra background stored in
             // data-mb-sticky-bg.  The attribute is refreshed on every _apply() call
             // so re-runs after zebra re-striping always have the current rest colour.
+            // Row hover highlight colour — read once, shared by all row handlers.
+            const hoverBgColor = Lib.settings.sa_ui_row_hover_bg || '#e2e2e2';
+
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const cell = tr.cells[stickyIdx];
                 if (!cell) return;
                 cell.style.position  = 'sticky';
                 cell.style.left      = leftPx;
                 cell.style.zIndex    = '1';
-                // Clear inline background so CSS class applies, then snapshot the result.
+
+                // ── Snapshot rest-state backgrounds for every cell in this row ──
+                //
+                // MusicBrainz's native `tr:hover > td` CSS rule is frequently
+                // defeated by inline style.background values on <td> elements:
+                //   • The sticky column cell itself gets an explicit inline background
+                //     (restBg below) so it paints opaquely over scrolled content.
+                //   • Injected cells (mb-re-cell, mb-rel-cell, mb-ice-cell) get an
+                //     inline backgroundColor set when they are created.
+                //   • Inline styles win the CSS cascade unconditionally, even against
+                //     !important rules in a stylesheet.
+                //
+                // Instead of relying on CSS :hover, we snapshot the rest-state
+                // background of every <td> in the row at _apply() time and swap all
+                // of them in the shared mouseenter/mouseleave handlers.  This gives
+                // reliable full-row highlighting regardless of inline backgrounds,
+                // compositing layer hit-testing quirks, or browser-specific :hover
+                // propagation issues.
+                //
+                // The sticky cell must keep an opaque inline background so it paints
+                // over scrolled content — it gets both mbStickyBg and mbRestBg.
+                // Non-sticky cells just get mbRestBg (stored for leave restore) and
+                // their inline style is cleared so CSS zebra striping drives the colour.
+
+                // Snapshot the sticky cell first (needs inline bg for opacity).
+                //
+                // Problem: renderFinalTable calls applyTints() on fresh cloned rows
+                // before runFilter() calls applyStickyColumn.  When we arrive here,
+                // a sort-tint class (mb-mscol-*) may already be on the cell with
+                // `background-color: rgba(…) !important`.  Clearing the inline
+                // background shorthand (cell.style.background = '') does NOT remove
+                // that — the class rule still wins.  getComputedStyle then returns
+                // the semi-transparent tint colour instead of the true zebra/base bg,
+                // which we would store as mbStickyBg and later use as the blend base
+                // in applyMultiSortColumnTints, producing a compounded wrong colour.
+                //
+                // Fix: find and temporarily remove any active tint class (and any
+                // prior inline !important bg-color) before reading getComputedStyle,
+                // so the true rest background is exposed.  Restore the tint class
+                // immediately after and apply the correct opaque blended colour.
+                const _activeTintClass = Object.keys(_MSCOL_TINT_RGBA).find(
+                    cls => cell.classList.contains(cls)
+                );
+                if (_activeTintClass) {
+                    cell.classList.remove(_activeTintClass);
+                    cell.style.removeProperty('background-color');
+                }
                 cell.style.background = '';
                 const cellBg = getComputedStyle(cell).backgroundColor;
-                const restBg = (cellBg === 'rgba(0, 0, 0, 0)' || cellBg === 'transparent')
+                const trueRestBg = (cellBg === 'rgba(0, 0, 0, 0)' || cellBg === 'transparent')
                     ? '#ffffff' : cellBg;
-                cell.style.background = restBg;
-                // Persist rest-state colour for the hover handlers.
-                cell.dataset.mbStickyBg = restBg;
+                cell.dataset.mbRestBg = trueRestBg;
+                if (_activeTintClass) {
+                    // Tint was already applied (renderFinalTable path): restore the
+                    // class and set an opaque blended colour via inline !important so
+                    // it wins the cascade over the class's rgba() !important rule.
+                    cell.classList.add(_activeTintClass);
+                    const blended = _blendSortTint(_MSCOL_TINT_RGBA[_activeTintClass], trueRestBg);
+                    cell.dataset.mbStickyBg     = blended;
+                    cell.dataset.mbStickyRestBg = trueRestBg;
+                    cell.style.setProperty('background-color', blended, 'important');
+                } else {
+                    cell.dataset.mbStickyBg = trueRestBg;
+                    cell.style.background   = trueRestBg;
+                }
                 cell.classList.add('mb-sticky-col');
+
+                // span.comment </bdi>) bidi-boundary wrap is handled globally by
+                // normalizeCommentSpans(), called after every render pass.
+
+                // Snapshot all non-sticky cells (clear inline bg so CSS zebra wins).
+                Array.from(tr.cells).forEach(td => {
+                    if (td === cell) return;
+                    td.style.background = '';
+                    const bg = getComputedStyle(td).backgroundColor;
+                    td.dataset.mbRestBg = (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')
+                        ? '#ffffff' : bg;
+                });
 
                 // Wire hover handlers — always rewire, because after sort/filter
                 // renderFinalTable/renderGroupedTable inserts cloneNode(true) copies of
@@ -7776,35 +8664,46 @@
                 // _apply() call, regardless of how many times the row was cloned or
                 // re-inserted.
                 const _enter = () => {
-                    const c = tr.cells[stickyIdx];
-                    if (!c || !c.classList.contains('mb-sticky-col')) return;
-                    // Read the hover colour from the first non-sticky sibling td.
-                    // At mouseenter time the browser has already applied :hover rules
-                    // to the sibling tds, so getComputedStyle reflects the hover bg.
-                    let hoverBg = '';
-                    for (let i = 0; i < tr.cells.length; i++) {
-                        const sib = tr.cells[i];
-                        if (sib !== c && !sib.classList.contains('mb-sticky-col')) {
-                            hoverBg = getComputedStyle(sib).backgroundColor;
-                            break;
+                    // Apply hover colour to every cell in the row, bypassing the
+                    // CSS :hover cascade (inline styles win over author :hover rules).
+                    //
+                    // For sticky cells that have an active sort tint (mbStickyRestBg
+                    // is set), the tint class uses `rgba() !important` which beats a
+                    // non-important inline background shorthand, making the sticky cell
+                    // semi-transparent during hover.  Applying via setProperty wins.
+                    Array.from(tr.cells).forEach(td => {
+                        td.style.background = hoverBgColor;
+                        if (td.classList.contains('mb-sticky-col') && td.dataset.mbStickyRestBg) {
+                            td.style.setProperty('background-color', hoverBgColor, 'important');
                         }
-                    }
-                    // Fall back to MusicBrainz's known hover tint (#e2e2e2) if the
-                    // sibling's computed bg is transparent or still equals our own
-                    // rest colour (can happen when there is only one column or when
-                    // the browser hasn't painted the :hover state yet).
-                    const ownRest = c.dataset.mbStickyBg || '#ffffff';
-                    if (!hoverBg || hoverBg === ownRest ||
-                            hoverBg === 'rgba(0, 0, 0, 0)' || hoverBg === 'transparent') {
-                        hoverBg = '#e2e2e2';
-                    }
-                    c.style.background = hoverBg;
+                    });
                 };
                 const _leave = () => {
-                    const c = tr.cells[stickyIdx];
-                    if (c && c.classList.contains('mb-sticky-col')) {
-                        c.style.background = c.dataset.mbStickyBg || '#ffffff';
-                    }
+                    // Restore each cell to its individual rest-state background.
+                    // Sticky cell: restore opaque inline bg from mbStickyBg.
+                    // Non-sticky cells: restore from mbRestBg when present (covers
+                    // barcode-highlighted cells whose color would be lost by clearing
+                    // the background shorthand), otherwise clear inline bg so CSS
+                    // zebra striping takes over.
+                    //
+                    // When a sort tint is active on a sticky cell (mbStickyRestBg set),
+                    // mbStickyBg holds the opaque blended colour.  The tint class's
+                    // `rgba() !important` would beat the non-important shorthand we set
+                    // via `background`, making the cell see-through.  Use setProperty
+                    // to ensure the opaque blended colour wins the cascade.
+                    Array.from(tr.cells).forEach(td => {
+                        if (td.classList.contains('mb-sticky-col')) {
+                            const restoreBg = td.dataset.mbStickyBg || '#ffffff';
+                            td.style.background = restoreBg;
+                            if (td.dataset.mbStickyRestBg) {
+                                td.style.setProperty('background-color', restoreBg, 'important');
+                            }
+                        } else if (td.dataset.mbRestBg) {
+                            td.style.background = td.dataset.mbRestBg;
+                        } else {
+                            td.style.background = '';
+                        }
+                    });
                 };
                 // Remove any previously attached listener on this exact node, then add fresh ones.
                 if (tr._mbStickyEnter) tr.removeEventListener('mouseenter', tr._mbStickyEnter);
@@ -8846,7 +9745,7 @@
         const toggleBtn = document.createElement('button');
         toggleBtn.id = 'mb-visible-btn';
         toggleBtn.innerHTML = makeButtonHTML('Visible', 'V', '👁️');
-        toggleBtn.title = `Show/hide table columns (${getPrefixDisplay()}, then V)`;
+        toggleBtn.title = `Show/hide table columns (${buildShortcutHint('sa_shortcut_open_visible_columns', 'Ctrl+V', 'V')})`;
         toggleBtn.style.cssText = uiActionBtnBaseCSS();
         toggleBtn.type = 'button';
 
@@ -10301,14 +11200,11 @@ ${sections.join('\n')}
      *
      * @param {string}      message        - Text to display inside the popup body.
      * @param {string|null} statusText     - When non-null, written to the #mb-info-display bar.
+     * @param {string|null} statusTip      - Optional tooltip for the status bar entry.
      */
-    function showDownloadNotification(message, statusText = null) {
+    function showDownloadNotification(message, statusText = null, statusTip = null) {
         if (statusText !== null) {
-            const infoDisplay = document.getElementById('mb-info-display');
-            if (infoDisplay) {
-                infoDisplay.textContent = statusText;
-                infoDisplay.style.color = 'green';
-            }
+            _setInfoSub('mb-info-display-generic', statusText, statusTip || '');
         }
 
         const infoPopup = document.createElement('div');
@@ -10399,7 +11295,8 @@ ${sections.join('\n')}
 
         showDownloadNotification(
             `${format} export complete: ${rowSummary}. Please monitor your browser for the file download.`,
-            `✓ Exported ${rowSummary} to ${filename}`
+            `✓ Exported ${rowSummary} to ${filename}`,
+            `${format} format — ${rowSummary}. File saved to your browser's download folder.`
         );
     }
 
@@ -10742,14 +11639,11 @@ ${sections.join('\n')}
 
             Lib.debug('export', `Export dialog: download triggered — "${chosenFilename}"`);
 
-            const infoDisp = document.getElementById('mb-info-display');
-            if (infoDisp) {
-                const rs = isFiltered
-                    ? `${rowsExported.toLocaleString()} of ${rowsTotal.toLocaleString()} rows`
-                    : `${rowsExported.toLocaleString()} rows`;
-                infoDisp.textContent = `✓ Exported ${rs} to ${chosenFilename}`;
-                infoDisp.style.color = 'green';
-            }
+            const _rs = isFiltered
+                ? `${rowsExported.toLocaleString()} of ${rowsTotal.toLocaleString()} rows`
+                : `${rowsExported.toLocaleString()} rows`;
+            _setInfoSub('mb-info-display-generic', `✓ Exported ${_rs} to ${chosenFilename}`,
+                `${format} format — ${_rs}. File saved to your browser's download folder.`);
 
             statusDiv.innerHTML     = `\u2705 Download initiated for <em>"${chosenFilename}"</em>. Monitor your browser for the file.`;
             statusDiv.style.color   = '#2e7d32';
@@ -10803,7 +11697,7 @@ ${sections.join('\n')}
         const exportBtn = document.createElement('button');
         exportBtn.id = 'mb-export-btn';
         exportBtn.innerHTML = makeButtonHTML('Export', 'E', '💾');
-        exportBtn.title = `Export visible rows and columns to various formats (${getPrefixDisplay()}, then E)`;
+        exportBtn.title = `Export visible rows and columns to various formats (${buildShortcutHint('sa_shortcut_open_export', 'Ctrl+E', 'E')})`;
         exportBtn.style.cssText = uiActionBtnBaseCSS();
         exportBtn.type = 'button';
 
@@ -12214,18 +13108,20 @@ ${sections.join('\n')}
                     { keys: getShortcutDisplay('sa_shortcut_col_sort_asc',        'Ctrl+↑'),        desc: 'Sort column ascending (emulates clicking ▲ in the column header)' },
                     { keys: getShortcutDisplay('sa_shortcut_col_sort_desc',       'Ctrl+↓'),        desc: 'Sort column descending (emulates clicking ▼ in the column header)' },
                     { keys: getShortcutDisplay('sa_shortcut_col_unsort',          'Ctrl+#'),        desc: 'Restore original sort order (emulates clicking ⇅ in the column header)' },
-                    { keys: getShortcutDisplay('sa_shortcut_col_toggle_collapse', 'Ctrl+O'),        desc: 'Toggle collapse / expand multi-row cells in this column (emulates ▶/◀ header icon)' },
-                    { keys: getShortcutDisplay('sa_shortcut_col_unique_dropdown', 'Ctrl+Q'),        desc: 'Open unique-values dropdown for this column (emulates 📊 header icon)' },
-                    { keys: getShortcutDisplay('sa_shortcut_col_toggle_caa',      'Ctrl+A'),        desc: 'Toggle CAA cover art images for the enclosing table (emulates the CAA toggle button)' },
-                    { keys: getShortcutDisplay('sa_shortcut_auto_resize',         'Ctrl+R'),        desc: 'Resize columns of the enclosing sub-table (falls back to global resize in single-table mode)' },
-                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns','Ctrl+V'),        desc: 'Open the per-sub-table visible-columns menu (mb-stf-…-vis-btn in the h3 header); falls back to global visible-columns menu in single-table mode' }
+                    { keys: getShortcutDisplay('sa_shortcut_col_toggle_collapse', 'Ctrl+O'),        desc: 'Toggle collapse / expand multi-row cells in this column (emulates ▶/◀ header icon) — use prefix-mode o when direct Ctrl+letter shortcuts are disabled' },
+                    { keys: getShortcutDisplay('sa_shortcut_col_unique_dropdown', 'Ctrl+Q'),        desc: 'Open unique-values dropdown for this column (emulates 📊 header icon) — use prefix-mode q when direct Ctrl+letter shortcuts are disabled' },
+                    { keys: getShortcutDisplay('sa_shortcut_col_toggle_caa',      'Ctrl+A'),        desc: 'Toggle CAA cover art images for the enclosing table (emulates the CAA toggle button) — use prefix-mode a when direct Ctrl+letter shortcuts are disabled' },
+                    { keys: getShortcutDisplay('sa_shortcut_auto_resize',         'Ctrl+R'),        desc: 'Resize columns of the enclosing sub-table (falls back to global resize in single-table mode) — use prefix-mode r when direct Ctrl+letter shortcuts are disabled' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns','Ctrl+V'),        desc: 'Open the per-sub-table visible-columns menu (mb-stf-…-vis-btn in the h3 header); falls back to global visible-columns menu in single-table mode — use prefix-mode v when direct Ctrl+letter shortcuts are disabled' }
                 ]
             },
             {
                 title: 'Filter & Search',
                 shortcuts: [
-                    { keys: getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G'), desc: 'Focus global filter' },
-                    { keys: getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'), desc: 'Focus first column filter (cycle through tables)' },
+                    { keys: getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G'), desc: 'Focus global filter (use prefix mode then G when direct Ctrl+letter shortcuts are disabled)' },
+                    { keys: getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C'), desc: 'Focus first column filter — cycles through tables (use prefix mode then C when direct Ctrl+letter shortcuts are disabled)' },
+                    { keys: `${getPrefixDisplay()}, then G`, desc: 'Focus global filter (prefix mode — always available)' },
+                    { keys: `${getPrefixDisplay()}, then C`, desc: 'Focus next column filter (prefix mode — always available)' },
                     { keys: getShortcutDisplay('sa_shortcut_clear_filters', 'Ctrl+Shift+G'), desc: 'Clear all filters' },
                     { keys: 'Shift+Esc', desc: 'Clear all COLUMN filters (global action)' },
                     { keys: 'Escape', desc: 'Clear focused filter (press twice to blur)' }
@@ -12234,10 +13130,11 @@ ${sections.join('\n')}
             {
                 title: 'View & Layout',
                 shortcuts: [
-                    { keys: getShortcutDisplay('sa_shortcut_auto_resize', 'Ctrl+R'), desc: 'Toggle resize columns (also: prefix mode then r)' },
-                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'), desc: 'Open "Visible" menu' },
-                    { keys: getShortcutDisplay('sa_shortcut_open_density', 'Ctrl+D'), desc: 'Open "Density" menu' },
-                    { keys: getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+I'), desc: 'Open "Statistics" panel' },
+                    { keys: getShortcutDisplay('sa_shortcut_auto_resize', 'Ctrl+R'), desc: 'Toggle resize columns (use prefix mode then R when direct Ctrl+letter shortcuts are disabled)' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'), desc: 'Open "Visible" menu (use prefix mode then V when direct Ctrl+letter shortcuts are disabled)' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_density', 'Ctrl+D'), desc: 'Open "Density" menu (use prefix mode then D when direct Ctrl+letter shortcuts are disabled)' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_statistics', 'Ctrl+I'), desc: 'Open "Statistics" panel (use prefix mode then I when direct Ctrl+letter shortcuts are disabled)' },
+                    { keys: getShortcutDisplay('sa_toggle_barcode_highlighting', 'Ctrl+B'), desc: 'Toggle barcode row highlighting (use prefix mode then B when direct Ctrl+letter shortcuts are disabled)' },
                     { keys: getShortcutDisplay('sa_shortcut_toggle_h2', 'Ctrl+2'), desc: 'Toggle collapse all h2 headers' },
                     { keys: getShortcutDisplay('sa_shortcut_toggle_h3', 'Ctrl+3'), desc: 'Toggle collapse all h3 headers (types)' }
                 ]
@@ -12245,9 +13142,9 @@ ${sections.join('\n')}
             {
                 title: 'Data Export & Management',
                 shortcuts: [
-                    { keys: getShortcutDisplay('sa_shortcut_save_to_disk', 'Ctrl+S'), desc: 'Save to disk (JSON)' },
-                    { keys: getShortcutDisplay('sa_shortcut_load_from_disk', 'Ctrl+L'), desc: 'Load from disk' },
-                    { keys: getShortcutDisplay('sa_shortcut_open_export', 'Ctrl+E'), desc: 'Open export menu (CSV, JSON, Org-Mode)' }
+                    { keys: getShortcutDisplay('sa_shortcut_save_to_disk', 'Ctrl+S'), desc: 'Save to disk (JSON) (use prefix mode then S when direct Ctrl+letter shortcuts are disabled)' },
+                    { keys: getShortcutDisplay('sa_shortcut_load_from_disk', 'Ctrl+L'), desc: 'Load from disk (use prefix mode then L when direct Ctrl+letter shortcuts are disabled)' },
+                    { keys: getShortcutDisplay('sa_shortcut_open_export', 'Ctrl+E'), desc: 'Open export menu (CSV, JSON, Org-Mode) (use prefix mode then E when direct Ctrl+letter shortcuts are disabled)' }
                 ]
             },
             {
@@ -12281,7 +13178,11 @@ ${sections.join('\n')}
             {
                 title: 'Keyboard Shortcuts',
                 shortcuts: [
-                    { keys: getPrefixDisplay(), desc: 'Enter prefix mode (then a second key selects action / function)' }
+                    { keys: getPrefixDisplay(), desc: 'Enter prefix mode (then a second key selects action / function) — always available, never suppressed' },
+                    { keys: `${getPrefixDisplay()}, then S/L/R/V/D/I/E/B/K/,/H/G/C`, desc: 'Prefix-mode alternatives — always available even when direct Ctrl+letter shortcuts are disabled' },
+                    { keys: `${getPrefixDisplay()}, then O`, desc: 'Toggle Multi-Row Cell Collapse for last focused column (prefix mode — requires a column filter to have been focused)' },
+                    { keys: `${getPrefixDisplay()}, then Q`, desc: 'Show Unique Values Dropdown for last focused column (prefix mode — requires a column filter to have been focused)' },
+                    { keys: `${getPrefixDisplay()}, then A`, desc: 'Toggle CAA Cover Art Images for the enclosing table of the last focused column (prefix mode)' }
                 ]
             },
             {
@@ -12295,7 +13196,7 @@ ${sections.join('\n')}
                 title: 'Help',
                 shortcuts: [
                     { keys: '? or /', desc: 'Show this shortcuts help' },
-                    { keys: 'Ctrl+K', desc: 'Show keyboard shortcuts help' },
+                    { keys: getShortcutDisplay('sa_shortcut_show_shortcuts_help', 'Ctrl+K'), desc: 'Show keyboard shortcuts help (use prefix mode then K when direct Ctrl+letter shortcuts are disabled)' },
                     { keys: `${getPrefixDisplay()}, then K`, desc: 'Show shortcuts help (prefix mode)' },
                     { keys: `${getPrefixDisplay()}, then H`, desc: 'Show app help (prefix mode)' }
                 ]
@@ -12334,12 +13235,23 @@ ${sections.join('\n')}
         });
 
         // Note at the bottom of the scrollable area
+        const directCtrlOn = Lib.settings.sa_enable_direct_ctrl_char_shortcuts;
         const note = document.createElement('div');
         note.style.cssText = 'margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee; font-size: 0.85em; color: #666; font-style: italic;';
-        note.innerHTML = '<strong>Note:</strong> Ctrl shortcuts work everywhere, even in input fields.<br>' +
-                         '? and / only work when not typing in input fields.<br>' +
-                         'Column filter shortcuts (Ctrl+↑/↓, Ctrl+#, Ctrl+O, Ctrl+Q, Ctrl+A) are only active when a column filter field has focus.<br>' +
-                         'Ctrl+R and Ctrl+V target the per-sub-table resize / visible-columns buttons when focus is in a sub-table column filter (fall back to global buttons in single-table mode).';
+        note.innerHTML =
+            '<strong>Note:</strong> ' +
+            (directCtrlOn
+                ? 'Direct Ctrl+letter shortcuts are enabled globally (fire at all times).'
+                : 'Direct Ctrl+<strong>letter</strong> shortcuts (Ctrl+S, Ctrl+L, Ctrl+R, etc.) are <strong>suppressed everywhere</strong> — ' +
+                  'Ctrl+2 and Ctrl+3 (number keys) are never affected. ' +
+                  'The Keyboard Shortcut Prefix (<strong>' + getPrefixDisplay() + '</strong>) always works and is never suppressed. ' +
+                  'Use it followed by the letter key as an alternative to any blocked Ctrl+letter shortcut. ' +
+                  'Enable "Direct Ctrl+Letter Shortcuts" in Settings to restore direct shortcuts.') +
+            '<br>' +
+            '? and / only work when not typing in input fields.<br>' +
+            'Column filter shortcuts (Ctrl+↑/↓, Ctrl+#) are only active when a column filter field has focus and are never suppressed.<br>' +
+            'Ctrl+O, Ctrl+Q, Ctrl+A (column filter focused) are also only active when a column filter has focus; use prefix-mode O/Q/A as alternatives.<br>' +
+            'Ctrl+R and Ctrl+V target the per-sub-table resize / visible-columns buttons when focus is in a sub-table column filter (fall back to global buttons in single-table mode).';
         scrollArea.appendChild(note);
 
         Lib.debug('shortcuts', 'Keyboard shortcuts help displayed');
@@ -12484,9 +13396,6 @@ ${sections.join('\n')}
             return;
         }
 
-        // Track current table index for Ctrl-C cycling
-        let currentTableIndex = -1;
-
         document.addEventListener('keydown', (e) => {
             // Check if user is typing in an input or textarea
             const isTyping = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
@@ -12588,6 +13497,17 @@ ${sections.join('\n')}
                     return;
                 }
 
+                // Block Ctrl+<a-z> column-filter shortcuts when sa_enable_direct_ctrl_char_shortcuts
+                // is off — the target IS an input, so the same rule that applies globally applies
+                // here too.  Ctrl+ArrowUp/Down and Ctrl+# (non-letter keys, checked above) are
+                // intentionally not affected.
+                if (!Lib.settings.sa_enable_direct_ctrl_char_shortcuts &&
+                    e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey &&
+                    e.key.length === 1 &&
+                    e.key.toLowerCase() >= 'a' && e.key.toLowerCase() <= 'z') {
+                    return;
+                }
+
                 // Toggle multi-row cell collapse: Ctrl+O (configurable via sa_shortcut_col_toggle_collapse)
                 if (isShortcutEvent(e, 'sa_shortcut_col_toggle_collapse', 'Ctrl+O')) {
                     e.preventDefault();
@@ -12618,20 +13538,21 @@ ${sections.join('\n')}
                     return;
                 }
 
-                // Toggle CAA cover art images for the enclosing table: Ctrl+A
+                // Toggle CAA/EAA cover art images for the enclosing table: Ctrl+A
                 // (configurable via sa_shortcut_col_toggle_caa)
                 if (isShortcutEvent(e, 'sa_shortcut_col_toggle_caa', 'Ctrl+A')) {
                     e.preventDefault();
                     e.stopPropagation();
                     if (_cfTable) {
-                        const _allTbls = Array.from(document.querySelectorAll('table.tbl'));
-                        const _tblIdx  = _allTbls.indexOf(_cfTable);
-                        const _caaBtn  = document.getElementById('mb-caa-toggle-btn-' + _tblIdx);
-                        if (_caaBtn) {
-                            _caaBtn.click();
-                            Lib.debug('shortcuts', `CAA images toggled via ${getShortcutDisplay('sa_shortcut_col_toggle_caa', 'Ctrl+A')} (table index ${_tblIdx})`);
+                        const _allTbls  = Array.from(document.querySelectorAll('table.tbl'));
+                        const _tblIdx   = _allTbls.indexOf(_cfTable);
+                        const _artBtn   = document.getElementById('mb-caa-toggle-btn-' + _tblIdx)
+                                       || document.getElementById('mb-eaa-toggle-btn-' + _tblIdx);
+                        if (_artBtn) {
+                            _artBtn.click();
+                            Lib.debug('shortcuts', `Art images toggled via ${getShortcutDisplay('sa_shortcut_col_toggle_caa', 'Ctrl+A')} (table index ${_tblIdx})`);
                         } else {
-                            Lib.warn('shortcuts', `No CAA toggle button found for table index ${_tblIdx}`);
+                            Lib.warn('shortcuts', `No CAA/EAA toggle button found for table index ${_tblIdx}`);
                         }
                     }
                     return;
@@ -12696,6 +13617,21 @@ ${sections.join('\n')}
             }
             // ── End column-filter-focused shortcuts ──────────────────────────────────────
 
+            // Block ALL direct Ctrl+<letter> (a–z) shortcuts when
+            // sa_enable_direct_ctrl_char_shortcuts is off — regardless of whether an
+            // input has focus or a dialog is open.
+            // • Ctrl+M (prefix key) and Ctrl+U (unicode picker) are handled in the
+            //   capture-phase listener above (stopImmediatePropagation) and never reach here.
+            // • Non-letter shortcuts (Ctrl+,  Ctrl+2  Ctrl+3  Ctrl+Shift+G  etc.) are
+            //   not matched by the a–z range check and always fire normally.
+            // • Column-filter-focused Ctrl+↑/↓ and Ctrl+# were already returned above.
+            if (!Lib.settings.sa_enable_direct_ctrl_char_shortcuts &&
+                e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey &&
+                e.key.length === 1 &&
+                e.key.toLowerCase() >= 'a' && e.key.toLowerCase() <= 'z') {
+                return;
+            }
+
             // Ctrl/Cmd + , : Open settings
             if (isShortcutEvent(e, 'sa_shortcut_open_settings', 'Ctrl+,')) {
                 e.preventDefault();
@@ -12727,8 +13663,8 @@ ${sections.join('\n')}
                 }
 
                 // Cycle to next table
-                currentTableIndex = (currentTableIndex + 1) % tables.length;
-                const currentTable = tables[currentTableIndex];
+                _colFilterTableIndex = (_colFilterTableIndex + 1) % tables.length;
+                const currentTable = tables[_colFilterTableIndex];
 
                 // Find the first column filter input in this table (skip checkbox/number columns)
                 const filterRow = currentTable.querySelector('thead tr.mb-col-filter-row');
@@ -12756,12 +13692,12 @@ ${sections.join('\n')}
                         targetInput.focus();
                         // No .select() here: the focus handler (applyFilterFocusStyle)
                         // prepends the search prefix and positions the cursor after it.
-                        Lib.debug('shortcuts', `First column filter focused via ${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')} (table ${currentTableIndex + 1}/${tables.length})`);
+                        Lib.debug('shortcuts', `First column filter focused via ${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')} (table ${_colFilterTableIndex + 1}/${tables.length})`);
                     } else {
-                        Lib.warn('shortcuts', `No suitable column filter input found in table ${currentTableIndex + 1}`);
+                        Lib.warn('shortcuts', `No suitable column filter input found in table ${_colFilterTableIndex + 1}`);
                     }
                 } else {
-                    Lib.warn('shortcuts', `No filter row found in table ${currentTableIndex + 1}`);
+                    Lib.warn('shortcuts', `No filter row found in table ${_colFilterTableIndex + 1}`);
                 }
             }
 
@@ -12816,6 +13752,18 @@ ${sections.join('\n')}
                     Lib.debug('shortcuts', 'Visible menu opened via ' + getShortcutDisplay('sa_shortcut_open_visible_columns', 'Ctrl+V'));
                 } else {
                     Lib.warn('shortcuts', 'Visible button not found');
+                }
+            }
+
+            // Toggle barcode highlighting (configurable, default Ctrl+B)
+            if (isShortcutEvent(e, 'sa_toggle_barcode_highlighting', 'Ctrl+B')) {
+                e.preventDefault();
+                const barcodeBtn = document.getElementById('mb-barcode-highlight-btn');
+                if (barcodeBtn) {
+                    barcodeBtn.click();
+                    Lib.debug('shortcuts', 'Barcode highlighting toggled via ' + getShortcutDisplay('sa_toggle_barcode_highlighting', 'Ctrl+B'));
+                } else {
+                    Lib.warn('shortcuts', 'Barcode highlight button not found');
                 }
             }
 
@@ -12896,11 +13844,11 @@ ${sections.join('\n')}
                 }
             }
 
-            // Show keyboard shortcuts help (hard-wired Ctrl+K)
-            if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toUpperCase() === 'K') {
+            // Show keyboard shortcuts help (configurable, default Ctrl+K)
+            if (isShortcutEvent(e, 'sa_shortcut_show_shortcuts_help', 'Ctrl+K')) {
                 e.preventDefault();
                 showShortcutsHelp();
-                Lib.debug('shortcuts', 'Shortcuts help opened via Ctrl+K');
+                Lib.debug('shortcuts', 'Shortcuts help opened via ' + getShortcutDisplay('sa_shortcut_show_shortcuts_help', 'Ctrl+K'));
             }
 
             // Toggle auto-resize columns (direct shortcut; also available as prefix sub-key 'r')
@@ -13049,6 +13997,83 @@ ${sections.join('\n')}
             }
         }, true); // capture phase
 
+        // Track the last focused column filter so prefix-mode o/q/a can resolve
+        // the column context even after Ctrl+M has been pressed (which doesn't blur the input).
+        document.addEventListener('focusin', (e) => {
+            if (e.target.matches('.mb-col-filter-input')) {
+                _lastFocusedColFilterInput = e.target;
+            }
+        }, true);
+
+        // ── Permanent prefix-mode function shortcuts for column-context actions ────
+        // o/q/a mirror the column-filter-focused Ctrl+O/Q/A shortcuts but are
+        // available via prefix mode (sa_keyboard_shortcut_prefix → o/q/a) so they
+        // work even when sa_enable_direct_ctrl_char_shortcuts is off.
+        // During an active fetch, ctrlMFunctionMap['o'] is temporarily overwritten
+        // with "Stop fetching" and restored here when the fetch ends.
+
+        /**
+         * Helper: resolve the column filter input for prefix-mode column-context shortcuts.
+         * Prefers document.activeElement (still focused after Ctrl+M), falls back to
+         * the last element that received focusin on .mb-col-filter-input.
+         * @returns {HTMLInputElement|null}
+         */
+        const _resolveColFilter = () => {
+            if (document.activeElement && document.activeElement.matches('.mb-col-filter-input')) {
+                return document.activeElement;
+            }
+            return _lastFocusedColFilterInput;
+        };
+
+        ctrlMFunctionMap['o'] = {
+            fn: () => {
+                const cfInput = _resolveColFilter();
+                if (!cfInput) { Lib.warn('shortcuts', 'No column filter context for multi-row collapse (focus a column filter first)'); return; }
+                const cfTable    = cfInput.closest('table.tbl');
+                const cfColIdx   = cfTable ? parseInt(cfInput.dataset.colIdx, 10) : -1;
+                const cfHdrRow   = cfTable ? cfTable.querySelector('thead tr:first-child') : null;
+                const cfTh       = (cfHdrRow && cfColIdx >= 0) ? cfHdrRow.cells[cfColIdx] : null;
+                const collapseBtn = cfTh ? cfTh.querySelector('.mb-col-collapse-hdr-btn') : null;
+                if (collapseBtn) { collapseBtn.click(); Lib.debug('shortcuts', 'Multi-row collapse toggled via prefix-mode o'); }
+                else { Lib.warn('shortcuts', 'No collapse-toggle button found in column header'); }
+            },
+            description: 'Toggle Multi-Row Cell Collapse',
+            colContext: true
+        };
+
+        ctrlMFunctionMap['q'] = {
+            fn: () => {
+                const cfInput = _resolveColFilter();
+                if (!cfInput) { Lib.warn('shortcuts', 'No column filter context for unique-values dropdown (focus a column filter first)'); return; }
+                const cfTable   = cfInput.closest('table.tbl');
+                const cfColIdx  = cfTable ? parseInt(cfInput.dataset.colIdx, 10) : -1;
+                const cfHdrRow  = cfTable ? cfTable.querySelector('thead tr:first-child') : null;
+                const cfTh      = (cfHdrRow && cfColIdx >= 0) ? cfHdrRow.cells[cfColIdx] : null;
+                const uniqWrap  = cfTh ? cfTh.querySelector('.mb-col-uniq-wrap') : null;
+                if (uniqWrap) { uniqWrap.click(); Lib.debug('shortcuts', 'Unique-values dropdown opened via prefix-mode q'); }
+                else { Lib.warn('shortcuts', 'No unique-values (📊) button found in column header'); }
+            },
+            description: 'Show Unique Values Dropdown',
+            colContext: true
+        };
+
+        ctrlMFunctionMap['a'] = {
+            fn: () => {
+                const cfInput = _resolveColFilter();
+                if (!cfInput) { Lib.warn('shortcuts', 'No column filter context for art toggle (focus a column filter first)'); return; }
+                const cfTable  = cfInput.closest('table.tbl');
+                if (!cfTable)  { Lib.warn('shortcuts', 'No table found for art toggle'); return; }
+                const allTbls  = Array.from(document.querySelectorAll('table.tbl'));
+                const tblIdx   = allTbls.indexOf(cfTable);
+                const artBtn   = document.getElementById('mb-caa-toggle-btn-' + tblIdx)
+                              || document.getElementById('mb-eaa-toggle-btn-' + tblIdx);
+                if (artBtn) { artBtn.click(); Lib.debug('shortcuts', `Art images toggled via prefix-mode a (table index ${tblIdx})`); }
+                else { Lib.warn('shortcuts', `No CAA/EAA toggle button found for table index ${tblIdx}`); }
+            },
+            description: 'Toggle Cover Art Images (CAA/EAA)',
+            colContext: true
+        };
+
         document._mbKeyboardShortcutsInitialized = true;
         Lib.debug('shortcuts', 'Keyboard shortcuts initialized');
     }
@@ -13072,7 +14097,7 @@ ${sections.join('\n')}
         const helpBtn = document.createElement('button');
         helpBtn.id = 'mb-shortcuts-help-btn';
         helpBtn.textContent = '🎹';
-        helpBtn.title = `Show keyboard shortcuts (or press ? / ${getPrefixDisplay()}, then K)`;
+        helpBtn.title = `Show keyboard shortcuts (or press ? / ${buildShortcutHint('sa_shortcut_show_shortcuts_help', 'Ctrl+K', 'K')})`;
         helpBtn.style.cssText = uiActionBtnBaseCSS();
         helpBtn.type = 'button';
         helpBtn.onclick = showShortcutsHelp;
@@ -13958,6 +14983,142 @@ ${sections.join('\n')}
         body.appendChild(_globalHead);
         body.appendChild(_mkTbl(globalRows));
 
+        // ── § IndexedDB Cache section (async) ─────────────────────────────────
+        // Queries IDB store counts asynchronously; renders a placeholder row that
+        // is filled in once the Promises resolve.  Safe to call even when IDB is
+        // disabled — _artIdbCountStore resolves to 0 in that case.
+        {
+            const _idbHead = _mkSectionHead('🗄️', 'IndexedDB Cache');
+            body.appendChild(_idbHead);
+
+            const _idbEnabled    = !!Lib.settings.sa_art_idb_enable;
+            const _relIdbEnabled = !!Lib.settings.sa_rels_idb_enable;
+            const _fmtTs = (ts) => {
+                if (!ts) return '—';
+                const d = new Date(ts);
+                return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            };
+
+            // Placeholder rows rendered synchronously; values filled in on Promise resolution.
+            const _idbPlaceholderRows = [
+                {
+                    stat:    `🖼️ Art images store (IDB)`,
+                    value:   '<em style="color:#aaa">querying…</em>',
+                    comment: _idbEnabled
+                        ? `TTL: ${Lib.settings.sa_art_idb_image_ttl_days || 30} days — blob cache (sa_art_idb_enable)`
+                        : '⚠️ IDB art cache disabled (sa_art_idb_enable = false)',
+                    _id:     'mb-stats-idb-images',
+                },
+                {
+                    stat:    `📋 Art metadata store (IDB)`,
+                    value:   '<em style="color:#aaa">querying…</em>',
+                    comment: _idbEnabled
+                        ? `TTL: ${Lib.settings.sa_art_idb_metadata_ttl_days || 7} days — archive JSON metadata`
+                        : '⚠️ IDB art cache disabled',
+                    _id:     'mb-stats-idb-metadata',
+                },
+                {
+                    stat:    `🔗 Rel WS2 store (IDB)`,
+                    value:   '<em style="color:#aaa">querying…</em>',
+                    comment: _relIdbEnabled
+                        ? 'TTL: 7 days — relationship WS2 JSON responses (sa_rels_idb_enable)'
+                        : '⚠️ IDB rel cache disabled (sa_rels_idb_enable = false)',
+                    _id:     'mb-stats-idb-relws2',
+                },
+                {
+                    stat:    '💡 L1 memory — art images (this session)',
+                    value:   String(_artIdbMemCache.size),
+                    comment: 'Per-session in-memory blob: URL Map; cleared on page unload',
+                    _id:     null,
+                },
+                {
+                    stat:    '💡 L1 memory — rel WS2 (this session)',
+                    value:   String(_relWs2Cache.size),
+                    comment: 'Per-session in-memory Map of resolved fetch() Promises',
+                    _id:     null,
+                },
+                {
+                    stat:    '🧹 Last idle sweep — expired records removed',
+                    value:   _artIdbLastSweep.ts !== null
+                        ? String(_artIdbLastSweep.deleted)
+                        : '— (not yet run this session)',
+                    comment: _artIdbLastSweep.ts !== null
+                        ? `Ran at ${_fmtTs(_artIdbLastSweep.ts)} — images, metadata, rel-ws2 stores`
+                        : 'Scheduled after first render (idle callback)',
+                    _id:     null,
+                },
+                {
+                    stat:    '⏱️ Rel WS2 TTL evictions (this session)',
+                    value:   String(_relIdbTtlEvictCount),
+                    comment: _relIdbTtlEvictCount > 0
+                        ? `${_relIdbTtlEvictCount} rel-ws2 record(s) found expired during reads and deleted`
+                        : 'Records silently removed when a cached record is read after its 7-day TTL',
+                    _id:     null,
+                },
+                {
+                    stat:    '🔄 Rel WS2 retry evictions (this session)',
+                    value:   String(_relIdbRetryEvictCount),
+                    comment: _relIdbRetryEvictCount > 0
+                        ? `${_relIdbRetryEvictCount} rel-ws2 record(s) evicted by user-initiated retry`
+                        : 'Records explicitly evicted when the user clicks a Retry Relationships button',
+                    _id:     null,
+                },
+            ];
+
+            const _idbTbl = _mkTbl(_idbPlaceholderRows);
+            body.appendChild(_idbTbl);
+
+            // Tag placeholder <td> cells with their data-id so we can fill them in.
+            _idbPlaceholderRows.forEach(row => {
+                if (!row._id) return;
+                const tds = _idbTbl.querySelectorAll('tbody tr td:nth-child(2)');
+                const tr = Array.from(_idbTbl.querySelectorAll('tbody tr')).find(
+                    r => r.querySelector('td') && r.querySelector('td').textContent.includes(
+                        row.stat.replace(/[🖼️📋🔗]/g, '').trim().substring(0, 10)
+                    )
+                );
+                if (tr) tr.dataset.idbPlaceholder = row._id;
+            });
+
+            // Async: fill in the live counts.
+            if (_idbEnabled || _relIdbEnabled) {
+                Promise.all([
+                    _artIdbCountStore('images'),
+                    _artIdbCountStore('metadata'),
+                    _artIdbCountStore('rel-ws2'),
+                ]).then(([imgCount, metaCount, relCount]) => {
+                    // Panel may have been closed by the time the counts arrive.
+                    if (!document.getElementById('mb-stats-panel')) return;
+
+                    // Walk the table rows and update the three async cells.
+                    const _allRows = Array.from(_idbTbl.querySelectorAll('tbody tr'));
+                    const _rowFor = (statFragment) =>
+                        _allRows.find(r =>
+                            r.querySelector('td') &&
+                            r.querySelector('td').textContent.includes(statFragment));
+
+                    const _setVal = (row, html) => {
+                        if (!row) return;
+                        const td = row.querySelectorAll('td')[1];
+                        if (td) td.innerHTML = `<strong>${html}</strong>`;
+                    };
+
+                    _setVal(_rowFor('Art images store'), `${imgCount.toLocaleString()} entries`);
+                    _setVal(_rowFor('Art metadata store'), `${metaCount.toLocaleString()} entries`);
+                    _setVal(_rowFor('Rel WS2 store'), `${relCount.toLocaleString()} entries`);
+                }).catch(e => {
+                    Lib.warn('idb', 'showStatsPanel: IDB count query failed:', e);
+                });
+            } else {
+                // Both disabled — replace all three "querying…" cells immediately.
+                const _allRows = Array.from(_idbTbl.querySelectorAll('tbody tr'));
+                [0, 1, 2].forEach(i => {
+                    const td = _allRows[i] && _allRows[i].querySelectorAll('td')[1];
+                    if (td) td.innerHTML = '<em style="color:#aaa">disabled</em>';
+                });
+            }
+        }
+
         // ── § Per-table section ───────────────────────────────────────────────
         const _tdLabel = (tableMode === 'multi' && _tableData.length > 1)
             ? 'Table Details' : 'Table Detail';
@@ -14668,7 +15829,7 @@ a { color: #1565c0; }`;
         const statsBtn = document.createElement('button');
         statsBtn.id = 'mb-stats-btn';
         statsBtn.innerHTML = makeButtonHTML('Statistics', 'i', '📊');
-        statsBtn.title = `Show table statistics (${getPrefixDisplay()}, then I)`;
+        statsBtn.title = `Show table statistics (${buildShortcutHint('sa_shortcut_open_statistics', 'Ctrl+I', 'I')})`;
         statsBtn.style.cssText = uiActionBtnBaseCSS();
         statsBtn.type = 'button';
         statsBtn.onclick = showStatsPanel;
@@ -14694,6 +15855,8 @@ a { color: #1565c0; }`;
             td.style.removeProperty('padding');
             td.style.removeProperty('border-radius');
             td.style.removeProperty('cursor');
+            // Clear mbRestBg so _leave restores CSS zebra rather than the old color.
+            delete td.dataset.mbRestBg;
             td.removeEventListener('click', barcodeToggleMergeCheckbox);
         });
     }
@@ -14713,12 +15876,12 @@ a { color: #1565c0; }`;
             btn.style.background  = '';
             btn.style.borderColor = '';
             btn.style.color       = '';
-            btn.title = 'Toggle barcode highlightning off';
+            btn.title = `Toggle barcode highlightning off (${buildShortcutHint('sa_toggle_barcode_highlighting', 'Ctrl+B', 'B')})`;
         } else {
             btn.style.background  = '#555555';
             btn.style.borderColor = '#333333';
             btn.style.color       = '#ffffff';
-            btn.title = 'Toggle barcode highlightning on';
+            btn.title = `Toggle barcode highlightning on (${buildShortcutHint('sa_toggle_barcode_highlighting', 'Ctrl+B', 'B')})`;
         }
     }
 
@@ -14768,7 +15931,7 @@ a { color: #1565c0; }`;
         // because the absence is fully expected on non-release page types.
         const hasBarcodeColumn =
             Array.from(document.querySelectorAll('table.tbl th')).some(
-                th => th.textContent.trim() === 'Barcode'
+                th => _cleanColHeaderText(th) === 'Barcode'
             ) ||
             document.querySelector('td.barcode-cell') !== null;
 
@@ -14877,11 +16040,8 @@ a { color: #1565c0; }`;
         currentDensity = densityKey;
 
         // Update status display
-        const infoDisplay = document.getElementById('mb-info-display');
-        if (infoDisplay) {
-            infoDisplay.textContent = `✓ Table density: ${config.label}`;
-            infoDisplay.style.color = 'green';
-        }
+        _setInfoSub('mb-info-display-generic', `✓ Table density: ${config.label}`,
+            'Click the density button again to cycle through available density levels.');
 
         Lib.debug('density', `Applied ${config.label} density to ${tables.length} table(s)`);
     }
@@ -14907,7 +16067,7 @@ a { color: #1565c0; }`;
         const densityBtn = document.createElement('button');
         densityBtn.id = 'mb-density-btn';
         densityBtn.innerHTML = makeButtonHTML('Density', 'D', '📏');
-        densityBtn.title = `Change table density (spacing) (${getPrefixDisplay()}, then D)`;
+        densityBtn.title = `Change table density (spacing) (${buildShortcutHint('sa_shortcut_open_density', 'Ctrl+D', 'D')})`;
         densityBtn.style.cssText = uiActionBtnBaseCSS();
         densityBtn.type = 'button';
 
@@ -15232,6 +16392,41 @@ a { color: #1565c0; }`;
             });
 
             let startX, startWidth, colIndex;
+            // Cached reference to the specific <col> element being dragged.
+            // Resolved once at mousedown so onMouseMove never re-queries the DOM.
+            let _targetCol = null;
+            // rAF gate: ensures at most one col.style.width write per animation
+            // frame regardless of how fast mousemove fires (up to 200 Hz on some
+            // devices).  Eliminates the per-pixel reflow storm during drag.
+            let _dragRafPending = false;
+            let _dragPendingWidth = 0;
+
+            // ── Per-column minimum drag width ──────────────────────────────
+            // Computed ONCE here (at set-up time, before any drag has occurred),
+            // when the column is still at its natural/initial width and
+            // _hdrFlex.scrollWidth reflects the true intrinsic minimum of the
+            // header widget (colName + sort icons + unique-values button +
+            // optional collapse-toggle / CAA/EAA header button + 8 px resizer).
+            //
+            // Recomputing inside mousedown is wrong: after the user has dragged
+            // a column wider, _hdrFlex.scrollWidth equals the CURRENT (wider)
+            // column width, raising the effective floor on every drag and making
+            // it impossible to narrow the column again.
+            //
+            // th.dataset.mbResizeMin caches the value across calls to
+            // makeColumnsResizable (e.g. the re-call inside toggleAutoResizeColumns
+            // which happens AFTER column widths are already modified by auto-resize,
+            // and the re-call when the Restore button removes and re-adds handles).
+            // The data attribute is only SET on the first call — the initial
+            // makeColumnsResizable invocation during page render — so the cached
+            // value always reflects the pre-resize header-content minimum.
+            if (!th.dataset.mbResizeMin) {
+                const _initHdrFlex = th.querySelector('.mb-col-hdr-flex');
+                th.dataset.mbResizeMin = String(
+                    _initHdrFlex ? (_initHdrFlex.scrollWidth + 8) : th.scrollWidth
+                );
+            }
+            const _minWidth = Number(th.dataset.mbResizeMin) || 30;
 
             resizer.addEventListener('mousedown', (e) => {
                 e.preventDefault();
@@ -15262,21 +16457,86 @@ a { color: #1565c0; }`;
                 // sub-table's ↔️ resize button (and the global "Resize*" hint).
                 markSubTableAsManuallyResized(table);
 
+                // ── Snapshot every column's current rendered width ─────────────
+                // Read all th.offsetWidth values NOW, before any style mutation,
+                // so they reflect the current visual layout (auto or fixed).
+                // These values are written to <col> elements below to lock each
+                // column in place before switching to table-layout:fixed, which
+                // would otherwise redistribute all column widths equally.
+                const _allWidths = Array.from(headers).map(h => h.offsetWidth);
+
+                // ── Ensure colgroup exists with the correct number of <col>s ───
+                let _cg = table.querySelector('colgroup');
+                if (!_cg) {
+                    _cg = document.createElement('colgroup');
+                    table.insertBefore(_cg, table.firstChild);
+                    const _firstRow = table.querySelector('tbody tr');
+                    const _colCount = _firstRow ? _firstRow.cells.length : 0;
+                    for (let _ci = 0; _ci < _colCount; _ci++) {
+                        _cg.appendChild(document.createElement('col'));
+                    }
+                }
+
+                // ── Lock every column at its current rendered width ────────────
+                // Setting an explicit px width on every <col> before switching to
+                // table-layout:fixed prevents the browser from redistributing all
+                // widths equally (its default when no <col> widths are present).
+                // Also clear th.style.minWidth (set by auto-resize) so that
+                // fixed-layout column widths are not floored by cell constraints.
+                const _allCols = _cg.querySelectorAll('col');
+                Array.from(headers).forEach((hdr, i) => {
+                    if (_allCols[i]) _allCols[i].style.width = `${_allWidths[i]}px`;
+                    if (hdr.style.minWidth) hdr.style.minWidth = '';
+                });
+
+                // ── Free the table's total-width constraint ────────────────────
+                // With all <col> widths explicit and table-layout:fixed, the table
+                // sizes to exactly the sum of its column widths.  Removing the
+                // fixed pixel total (set by auto-resize) means widening one column
+                // expands the table instead of compressing all other columns.
+                table.style.width = '';
+                table.style.minWidth = '';
+
+                // Switch to fixed layout (once) so subsequent width writes are cheap.
+                table.style.tableLayout = 'fixed';
+                _targetCol = _allCols[colIndex] || null;
+                _dragRafPending = false;
+
                 document.addEventListener('mousemove', onMouseMove);
                 document.addEventListener('mouseup', onMouseUp);
 
                 // Prevent text selection during resize
                 document.body.style.userSelect = 'none';
 
-                Lib.debug('resize', `Started resizing column ${colIndex} from width ${startWidth}px`);
+                Lib.debug('resize', `Started resizing column ${colIndex} from width ${startWidth}px (min: ${_minWidth}px)`);
             });
 
+            /**
+             * Mouse-move handler for column drag resize.
+             *
+             * Writes are throttled to one per animation frame via a pending-flag
+             * guard so that high-frequency mousemove events (up to ~200 Hz) do not
+             * trigger a layout reflow on every pixel of movement.  The most recent
+             * target width is always applied — no intermediate frames are skipped
+             * visually because rAF fires before the next paint.
+             *
+             * @param {MouseEvent} e
+             */
             function onMouseMove(e) {
-                const delta = e.pageX - startX;
-                const newWidth = Math.max(30, startWidth + delta); // Min width 30px
-
-                // Apply width to the column
-                setColumnWidth(table, colIndex, newWidth);
+                _dragPendingWidth = Math.max(_minWidth, startWidth + (e.pageX - startX));
+                if (_dragRafPending) return;
+                _dragRafPending = true;
+                requestAnimationFrame(() => {
+                    _dragRafPending = false;
+                    // Fast path: write directly to the cached <col> element.
+                    // Falls back to setColumnWidth when the cache is unavailable
+                    // (e.g. if a concurrent re-render replaced the colgroup).
+                    if (_targetCol && _targetCol.isConnected) {
+                        _targetCol.style.width = `${_dragPendingWidth}px`;
+                    } else {
+                        setColumnWidth(table, colIndex, _dragPendingWidth);
+                    }
+                });
             }
 
             function onMouseUp(e) {
@@ -15289,15 +16549,15 @@ a { color: #1565c0; }`;
                 // Re-enable text selection
                 document.body.style.userSelect = '';
 
+                _targetCol = null;
+                _dragRafPending = false;
+
                 const finalWidth = th.offsetWidth;
                 Lib.debug('resize', `Finished resizing column ${colIndex} to ${finalWidth}px`);
 
                 // Update status
-                const infoDisplay = document.getElementById('mb-info-display');
-                if (infoDisplay) {
-                    infoDisplay.textContent = `✓ Column ${colIndex + 1} resized to ${finalWidth}px`;
-                    infoDisplay.style.color = 'green';
-                }
+                _setInfoSub('mb-info-display-generic', `✓ Column ${colIndex + 1} resized to ${finalWidth}px`,
+                    `Column ${colIndex + 1} manually set to ${finalWidth}px. Click the auto-resize button (📐) to refit all columns to content.`);
             }
 
             // Make th positioned for absolute positioning of the resizer handle.
@@ -15356,7 +16616,7 @@ a { color: #1565c0; }`;
 
         if (isResized) {
             resizeBtn.innerHTML = makeButtonHTML('Restore', 'R', '↔️');
-            resizeBtn.title = `Restore original column widths (click to toggle / ${getPrefixDisplay()}, then R)`;
+            resizeBtn.title = `Restore original column widths (click to toggle / ${buildShortcutHint('sa_shortcut_auto_resize', 'Ctrl+R', 'R')})`;
             resizeBtn.style.background = '#e8f5e9';
             resizeBtn.style.borderColor = '#4CAF50';
         } else {
@@ -15365,12 +16625,12 @@ a { color: #1565c0; }`;
             const anySubResized = Array.from(subTableResizedStates.values()).some(Boolean);
             if (anySubResized) {
                 resizeBtn.innerHTML = makeButtonHTML('Resize*', 'R', '↔️');
-                resizeBtn.title = `One or more sub-tables are auto-resized. Click to auto-resize all (${getPrefixDisplay()}, then R)`;
+                resizeBtn.title = `One or more sub-tables are auto-resized. Click to auto-resize all (${buildShortcutHint('sa_shortcut_auto_resize', 'Ctrl+R', 'R')})`;
                 resizeBtn.style.background = '#fff3e0';
                 resizeBtn.style.borderColor = '#FF9800';
             } else {
                 resizeBtn.innerHTML = makeButtonHTML('Resize', 'R', '↔️');
-                resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${getPrefixDisplay()}, then R)`;
+                resizeBtn.title = `Auto-resize columns to optimal width (click to toggle / ${buildShortcutHint('sa_shortcut_auto_resize', 'Ctrl+R', 'R')})`;
                 resizeBtn.style.background = '';
                 resizeBtn.style.borderColor = '';
             }
@@ -15500,28 +16760,44 @@ a { color: #1565c0; }`;
             const columnWidths = new Array(columnCount).fill(0);
 
             // ── Measurement div ───────────────────────────────────────────────
+            // The `.mb-measure-nowrap` CSS class (injected during sticky-header
+            // initialisation) applies white-space:nowrap, overflow-wrap:normal, and
+            // word-break:normal with !important to the div and all its descendants,
+            // replacing the previous per-element querySelectorAll style loop that
+            // triggered a micro-reflow for every cloned cell child.
             const measureDiv = document.createElement('div');
             measureDiv.style.cssText = 'position:absolute;visibility:hidden;top:-9999px;left:-9999px;display:inline-block;font-size:inherit;padding:4px 8px;';
-            measureDiv.style.setProperty('white-space',   'nowrap',  'important');
-            measureDiv.style.setProperty('overflow-wrap', 'normal',  'important');
-            measureDiv.style.setProperty('word-break',    'normal',  'important');
+            measureDiv.classList.add('mb-measure-nowrap');
             document.body.appendChild(measureDiv);
+
+            // ── Hoist getComputedStyle reads outside the row loop ─────────────
+            // getComputedStyle() forces a style recalculation on every call.
+            // All <td>s in the same column share the same font/padding as their
+            // <th>, so we read each column's styles exactly once here.
+            const colStyleCache = Array.from(headers).map((th, i) => {
+                if (!columnVisible[i]) return null;
+                const s = window.getComputedStyle(th);
+                return {
+                    fontSize:   s.fontSize,
+                    fontWeight: s.fontWeight,
+                    padding:    s.padding,
+                    fontFamily: s.fontFamily
+                };
+            });
 
             // Measure header widths
             headers.forEach((th, colIndex) => {
                 if (!columnVisible[colIndex]) return;
-                const styles = window.getComputedStyle(th);
-                measureDiv.style.fontSize   = styles.fontSize;
-                measureDiv.style.fontWeight = styles.fontWeight;
-                measureDiv.style.padding    = styles.padding;
-                measureDiv.style.fontFamily = styles.fontFamily;
+                const cs = colStyleCache[colIndex];
+                if (cs) {
+                    measureDiv.style.fontSize   = cs.fontSize;
+                    measureDiv.style.fontWeight = cs.fontWeight;
+                    measureDiv.style.padding    = cs.padding;
+                    measureDiv.style.fontFamily = cs.fontFamily;
+                }
                 measureDiv.innerHTML = '';
                 Array.from(th.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
-                measureDiv.querySelectorAll('*').forEach(el => {
-                    el.style.setProperty('white-space',   'nowrap',  'important');
-                    el.style.setProperty('overflow-wrap', 'normal',  'important');
-                    el.style.setProperty('word-break',    'normal',  'important');
-                });
+                // .mb-measure-nowrap covers all descendants — no per-element loop needed.
                 columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
             });
 
@@ -15532,18 +16808,16 @@ a { color: #1565c0; }`;
                 if (row.style.display === 'none') continue;
                 Array.from(row.cells).forEach((cell, colIndex) => {
                     if (colIndex >= columnCount || !columnVisible[colIndex]) return;
-                    const styles = window.getComputedStyle(cell);
-                    measureDiv.style.fontSize   = styles.fontSize;
-                    measureDiv.style.fontWeight = styles.fontWeight;
-                    measureDiv.style.padding    = styles.padding;
-                    measureDiv.style.fontFamily = styles.fontFamily;
+                    const cs = colStyleCache[colIndex];
+                    if (cs) {
+                        measureDiv.style.fontSize   = cs.fontSize;
+                        measureDiv.style.fontWeight = cs.fontWeight;
+                        measureDiv.style.padding    = cs.padding;
+                        measureDiv.style.fontFamily = cs.fontFamily;
+                    }
                     measureDiv.innerHTML = '';
                     Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
-                    measureDiv.querySelectorAll('*').forEach(el => {
-                        el.style.setProperty('white-space',   'nowrap',  'important');
-                        el.style.setProperty('overflow-wrap', 'normal',  'important');
-                        el.style.setProperty('word-break',    'normal',  'important');
-                    });
+                    // .mb-measure-nowrap covers all descendants — no per-element loop needed.
                     columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
 
                     // Also measure each <li> individually (hidden or visible) so that
@@ -15552,15 +16826,8 @@ a { color: #1565c0; }`;
                     cell.querySelectorAll('ul > li').forEach(li => {
                         if (li.classList.contains('mb-caa-art-li')) return;
                         const liClone = li.cloneNode(true);
-                        liClone.style.display     = 'inline-block';
-                        liClone.style.setProperty('white-space',   'nowrap',  'important');
-                        liClone.style.setProperty('overflow-wrap', 'normal',  'important');
-                        liClone.style.setProperty('word-break',    'normal',  'important');
-                        liClone.querySelectorAll('*').forEach(el => {
-                            el.style.setProperty('white-space',   'nowrap',  'important');
-                            el.style.setProperty('overflow-wrap', 'normal',  'important');
-                            el.style.setProperty('word-break',    'normal',  'important');
-                        });
+                        liClone.style.display = 'inline-block';
+                        // .mb-measure-nowrap on the parent div covers all descendants.
                         measureDiv.innerHTML = '';
                         measureDiv.appendChild(liClone);
                         columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
@@ -15589,9 +16856,9 @@ a { color: #1565c0; }`;
                                 // We measure the li clone with display:'' and white-space:nowrap.
                                 const liClone = li.cloneNode(true);
                                 liClone.style.display     = '';
-                                liClone.style.whiteSpace  = 'nowrap';
-                                liClone.style.setProperty('overflow-wrap', 'normal', 'important');
-                                liClone.style.wordBreak   = 'normal';
+                                // .mb-measure-nowrap on the parent div covers white-space,
+                                // overflow-wrap, and word-break for the clone and all its
+                                // descendants — no per-element querySelectorAll loop needed.
                                 // Strip the <img> thumbnail itself — it has a fixed width and
                                 // its natural-width is not what determines column width.
                                 const thumbImg = liClone.querySelector('img');
@@ -15602,11 +16869,7 @@ a { color: #1565c0; }`;
 
                                 measureDiv.innerHTML = '';
                                 measureDiv.appendChild(liClone);
-                                measureDiv.querySelectorAll('*').forEach(el => {
-                                    el.style.setProperty('white-space',   'nowrap',  'important');
-                                    el.style.setProperty('overflow-wrap', 'normal',  'important');
-                                    el.style.setProperty('word-break',    'normal',  'important');
-                                });
+                                // .mb-measure-nowrap covers all descendants.
                                 columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
                             });
                         }
@@ -15614,6 +16877,44 @@ a { color: #1565c0; }`;
                 });
             }
             document.body.removeChild(measureDiv);
+
+            // ── collapse-toggle extra space ───────────────────────────────────────
+            // .mb-cell-collapse-toggle is position:absolute (right:4px) and invisible
+            // to the measurement pass above.  Widen any column that contains
+            // td.mb-has-collapse-toggle cells so the toggle never overlaps text.
+            {
+                const _colToggleSample = {};
+                table.querySelectorAll('tbody td.mb-has-collapse-toggle').forEach(cell => {
+                    const row = cell.parentElement;
+                    if (!row || row.style.display === 'none') return;
+                    const colIndex = cell.cellIndex;
+                    if (colIndex < 0 || colIndex >= columnCount || !columnVisible[colIndex]) return;
+                    if (_colToggleSample[colIndex]) return;
+                    const toggle = cell.querySelector(':scope > .mb-cell-collapse-toggle');
+                    if (toggle) _colToggleSample[colIndex] = { toggle, th: headers[colIndex] };
+                });
+
+                for (const [colIndexStr, { toggle, th }] of Object.entries(_colToggleSample)) {
+                    const colIndex = +colIndexStr;
+                    const _tDiv = document.createElement('div');
+                    _tDiv.style.cssText = 'position:absolute;left:-9999px;top:0;display:inline-block;visibility:hidden;';
+                    const _tClone = toggle.cloneNode(true);
+                    _tClone.style.position = 'static';
+                    _tDiv.appendChild(_tClone);
+                    document.body.appendChild(_tDiv);
+                    const toggleWidth = _tDiv.offsetWidth;
+                    document.body.removeChild(_tDiv);
+
+                    const thPaddingRight = th
+                        ? (parseFloat(window.getComputedStyle(th).paddingRight) || 0)
+                        : 0;
+                    const extra = Math.max(0, toggleWidth + 16 - thPaddingRight);
+                    if (extra > 0) {
+                        columnWidths[colIndex] += extra;
+                        Lib.debug('resize', `Sub-table "${categoryName}", Column ${colIndex}: +${extra}px for collapse-toggle (toggle=${toggleWidth}px, thPaddingRight=${thPaddingRight}px)`);
+                    }
+                }
+            }
 
             // Apply widths via colgroup
             let colgroup = table.querySelector('colgroup');
@@ -15750,7 +17051,7 @@ a { color: #1565c0; }`;
      * Second click: restores original column widths.
      * Manual column resizing also resets the auto-resize state.
      */
-    function toggleAutoResizeColumns() {
+    async function toggleAutoResizeColumns() {
         const tables = document.querySelectorAll('table.tbl');
 
         if (tables.length === 0) {
@@ -15809,17 +17110,58 @@ a { color: #1565c0; }`;
             updateResizeButtonState(false);
 
             // Update status display
-            const infoDisplay = document.getElementById('mb-info-display');
-            if (infoDisplay) {
-                infoDisplay.textContent = '✓ Restored original column widths';
-                infoDisplay.style.color = 'green';
-            }
+            _setInfoSub('mb-info-display-generic', '✓ Restored original column widths',
+                'All columns reset to auto-fitted widths. Drag column edges to resize manually.');
 
             Lib.debug('resize', 'Original column widths restored');
             return;
         }
 
         // First click: Auto-resize columns
+
+        // Disable the resize button and show a fixed-centre progress overlay while
+        // the chunked measurement pass runs, preventing a "page unresponsive" dialog.
+        if (resizeBtn) resizeBtn.disabled = true;
+
+        const _resizeOverlay = document.createElement('div');
+        _resizeOverlay.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+            z-index: 9999;
+            font-size: 16px;
+            text-align: center;
+        `;
+        _resizeOverlay.innerHTML = `
+            <div id="mb-resize-heading" style="margin-bottom: 10px;">📐 Measuring column widths…</div>
+            <div id="mb-resize-progress" style="font-size: 14px;">Preparing…</div>
+        `;
+        document.body.appendChild(_resizeOverlay);
+        const _resizeHeading  = _resizeOverlay.querySelector('#mb-resize-heading');
+        const _resizeProgress = _resizeOverlay.querySelector('#mb-resize-progress');
+
+        // Offscreen measurement container — shared across all source tables.
+        // A plain <div> is used, not a <table>: in a table every cell in the same
+        // column position shares the column width (the browser sets it to the max
+        // of all cells in that column), so measuring all source columns in one
+        // table column would make every measured width identical — the max across
+        // the entire table.  By contrast, each inline-block <div> child sizes to
+        // its OWN content, giving independent per-cell widths.
+        // Table-fixup (anonymous table boxes carrying white-space:normal) is not
+        // an issue here because we clone cell *children* (not the <td>/<th>
+        // elements themselves) — no orphaned table elements are ever appended.
+        const _measureContainer = document.createElement('div');
+        _measureContainer.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;font-family:inherit;font-size:inherit;';
+        _measureContainer.classList.add('mb-measure-nowrap');
+        document.body.appendChild(_measureContainer);
+
+        try {
+
         Lib.debug('resize', `Auto-resizing ${tables.length} table(s)...`);
 
         const startTime = performance.now();
@@ -15861,7 +17203,10 @@ a { color: #1565c0; }`;
             Lib.debug('resize', 'Enabled horizontal scrolling at window level to preserve sticky headers');
         }
 
-        tables.forEach((table, tableIndex) => {
+        // Yield once so the overlay renders before the (now synchronous) batch pass.
+        await new Promise(resolve => setTimeout(resolve, 0));
+
+        for (const [tableIndex, table] of Array.from(tables).entries()) {
             // Remove any existing width constraints
             table.style.width = 'auto';
             table.style.tableLayout = 'auto';
@@ -15870,7 +17215,7 @@ a { color: #1565c0; }`;
             const firstRow = table.querySelector('tbody tr');
             if (!firstRow) {
                 Lib.warn('resize', `Table ${tableIndex} has no data rows, skipping`);
-                return;
+                continue;
             }
 
             const columnCount = firstRow.cells.length;
@@ -15891,136 +17236,111 @@ a { color: #1565c0; }`;
                 columnVisible[colIndex] = th.style.display !== 'none';
             });
 
-            // Create temporary measurement container.
-            //
-            // IMPORTANT – white-space / word-break / overflow-wrap:
-            //   We must ensure the cloned content is measured as a single,
-            //   non-wrapping line.  Three pitfalls prevented here:
-            //
-            //   1. Table-fixup: appending an orphaned <td>/<th> to a plain <div>
-            //      makes the browser wrap it in anonymous table/table-row boxes.
-            //      Those anonymous boxes carry the UA-stylesheet default of
-            //      white-space:normal, silently overriding the measureDiv's
-            //      white-space:nowrap and causing content to wrap.  Fix: clone
-            //      only the *children* of each cell directly into the measureDiv
-            //      so no <td>/<th> is ever appended (no fixup triggered).
-            //
-            //   2. .wrap-anywhere (overflow-wrap:anywhere): even outside a table
-            //      context this can break text.  Explicitly reset it on the div.
-            //
-            //   3. word-break: same — reset to normal so no mid-word breaks occur.
-            const measureDiv = document.createElement('div');
-            // Use !important on text-wrap properties so that MusicBrainz stylesheet
-            // rules (including any with !important, e.g. .wrap-anywhere) cannot
-            // override them and cause wrapping inside the measureDiv.
-            measureDiv.style.cssText = 'position:absolute;visibility:hidden;font-family:inherit;font-size:inherit;padding:4px 8px;';
-            measureDiv.style.setProperty('white-space',   'nowrap',  'important');
-            measureDiv.style.setProperty('overflow-wrap', 'normal',  'important');
-            measureDiv.style.setProperty('word-break',    'normal',  'important');
-            document.body.appendChild(measureDiv);
-
-            // Measure header widths (ONLY for visible columns)
-            headers.forEach((th, colIndex) => {
-                if (colIndex >= columnCount) return;
-
-                // Skip hidden columns
-                if (!columnVisible[colIndex]) {
-                    Lib.debug('resize', `Header ${colIndex}: Skipped (hidden)`);
-                    return;
-                }
-
-                // DO NOT remove sort icons - they need to be measured as they're always present in headers
-                // The sorting symbols (⇅, ▲, ▼) take up space and must be included in width calculation
-
-                // Copy styles for accurate measurement
-                const styles = window.getComputedStyle(th);
-                measureDiv.style.fontSize = styles.fontSize;
-                measureDiv.style.fontWeight = styles.fontWeight;
-                measureDiv.style.padding = styles.padding;
-                measureDiv.style.fontFamily = styles.fontFamily;
-
-                // Clone the th's CHILDREN directly into measureDiv (not the <th> itself).
-                // Appending an orphaned <th> triggers browser table-fixup which wraps
-                // it in anonymous table/table-row boxes that carry white-space:normal,
-                // defeating the white-space:nowrap set on measureDiv.
-                measureDiv.innerHTML = '';
-                Array.from(th.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
-                // Force every cloned descendant to not wrap.  CSS inheritance only
-                // fills values that are not explicitly set — it does NOT override
-                // explicit stylesheet rules like .wrap-anywhere{overflow-wrap:anywhere}.
-                // Setting the inline style on each element beats any stylesheet rule.
-                measureDiv.querySelectorAll('*').forEach(el => {
-                    el.style.setProperty('white-space',   'nowrap',  'important');
-                    el.style.setProperty('overflow-wrap', 'normal',  'important');
-                    el.style.setProperty('word-break',    'normal',  'important');
-                });
-
-                const width = measureDiv.offsetWidth;
-
-                columnWidths[colIndex] = Math.max(columnWidths[colIndex], width);
-
-                Lib.debug('resize', `Header ${colIndex}: "${th.textContent.trim()}" = ${width}px`);
-            });
-
-            // Measure ALL data rows — no sampling.  Sampling caused long cells at
-            // odd/skipped indices to be missed, resulting in under-sized columns.
-            const rows = table.querySelectorAll('tbody tr');
-
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-
-                // Skip hidden rows
-                if (row.style.display === 'none') continue;
-
-                Array.from(row.cells).forEach((cell, colIndex) => {
-                    if (colIndex >= columnCount) return;
-
-                    // Skip hidden columns
-                    if (!columnVisible[colIndex]) return;
-
-                    // Copy styles for accurate measurement
-                    const styles = window.getComputedStyle(cell);
-                    measureDiv.style.fontSize = styles.fontSize;
-                    measureDiv.style.fontWeight = styles.fontWeight;
-                    measureDiv.style.padding = styles.padding;
-                    measureDiv.style.fontFamily = styles.fontFamily;
-
-                    // Clone the cell's CHILDREN directly into measureDiv (not the <td> itself).
-                    measureDiv.innerHTML = '';
-                    Array.from(cell.childNodes).forEach(n => measureDiv.appendChild(n.cloneNode(true)));
-                    measureDiv.querySelectorAll('*').forEach(el => {
-                        el.style.setProperty('white-space',   'nowrap',  'important');
-                        el.style.setProperty('overflow-wrap', 'normal',  'important');
-                        el.style.setProperty('word-break',    'normal',  'important');
-                    });
-                    columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
-
-                    // Also measure each <li> individually (including hidden ones from
-                    // collapsed multi-row cells and single-li synthetic columns like
-                    // 'Primary Alias').  Block <ul>/<li> elements inside the inline
-                    // measureDiv may not expand to their full text width, so measuring
-                    // each li as a standalone inline block gives a reliable maximum.
-                    cell.querySelectorAll('ul > li').forEach(li => {
-                        if (li.classList.contains('mb-caa-art-li')) return; // handled separately
-                        const liClone = li.cloneNode(true);
-                        liClone.style.display     = 'inline-block';
-                        liClone.style.setProperty('white-space',   'nowrap',  'important');
-                        liClone.style.setProperty('overflow-wrap', 'normal',  'important');
-                        liClone.style.setProperty('word-break',    'normal',  'important');
-                        liClone.querySelectorAll('*').forEach(el => {
-                            el.style.setProperty('white-space',   'nowrap',  'important');
-                            el.style.setProperty('overflow-wrap', 'normal',  'important');
-                            el.style.setProperty('word-break',    'normal',  'important');
-                        });
-                        measureDiv.innerHTML = '';
-                        measureDiv.appendChild(liClone);
-                        columnWidths[colIndex] = Math.max(columnWidths[colIndex], measureDiv.offsetWidth);
-                    });
-                });
+            // Update overlay for this table
+            if (_resizeProgress) {
+                _resizeProgress.textContent = tables.length > 1
+                    ? `Table ${tableIndex + 1} / ${tables.length}: building batch…`
+                    : 'Building batch…';
             }
 
-            // Clean up measurement div
-            document.body.removeChild(measureDiv);
+            // ── PRE-MEASUREMENT DOM NORMALISATION ──────────────────────────
+            // Normalise span.comment nodes in the source table BEFORE the live-table
+            // nowrap pass.  This ensures the measured column width reflects the actual
+            // cell content after the post-render normalizeCommentSpans() call, so the
+            // auto-resize minimum matches what the live cell needs to render without
+            // wrapping.
+            normalizeCommentSpans(table);
+
+            // ── LIVE-TABLE COLUMN MEASUREMENT ──────────────────────────────────────
+            // Apply white-space:nowrap to the TABLE ITSELF so the browser computes
+            // each column's natural single-line content width in the real table
+            // context.  Reading th.offsetWidth gives the exact column width, including
+            // actual TD cell padding, borders, and font rendering.  The previous
+            // offscreen-div approach applied th-padding to the measurement div and then
+            // used th.style.minWidth as the floor — but because td.padding differs from
+            // th.padding in the live table, the content area available to cell content
+            // was narrower than measured, causing long cells (e.g. Release + comment)
+            // to wrap even at the auto-resize minimum width.
+            //
+            // All mutations here are synchronous (no await between add and remove),
+            // so the browser never paints the intermediate expanded-table or
+            // temporarily-revealed collapsed-table state.
+
+            // If the table is currently collapsed (display:none), temporarily show it.
+            // A hidden table returns offsetWidth = 0 for all cells, which would give
+            // every column a 20px minimum instead of the true content width.  The
+            // show/hide pair is synchronous with no await in between, so the browser
+            // never paints the intermediate visible state.
+            const _tableWasHidden = table.style.display === 'none';
+            if (_tableWasHidden) table.style.display = '';
+
+            // Clear any existing minWidths so the table lays out freely.
+            headers.forEach(th => { th.style.minWidth = ''; });
+
+            // Nowrap → browser expands each column to single-line content width.
+            table.classList.add('mb-measure-nowrap');
+
+            // Single reflow read: first offsetWidth access triggers layout;
+            // subsequent reads in this block are cache-served (no DOM mutations).
+            headers.forEach((th, colIndex) => {
+                if (colIndex >= columnCount || !columnVisible[colIndex]) return;
+                columnWidths[colIndex] = th.offsetWidth;
+            });
+
+            // Restore normal wrapping before any further DOM work.
+            table.classList.remove('mb-measure-nowrap');
+
+            // Restore collapsed state immediately after measurement.
+            if (_tableWasHidden) table.style.display = 'none';
+
+            Lib.debug('resize', `Table ${tableIndex}: ${columnCount} columns measured from live table in nowrap pass${_tableWasHidden ? ' (was hidden — temporarily shown)' : ''}`);
+
+            // ── PASS 2: collapse-toggle extra space ──────────────────────────────
+            // .mb-cell-collapse-toggle spans are position:absolute (right:4px) and are
+            // excluded from the normal flow, so the nowrap pass above never accounts for their
+            // width.  When auto-resize sizes a column to the text-content minimum the
+            // toggle widget visually overlaps the rightmost characters.
+            // Fix: measure each toggle once per column and widen columnWidths so there
+            // is a clear gap between the content right edge and the toggle left edge.
+            {
+                const _colToggleSample = {};
+                table.querySelectorAll('tbody td.mb-has-collapse-toggle').forEach(cell => {
+                    const row = cell.parentElement;
+                    if (!row || row.style.display === 'none') return;
+                    const colIndex = cell.cellIndex;
+                    if (colIndex < 0 || colIndex >= columnCount || !columnVisible[colIndex]) return;
+                    if (_colToggleSample[colIndex]) return;
+                    const toggle = cell.querySelector(':scope > .mb-cell-collapse-toggle');
+                    if (toggle) _colToggleSample[colIndex] = { cell, toggle };
+                });
+
+                for (const [colIndexStr, { cell, toggle }] of Object.entries(_colToggleSample)) {
+                    const colIndex = +colIndexStr;
+                    // Render toggle as static so its layout width is measurable
+                    const _tDiv = document.createElement('div');
+                    _tDiv.style.cssText = 'display:inline-block;';
+                    const _tClone = toggle.cloneNode(true);
+                    _tClone.style.position = 'static';
+                    _tDiv.appendChild(_tClone);
+                    _measureContainer.appendChild(_tDiv);
+                    const toggleWidth = _tDiv.offsetWidth;
+                    _measureContainer.innerHTML = '';
+
+                    // columnWidths[colIndex] = th.offsetWidth from the live-table nowrap pass,
+                    // which already includes actual TD padding.  The toggle sits at right:4px
+                    // from the TD's padding box edge, so tdPaddingRight is the correct baseline
+                    // (not thPaddingRight, which is smaller and would over-estimate extra).
+                    const tdPaddingRight = cell
+                        ? (parseFloat(window.getComputedStyle(cell).paddingRight) || 0)
+                        : 0;
+                    const extra = Math.max(0, toggleWidth + 16 - tdPaddingRight);
+                    if (extra > 0) {
+                        columnWidths[colIndex] += extra;
+                        Lib.debug('resize', `Table ${tableIndex}, Column ${colIndex}: +${extra}px for collapse-toggle (toggle=${toggleWidth}px, tdPaddingRight=${tdPaddingRight}px)`);
+                    }
+                }
+            }
+
 
             // Apply widths to table columns
             // Use colgroup for better performance
@@ -16066,9 +17386,18 @@ a { color: #1565c0; }`;
                 }
             });
 
-            // Calculate total table width (only from visible columns)
+            // Calculate total table width as the sum of the ceiled per-column
+            // min-widths.  MUST use Math.ceil here — th.style.minWidth is set to
+            // Math.ceil(w + 20) above, so the table width must equal the sum of
+            // those ceiled values exactly.  Using raw (w + 20) produces a total
+            // that is smaller than the sum of the th minWidths (by up to
+            // numColumns px due to fractional rounding), causing table-layout:auto
+            // to be unable to satisfy all minWidth constraints within the given
+            // table width and silently shrink the widest columns — exactly the
+            // Title / Release / Label columns that have the longest content —
+            // making them narrower than their content and causing line wrapping.
             const totalWidth = columnWidths.reduce((sum, w, idx) => {
-                return columnVisible[idx] ? sum + w + 20 : sum;
+                return columnVisible[idx] ? sum + Math.ceil(w + 20) : sum;
             }, 0);
             table.style.width = `${totalWidth}px`;
             table.style.minWidth = `${totalWidth}px`;
@@ -16088,9 +17417,9 @@ a { color: #1565c0; }`;
             }
 
             Lib.debug('resize', `Table ${tableIndex}: Resized ${columnCount} columns, total width: ${totalWidth}px`);
-        });
+        }
 
-        const duration = (performance.now() - startTime).toFixed(0);
+        const duration = ((performance.now() - startTime) / 1000).toFixed(2);
 
         // Mark as resized
         isAutoResized = true;
@@ -16099,18 +17428,24 @@ a { color: #1565c0; }`;
         updateResizeButtonState(true);
 
         // Update status display
-        const infoDisplay = document.getElementById('mb-info-display');
-        if (infoDisplay) {
-            let message = `✓ Auto-resized ${totalColumnsResized} visible column${totalColumnsResized !== 1 ? 's' : ''}`;
-            if (tableCount > 1) {
-                message += ` across ${tableCount} tables`;
-            }
-            message += ` in ${duration}ms (drag column edges to adjust)`;
-            infoDisplay.textContent = message;
-            infoDisplay.style.color = 'green';
-        }
+        let _resizeMsg = `✓ Auto-resized ${totalColumnsResized} visible column${totalColumnsResized !== 1 ? 's' : ''}`;
+        if (tableCount > 1) _resizeMsg += ` across ${tableCount} tables`;
+        _resizeMsg += ` in ${duration}s (drag column edges to adjust)`;
+        _setInfoSub('mb-info-display-generic', _resizeMsg,
+            `Each visible column was measured and fitted to its widest content. ` +
+            `Drag column edges to adjust manually, or click the resize button again to restore original widths.`);
 
-        Lib.debug('resize', `Auto-resize complete: ${totalColumnsResized} visible columns across ${tableCount} table(s) in ${duration}ms`);
+        Lib.debug('resize', `Auto-resize complete: ${totalColumnsResized} visible columns across ${tableCount} table(s) in ${duration}s`);
+
+        } finally {
+            if (resizeBtn) resizeBtn.disabled = false;
+            if (_resizeOverlay && _resizeOverlay.parentNode) {
+                _resizeOverlay.parentNode.removeChild(_resizeOverlay);
+            }
+            if (_measureContainer && _measureContainer.parentNode) {
+                _measureContainer.parentNode.removeChild(_measureContainer);
+            }
+        }
     }
 
     /**
@@ -16133,7 +17468,7 @@ a { color: #1565c0; }`;
         const resizeBtn = document.createElement('button');
         resizeBtn.id = 'mb-resize-btn';
         resizeBtn.innerHTML = makeButtonHTML('Resize', 'R', '↔️');
-        resizeBtn.title = `Auto-resize columns to optimal width (${getPrefixDisplay()}, then R)`;
+        resizeBtn.title = `Auto-resize columns to optimal width (${buildShortcutHint('sa_shortcut_auto_resize', 'Ctrl+R', 'R')})`;
         resizeBtn.style.cssText = uiActionBtnBaseCSS();
         resizeBtn.type = 'button';
         resizeBtn.onclick = toggleAutoResizeColumns;
@@ -16385,21 +17720,54 @@ a { color: #1565c0; }`;
         }
 
         // Keep handle flush against the sidebar on every scroll / resize.
-        // Scroll events fire very frequently, so no throttling overhead is
-        // added here — updateHandlePosition() is a simple rect read + style set.
-        window.addEventListener('scroll', () => updateHandlePosition(handle), { passive: true });
+        // Scroll events can fire at very high frequency; throttle writes to one
+        // rAF per frame so we never force more than one getBoundingClientRect()
+        // layout read between paints.
+        let _scrollRafPending = false;
+        window.addEventListener('scroll', () => {
+            if (!_scrollRafPending) {
+                _scrollRafPending = true;
+                requestAnimationFrame(() => {
+                    _scrollRafPending = false;
+                    updateHandlePosition(handle);
+                });
+            }
+        }, { passive: true });
         window.addEventListener('resize', () => updateHandlePosition(handle), { passive: true });
 
         // Observer to handle dynamic content replacement by the "Show All" logic
+        // and layout changes caused by toggleAutoResizeColumns altering
+        // sidebar.style.position.
+        //
+        // Scope: watch only the sidebar element itself (childList + attributes),
+        // NOT document.body with subtree:true.  The original broad observer fired
+        // on every DOM mutation anywhere on the page — including every cell clone
+        // appended during auto-resize measurement — and each callback scheduled a
+        // getBoundingClientRect() rAF, causing a reflow storm during table render.
+        //
+        // The rAF call is deduplicated with a pending-flag so that bursts of rapid
+        // mutations (e.g. toggling many CSS classes at once) only schedule one
+        // layout read per animation frame.
+        let _sidebarRafPending = false;
         const observer = new MutationObserver(() => {
             if (sidebar.classList.contains('sidebar-collapsed')) {
                 applyStretching(true);
             }
-            // Re-evaluate handle position whenever the DOM changes (e.g. after
-            // toggleAutoResizeColumns alters sidebar.style.position).
-            requestAnimationFrame(() => updateHandlePosition(handle));
+            if (!_sidebarRafPending) {
+                _sidebarRafPending = true;
+                requestAnimationFrame(() => {
+                    _sidebarRafPending = false;
+                    updateHandlePosition(handle);
+                });
+            }
         });
-        observer.observe(document.body, { childList: true, subtree: true });
+        // childList catches child additions/removals inside the sidebar (e.g. the
+        // script injecting elements); attributes + attributeFilter catches class and
+        // style changes on the sidebar root itself (collapse toggle, position change).
+        observer.observe(sidebar, {
+            childList: true, subtree: true,
+            attributes: true, attributeFilter: ['class', 'style']
+        });
     }
 
     // --- Initialization Logic ---
@@ -16640,6 +18008,46 @@ a { color: #1565c0; }`;
             }
         }
 
+        // ── Dynamic label from URL path segment (labelFromPath: true) ────────
+        // When a button definition carries `labelFromPath: true`, read the last
+        // URL path segment, apply the same slug-to-plural conversion used by
+        // resolveEntityFeaturesFromH2 [user-ratings-type], and append the result
+        // to the base label as "… for <Plural>" (replacing any existing suffix).
+        // Example: /user/vzell/ratings/recording → slug="recording"
+        //          → singular="Recording" → plural="Recordings"
+        //          → label="Show Ratings for Recordings"
+        if (conf.labelFromPath) {
+            const _parts  = window.location.pathname.split('/').filter(Boolean);
+            const _slug   = _parts[_parts.length - 1] || '';
+            const _singular = _slug.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+            const _plural   = _singular ? _singular + 's' : '';
+            if (_plural) {
+                const _base = conf.label.replace(/\s+for\s+.*$/, '').trim();
+                conf = Object.assign({}, conf, {
+                    label: `${_base} for ${_plural}`
+                });
+            }
+        }
+
+        // ── Dynamic label from URL entity-type path segment (labelFromPathEntity) ─
+        // When a button definition carries `labelFromPathEntity: true`, read the
+        // FIRST URL path segment (the entity type, e.g. "work", "release-group"),
+        // capitalise and de-hyphenate it, and append it to the base label as
+        // "… for <EntityType>".
+        // Example: /work/<mbid>/ratings → slug="work" → entity="Work"
+        //          → label="Show all Ratings for Work"
+        if (conf.labelFromPathEntity) {
+            const _parts  = window.location.pathname.split('/').filter(Boolean);
+            const _slug   = _parts[0] || '';
+            const _entity = _slug.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
+            if (_entity) {
+                const _base = conf.label.replace(/\s+for\s+.*$/, '').trim();
+                conf = Object.assign({}, conf, {
+                    label: `${_base} for ${_entity}`
+                });
+            }
+        }
+
         // Build button label with Ctrl-M+N superscript mnemonic (¹²³…) after the 🧮 emoji.
         // Every action button receives this prefix so the Ctrl-M shortcut system can
         // discover and activate it regardless of the button's original label format.
@@ -16712,7 +18120,7 @@ a { color: #1565c0; }`;
     saveToDiskBtn.onmouseover = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.hoverBg; };
     saveToDiskBtn.onmouseout  = () => { saveToDiskBtn.style.backgroundColor = _saveStyle.normalBg; };
     saveToDiskBtn.type = 'button';
-    saveToDiskBtn.title = `Save current table data to disk in a serialized format as Gzipped JSON (${getPrefixDisplay()}, then S)`;
+    saveToDiskBtn.title = `Save current table data to disk in a serialized format as Gzipped JSON (${buildShortcutHint('sa_shortcut_save_to_disk', 'Ctrl+S', 'S')})`;
     saveToDiskBtn.onclick = () => saveTableDataToDisk();
     saveToDiskBtn.style.display = 'none';
 
@@ -16729,7 +18137,7 @@ a { color: #1565c0; }`;
     loadFromDiskBtn.onmouseover = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.hoverBg; };
     loadFromDiskBtn.onmouseout  = () => { loadFromDiskBtn.style.backgroundColor = _loadStyle.normalBg; };
     loadFromDiskBtn.type = 'button';
-    loadFromDiskBtn.title = `Load table data from disk (serialized JSON file in Gzipped format) (${getPrefixDisplay()}, then L)`;
+    loadFromDiskBtn.title = `Load table data from disk (serialized JSON file in Gzipped format) (${buildShortcutHint('sa_shortcut_load_from_disk', 'Ctrl+L', 'L')})`;
 
     const fileInput = document.createElement('input');
     fileInput.id = 'mb-file-input';
@@ -16761,7 +18169,7 @@ a { color: #1565c0; }`;
     settingsBtn.id = 'mb-settings-btn';
     settingsBtn.textContent = '⚙️';
     settingsBtn.type = 'button';
-    settingsBtn.title = `Open userscript settings manager to configure script behavior (${getPrefixDisplay()}, then ,)`;
+    settingsBtn.title = `Open userscript settings manager to configure script behavior (${buildShortcutHint('sa_shortcut_open_settings', 'Ctrl+,', ',')})`;
     settingsBtn.onclick = () => {
         openSettingsWithConfigButtons();
     };
@@ -16771,7 +18179,7 @@ a { color: #1565c0; }`;
         const shortcutsBtn = document.createElement('button');
         shortcutsBtn.id = 'mb-shortcuts-help-btn';
         shortcutsBtn.textContent = '🎹';
-        shortcutsBtn.title = `Show keyboard shortcuts (or press ? / ${getPrefixDisplay()}, then K)`;
+        shortcutsBtn.title = `Show keyboard shortcuts (or press ? / ${buildShortcutHint('sa_shortcut_show_shortcuts_help', 'Ctrl+K', 'K')})`;
         shortcutsBtn.style.cssText = uiActionBtnBaseCSS();
         shortcutsBtn.type = 'button';
         shortcutsBtn.onclick = showShortcutsHelp;
@@ -16792,7 +18200,7 @@ a { color: #1565c0; }`;
     const appHelpBtn = document.createElement('button');
     appHelpBtn.id = 'mb-app-help-btn';
     appHelpBtn.textContent = '❓';
-    appHelpBtn.title = `Show application help and feature overview (${getPrefixDisplay()}, then H)`;
+    appHelpBtn.title = `Show application help and feature overview (${getPrefixDisplay()}, then H)`; // H has no direct Ctrl+H shortcut — prefix mode only
     appHelpBtn.style.cssText = uiHelpBtnCSS();
     appHelpBtn.type = 'button';
     appHelpBtn.onclick = showAppHelp;
@@ -16911,15 +18319,78 @@ a { color: #1565c0; }`;
     stopBtn.innerHTML = makeButtonHTML('Stop', 'o');
     stopBtn.type = 'button';
     stopBtn.style.cssText = uiStopBtnCSS();
-    stopBtn.title = 'Stop the current data fetching process from the MusicBrainz backend database';
+    stopBtn.title = `Stop the current data fetching process from the MusicBrainz backend database (${getPrefixDisplay()}, then O)`;
 
     const globalStatusDisplay = document.createElement('span');
     globalStatusDisplay.id = 'mb-global-status-display';
     globalStatusDisplay.style.cssText = 'font-size:0.95em; color:#333; font-weight:bold; vertical-align:middle;';
 
+    /**
+     * Appends a labelled segment to globalStatusDisplay, preceded by a separator span.
+     * @param {string} text     Visible text for this segment.
+     * @param {string} [sep]    Separator prepended before the segment (default ', ').
+     * @param {string} [tip]    Tooltip text (title attribute) for this segment.
+     */
+    function _sdAppend(text, sep, tip) {
+        const sepEl = document.createElement('span');
+        sepEl.textContent = sep !== undefined ? sep : ', ';
+        globalStatusDisplay.appendChild(sepEl);
+        const segEl = document.createElement('span');
+        segEl.textContent = text;
+        if (tip) segEl.title = tip;
+        globalStatusDisplay.appendChild(segEl);
+    }
+
     const infoDisplay = document.createElement('span');
     infoDisplay.id = 'mb-info-display';
-    infoDisplay.style.cssText = 'font-size:0.95em; color:#333; font-weight:bold; vertical-align:middle;';
+    infoDisplay.style.cssText = 'display:inline-flex; align-items:center; gap:6px; font-size:0.95em; font-weight:bold; vertical-align:middle;';
+
+    // Three independent sub-spans so CAA/EAA, Rels, and generic messages
+    // can coexist without overwriting each other.
+    const _infoSubCss = 'display:none; color:green;';
+
+    const infoDisplayCaa = document.createElement('span');
+    infoDisplayCaa.id = 'mb-info-display-caa';
+    infoDisplayCaa.style.cssText = _infoSubCss;
+    infoDisplay.appendChild(infoDisplayCaa);
+
+    const infoDisplayRel = document.createElement('span');
+    infoDisplayRel.id = 'mb-info-display-rel';
+    infoDisplayRel.style.cssText = _infoSubCss;
+    infoDisplay.appendChild(infoDisplayRel);
+
+    const infoDisplayGeneric = document.createElement('span');
+    infoDisplayGeneric.id = 'mb-info-display-generic';
+    infoDisplayGeneric.style.cssText = _infoSubCss;
+    infoDisplay.appendChild(infoDisplayGeneric);
+
+    /**
+     * Sets the text (and optional tooltip) of one of the three mb-info-display
+     * sub-spans, or hides it when text is empty.
+     * @param {string} id   'mb-info-display-caa' | 'mb-info-display-rel' | 'mb-info-display-generic'
+     * @param {string} text Visible text. Pass '' to hide the sub-container.
+     * @param {string} [tip] Optional tooltip (title attribute).
+     */
+    function _setInfoSub(id, text, tip) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (!text) {
+            el.textContent = '';
+            el.removeAttribute('title');
+            el.style.display = 'none';
+        } else {
+            el.textContent = text;
+            tip ? (el.title = tip) : el.removeAttribute('title');
+            el.style.display = 'inline-block';
+        }
+        // Show the divider only when at least one sub-span is visible.
+        const divider = document.getElementById('mb-status-divider');
+        if (divider) {
+            const hasContent = ['mb-info-display-caa', 'mb-info-display-rel', 'mb-info-display-generic']
+                .some(sid => { const s = document.getElementById(sid); return s && s.style.display !== 'none'; });
+            divider.style.display = hasContent ? 'inline-block' : 'none';
+        }
+    }
 
     const filterContainer = document.createElement('span');
     filterContainer.id = 'mb-filter-container';
@@ -16947,7 +18418,14 @@ a { color: #1565c0; }`;
     filterInput.placeholder = activeDefinition && activeDefinition.tableMode === 'multi'
         ? `Global Filter… works across all sub-tables`
         : `Global Filter…`;
-    filterInput.title = `Enter global filter string (focus this field with '${getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G')}', use 'Ctrl+U' for unicode character map)`;
+    filterInput.title = (() => {
+        const _directOn = typeof Lib !== 'undefined' && Lib.settings && Lib.settings.sa_enable_direct_ctrl_char_shortcuts;
+        const _gKey = getShortcutDisplay('sa_shortcut_focus_global_filter', 'Ctrl+G');
+        const _focusHint = _directOn
+            ? `focus with '${_gKey}'`
+            : `focus with '${getPrefixDisplay()} then G' (or enable Direct Ctrl+Letter Shortcuts for '${_gKey}')`;
+        return `Enter global filter string (${_focusHint}, use '${getShortcutDisplay('sa_shortcut_unicode_chars', 'Ctrl+U')}' for unicode character map)`;
+    })();
     filterInput.style.cssText = uiGlobalFilterInputCSS();
 
     // ── Clear (✕) button — absolutely positioned inside the input ───────────
@@ -18481,6 +19959,11 @@ a { color: #1565c0; }`;
     statusDisplaysContainer.id = 'mb-status-displays-container';
     statusDisplaysContainer.style.cssText = 'display:inline-flex; align-items:center; gap:8px; line-height:1; vertical-align:middle;';
     statusDisplaysContainer.appendChild(globalStatusDisplay);
+    const _statusDivider = document.createElement('span');
+    _statusDivider.id = 'mb-status-divider';
+    _statusDivider.textContent = '|';
+    _statusDivider.style.cssText = 'display:none; color:#bbb; font-weight:normal; user-select:none;';
+    statusDisplaysContainer.appendChild(_statusDivider);
     statusDisplaysContainer.appendChild(infoDisplay);
 
     // A zero-width sentinel span is injected immediately before statusDisplaysContainer in the
@@ -18548,10 +20031,37 @@ a { color: #1565c0; }`;
     let allRows = [];
     let originalAllRows = [];
     let groupedRows = [];
+    // Filter result cache: Map<string key → TR[]> for single-table,
+    // Map<string key → TR[]> per-group for multi-table.
+    // Keyed on normalised query + flags + column-filter state.
+    // Max 50 entries; oldest evicted on overflow.
+    // Cleared on fetch start, disk-load, and sort completion.
+    const _filterResultCache = new Map();
+    const _FILTER_CACHE_MAX  = 50;
+    // Monotonically-increasing counter incremented at the start of every
+    // renderFinalTable / renderGroupedTable call.  renderRowsChunked checks
+    // this after each rAF yield and aborts if its captured generation no longer
+    // matches — preventing stale chunks from a superseded render from being
+    // appended to a tbody that has already been claimed by a newer render.
+    let _renderGeneration = 0;
+    // Incremental-filter narrowing state — single-table mode only.
+    // On each full testRowMatch scan the query string, partial key (flags +
+    // column filters), and the resulting match set are saved here.  The next
+    // runFilter() call can narrow: if the new globalQuery is a plain-text
+    // extension of _incrLastGlobalQuery and all flags/colFilters are unchanged,
+    // only the previous match set is re-tested instead of all of allRows.
+    // Cleared by _invalidateFilterCache() on fetch, sort, and disk-load.
+    let _incrLastGlobalQuery = '';
+    let _incrLastPartialKey  = '';
+    let _incrMatchSet        = null;
     // Source-of-truth for per-cell expand/collapse state, keyed "rowIdx:colIdx".
     // Updated by every toggle click; read by initCollapsableColumns, testRowMatch,
     // and openUniqDrop so they all agree even after renderFinalTable+init resets the DOM.
     const expandedCells = new Map();
+    // Sparse text cache for source rows, keyed by TR element.
+    // Populated lazily by _cachedFullText / _cachedColText on matchOnly=true passes.
+    // Entries are GC'd automatically when allRows / groupedRows are replaced.
+    const _rowTextCache = new WeakMap();
     // Global row-index counter — incremented for EVERY row pushed to allRows or
     // groupedRows (both live-fetch and disk-load), regardless of tableMode.
     // Stored as data-mb-row-idx on the TR element so cloneNode(true) propagates
@@ -18949,8 +20459,8 @@ a { color: #1565c0; }`;
 
             Lib.debug('cache', `Save dialog: download triggered for "${chosenFilename}"`);
 
-            infoDisplay.textContent = `✓ Serialized ${totalRows.toLocaleString()} rows to ${chosenFilename}`;
-            infoDisplay.style.color = 'green';
+            _setInfoSub('mb-info-display-generic', `✓ Serialized ${totalRows.toLocaleString()} rows to ${chosenFilename}`,
+                `Use '📂 Load from Disk' to restore this data without re-fetching from the MusicBrainz server.`);
 
             statusDiv.innerHTML     = `\u2705 Download initiated for <em>"${chosenFilename}"</em>. Monitor your browser for the file.`;
             statusDiv.style.color   = '#2e7d32';
@@ -22299,7 +23809,14 @@ a { color: #1565c0; }`;
             const input = document.createElement('input');
             input.type = 'text';
             input.placeholder = '…';
-            input.title = `Enter column filter string (the first column in a table can be focused by '${getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C')}', use 'Ctrl+U' for unicode character map`;
+            input.title = (() => {
+                const _directOn = typeof Lib !== 'undefined' && Lib.settings && Lib.settings.sa_enable_direct_ctrl_char_shortcuts;
+                const _cKey = getShortcutDisplay('sa_shortcut_focus_column_filter', 'Ctrl+C');
+                const _focusHint = _directOn
+                    ? `first column in table focusable with '${_cKey}'`
+                    : `first column in table focusable with '${getPrefixDisplay()} then C' (or enable Direct Ctrl+Letter Shortcuts for '${_cKey}')`;
+                return `Enter column filter string (${_focusHint}, use '${getShortcutDisplay('sa_shortcut_unicode_chars', 'Ctrl+U')}' for unicode character map)`;
+            })();
             input.className = 'mb-col-filter-input';
             input.dataset.colIdx = idx;
 
@@ -22334,7 +23851,7 @@ a { color: #1565c0; }`;
             const debouncedColumnFilter = debounce(() => {
                 Lib.debug('filter', `Column filter updated on column ${idx}: "${stripFilterPrefix(input.value)}"`);
                 runFilter();
-            }, Lib.settings.sa_filter_debounce_delay || 300);
+            }, _adaptiveFilterDelay);
 
             input.addEventListener('input', (e) => {
                 e.stopPropagation();
@@ -22580,9 +24097,36 @@ a { color: #1565c0; }`;
         }
     }
 
+    /** Returns (creating if absent) the sparse cache entry for a source row. */
+    function _getOrCreateRowCache(row) {
+        let c = _rowTextCache.get(row);
+        if (!c) { c = { full: null, cols: [] }; _rowTextCache.set(row, c); }
+        return c;
+    }
+
+    /** Cached getCleanVisibleText for a source row. */
+    function _cachedFullText(row) {
+        const c = _getOrCreateRowCache(row);
+        if (c.full === null) c.full = getCleanVisibleText(row);
+        return c.full;
+    }
+
     /**
-     * Tests whether a single (already-cloned) row passes the current global + column filters.
-     * Resets previous highlight markup, applies fresh highlights on a hit, and returns the result.
+     * Cached getCleanColumnText(row.cells[idx]) for a source row.
+     * Only valid when called on the same TR element that lives in allRows / groupedRows.
+     */
+    function _cachedColText(row, idx) {
+        const c = _getOrCreateRowCache(row);
+        if (c.cols[idx] === undefined) c.cols[idx] = getCleanColumnText(row.cells[idx]);
+        return c.cols[idx];
+    }
+
+    /**
+     * Tests whether a row passes the current global + column filters.
+     * When `matchOnly` is false (default): resets previous highlight markup and applies
+     * fresh highlights on a hit — intended for cloned rows going into the DOM.
+     * When `matchOnly` is true: pure boolean test with no DOM mutation — safe to call
+     * on source rows before cloning so that cloneNode() is skipped for non-matching rows.
      *
      * @param {HTMLTableRowElement} row
      * @param {{
@@ -22594,18 +24138,23 @@ a { color: #1565c0; }`;
      *   isExclude:      boolean,
      *   colFilters:     { val: string, idx: number }[]
      * }} ctx
+     * @param {boolean} [matchOnly=false] - When true, skip all DOM mutations (highlight
+     *   reset and highlight application). Use on source rows; call again on the clone with
+     *   matchOnly=false to apply highlights after cloning.
      * @returns {boolean}
      */
-    function testRowMatch(row, ctx) {
+    function testRowMatch(row, ctx, matchOnly = false) {
         const { globalQuery, globalQueryRaw, globalRegex,
                 isCaseSensitive, isRegExp, isExclude, colFilters } = ctx;
 
-        // Reset previous highlights (critical for correct re-filtering)
-        row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
-            .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
-        // Reset relationship icon match-boxes from any previous filter pass.
-        row.querySelectorAll('.mb-rel-icon-match')
-            .forEach(a => a.classList.remove('mb-rel-icon-match'));
+        if (!matchOnly) {
+            // Reset previous highlights (critical for correct re-filtering)
+            row.querySelectorAll('.mb-global-filter-highlight, .mb-column-filter-highlight')
+                .forEach(n => n.replaceWith(document.createTextNode(n.textContent)));
+            // Reset relationship icon match-boxes from any previous filter pass.
+            row.querySelectorAll('.mb-rel-icon-match')
+                .forEach(a => a.classList.remove('mb-rel-icon-match'));
+        }
 
         // --- Global filter ---
         let globalHit = !globalQuery;
@@ -22613,11 +24162,11 @@ a { color: #1565c0; }`;
             let matchFound = false;
             if (isRegExp && globalRegex) {
                 // Test each cell individually so anchored patterns like ^Thunder Road work correctly
-                matchFound = Array.from(row.cells).some(cell =>
-                    globalRegex.test(getCleanColumnText(cell))
+                matchFound = Array.from(row.cells).some((cell, i) =>
+                    globalRegex.test(matchOnly ? _cachedColText(row, i) : getCleanColumnText(cell))
                 );
             } else {
-                const text = getCleanVisibleText(row);
+                const text = matchOnly ? _cachedFullText(row) : getCleanVisibleText(row);
                 matchFound = isCaseSensitive
                     ? text.includes(globalQuery)
                     : text.toLowerCase().includes(globalQuery);
@@ -22630,9 +24179,9 @@ a { color: #1565c0; }`;
                 // .mb-rel-cell via getCleanColumnText, mirroring the same targeted
                 // rel-cell fallback already applied to the regexp path.
                 if (!matchFound) {
-                    matchFound = Array.from(row.cells).some(cell => {
+                    matchFound = Array.from(row.cells).some((cell, i) => {
                         if (!cell.classList.contains('mb-rel-cell')) return false;
-                        const relText = getCleanColumnText(cell);
+                        const relText = matchOnly ? _cachedColText(row, i) : getCleanColumnText(cell);
                         return isCaseSensitive
                             ? relText.includes(globalQuery)
                             : relText.toLowerCase().includes(globalQuery);
@@ -22659,7 +24208,8 @@ a { color: #1565c0; }`;
 
         // --- Column filters ---
         let colHit = true;
-        for (const f of colFilters) {
+        // Skip per-column checks when the global filter already rejected this row.
+        for (const f of (globalHit ? colFilters : [])) {
             // ── Multi-row state filter: match by expandedCells state, not by DOM toggle ──
             // Using expandedCells (keyed "rowIdx:colIdx") instead of toggle.textContent
             // ensures correctness across renderFinalTable+initCollapsableColumns cycles:
@@ -22673,7 +24223,7 @@ a { color: #1565c0; }`;
                 // lis.length === 0 is always true regardless of whether the cell is
                 // empty or contains plain text — without the text check every row in a
                 // non-collapsable column would be matched by the 'empty' filter mode.
-                const hasEmpty      = lis.length === 0 && !getCleanColumnText(cell);
+                const hasEmpty      = lis.length === 0 && !(matchOnly ? _cachedColText(row, f.idx) : getCleanColumnText(cell));
                 const hasMultiRow   = lis.length >= 2;
                 const hasSingleRow  = lis.length === 1;
                 const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
@@ -22702,67 +24252,67 @@ a { color: #1565c0; }`;
             const _fIsCase    = f.isCaseSensitive !== undefined ? f.isCaseSensitive : isCaseSensitive;
             const _fIsExclude = f.isExclude       !== undefined ? f.isExclude       : isExclude;
 
-            const cellText = getCleanColumnText(row.cells[f.idx]);
+            const cellText = matchOnly ? _cachedColText(row, f.idx) : getCleanColumnText(row.cells[f.idx]);
             let match = false;
 
-            // ── Inline-art sort-key bypass ──────────────────────────────────────
-            // .mb-inline-art-sort-key spans are stripped from getCleanColumnText
-            // (they are now in _CLEAN_STRIP_SEL) to prevent sentinel text like
-            // "caa-inline-yes" from leaking into general filter matching.
-            // The applyUniqVal('caa-inline-yes') / applyUniqVal('caa-inline-no')
-            // column-filter path must still work, so we check the span directly
-            // and OR the result into `match` before falling through to the normal
-            // text comparison.  This is intentionally skipped for regexp filters
-            // (which would be odd for these sentinel values) and for exclude mode
-            // (the negation is applied later via _fIsExclude).
-            if (!_fIsRegExp) {
-                const cell = row.cells[f.idx];
-                const sk = cell ? cell.querySelector('.mb-inline-art-sort-key') : null;
-                if (sk) {
-                    const skVal = sk.textContent.trim();
-                    match = _fIsCase
-                        ? skVal === f.val
-                        : skVal.toLowerCase() === f.val.toLowerCase();
-                }
-            }
-
-            // ── CAA/EAA sort-key bypass ─────────────────────────────────────────
-            // .mb-caa-sort-key (and .mb-eaa-sort-key) hold 'yes' or 'no' — the
-            // artwork-presence sentinel stamped by _artBuildMultiRowArtCell /
-            // initRelGroupings.  These spans are now in _CLEAN_STRIP_SEL so
-            // getCleanColumnText never sees them, preventing filter strings like 'no'
-            // from matching 'not readable', 'known', etc. in the visible cell text.
-            // applyUniqVal('yes') / applyUniqVal('no') (via makeArtItem in the
-            // CAA column unique-values dropdown) must still filter correctly, so we
-            // check the span directly with an exact-match test — same pattern as
-            // the mb-inline-art-sort-key bypass above.
-            if (!_fIsRegExp && !match) {
-                const _cell = row.cells[f.idx];
-                const _csk  = _cell
-                    ? (_cell.querySelector('.mb-caa-sort-key') ||
-                       _cell.querySelector('.mb-eaa-sort-key'))
-                    : null;
-                if (_csk) {
-                    const _skVal = _csk.textContent.trim();
-                    match = _fIsCase
-                        ? _skVal === f.val
-                        : _skVal.toLowerCase() === f.val.toLowerCase();
-                }
-            }
-
-            if (!match) {
-                if (_fIsRegExp) {
-                    try {
-                        match = new RegExp(f.val, _fIsCase ? '' : 'i').test(cellText);
-                    } catch (e) {
-                        match = _fIsCase
-                            ? cellText.includes(f.val)
-                            : cellText.toLowerCase().includes(f.val);
-                    }
-                } else {
+            if (_fIsRegExp) {
+                // Regexp mode — always run the full test; a plain includes pre-check
+                // is not reliable for patterns containing anchors or special chars.
+                try {
+                    match = new RegExp(f.val, _fIsCase ? '' : 'i').test(cellText);
+                } catch (e) {
                     match = _fIsCase
                         ? cellText.includes(f.val)
                         : cellText.toLowerCase().includes(f.val);
+                }
+            } else {
+                // Phase 1 (cheap): plain-text substring check on the cached column text.
+                // For the vast majority of filter values this is the only check needed.
+                match = _fIsCase
+                    ? cellText.includes(f.val)
+                    : cellText.toLowerCase().includes(f.val);
+
+                if (!match) {
+                    // Phase 2 (expensive): querySelector for sentinel values that are
+                    // intentionally stripped from cellText by _CLEAN_STRIP_SEL and
+                    // therefore invisible to the plain-text check above.
+                    const cell = row.cells[f.idx];
+                    // ── Inline-art sort-key bypass ──────────────────────────────────
+                    // .mb-inline-art-sort-key spans are stripped from getCleanColumnText
+                    // (they are now in _CLEAN_STRIP_SEL) to prevent sentinel text like
+                    // "caa-inline-yes" from leaking into general filter matching.
+                    // The applyUniqVal('caa-inline-yes') / applyUniqVal('caa-inline-no')
+                    // column-filter path must still work, so we check the span directly.
+                    // This is intentionally skipped for regexp filters (which would be
+                    // odd for these sentinel values) and for exclude mode (the negation
+                    // is applied later via _fIsExclude).
+                    const sk = cell ? cell.querySelector('.mb-inline-art-sort-key') : null;
+                    if (sk) {
+                        const skVal = sk.textContent.trim();
+                        match = _fIsCase
+                            ? skVal === f.val
+                            : skVal.toLowerCase() === f.val.toLowerCase();
+                    }
+                    // ── CAA/EAA sort-key bypass ─────────────────────────────────────
+                    // .mb-caa-sort-key (and .mb-eaa-sort-key) hold 'yes' or 'no' — the
+                    // artwork-presence sentinel stamped by _artBuildMultiRowArtCell /
+                    // initRelGroupings.  These spans are now in _CLEAN_STRIP_SEL so
+                    // getCleanColumnText never sees them, preventing filter strings like
+                    // 'no' from matching 'not readable', 'known', etc.
+                    // applyUniqVal('yes') / applyUniqVal('no') must still filter
+                    // correctly, so we check the span with an exact-match test.
+                    if (!match) {
+                        const _csk = cell
+                            ? (cell.querySelector('.mb-caa-sort-key') ||
+                               cell.querySelector('.mb-eaa-sort-key'))
+                            : null;
+                        if (_csk) {
+                            const _skVal = _csk.textContent.trim();
+                            match = _fIsCase
+                                ? _skVal === f.val
+                                : _skVal.toLowerCase() === f.val.toLowerCase();
+                        }
+                    }
                 }
             }
             // Respect per-filter exclude flag (may differ from global isExclude on
@@ -22771,7 +24321,7 @@ a { color: #1565c0; }`;
         }
 
         const finalHit = globalHit && colHit;
-        if (finalHit) {
+        if (finalHit && !matchOnly) {
             // Highlighting on excluded matches would be misleading, so skip it
             if (globalQuery && !isExclude) highlightText(row, globalQueryRaw, isCaseSensitive, -1, isRegExp);
             // Multi-row state filters operate on DOM structure, not on text → skip highlight.
@@ -22825,6 +24375,71 @@ a { color: #1565c0; }`;
      * Executes the filtering logic across all table rows based on global and column-specific filters
      * Handles both single-table and multi-table page modes, applies highlighting, and updates row visibility
      */
+
+    /** Clears the filter result cache and incremental-filter state. Call on fetch start, disk-load, and sort. */
+    function _invalidateFilterCache() {
+        _filterResultCache.clear();
+        _incrLastGlobalQuery = '';
+        _incrLastPartialKey  = '';
+        _incrMatchSet        = null;
+    }
+
+    /**
+     * Builds a stable string key from the current filter context for use in
+     * _filterResultCache.  Includes global query, flags, and per-column filter
+     * specs.  Multi-table callers prepend a group-specific prefix.
+     * @param {object} matchCtx
+     * @param {string} prefix - 's' for single-table; 'm:<dvState>:<groupIdx>' for multi.
+     * @returns {string}
+     */
+    function _buildFilterKey(matchCtx, prefix) {
+        return prefix + '|' + JSON.stringify({
+            g: matchCtx.globalQuery,
+            c: matchCtx.isCaseSensitive,
+            r: matchCtx.isRegExp,
+            x: matchCtx.isExclude,
+            f: matchCtx.colFilters.map(f => f.isMultiRowFilter
+                ? { i: f.idx, m: f.multiRowMode }
+                : { i: f.idx, v: f.val,
+                    c: f.isCaseSensitive, r: f.isRegExp, x: f.isExclude })
+        });
+    }
+
+    /**
+     * Stores rows in _filterResultCache, evicting the oldest entry when the
+     * cache has reached _FILTER_CACHE_MAX entries.
+     * @param {string}  key
+     * @param {TR[]} rows
+     */
+    function _filterCacheSet(key, rows) {
+        if (_filterResultCache.size >= _FILTER_CACHE_MAX) {
+            _filterResultCache.delete(_filterResultCache.keys().next().value);
+        }
+        _filterResultCache.set(key, rows);
+    }
+
+    /**
+     * Builds a partial filter key covering everything EXCEPT globalQuery.
+     * Used by the incremental-filter optimisation to detect whether flags or
+     * column filters changed between two consecutive runFilter() calls.
+     * If the partial key matches the previous scan's key AND the new globalQuery
+     * is a plain-text extension of the previous one, we narrow the candidate set
+     * to the previous match set instead of re-scanning all of allRows.
+     * @param {object} matchCtx
+     * @returns {string}
+     */
+    function _buildIncrPartialKey(matchCtx) {
+        return JSON.stringify({
+            c: matchCtx.isCaseSensitive,
+            r: matchCtx.isRegExp,
+            x: matchCtx.isExclude,
+            f: matchCtx.colFilters.map(f => f.isMultiRowFilter
+                ? { i: f.idx, m: f.multiRowMode }
+                : { i: f.idx, v: f.val,
+                    c: f.isCaseSensitive, r: f.isRegExp, x: f.isExclude })
+        });
+    }
+
     function runFilter() {
         const filterStartTime = performance.now();
 
@@ -23004,7 +24619,15 @@ a { color: #1565c0; }`;
                     _sourceRows = _combined;
                 }
 
-                const matches = _sourceRows.map(r => {
+                const _mk = _buildFilterKey(matchCtx, `m:${discographyViewState}:${groupIdx}`);
+                let _matchingSrc = _filterResultCache.get(_mk);
+                if (_matchingSrc) {
+                    Lib.debug('filter', `runFilter: cache hit group ${groupIdx}`);
+                } else {
+                    _matchingSrc = _sourceRows.filter(r => testRowMatch(r, matchCtx, true));
+                    _filterCacheSet(_mk, _matchingSrc);
+                }
+                const matches = _matchingSrc.map(r => {
                     const clone = r.cloneNode(true);
                     // Strip CAA/EAA enrichment markers from every cell in the clone.
                     //
@@ -23032,8 +24655,9 @@ a { color: #1565c0; }`;
                     // [data-caa-expand-btn] span; without this call any cells the user
                     // had expanded would snap back to collapsed on every filter keystroke.
                     _restoreArtExpandState(clone);
+                    testRowMatch(clone, matchCtx);
                     return clone;
-                }).filter(r => testRowMatch(r, matchCtx));
+                });
 
                 // Always push to filteredArray, even if matches.length is 0, to maintain the table count and restoration capability.
                 // Spread the full group object so that colName, entityFeatures, key, originalRows etc.
@@ -23109,6 +24733,11 @@ a { color: #1565c0; }`;
             // where runFilter fires BEFORE initRelationshipsColumn — in that case source
             // rows have no picard_td yet and inserting it here would create wrong order.
             initPicardTaggerColumn(/* rewireOnly */ true);
+            // Re-populate any rel cells that were not yet done when runFilter rebuilt
+            // the DOM (race: Phase-2 fetch queue was mid-flight when the user typed).
+            if (document.querySelector('td.mb-rel-cell:not([data-rel-done="1"])')) {
+                initRelationshipsColumn();
+            }
         } else {
             const totalAbsolute = allRows.length;
             // Pass isExclude so that f.isExclude in every filter object reflects the
@@ -23127,7 +24756,38 @@ a { color: #1565c0; }`;
             // here; _singleColRxErrors is declared in the outer scope so the status-update
             // block at the bottom of runFilter() can always reach it.
             _singleColRxErrors = matchCtx.colFilters._rxErrors || [];
-            const filteredRows = allRows.map(row => {
+            const _sk = _buildFilterKey(matchCtx, 's');
+            let _matchingSrc = _filterResultCache.get(_sk);
+            if (_matchingSrc) {
+                Lib.debug('filter', 'runFilter: cache hit single-table');
+            } else {
+                // Incremental narrowing: if the new globalQuery is a plain-text
+                // extension of the previous scan's query, and no flags or column
+                // filters changed, narrow the candidate set to the previous match
+                // set instead of re-scanning all of allRows.
+                // Unsafe for regex (semantics change non-monotonically) and for
+                // exclude mode (extending a NOT-query widens, not narrows, results).
+                const _partialKey = _buildIncrPartialKey(matchCtx);
+                const _canNarrow  =
+                    _incrMatchSet        !== null &&
+                    !isRegExp && !isExclude &&
+                    _partialKey          === _incrLastPartialKey &&
+                    globalQuery.length   >  _incrLastGlobalQuery.length &&
+                    globalQuery.startsWith(_incrLastGlobalQuery);
+                const _candidateRows = _canNarrow ? _incrMatchSet : allRows;
+                Lib.debug('filter',
+                    _canNarrow
+                        ? `runFilter: incremental scan (${_candidateRows.length} candidates of ${allRows.length})`
+                        : `runFilter: full scan (${allRows.length} rows)`
+                );
+                _matchingSrc = _candidateRows.filter(row => testRowMatch(row, matchCtx, true));
+                _filterCacheSet(_sk, _matchingSrc);
+                // Update incremental state so the next keystroke can narrow further.
+                _incrLastGlobalQuery = globalQuery;
+                _incrLastPartialKey  = _partialKey;
+                _incrMatchSet        = _matchingSrc;
+            }
+            const filteredRows = _matchingSrc.map(row => {
                 const clone = row.cloneNode(true);
                 // Strip CAA/EAA enrichment markers from every cell in the clone.
                 //
@@ -23151,8 +24811,9 @@ a { color: #1565c0; }`;
                 // state, so expandedCells is the only way to replay the user's
                 // expand/collapse choices onto clones after every filter re-render.
                 _restoreArtExpandState(clone);
+                testRowMatch(clone, matchCtx);
                 return clone;
-            }).filter(row => testRowMatch(row, matchCtx));
+            });
             singleTableFilteredCount = filteredRows.length; // capture before async render
             // Finalize colon-aligned columns on the filtered subset before re-render
             if (Lib.settings.sa_enable_numeric_alignment !== false) {
@@ -23185,9 +24846,6 @@ a { color: #1565c0; }`;
             // a fresh live button into each qualifying <td>.
             initExpandRGsFeature();
 
-            // Re-apply barcode highlights after every filter / sort re-render.
-            initBarcodeHighlight();
-
             // CDtoc: re-inject tracklist sub-rows and re-wire toggle links after
             // every re-render (cloneNode(true) strips event listeners).
             _cdtocInitTracklistToggles();
@@ -23199,14 +24857,18 @@ a { color: #1565c0; }`;
             // before rel_td, corrupting column order.  After the initial render,
             // allRows source rows already carry picard_td so rewire-only is sufficient.
             initPicardTaggerColumn(/* rewireOnly */ true);
-            // initCaaPics() MUST run before initEaaPics() and initCaaInlinePics() /
-            // initEaaInlinePics() — it creates _caaQueue used by all three.
-            initCaaPics();
-            initEaaPics();
-            // Inline CAA/EAA thumbnails must run after ERG (▶ button already present) and
-            // after initCaaPics() (so _caaQueue is initialised).
+            // Inline thumbnails first — _artInitQueue creates _caaQueue so they
+            // land ahead of small icons and the big strip in the fetch queue.
+            _artInitQueue();
             initCaaInlinePics();
             initEaaInlinePics();
+            initCaaPics();
+            initEaaPics();
+            // Re-populate any rel cells that were not yet done when runFilter rebuilt
+            // the DOM (race: Phase-2 fetch queue was mid-flight when the user typed).
+            if (document.querySelector('td.mb-rel-cell:not([data-rel-done="1"])')) {
+                initRelationshipsColumn();
+            }
         }
         // Maintain scroll position after filtering or sorting.
         // __scrollX preserves any horizontal offset the user reached via the
@@ -23382,9 +25044,17 @@ a { color: #1565c0; }`;
         // Reapply zebra striping after every filter/sort: row order may have changed
         // and hidden rows shift the visible index sequence.
         document.querySelectorAll('table.tbl').forEach(applyZebraStriping);
+        // Normalise span.comment DOM: move orphan ")" text nodes after </bdi> into
+        // the <bdi> to prevent bidi-boundary soft-wrap at the </bdi>→")" boundary.
+        document.querySelectorAll('table.tbl').forEach(normalizeCommentSpans);
         if (Lib.settings.sa_enable_sticky_columns !== false) {
             document.querySelectorAll('table.tbl').forEach(applyStickyColumn);
         }
+        // Re-apply barcode highlights AFTER applyStickyColumn — applyStickyColumn
+        // calls td.style.background = '' on every non-sticky cell, which clears any
+        // inline background-color set by barcodeProcessTable.  Running barcode
+        // highlighting last ensures its backgroundColor survives.
+        initBarcodeHighlight();
 
         Lib.debug('filter', `Filter completed in ${filterDuration}ms`);
 
@@ -23403,8 +25073,28 @@ a { color: #1565c0; }`;
         stopBtn.textContent = 'Stopping...';
     });
 
-    // Create debounced version of runFilter based on user configuration
-    const debouncedRunFilter = debounce(runFilter, Lib.settings.sa_filter_debounce_delay || 300);
+    /**
+     * Returns the debounce delay to use for the current filter pass.
+     * The user-configured `sa_filter_debounce_delay` is the floor (minimum).
+     * For large row sets an additional delay of 0.05 ms/row (above 500 rows, capped at
+     * 1000 ms) is added so that rapid keystrokes on huge tables do not queue many
+     * expensive filter runs.  A user setting of 0 means "no minimum" — the adaptive
+     * component still scales for large tables.
+     * @returns {number} Debounce delay in milliseconds.
+     */
+    function _adaptiveFilterDelay() {
+        const floor = Lib.settings.sa_filter_debounce_delay != null
+            ? Math.max(0, Lib.settings.sa_filter_debounce_delay)
+            : 300;
+        const n = (activeDefinition && activeDefinition.tableMode === 'multi')
+            ? groupedRows.reduce((s, g) => s + g.rows.length, 0)
+            : allRows.length;
+        const adaptive = n > 500 ? Math.min(1000, (n - 500) * 0.05) : 0;
+        return Math.max(floor, adaptive);
+    }
+
+    // Create debounced version of runFilter — delay adapts to current row count.
+    const debouncedRunFilter = debounce(runFilter, _adaptiveFilterDelay);
 
     // ── Global filter: the focus prefix is ALWAYS present in the value ───────────────────
     // Unlike column filters (where the prefix appears only while focused), the global filter
@@ -23515,7 +25205,8 @@ a { color: #1565c0; }`;
                     case 'Event-Venue-Detail': return `Derived from '${src}': venue sub-detail (e.g. hall or stage name), parsed from the Comment field.`;
                     case 'Event-City':         return `Derived from '${src}': the city name, parsed from the location segment of the Comment field.`;
                     case 'Event-State':        return `Derived from '${src}': the state or province (used for USA / Canada / UK), parsed from the Comment field.`;
-                    case 'Event-Country':      return `Derived from '${src}': the country name, parsed from the location segment of the Comment field.`;
+                    case 'Event-Country':         return `Derived from '${src}': the country name, parsed from the location segment of the Comment field.`;
+                    case 'Event-Additional-Info': return `Derived from '${src}': extra text following a ';' in the last location segment (e.g. 'USA; intro' → 'intro'), parsed from the Comment field.`;
                 }
                 break;
             case 'extractMainColumn':
@@ -23659,6 +25350,9 @@ a { color: #1565c0; }`;
 
             // Setting-gated columns (Rating)
             for (const [headerPrefix, settingKey] of Object.entries(removalMapSetting)) {
+                // user-ratings / user-ratings-type create their own "Rating" column —
+                // never remove it as the native MB Rating column.
+                if (pageType === 'user-ratings' || pageType === 'user-ratings-type') break;
                 if (txt.startsWith(headerPrefix)) {
                     const isEnabled = Lib.settings[settingKey];
 
@@ -24160,6 +25854,32 @@ a { color: #1565c0; }`;
             }
             Lib.debug('init',
                 `resolveEntityFeaturesFromH2 [artist-credit-entity]: ` +
+                `no match for "${_plural}" in entityFeatures — returning {}`);
+            return {};
+        }
+
+        // ── user-ratings-type pageType: resolve from URL path segment ────────
+        // URL: /user/<username>/ratings/<entity> — last segment is singular entity
+        // (e.g. "recording", "event", "release-group").  Same slug-to-plural
+        // conversion as artist-credit-entity; no "series" special case needed
+        // (MusicBrainz does not have a series ratings page).
+        if (def.type === 'user-ratings-type') {
+            const _parts      = window.location.pathname.split('/').filter(Boolean);
+            const _entitySlug = _parts[_parts.length - 1] || '';
+            const _singular   = _entitySlug
+                .replace(/-/g, ' ')
+                .replace(/^\w/, c => c.toUpperCase());
+            const _plural     = _singular + 's';
+            Lib.debug('init',
+                `resolveEntityFeaturesFromH2 [user-ratings-type]: ` +
+                `entitySlug="${_entitySlug}" → singular="${_singular}" → key="${_plural}"`);
+            if (_plural && def.entityFeatures[_plural]) {
+                Lib.debug('init',
+                    `resolveEntityFeaturesFromH2 [user-ratings-type]: matched key "${_plural}"`);
+                return def.entityFeatures[_plural];
+            }
+            Lib.debug('init',
+                `resolveEntityFeaturesFromH2 [user-ratings-type]: ` +
                 `no match for "${_plural}" in entityFeatures — returning {}`);
             return {};
         }
@@ -24715,12 +26435,13 @@ a { color: #1565c0; }`;
                 activeBtn.style.backgroundColor = '';
                 activeBtn.style.color = '';
                 activeBtn.disabled = false;
-                infoDisplay.textContent = '';
+                _setInfoSub('mb-info-display-generic', '');
                 return;
             }
         }
 
         stopRequested = false;
+        _invalidateFilterCache();
         allRows = [];
         originalAllRows = [];
         groupedRows = [];
@@ -24747,6 +26468,7 @@ a { color: #1565c0; }`;
 
         stopBtn.style.display = 'inline-block';
         stopBtn.disabled = false;
+        const _prevCtrlMO = ctrlMFunctionMap['o']; // preserve permanent 'o' entry (Toggle Multi-Row Collapse)
         ctrlMFunctionMap['o'] = { fn: () => stopBtn.click(), description: 'Stop fetching' };
         globalStatusDisplay.textContent = 'Loading…';
         globalStatusDisplay.style.color = '#999';
@@ -24955,7 +26677,11 @@ a { color: #1565c0; }`;
                         // hidden externally by another userscript (display:none on <th>)
                         // even when sa_remove_rating is disabled, to keep index tracking
                         // aligned with what cleanupHeaders will remove from the thead.
+                        // Exception: user-ratings / user-ratings-type create their own
+                        // "Rating" column that must never be treated as the native MB
+                        // "Rating" column removal candidate.
                         for (const [headerPrefix, settingKey] of Object.entries(removalMap)) {
+                            if (pageType === 'user-ratings' || pageType === 'user-ratings-type') break;
                             if (txt.startsWith(headerPrefix)) {
                                 const _settingOn = Lib.settings[settingKey];
                                 const _extHidden =
@@ -25426,7 +27152,19 @@ a { color: #1565c0; }`;
                             // so renderGroupedTable can drive per-group cleanupHeaders correctly.
                             const _lastGroup = groupedRows[groupedRows.length - 1];
                             if (activeDefinition.entityFeatures) {
-                                _lastGroup.entityFeatures = resolveEntityFeaturesFromH3(category, activeDefinition);
+                                // user-ratings: category is "Artist ratings" but entityFeatures
+                                // keys are plural entity types ("Artists"). Use the key stored by
+                                // Structure H (mbEntityFeaturesKey = _entityType + 's').
+                                const _efKey = (pageType === 'user-ratings' && table.dataset.mbEntityFeaturesKey)
+                                    ? table.dataset.mbEntityFeaturesKey
+                                    : category;
+                                _lastGroup.entityFeatures = resolveEntityFeaturesFromH3(_efKey, activeDefinition);
+                            }
+                            // For user-ratings, store per-group column headers (from
+                            // applyListToTable Structure H) so renderGroupedTable can
+                            // build the correct per-group thead width (2-col vs 3-col).
+                            if (pageType === 'user-ratings' && table.dataset.mbColHeaders) {
+                                try { _lastGroup.colHeaders = JSON.parse(table.dataset.mbColHeaders); } catch (_e) {}
                             }
                         }
                         const currentGroup = groupedRows[groupedRows.length - 1];
@@ -25437,7 +27175,7 @@ a { color: #1565c0; }`;
                         // activeColumnExtractors must be re-resolved against the CURRENT
                         // table's headers — otherwise previous tables' resolved colIdx
                         // values linger and cause multiple extractors to fire on every row.
-                        if (pageType === 'tag-value' || pageType === 'user-tag-value') {
+                        if (pageType === 'tag-value' || pageType === 'user-tag-value' || pageType === 'user-ratings') {
                             // If this group has entity-specific features (from entityFeatures map),
                             // rebuild the active extractors and integer columns from that feature set,
                             // merged with the base features (listToTable, removeSelector, etc.).
@@ -26119,7 +27857,7 @@ a { color: #1565c0; }`;
                     activeBtn.classList.remove('mb-show-all-btn-loading');
                     allActionButtons.forEach(b => b.disabled = false);
                     stopBtn.style.display = 'none';
-                    delete ctrlMFunctionMap['o'];
+                    if (_prevCtrlMO) ctrlMFunctionMap['o'] = _prevCtrlMO; else delete ctrlMFunctionMap['o'];
 
                     const fetchSeconds = (totalFetchingTime / 1000).toFixed(2);
                     const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
@@ -26136,7 +27874,7 @@ a { color: #1565c0; }`;
                     activeBtn.classList.remove('mb-show-all-btn-loading');
                     allActionButtons.forEach(b => b.disabled = false);
                     stopBtn.style.display = 'none';
-                    delete ctrlMFunctionMap['o'];
+                    if (_prevCtrlMO) ctrlMFunctionMap['o'] = _prevCtrlMO; else delete ctrlMFunctionMap['o'];
                     globalStatusDisplay.textContent = 'Operation cancelled';
                     fetchProgressWrap.style.display = 'none';
                     return;
@@ -26163,7 +27901,7 @@ a { color: #1565c0; }`;
                     activeBtn.classList.remove('mb-show-all-btn-loading');
                     allActionButtons.forEach(b => b.disabled = false);
                     stopBtn.style.display = 'none';
-                    delete ctrlMFunctionMap['o'];
+                    if (_prevCtrlMO) ctrlMFunctionMap['o'] = _prevCtrlMO; else delete ctrlMFunctionMap['o'];
                     globalStatusDisplay.textContent = `Render cancelled (${totalRows.toLocaleString()} rows fetched — use "Load from disk" to render later)`;
                     globalStatusDisplay.style.color = 'orange';
                     fetchProgressWrap.style.display = 'none';
@@ -26232,7 +27970,7 @@ a { color: #1565c0; }`;
             activeBtn.classList.remove('mb-show-all-btn-loading');
             allActionButtons.forEach(b => b.disabled = false);
             stopBtn.style.display = 'none';
-            delete ctrlMFunctionMap['o'];
+            if (_prevCtrlMO) ctrlMFunctionMap['o'] = _prevCtrlMO; else delete ctrlMFunctionMap['o'];
             fetchProgressWrap.style.display = 'none';
 
             // Only show filter container if it wasn't already appended to H2 (handled in updateH2Count or renderGroupedTable)
@@ -26456,11 +28194,25 @@ a { color: #1565c0; }`;
                 // sa_auto_resize_columns: emulate pressing the Resize button on load.
                 // Uses setTimeout(0) so the button and column widths are fully set up
                 // before the auto-resize measurement pass runs.
+                // Skipped when totalRows exceeds sa_auto_resize_columns_threshold (default
+                // 2000) to avoid a slow measurement pass on large datasets.
                 if (Lib.settings.sa_auto_resize_columns && !isAutoResized) {
-                    setTimeout(() => {
-                        Lib.debug('resize', 'sa_auto_resize_columns: triggering auto-resize on load');
-                        toggleAutoResizeColumns();
-                    }, 0);
+                    const _arThreshold = Lib.settings.sa_auto_resize_columns_threshold ?? 2000;
+                    const _arBelowThreshold = _arThreshold === 0 || totalRows <= _arThreshold;
+                    if (_arBelowThreshold) {
+                        setTimeout(async () => {
+                            Lib.debug('resize', `sa_auto_resize_columns: triggering auto-resize on load (${totalRows} rows ≤ threshold ${_arThreshold})`);
+                            const _arStart = performance.now();
+                            await toggleAutoResizeColumns();
+                            const _arSeconds = ((performance.now() - _arStart) / 1000).toFixed(2);
+                            Lib.debug('resize', `sa_auto_resize_columns: completed in ${_arSeconds}s`);
+                            _sdAppend(`📐Measuring: ${_arSeconds}s`, ', ',
+                                'Time to auto-measure and set per-column widths (sa_auto_resize_columns).');
+                        }, 0);
+                    } else {
+                        Lib.debug('resize',
+                            `sa_auto_resize_columns: skipped — ${totalRows} rows exceeds threshold ${_arThreshold}`);
+                    }
                 }
             }
 
@@ -26562,13 +28314,13 @@ a { color: #1565c0; }`;
             //             Without this block the CAA/EAA bigboxes and inline thumbnails are
             //             never initialised on the initial load of any single-table page.
             if (activeDefinition.tableMode !== 'multi') {
-                // initCaaPics() MUST run first — it creates _caaQueue consumed by the others.
-                initCaaPics();
-                initEaaPics();
-                // Inline thumbnails after ERG (▶ button already present) and after
-                // initCaaPics() (so _caaQueue is initialised).
+                // Inline thumbnails first — _artInitQueue creates _caaQueue so they
+                // land ahead of small icons and the big strip in the fetch queue.
+                _artInitQueue();
                 initCaaInlinePics();
                 initEaaInlinePics();
+                initCaaPics();
+                initEaaPics();
                 // One-shot toast when all artwork finishes loading on single-table pages.
                 if (_caaQueue && Lib.settings.sa_enable_caa_pics) {
                     _caaQueue.onIdle(_showCaaCompletionToast);
@@ -26598,9 +28350,17 @@ a { color: #1565c0; }`;
                 t.style.borderSpacing  = '0';
             });
             document.querySelectorAll('table.tbl').forEach(applyZebraStriping);
+            // Normalise span.comment DOM: move orphan ")" text nodes after </bdi> into
+            // the <bdi> to prevent bidi-boundary soft-wrap at the </bdi>→")" boundary.
+            document.querySelectorAll('table.tbl').forEach(normalizeCommentSpans);
             if (Lib.settings.sa_enable_sticky_columns !== false) {
                 document.querySelectorAll('table.tbl').forEach(applyStickyColumn);
             }
+            // Re-apply barcode highlights after this final applyStickyColumn pass.
+            // applyStickyColumn calls td.style.background = '' on every non-sticky cell,
+            // which clears any inline background-color.  Running last ensures the
+            // barcode cell colors survive for both single-table and multi-table renders.
+            initBarcodeHighlight();
 
             Lib.debug('render', `DOM rendering finished in ${totalRenderingTime.toFixed(2)}ms`);
 
@@ -26608,7 +28368,20 @@ a { color: #1565c0; }`;
             const renderSeconds = (totalRenderingTime / 1000).toFixed(2);
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
-            globalStatusDisplay.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows) from MusicBrainz, Fetching time: ${fetchSeconds}s, Rendering time: ${renderSeconds}s`;
+            globalStatusDisplay.innerHTML = '';
+            _caaGlobalStatusDone = false;  // allow the first CAA completion to append its segment
+            _relGlobalStatusDone = false;  // allow the first Rels completion to append its segment
+            _setInfoSub('mb-info-display-caa', '');
+            _setInfoSub('mb-info-display-rel', '');
+            _setInfoSub('mb-info-display-generic', '');
+            const _sdLoaded = document.createElement('span');
+            _sdLoaded.textContent = `Loaded ${pagesProcessed} ${pageLabel} (${totalRows} rows)`;
+            _sdLoaded.title = 'Pages and rows loaded from the MusicBrainz database.';
+            globalStatusDisplay.appendChild(_sdLoaded);
+            _sdAppend(`Fetching: ${fetchSeconds}s`, '; ',
+                'Time to fetch all pages from the MusicBrainz server.');
+            _sdAppend(`Rendering: ${renderSeconds}s`, ', ',
+                'Time to build and insert the fetched rows into the DOM.');
             fetchProgressWrap.style.display = 'none';
 
             Lib.debug('success', `Process complete. Final Row Count: ${totalRowsAccumulated}. Total Time: ${((performance.now() - startTime) / 1000).toFixed(2)}s`);
@@ -26804,8 +28577,13 @@ a { color: #1565c0; }`;
      * @returns {Promise<void>}
      */
     async function renderFinalTable(rows) {
+        // Claim this render's generation slot.  Any renderRowsChunked continuation
+        // from a previous call that is still yielding in setTimeout(0) will see
+        // _renderGeneration !== its captured generation and abort without appending
+        // further stale rows to the tbody.
+        const generation = ++_renderGeneration;
         const rowCount = Array.isArray(rows) ? rows.length : 0;
-        Lib.debug('render', `Starting renderFinalTable with ${rowCount} rows.`);
+        Lib.debug('render', `Starting renderFinalTable with ${rowCount} rows (generation=${generation}).`);
 
         const tbody = document.querySelector('table.tbl tbody');
         if (!tbody) {
@@ -26838,7 +28616,14 @@ a { color: #1565c0; }`;
             Lib.debug('render', `Fast render: Injected ${rowCount} rows into DOM.`);
         } else {
             // For large datasets, use chunked async rendering with progress
-            await renderRowsChunked(tbody, rows, 'single');
+            await renderRowsChunked(tbody, rows, 'single', generation);
+            // If a newer renderFinalTable or renderGroupedTable fired while we
+            // were chunking, skip the post-render hooks — they already ran for
+            // the winning render.
+            if (_renderGeneration !== generation) {
+                Lib.debug('render', `renderFinalTable: generation ${generation} superseded — skipping post-render hooks.`);
+                return;
+            }
         }
 
         // Show the save button now that data is rendered
@@ -26861,11 +28646,15 @@ a { color: #1565c0; }`;
 
     /**
      * Renders rows in batches to avoid blocking the UI thread
-     * @param {HTMLTableSectionElement} tbody - The table body element to render into
-     * @param {Array<HTMLTableRowElement>} rows - Array of table row elements to render
-     * @param {string} mode - Rendering mode: 'single' for single table or 'multi' for grouped tables
+     * @param {HTMLTableSectionElement} tbody      - The table body element to render into
+     * @param {Array<HTMLTableRowElement>} rows    - Array of table row elements to render
+     * @param {string} mode                        - Rendering mode: 'single' or 'multi'
+     * @param {number} [generation=0]              - Render-generation token from renderFinalTable.
+     *   After each setTimeout(0) yield the function checks whether _renderGeneration still
+     *   matches the captured token; if not, it aborts so stale rows from a superseded render
+     *   are never appended to a tbody that a newer render has already claimed.
      */
-    async function renderRowsChunked(tbody, rows, mode = 'single') {
+    async function renderRowsChunked(tbody, rows, mode = 'single', generation = 0) {
         const totalRows = rows.length;
         const chunkSize = 500; // Render 500 rows at a time
         const chunks = Math.ceil(totalRows / chunkSize);
@@ -26911,8 +28700,19 @@ a { color: #1565c0; }`;
             // Update progress
             progressText.textContent = `${rowsRendered.toLocaleString()} / ${totalRows.toLocaleString()}`;
 
-            // Yield to browser to keep UI responsive
-            await new Promise(resolve => setTimeout(resolve, 0));
+            // Yield to browser before next chunk — rAF guarantees a paint
+            // between chunks so the progress counter is always visible on screen
+            // and the tab stays responsive.  The timestamp argument passed by
+            // rAF to its callback is intentionally ignored.
+            await new Promise(resolve => requestAnimationFrame(() => resolve()));
+            // Abort if a newer render has started since this chunk was queued.
+            // Without this guard, old renderRowsChunked continuations append rows
+            // with the wrong-query highlight to a tbody claimed by a newer render.
+            if (generation !== 0 && _renderGeneration !== generation) {
+                progressMsg.remove();
+                Lib.debug('render', `renderRowsChunked: generation ${generation} superseded by ${_renderGeneration} — aborting.`);
+                return;
+            }
         }
 
         // Remove progress indicator
@@ -27528,7 +29328,7 @@ a { color: #1565c0; }`;
         });
 
         // ── Event wiring ─────────────────────────────────────────────────────
-        const debouncedApply = debounce(applySubFilter, Lib.settings.sa_filter_debounce_delay || 300);
+        const debouncedApply = debounce(applySubFilter, _adaptiveFilterDelay);
         filterInput.addEventListener('input', () => {
             _syncStfClearBtn();
             debouncedApply();
@@ -27828,7 +29628,14 @@ a { color: #1565c0; }`;
      * @returns {Promise<void>}
      */
     async function renderGroupedTable(dataArray, isArtistMain, query = '') {
-        Lib.debug('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}"`);
+        // Increment the global render-generation counter.  This causes any
+        // in-flight renderRowsChunked continuation from a concurrent single-table
+        // render to detect it has been superseded and abort.  renderGroupedTable
+        // itself is currently synchronous (no internal await), so the generation
+        // guard at the end of this function is proactive — it protects the
+        // post-render hooks if await points are added in the future.
+        const generation = ++_renderGeneration;
+        Lib.debug('render', `Starting renderGroupedTable with ${dataArray.length} categories. Query: "${query}" (generation=${generation})`);
 
         // `let` (not `const`) so we can re-root to targetHeader.parentNode on pages
         // that have no div#content and wrap the initial tables in a sub-element
@@ -28121,7 +29928,55 @@ a { color: #1565c0; }`;
                 table.style.width = 'calc(100% - 1.5em)';
                 if (templateHead) {
                     let _theadForGroup;
-                    if ((pageType === 'tag-value' || pageType === 'user-tag-value') && rawTemplateHead) {
+                    if (pageType === 'user-ratings') {
+                        // ── Per-group thead for user-ratings ──────────────────────────
+                        // Each group may have a different column count (2-col for entity
+                        // types without artist credit, 3-col for those with "by …").
+                        // Build the thead from the stored colHeaders array rather than
+                        // cloning the shared templateHead (which always reflects the
+                        // first section's column layout).
+                        _theadForGroup = document.createElement('thead');
+                        const _hRow = document.createElement('tr');
+                        (group.colHeaders || ['Rating', categoryName]).forEach(name => {
+                            const _th = document.createElement('th');
+                            _th.textContent = name;
+                            _hRow.appendChild(_th);
+                        });
+                        _theadForGroup.appendChild(_hRow);
+                        // If this group has entity-specific features, rebuild active
+                        // extractors, resolve colIdx from the freshly built thead cells,
+                        // then call cleanupHeaders to inject synthetic <th>s (e.g. Name,
+                        // Comment) — mirrors the tag-value per-group thead path.
+                        const _urGroupEF = group.entityFeatures || {};
+                        if (Object.keys(_urGroupEF).length > 0) {
+                            const _urMf = { ...(activeDefinition.features || {}), ..._urGroupEF };
+                            const _urTd = { ...activeDefinition, features: _urMf };
+                            activeColumnExtractors          = buildActiveColumnExtractors(_urTd);
+                            activeSyntheticColumnExtractors = buildActiveSyntheticColumnExtractors(_urTd);
+                            activeInjectedColumnExtractors  = buildActiveInjectedColumnExtractors(_urTd);
+                            activeIntegerColumns            = buildActiveIntegerColumns(_urTd);
+                            if (_urGroupEF.tooltipColumns) {
+                                table.dataset.mbEntityTooltipColumns =
+                                    JSON.stringify(_urGroupEF.tooltipColumns);
+                            } else {
+                                delete table.dataset.mbEntityTooltipColumns;
+                            }
+                            if (_urGroupEF.extractMainColumn) {
+                                table.dataset.mbEntityExtractMainColumn = _urGroupEF.extractMainColumn;
+                            } else {
+                                delete table.dataset.mbEntityExtractMainColumn;
+                            }
+                            // Resolve colIdx for each extractor by scanning the thead cells.
+                            activeColumnExtractors.forEach(e => { e.colIdx = -1; });
+                            Array.from(_hRow.cells).forEach((th, idx) => {
+                                const _txt = (th.dataset.colName || th.textContent).trim().replace(/\s+/g, ' ');
+                                activeColumnExtractors.forEach(ext => {
+                                    if (ext.colIdx === -1 && ext.sourceColumn === _txt) ext.colIdx = idx;
+                                });
+                            });
+                            cleanupHeaders(_theadForGroup);
+                        }
+                    } else if ((pageType === 'tag-value' || pageType === 'user-tag-value') && rawTemplateHead) {
                         // ── Per-group thead for tag-value multi-table mode ────────────
                         // Each group has a different entity-type column and therefore
                         // different synthetic columns.  Resolve extractors from the group's
@@ -28411,6 +30266,90 @@ a { color: #1565c0; }`;
                     }
                 }
 
+                // ── "View all ratings" button for user-ratings pages ──────────────
+                // On user-ratings pages the rendered table may have a trailing row
+                // whose first cell contains an <a href="/user/.../ratings/<type>">
+                // "View all ratings" link (converted from the native <li> by
+                // applyListToTable Structure H).
+                // When found:
+                //   • A button is inserted in the h3 (after the filter container)
+                //     that opens the full entity ratings list in a new tab.
+                //   • The trailing row is removed from the table.
+                //   • table.dataset.mbTotalRows and the mb-row-count-stat span are
+                //     patched to reflect the real (post-removal) row count.
+                if (pageType === 'user-ratings') {
+                    const _lastRow = tbody.lastElementChild;
+                    if (_lastRow) {
+                        const _viewAllLink = _lastRow.querySelector(
+                            'td a[href*="/user/"][href*="/ratings/"]'
+                        );
+                        if (_viewAllLink &&
+                                /^\s*view all ratings\s*$/i.test(_viewAllLink.textContent)) {
+                            const _href = _viewAllLink.getAttribute('href');
+
+                            const _viewAllBtn = document.createElement('button');
+                            _viewAllBtn.type      = 'button';
+                            _viewAllBtn.className = 'mb-show-all-subtable-btn';
+                            _viewAllBtn.textContent = 'View all ratings';
+                            _viewAllBtn.title =
+                                `Click to view all ratings in a new browser tab ` +
+                                `for this sub-section (MusicBrainz Ratings pages show only ` +
+                                `the top-rated items per entity type)`;
+                            const _initBg    = Lib.settings.sa_ui_show_all_subtable_btn_bg         || '#FFE0B2';
+                            const _clickedBg = Lib.settings.sa_ui_show_all_subtable_btn_bg_clicked || '#CCFFCC';
+                            _viewAllBtn.style.background = _initBg;
+                            _viewAllBtn.onclick = (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.open(new URL(_href, window.location.origin).href, '_blank');
+                                _viewAllBtn.style.background = _clickedBg;
+                            };
+
+                            // Insert after filter container (or toggle icon if absent)
+                            const _insertAfter =
+                                h3.querySelector('.mb-subtable-filter-container') ||
+                                h3.querySelector('.mb-subtable-filter-toggle-icon');
+                            if (_insertAfter) {
+                                _insertAfter.after(_viewAllBtn);
+                            } else {
+                                h3.appendChild(_viewAllBtn);
+                            }
+
+                            // Remove the trailing "View all ratings" row
+                            _lastRow.remove();
+
+                            // Splice out of in-memory row arrays so re-filter
+                            // does not re-insert the removed row.
+                            const _splice = (arr) => {
+                                if (!Array.isArray(arr)) return;
+                                const _si = arr.indexOf(_lastRow);
+                                if (_si !== -1) arr.splice(_si, 1);
+                            };
+                            _splice(group.rows);
+                            _splice(group.originalRows);
+                            if (typeof groupedRows !== 'undefined' && groupedRows[index]) {
+                                if (groupedRows[index].rows !== group.rows)
+                                    _splice(groupedRows[index].rows);
+                                if (groupedRows[index].originalRows)
+                                    _splice(groupedRows[index].originalRows);
+                            }
+
+                            // Patch mbTotalRows to the real (post-removal) count
+                            const _realCount = tbody.rows.length;
+                            table.dataset.mbTotalRows = String(_realCount);
+                            const _statSpan = h3.querySelector('.mb-row-count-stat');
+                            if (_statSpan) {
+                                _statSpan.textContent = `(${_realCount})`;
+                                _statSpan.removeAttribute('data-mbtt');
+                            }
+
+                            Lib.debug('render',
+                                `user-ratings: added "View all ratings" button to h3 "${categoryName}"; ` +
+                                `patched mbTotalRows to ${_realCount}.`);
+                        }
+                    }
+                }
+
                 // Add sub-table controls: Clear button and separate status displays
                 const subTableControls = document.createElement('span');
                 subTableControls.className = 'mb-subtable-controls';
@@ -28667,14 +30606,22 @@ a { color: #1565c0; }`;
             rewireGlobalCollapseButtonMulti();
         }
 
+        // Generation guard: if a newer renderFinalTable or renderGroupedTable
+        // call started while we were in the forEach loop above, skip the
+        // post-render hooks — they will run (or already ran) for the winning
+        // render.  renderGroupedTable is currently synchronous so this guard
+        // cannot trigger in practice; it is here so the hooks remain protected
+        // if await points are added inside the forEach loop in the future.
+        if (_renderGeneration !== generation) {
+            Lib.debug('render', `renderGroupedTable: generation ${generation} superseded — skipping post-render hooks.`);
+            return;
+        }
+
         // Re-inject erg expand buttons across all freshly rendered sub-table rows.
         // Both sort and filter re-renders replace tbody content with cloneNode(true)
         // copies whose event listeners are stripped; initExpandRGsFeature() removes
         // stale [data-erg-btn] clones and re-injects live ▶ buttons.
         initExpandRGsFeature();
-
-        // Re-apply barcode highlights across all freshly rendered sub-table rows.
-        initBarcodeHighlight();
 
         // NOTE: initPicardTaggerColumn() is intentionally NOT called here.
         // It is called from each external call site (startFetchingProcess,
@@ -28683,8 +30630,6 @@ a { color: #1565c0; }`;
         // the column order matches the thead order.
 
         // Re-apply CAA/EAA illustrated discography across all freshly rendered sub-table rows.
-        // initCaaPics() MUST run before initEaaPics() and the inline variants —
-        // it creates _caaQueue used by all three.
         //
         // ── Multi-table tag pages: per-group addCAA/addEAA exposure ─────────────
         // For tag-value/user-tag-value, addCAA/addEAA live inside per-group
@@ -28693,10 +30638,11 @@ a { color: #1565c0; }`;
         // set on the global definition.
         const _origFeaturesPreCaa = activeDefinition.features;
         let _tagHasEntityFeatureCaa = false;
+        let _anyAddCAA, _anyAddEAA;
         if (activeDefinition.entityFeatures) {
-            const _anyAddCAA = Object.values(activeDefinition.entityFeatures)
+            _anyAddCAA = Object.values(activeDefinition.entityFeatures)
                 .map(f => f.addCAA).filter(Boolean)[0];
-            const _anyAddEAA = Object.values(activeDefinition.entityFeatures)
+            _anyAddEAA = Object.values(activeDefinition.entityFeatures)
                 .map(f => f.addEAA).filter(Boolean)[0];
             if (_anyAddCAA || _anyAddEAA) {
                 // Temporarily expose any addCAA/addEAA so _artInitPics doesn't
@@ -28714,9 +30660,13 @@ a { color: #1565c0; }`;
                 _tagHasEntityFeatureCaa = true;
             }
         }
-        initCaaPics();
-        initEaaPics();
 
+        // Create a fresh _caaQueue before any art function runs.
+        _artInitQueue();
+
+        // ── Inline thumbnails first ─────────────────────────────────────────────
+        // Enqueue inline thumbnails before small icons and the big picture strip
+        // so they appear in the entity-name column as soon as possible.
         if (_tagHasEntityFeatureCaa) {
             // ── Per-group inline thumbnails ─────────────────────────────────────
             // _artInitInlinePics reads activeDefinition.features.addCAA/addEAA to
@@ -28762,6 +30712,17 @@ a { color: #1565c0; }`;
                 initCaaInlinePics();
                 initEaaInlinePics();
             }
+
+            // Re-apply the any-CAA/any-EAA exposure so initCaaPics/initEaaPics
+            // do not skip tables whose addCAA/addEAA live only in entityFeatures.
+            activeDefinition = {
+                ...activeDefinition,
+                features: {
+                    ..._origFeaturesPreCaa,
+                    ...(_anyAddCAA ? { addCAA: _anyAddCAA } : {}),
+                    ...(_anyAddEAA ? { addEAA: _anyAddEAA } : {})
+                }
+            };
         } else if (_isReleaseGroupsMultiMode()) {
             // artist-releasegroups has no entityFeatures on its definition, so
             // _tagHasEntityFeatureCaa is false and we reach here.  addCAA is already
@@ -28772,6 +30733,15 @@ a { color: #1565c0; }`;
             // Standard single-feature pages.
             initCaaInlinePics();
             initEaaInlinePics();
+        }
+
+        // ── Small icons + big strip (pass 1), enrichment (pass 2) ────────────────
+        initCaaPics();
+        initEaaPics();
+
+        // Restore activeDefinition to the original base after initCaaPics/initEaaPics.
+        if (_tagHasEntityFeatureCaa) {
+            activeDefinition = { ...activeDefinition, features: _origFeaturesPreCaa };
         }
 
         // Register a one-shot toast for when the full queue drains (all artwork loaded).
@@ -28788,9 +30758,16 @@ a { color: #1565c0; }`;
             t.style.borderSpacing  = '0';
         });
         document.querySelectorAll('table.tbl').forEach(applyZebraStriping);
+        // Normalise span.comment DOM: move orphan ")" text nodes after </bdi> into
+        // the <bdi> to prevent bidi-boundary soft-wrap at the </bdi>→")" boundary.
+        document.querySelectorAll('table.tbl').forEach(normalizeCommentSpans);
         if (Lib.settings.sa_enable_sticky_columns !== false) {
             document.querySelectorAll('table.tbl').forEach(applyStickyColumn);
         }
+        // Re-apply barcode highlights AFTER applyStickyColumn for the same reason
+        // as in runFilter: applyStickyColumn clears td.style.background on non-sticky
+        // cells, which removes any backgroundColor set by barcodeProcessTable.
+        initBarcodeHighlight();
 
         Lib.debug('render', 'Finished renderGroupedTable.');
 
@@ -29515,7 +31492,7 @@ a { color: #1565c0; }`;
         //   unexpected ways (e.g. IDB cache hits fire synchronously inside the task
         //   body, advancing state before the caller expects it).
         //
-        //   initCaaPics() creates a BRAND-NEW _caaQueue.  The old queue object is
+        //   _artInitQueue() creates a BRAND-NEW _caaQueue.  The old queue object is
         //   abandoned: pending tasks are never started (the old pending[] array is
         //   unreferenced and GC'd), and the few tasks that are already running will
         //   complete but their _onBigLoaded callbacks will fail the gen-check and
@@ -29525,6 +31502,7 @@ a { color: #1565c0; }`;
         //   initCaaPics()/initEaaPics() also call _artCreateOrUpdateGlobalToggleButton
         //   internally, so we skip the separate call in this branch.
         if (_tablesToRebuild.length > 0) {
+            _artInitQueue();
             initCaaPics();
             initEaaPics();
         } else {
@@ -29617,12 +31595,26 @@ a { color: #1565c0; }`;
             h2.style.cursor = 'pointer'; // Make entire H2 header indicate clickability
             h2.style.userSelect = 'none'; // Prevent text selection when clicking
 
-            // Find elements between this H2 and the next H2
+            // Find nodes between this H2 and the next H2.
+            // Walk nextSibling (not nextElementSibling) so that bare text nodes
+            // (e.g. "No one has reviewed … yet." in the Reviews section on
+            // ratings-entity pages) are also captured.  Non-empty text nodes are
+            // wrapped in a <span> in-place so they can be shown/hidden via the
+            // same style.display mechanism as element siblings.
             const contentNodes = [];
-            let next = h2.nextElementSibling;
-            while (next && next.tagName !== 'H2') {
-                contentNodes.push(next);
-                next = next.nextElementSibling;
+            let _cur = h2.nextSibling;
+            while (_cur) {
+                const _nxt = _cur.nextSibling; // save before any DOM mutation
+                if (_cur.nodeType === Node.ELEMENT_NODE && _cur.tagName === 'H2') break;
+                if (_cur.nodeType === Node.TEXT_NODE && _cur.textContent.trim()) {
+                    const _wrap = document.createElement('span');
+                    _cur.parentNode.insertBefore(_wrap, _cur);
+                    _wrap.appendChild(_cur);
+                    contentNodes.push(_wrap);
+                } else if (_cur.nodeType === Node.ELEMENT_NODE) {
+                    contentNodes.push(_cur);
+                }
+                _cur = _nxt;
             }
 
             // Identify if this is the target H2 with row-count stat
@@ -31443,9 +33435,14 @@ a { color: #1565c0; }`;
                 // wherever the user hovers within the clickable unit.
                 const uniqWrap = uniqCountSpan.closest('.mb-col-uniq-wrap');
                 if (uniqWrap) {
+                    const _directOn = typeof Lib !== 'undefined' && Lib.settings && Lib.settings.sa_enable_direct_ctrl_char_shortcuts;
+                    const _qKey = getShortcutDisplay('sa_shortcut_col_unique_dropdown', 'Ctrl+Q');
+                    const _kbHint = _directOn
+                        ? `keyboard: ${_qKey} or ${getPrefixDisplay()} then Q when a column filter is focused`
+                        : `keyboard: ${getPrefixDisplay()} then Q when a column filter is focused (or enable Direct Ctrl+Letter Shortcuts for ${_qKey})`;
                     const tip = n > 0
-                        ? `Show the ${n} different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing "Enter" on an entry`
-                        : 'Show unique values for this column';
+                        ? `Show the ${n} different unique values in this column, with the ability to quick filter by either clicking or selecting with the keyboard and pressing "Enter" on an entry — ${_kbHint}`
+                        : `Show unique values for this column — ${_kbHint}`;
                     uniqWrap.title      = tip;
                     uniqWrap.setAttribute('aria-label', tip);
                 }
@@ -31549,7 +33546,11 @@ a { color: #1565c0; }`;
             const globalBtn = document.getElementById('mb-col-collapse-all-btn');
             if (globalBtn) globalBtn.style.display = 'none';
             // Still update unique-value counts even when no collapsable columns.
-            _updateAllColHeaderCounts(table);
+            // Deferred out of the synchronous render path — for large tables
+            // (8 k+ rows) the getCleanColumnText loop inside _updateAllColHeaderCounts
+            // can take 30–120 s synchronously, blocking the UI and triggering the
+            // Chrome "Page Unresponsive" dialog.
+            setTimeout(() => _updateAllColHeaderCounts(table), 0);
             return;
         }
 
@@ -31567,41 +33568,46 @@ a { color: #1565c0; }`;
         // AFTER initCollapsableColumns and _artEnrichIcon skips the rebuild when
         // `multiBuiltAttr` is already set on the cloned row (set during the
         // previous render and preserved by cloneNode(true)).
-        table.querySelectorAll('.mb-col-collapse-hdr-btn').forEach(btn => {
-            const hdrFlex = btn.closest('.mb-col-hdr-flex');
-            if (hdrFlex) {
-                const uniqWrap = hdrFlex.querySelector('.mb-col-uniq-wrap');
-                if (uniqWrap) uniqWrap.style.marginLeft = '';
+        // Single consolidated cleanup pass — replaces five separate querySelectorAll
+        // calls (each a full table walk) with one.  For 8 k+ row tables this saves
+        // ~4 full DOM traversals ≈ 2–8 s of synchronous work.
+        //
+        // Selector coverage:
+        //   .mb-col-collapse-hdr-btn  — collapse toggle in thead (resets uniqWrap margin, removes)
+        //   .mb-caa-col-hdr-btn       — CAA/EAA col-header expand btn (removed; re-injected later)
+        //   .mb-cell-collapse-toggle  — per-cell toggle span in tbody (removed unconditionally)
+        //   td.mb-has-collapse-toggle — td class that sets position:relative + padding-right
+        //   tbody td ul > li          — list items whose display was set to 'none' when collapsed
+        table.querySelectorAll(
+            '.mb-col-collapse-hdr-btn, .mb-caa-col-hdr-btn, ' +
+            '.mb-cell-collapse-toggle, ' +
+            'td.mb-has-collapse-toggle, ' +
+            'tbody td ul > li'
+        ).forEach(el => {
+            if (el.classList.contains('mb-col-collapse-hdr-btn')) {
+                const hdrFlex = el.closest('.mb-col-hdr-flex');
+                if (hdrFlex) {
+                    const uniqWrap = hdrFlex.querySelector('.mb-col-uniq-wrap');
+                    if (uniqWrap) uniqWrap.style.marginLeft = '';
+                }
+                el.remove();
+            } else if (el.classList.contains('mb-caa-col-hdr-btn') ||
+                       el.classList.contains('mb-cell-collapse-toggle')) {
+                // mb-caa-col-hdr-btn: re-injected by _artInitCaaColHeaderToggle later.
+                // mb-cell-collapse-toggle: stale art-cell toggles also removed here
+                // (pre-feature files left them on art tds; [data-caa-expand-btn] is
+                // now the authoritative art-cell toggle, so any remaining
+                // mb-cell-collapse-toggle on such cells is dead markup).
+                el.remove();
+            } else if (el.tagName === 'TD') {
+                // td.mb-has-collapse-toggle — clear positioning class.
+                el.classList.remove('mb-has-collapse-toggle');
+            } else {
+                // tbody td ul > li — reset display unless art-managed.
+                if (!el.classList.contains('mb-caa-art-li')) {
+                    el.style.display = '';
+                }
             }
-            btn.remove();
-        });
-        // Also remove CAA/EAA column-header expand buttons — they are re-injected
-        // by _artInitCaaColHeaderToggle which runs after makeTableSortableUnified
-        // has rebuilt the mb-col-hdr-flex rows.
-        table.querySelectorAll('.mb-caa-col-hdr-btn').forEach(btn => btn.remove());
-        table.querySelectorAll('.mb-cell-collapse-toggle').forEach(el => {
-            // Skip toggles that belong to CAA/EAA art cells — art cells now use
-            // [data-caa-expand-btn] inside li-0; any leftover mb-cell-collapse-toggle
-            // on the artCell itself is stale and should be removed.
-            if (el.closest('td')?.querySelector(':scope > ul.mb-caa-art-ul')) {
-                el.remove(); // remove stale art-cell toggle (pre-feature files)
-                return;
-            }
-            el.remove();
-        });
-        table.querySelectorAll('td.mb-has-collapse-toggle').forEach(td => {
-            // Art cells no longer use mb-has-collapse-toggle (the inline expand btn
-            // in li-0 does not need position:relative on the td).  Remove the class
-            // from art cells so the padding-right that was protecting toggle space
-            // is no longer applied unnecessarily.
-            td.classList.remove('mb-has-collapse-toggle');
-        });
-        // Reset any <li> items that were hidden by a previous collapse pass.
-        // Skip li.mb-caa-art-li items — their display is managed by the art-cell
-        // collapse toggle and must not be unconditionally reset to '' here.
-        table.querySelectorAll('tbody td ul > li').forEach(li => {
-            if (li.classList.contains('mb-caa-art-li')) return;
-            li.style.display = '';
         });
 
         // ── Install delegation listener (idempotent) ──────────────────────────
@@ -31614,6 +33620,10 @@ a { color: #1565c0; }`;
         let anyColumnHasMultiRow = false;
         // Collect header-level toggle buttons for global-button wiring.
         const collapseHdrBtns = [];
+        // Hoist the tbody-row snapshot once — reused for every collapsable column
+        // and for the art-cell hidden-match scan.  Querying per column would run
+        // O(collapsableColumns × bodyRows) DOM walks; one shared query is O(1).
+        const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
 
         collapsableColumns.forEach(colName => {
             // ── Locate column index by clean header text ──────────────────────
@@ -31631,7 +33641,6 @@ a { color: #1565c0; }`;
             }
 
             const th = headers[colIndex];
-            const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
 
             // ── Gather multi-row body cells ───────────────────────────────────
             const multiRowCells = [];
@@ -31668,6 +33677,9 @@ a { color: #1565c0; }`;
             // NO click listener is attached here — all clicks are handled by
             // the delegation listener installed by ensureCollapseDelegate().
             let maxFirstLiWidth = 0;
+            // Collect first-<li> refs here; measured in the batch pass AFTER
+            // the forEach so all DOM writes are finished before any reads.
+            const _firstLisForMeasure = [];
 
             multiRowCells.forEach(({ td, lis }) => {
                 // ── Skip CAA/EAA art cells — they own their toggle ────────────
@@ -31749,15 +33761,20 @@ a { color: #1565c0; }`;
                     cellToggle.classList.add('mb-collapse-toggle-has-match');
                 }
 
-                // ── Measure first-<li> natural width for column min-width ─────
-                // Temporarily set white-space:nowrap so scrollWidth gives the
-                // full unwrapped width of the first item's content.
-                const firstLi = lis[0];
-                const prevWS = firstLi.style.whiteSpace;
-                firstLi.style.whiteSpace = 'nowrap';
-                maxFirstLiWidth = Math.max(maxFirstLiWidth, firstLi.scrollWidth);
-                firstLi.style.whiteSpace = prevWS;
+                // Defer measurement to the batch pass below — pushing the
+                // first-<li> ref here avoids an FSL per cell.
+                _firstLisForMeasure.push(lis[0]);
             });
+
+            // ── Batch measure first-<li> natural widths (1 FSL per column) ─────
+            // All DOM writes above are done; a single batch of: set nowrap on all,
+            // read all scrollWidths, reset nowrap — causes exactly one layout flush
+            // per column instead of one per cell (which was 1000s of forced reflows).
+            _firstLisForMeasure.forEach(li => { li.style.whiteSpace = 'nowrap'; });
+            _firstLisForMeasure.forEach(li => {
+                maxFirstLiWidth = Math.max(maxFirstLiWidth, li.scrollWidth);
+            });
+            _firstLisForMeasure.forEach(li => { li.style.whiteSpace = ''; });
 
             // ── Hidden-match indicator for art cells (CAA/EAA column) ─────────
             // Art cells were skipped in the loop above to avoid duplicate toggles,
@@ -31770,7 +33787,7 @@ a { color: #1565c0; }`;
             // toggle.  The expand button is a [data-caa-expand-btn] span inside the
             // li-0 summary row of ul.mb-caa-art-ul.  The old lookup for
             // ':scope > .mb-cell-collapse-toggle' was dead code and is replaced here.
-            table.querySelectorAll('tbody tr').forEach(tr => {
+            bodyRows.forEach(tr => {
                 const td = tr.cells[colIndex];
                 if (!td) return;
                 const artUl = td.querySelector(':scope > ul.mb-caa-art-ul');
@@ -31812,7 +33829,12 @@ a { color: #1565c0; }`;
             const collapseHdrBtn = document.createElement('span');
             collapseHdrBtn.className = 'mb-col-collapse-hdr-btn';
             collapseHdrBtn.dataset.colIndex = String(colIndex);
-            collapseHdrBtn.title = `Expand ALL multi-row "${colName}" cells (${multiRowCells.length}) in this table column`;
+            const _collapseDirectOn = typeof Lib !== 'undefined' && Lib.settings && Lib.settings.sa_enable_direct_ctrl_char_shortcuts;
+            const _collapseKey = getShortcutDisplay('sa_shortcut_col_toggle_collapse', 'Ctrl+O');
+            const _collapseKbHint = _collapseDirectOn
+                ? `keyboard: ${_collapseKey} or ${getPrefixDisplay()} then O when a column filter is focused`
+                : `keyboard: ${getPrefixDisplay()} then O when a column filter is focused (or enable Direct Ctrl+Letter Shortcuts for ${_collapseKey})`;
+            collapseHdrBtn.title = `Expand ALL multi-row "${colName}" cells (${multiRowCells.length}) in this table column — ${_collapseKbHint}`;
             collapseHdrBtn.setAttribute('role', 'button');
             collapseHdrBtn.setAttribute('aria-expanded', 'false');
             collapseHdrBtn.setAttribute('aria-label', `Expand all collapsed cells in: ${colName}`);
@@ -31851,8 +33873,8 @@ a { color: #1565c0; }`;
                 _glyphSpan.textContent = targetExpand ? '▼' : '▶';
                 const _count = _countSpan.textContent;
                 collapseHdrBtn.title = targetExpand
-                    ? `Collapse ALL multi-row ${colName} cells (${_count}) in this table column`
-                    : `Expand ALL multi-row ${colName} cells (${_count}) in this table column`;
+                    ? `Collapse ALL multi-row ${colName} cells (${_count}) in this table column — ${_collapseKbHint}`
+                    : `Expand ALL multi-row ${colName} cells (${_count}) in this table column — ${_collapseKbHint}`;
                 collapseHdrBtn.setAttribute('aria-expanded', targetExpand ? 'true' : 'false');
                 collapseHdrBtn.setAttribute(
                     'aria-label',
@@ -31948,8 +33970,10 @@ a { color: #1565c0; }`;
         // ── Update live count indicators in all column headers ────────────────
         // Refreshes both the unique-value count (before 📊) and the multi-row
         // cell count (inside ▶N▤/▼N▤) for every column in this table.
-        // Placed last so all toggles are already in their final state.
-        _updateAllColHeaderCounts(table);
+        // Deferred via setTimeout(0) so the browser can paint the rendered rows
+        // before the O(rows × columns) getCleanColumnText scan begins — prevents
+        // the Chrome "Page Unresponsive" dialog on 8 k+ row tables.
+        setTimeout(() => _updateAllColHeaderCounts(table), 0);
 
         Lib.debug(
             'collapse',
@@ -31997,7 +34021,8 @@ a { color: #1565c0; }`;
             multiTableSortStates.set(sortKey, {
                 lastSortIndex: -1,
                 sortState: 0,
-                multiSortColumns: []
+                multiSortColumns: [],
+                sortByLength: false
             });
         }
         const state = multiTableSortStates.get(sortKey);
@@ -32036,10 +34061,20 @@ a { color: #1565c0; }`;
         // Within each sorted column the tint alternates between two shades whenever the cell
         // value changes, making equal-value runs visually obvious.
         // Semi-transparent colours overlay the existing even/odd zebra striping.
+
         const applyMultiSortColumnTints = () => {
             // Clear any existing tint classes first so a re-apply starts clean
             clearMultiSortColumnTints();
-            if (state.multiSortColumns.length === 0) return;
+
+            // Build the column list to paint.
+            // Multi-sort: use the registered chain.
+            // Single-sort: synthesise a one-entry list so the same shade-flip
+            //   logic marks value-change boundaries in the sorted column.
+            let columnsToPaint = state.multiSortColumns;
+            if (columnsToPaint.length === 0) {
+                if (state.lastSortIndex < 0 || state.sortState === 0) return;
+                columnsToPaint = [{ colIndex: state.lastSortIndex, direction: state.sortState }];
+            }
 
             // Two-shade pairs per priority (light / slightly-darker of the same hue)
             // Index 0 = first shade (run starts), index 1 = second shade (run changes)
@@ -32061,29 +34096,73 @@ a { color: #1565c0; }`;
             const bodyRows = Array.from(table.querySelectorAll('tbody tr'));
             const mainHeaderRow = table.querySelector('thead tr:first-child');
 
-            state.multiSortColumns.forEach((sortCol, priorityIdx) => {
+            columnsToPaint.forEach((sortCol, priorityIdx) => {
                 const colIdx = sortCol.colIndex;
                 const pair   = bodyPairs[priorityIdx % bodyPairs.length];
                 const hdrCls = hdrClasses[priorityIdx % hdrClasses.length];
 
-                // Walk rows, flip shade each time the cell text value changes
+                // Walk rows, flip shade each time the cell text value changes.
+                // getCleanColumnText skips <script>/<style> nodes so cells that
+                // embed JSON data (e.g. Country/Date release-events) compare equal
+                // when their visible text is the same despite differing property order.
                 let shadeIdx  = 0;
                 let lastValue = null;
                 bodyRows.forEach(tr => {
                     const cell = tr.cells[colIdx];
                     if (!cell) return;
-                    const cellValue = cell.textContent.trim();
+                    const cellValue = getCleanColumnText(cell);
                     if (lastValue !== null && cellValue !== lastValue) {
                         shadeIdx = 1 - shadeIdx; // toggle between 0 and 1
                     }
                     lastValue = cellValue;
-                    cell.classList.add(pair[shadeIdx]);
+                    const tintClass = pair[shadeIdx];
+                    cell.classList.add(tintClass);
+
+                    // ── Sticky-cell opacity fix ──────────────────────────────────
+                    // The mscol CSS uses `background-color: rgba() !important` which
+                    // overrides the inline opaque background set by applyStickyColumn,
+                    // making the sticky cell semi-transparent so scrolled content shows
+                    // through.  Fix: alpha-blend the tint onto the cell's rest
+                    // background (mbStickyBg, which applyStickyColumn now always stores
+                    // as the true opaque zebra/base colour) and apply the resulting
+                    // opaque colour via inline setProperty('important'), which wins over
+                    // class !important.
+                    if (cell.classList.contains('mb-sticky-col')) {
+                        const tint = _MSCOL_TINT_RGBA[tintClass];
+                        if (tint) {
+                            const restBg = cell.dataset.mbStickyBg || '#ffffff';
+                            const blended = _blendSortTint(tint, restBg);
+                            // Save original rest bg so clearMultiSortColumnTints can restore it.
+                            if (!cell.dataset.mbStickyRestBg) {
+                                cell.dataset.mbStickyRestBg = restBg;
+                            }
+                            cell.dataset.mbStickyBg = blended;
+                            cell.style.setProperty('background-color', blended, 'important');
+                        }
+                    }
                 });
 
                 // Tint the header cell
                 if (mainHeaderRow) {
                     const th = mainHeaderRow.cells[colIdx];
-                    if (th) th.classList.add(hdrCls);
+                    if (th) {
+                        th.classList.add(hdrCls);
+                        // Sticky header fix: same opacity problem as body cells.
+                        // The hdr-tint class uses rgba() !important which beats the
+                        // inline background shorthand set by applyStickyColumn.
+                        if (th.classList.contains('mb-sticky-col')) {
+                            const tint = _MSCOL_HDR_TINT_RGBA[hdrCls];
+                            if (tint) {
+                                const restBg = th.dataset.mbStickyBg || '#e8e8e8';
+                                const blended = _blendSortTint(tint, restBg);
+                                if (!th.dataset.mbStickyRestBg) {
+                                    th.dataset.mbStickyRestBg = restBg;
+                                }
+                                th.dataset.mbStickyBg = blended;
+                                th.style.setProperty('background-color', blended, 'important');
+                            }
+                        }
+                    }
                 }
             });
         };
@@ -32100,6 +34179,13 @@ a { color: #1565c0; }`;
             ];
             table.querySelectorAll('tbody td, thead tr:first-child th').forEach(cell => {
                 cell.classList.remove(...allTintClasses);
+                // Restore sticky cell to its original opaque rest background.
+                if (cell.classList.contains('mb-sticky-col') && cell.dataset.mbStickyRestBg) {
+                    cell.style.removeProperty('background-color');
+                    cell.dataset.mbStickyBg = cell.dataset.mbStickyRestBg;
+                    cell.style.background   = cell.dataset.mbStickyRestBg;
+                    delete cell.dataset.mbStickyRestBg;
+                }
             });
         };
 
@@ -32139,10 +34225,16 @@ a { color: #1565c0; }`;
                 const span = document.createElement('span');
                 span.className = 'sort-icon-btn';
 
-                // Tooltips reflect the Ctrl+Click multi-sort model on all page types
-                if (char === '⇅') span.title = 'Restore original sort order (clears multi-sort columns)';
-                else if (char === '▲') span.title = 'Sort ascending — Ctrl+Click to add to multi-column sort';
-                else if (char === '▼') span.title = 'Sort descending — Ctrl+Click to add to multi-column sort';
+                // Tooltips reflect the Ctrl+Click multi-sort model and keyboard shortcuts
+                if (char === '⇅') span.title =
+                    'Restore original sort order (clears multi-sort columns)' +
+                    ` — keyboard: ${getShortcutDisplay('sa_shortcut_col_unsort', 'Ctrl+#')} when a column filter is focused`;
+                else if (char === '▲') span.title =
+                    'Sort ascending — Ctrl+Click to add to multi-column sort / Alt+Click to sort by column length' +
+                    ` — keyboard: ${getShortcutDisplay('sa_shortcut_col_sort_asc', 'Ctrl+↑')} when a column filter is focused`;
+                else if (char === '▼') span.title =
+                    'Sort descending — Ctrl+Click to add to multi-column sort / Alt+Click to sort by column length' +
+                    ` — keyboard: ${getShortcutDisplay('sa_shortcut_col_sort_desc', 'Ctrl+↓')} when a column filter is focused`;
 
                 // Restore active indicator for single-column state after re-render
                 // (multi-sort visuals are restored by the updateMultiSortVisuals call at the end)
@@ -32173,9 +34265,19 @@ a { color: #1565c0; }`;
                     const rowCount = targetRows.length;
                     const showWaitCursor = rowCount > 1000;
                     const isCtrl = e.ctrlKey || e.metaKey;
+                    const isAlt  = e.altKey;
 
                     // === Update sort state ===
-                    if (isCtrl && targetState !== 0) {
+                    if (isAlt && targetState !== 0) {
+                        // Alt+Click on ▲ or ▼: single-column sort by visible text length.
+                        // Clears any multi-sort chain; does not participate in Ctrl chain.
+                        state.multiSortColumns = [];
+                        clearMultiSortColumnTints();
+                        state.lastSortIndex = index;
+                        state.sortState     = targetState;
+                        state.sortByLength  = true;
+                        Lib.debug('sort', `Alt-sort by length: column ${index} dir=${targetState}`);
+                    } else if (isCtrl && targetState !== 0) {
                         // Ctrl+Click on ▲ or ▼: add / update / remove from multi-sort chain.
                         //
                         // Special case: if we are entering multi-sort from a plain single-sort
@@ -32208,14 +34310,16 @@ a { color: #1565c0; }`;
                             Lib.debug('sort', `Added column ${index} to multi-sort (position ${state.multiSortColumns.length})`);
                         }
                         state.lastSortIndex = index;
-                        state.sortState = targetState;
+                        state.sortState     = targetState;
+                        state.sortByLength  = false;
                     } else {
-                        // Plain click (no Ctrl), or ⇅ clicked:
+                        // Plain click (no Ctrl/Alt), or ⇅ clicked:
                         // always single-sort mode — clear the multi-sort chain.
                         state.multiSortColumns = [];
                         clearMultiSortColumnTints();
                         state.lastSortIndex = targetState === 0 ? -1 : index;
-                        state.sortState = targetState;
+                        state.sortState     = targetState;
+                        state.sortByLength  = false;
                     }
 
                     // === Debug log ===
@@ -32274,9 +34378,9 @@ a { color: #1565c0; }`;
                                     const cn = getCleanColName(headers[col.colIndex]);
                                     compareFn = createSortComparator(col.colIndex, col.direction === 1, isNumericCol(cn));
                                 } else {
-                                    // Plain single-column sort
+                                    // Plain or Alt+Click single-column sort
                                     const cn = getCleanColName(headers[index]);
-                                    compareFn = createSortComparator(index, state.sortState === 1, isNumericCol(cn));
+                                    compareFn = createSortComparator(index, state.sortState === 1, isNumericCol(cn), state.sortByLength);
                                 }
 
                                 await sortLargeArray(sortedData, compareFn, null);
@@ -32289,11 +34393,12 @@ a { color: #1565c0; }`;
                                 allRows = sortedData;
                             }
 
+                            _invalidateFilterCache();
                             runFilter();
 
                             // Apply or clear column tints AFTER runFilter() so the fresh tbody
                             // rows are already in the DOM when we paint.
-                            if (state.multiSortColumns.length > 0) {
+                            if (state.multiSortColumns.length > 0 || state.sortState !== 0) {
                                 applyMultiSortColumnTints();
                             } else {
                                 clearMultiSortColumnTints();
@@ -32325,7 +34430,8 @@ a { color: #1565c0; }`;
                                                 const dispIdx  = col ? col.colIndex : index;
                                                 const dispIcon = col ? (col.direction === 1 ? '▲' : '▼')
                                                                      : (state.sortState === 1 ? '▲' : '▼');
-                                                subSortStatus.textContent = `✓ Sorted by: '${getCleanColName(headers[dispIdx])}'${dispIcon} (${rowCount} rows in ${durationMs}ms)`;
+                                                const lenSuffix = state.sortByLength ? ' (by length)' : '';
+                                                subSortStatus.textContent = `✓ Sorted by: '${getCleanColName(headers[dispIdx])}'${dispIcon}${lenSuffix} (${rowCount} rows in ${durationMs}ms)`;
                                                 subSortStatus.style.color = colorByDuration;
                                             }
                                         }
@@ -32342,13 +34448,14 @@ a { color: #1565c0; }`;
                                     sortStatusDisplay.textContent = `✓ Multi-sorted by: ${colNames} (${rowCount} rows in ${durationMs}ms)`;
                                     sortStatusDisplay.style.color = colorByDuration;
                                 } else {
-                                    // Single-column (including the single-entry Ctrl+Click chain).
+                                    // Single-column (including the single-entry Ctrl+Click chain, or Alt+Click by length).
                                     // Format mirrors multi-sort: "✓ Sorted by: "Col"▲ (N rows in Xms)"
                                     const col = state.multiSortColumns.length === 1 ? state.multiSortColumns[0] : null;
                                     const dispIdx  = col ? col.colIndex : index;
                                     const dispIcon = col ? (col.direction === 1 ? '▲' : '▼')
                                                          : (state.sortState === 1 ? '▲' : '▼');
-                                    sortStatusDisplay.textContent = `✓ Sorted by: '${getCleanColName(headers[dispIdx])}'${dispIcon} (${rowCount} rows in ${durationMs}ms)`;
+                                    const lenSuffix = state.sortByLength ? ' (by length)' : '';
+                                    sortStatusDisplay.textContent = `✓ Sorted by: '${getCleanColName(headers[dispIdx])}'${dispIcon}${lenSuffix} (${rowCount} rows in ${durationMs}ms)`;
                                     sortStatusDisplay.style.color = colorByDuration;
                                 }
                             }
@@ -32441,10 +34548,13 @@ a { color: #1565c0; }`;
             th.appendChild(hdrFlex);
         });
 
-        // Restore multi-sort visuals and column tints if state already has columns in the chain
-        // (called on every re-render triggered by renderGroupedTable after a sort on multi-table pages)
+        // Restore sort visuals and column tints on every re-render (e.g. after renderGroupedTable).
+        // Multi-sort: restore chain visuals + tints.
+        // Single-sort: restore value-change tints for the active column.
         if (state.multiSortColumns.length > 0) {
             updateMultiSortVisuals();
+            applyMultiSortColumnTints();
+        } else if (state.lastSortIndex >= 0 && state.sortState !== 0) {
             applyMultiSortColumnTints();
         } else {
             clearMultiSortColumnTints();
@@ -32980,8 +35090,17 @@ a { color: #1565c0; }`;
             }
 
             if (_anonCount > 0 && _lastRow) {
-                // 1. Remove the anonymous-users row.
+                // 1. Remove the anonymous-users row from the DOM.
                 _lastRow.remove();
+
+                // Splice out of in-memory row arrays so sort/filter never re-inserts it.
+                const _spliceAnon = (arr) => {
+                    if (!Array.isArray(arr)) return;
+                    const _si = arr.indexOf(_lastRow);
+                    if (_si !== -1) arr.splice(_si, 1);
+                };
+                _spliceAnon(allRows);
+                _spliceAnon(originalAllRows);
 
                 // 2. Patch table.dataset.mbTotalRows and the h2 row-count stat.
                 if (_tbl) {
@@ -34458,6 +36577,9 @@ a { color: #1565c0; }`;
     /** Set to true while a force-retry is active so _relFetchWs2 skips caches. */
     let _relRetryActive = false;
 
+    /** True once the Rels segment has been appended to globalStatusDisplay for the current load. */
+    let _relGlobalStatusDone = false;
+
     /**
      * Reads one WS2 rel-data record from IndexedDB.
      * Returns null when IDB is disabled, unavailable, or the entry is missing/expired.
@@ -34471,6 +36593,7 @@ a { color: #1565c0; }`;
                 if (!rec) return null;
                 if (Date.now() - (rec.ts || 0) > _REL_IDB_TTL_MS) {
                     _artIdbDelete('rel-ws2', ckey).catch(() => {});
+                    _relIdbTtlEvictCount++;
                     return null;
                 }
                 return rec.data;
@@ -35601,9 +37724,9 @@ a { color: #1565c0; }`;
                     if (td && !cells.includes(td)) _srcCells.push(td);
                 });
             }
-            _srcCells.forEach(td => { td.style.backgroundColor = ''; td.dataset.relDone = '1'; });
             if (!data) {
                 _relDbg(`_populateCells: no data for ${mbid}`);
+                _srcCells.forEach(td => { td.style.backgroundColor = ''; td.dataset.relDone = '1'; });
                 return;
             }
             // WS2 JSON format: data.relations[] filtered by target-type
@@ -35691,6 +37814,14 @@ a { color: #1565c0; }`;
                 _relDbg(`_populateCells: non-url rel type='${relType}' href='${href}' title='${_entityTitle}' ended=${ended}`);
                 cells.forEach(td => _relAppendIcon(td, href, iconUrl, ended, _tooltip));
             }
+            // Immediately sync icon HTML to source-row cells so runFilter clones
+            // carry the correct content even when the Phase-2 queue is still mid-flight.
+            const _srcHtml = cells.length ? cells[0].innerHTML : '';
+            _srcCells.forEach(td => {
+                td.innerHTML = _srcHtml;
+                td.style.backgroundColor = '';
+                td.dataset.relDone = '1';
+            });
         }
 
         // ── Two-phase fetch: IDB hits in parallel, misses throttled (1 req/s) ───
@@ -35720,17 +37851,21 @@ a { color: #1565c0; }`;
 
         // Phase 2: throttled network queue for misses only
         let queue = Promise.resolve();
+        let _p2CacheHits = 0, _p2NetFetches = 0;
         _missMbids.forEach((mbid, i) => {
             queue = queue.then(async () => {
                 if (i > 0) await new Promise(r => setTimeout(r, 1100));
+                if (_relWs2Cache.has(`${entityType}:${mbid}`)) _p2CacheHits++;
+                else _p2NetFetches++;
                 await _populateCells(mbid, await _relFetchWs2(mbid, entityType, incOptions));
             });
         });
         const _relStartMs = performance.now();
         queue.then(() => {
             _relRetryActive = false;  // reset retry flag from _relRetryMbids
-            // Sync populated icon HTML from DOM cells to source-row cells
-            // so runFilter clones carry the icons.
+            // Safety-net: sync any source-row cells that _populateCells did not already
+            // sync (e.g. cells added to source rows after _populateCells ran).
+            // Skip cells whose innerHTML already matches the DOM cell (already synced).
             if (typeof groupedRows !== 'undefined' || typeof allRows !== 'undefined') {
                 document.querySelectorAll('td.mb-rel-cell[data-rel-done="1"]').forEach(domTd => {
                     const _mid = domTd.dataset.mbid;
@@ -35738,7 +37873,7 @@ a { color: #1565c0; }`;
                     const _html = domTd.innerHTML;
                     const _sync = rows => rows.forEach(r => {
                         const srcTd = r.querySelector(`td.mb-rel-cell[data-mbid='${_mid}']`);
-                        if (srcTd && srcTd !== domTd) {
+                        if (srcTd && srcTd !== domTd && srcTd.innerHTML !== _html) {
                             srcTd.innerHTML = _html;
                             srcTd.dataset.relDone = '1';
                             srcTd.style.backgroundColor = '';
@@ -35752,7 +37887,34 @@ a { color: #1565c0; }`;
             _relDbg('initRelationshipsColumn: complete');
             _relCreateRetryButtons();
             const _relElapsed = performance.now() - _relStartMs;
-            _showRelCompletionToast(allCells.length, uniqueMbids.length, _relElapsed);
+            const _tierInfo = {
+                idb:   _hitFlags.filter(Boolean).length,
+                cache: _p2CacheHits,
+                net:   _p2NetFetches,
+            };
+            _showRelCompletionToast(allCells.length, uniqueMbids.length, _relElapsed, _tierInfo);
+            const _fmtT = ms => ms < 1000 ? `${Math.round(ms)}ms`
+                : ms < 60000 ? `${(ms / 1000).toFixed(1)}s`
+                : `${Math.floor(ms / 60000)}m ${Math.round((ms % 60000) / 1000)}s`;
+            const _rCellSuffix = allCells.length !== 1 ? 's' : '';
+            const _rMbidSuffix = uniqueMbids.length !== 1 ? 's' : '';
+            // Tooltip: always all 3 tiers
+            const _relTipTiers = [
+                { emoji: '📦', label: 'IDB',   desc: 'IndexedDB browser cache (cross-session)', count: _tierInfo.idb   },
+                { emoji: '💾', label: 'cache', desc: 'memory cache (same session)',              count: _tierInfo.cache },
+                { emoji: '🌐', label: 'net',   desc: 'live WS2 API fetch (throttled 1 req/s)',  count: _tierInfo.net   },
+            ].map(t => `${t.emoji} ${t.label}: ${t.count} — ${t.desc}`)
+             .join('\n');
+            if (!_relGlobalStatusDone) {
+                _relGlobalStatusDone = true;
+                _sdAppend(
+                    `🔗Rels: ${_fmtT(_relElapsed)}`,
+                    ', ',
+                    `Relationship icons: ${uniqueMbids.length} unique MBID${_rMbidSuffix} / ${allCells.length} cell${_rCellSuffix}\n` +
+                    _relTipTiers + '\n' +
+                    `Total load time: ${_fmtT(_relElapsed)}`
+                );
+            }
         });
     }
 
@@ -35762,23 +37924,44 @@ a { color: #1565c0; }`;
      * @param {number} cellCount   Total number of .mb-rel-cell elements processed.
      * @param {number} mbidCount   Number of unique MBIDs fetched.
      * @param {number} elapsedMs   Elapsed time since initRelationshipsColumn() started.
+     * @param {{idb:number, cache:number, net:number}} [tierInfo]  Per-tier fetch counts.
      */
-    function _showRelCompletionToast(cellCount, mbidCount, elapsedMs) {
-        const secs = Lib.settings.sa_rel_completion_toast_duration;
-        if (typeof secs === 'number' && secs <= 0) return;
-        const duration = (typeof secs === 'number' ? secs : 8) * 1000;
+    function _showRelCompletionToast(cellCount, mbidCount, elapsedMs, tierInfo) {
         const _fmtMs = ms => {
             if (ms < 1000) return `${Math.round(ms)}ms`;
             const s = ms / 1000;
             if (s < 60) return `${s.toFixed(1)}s`;
             return `${Math.floor(s/60)}m ${Math.round(s%60)}s`;
         };
+        const _ti = tierInfo || {};
+        // ── Update the Rels info sub-display (always, even when toast is disabled) ──
+        const _relInfoTipTiers = [
+            { emoji: '📦', label: 'IDB',   desc: 'IndexedDB browser cache (cross-session)', count: _ti.idb   || 0 },
+            { emoji: '💾', label: 'cache', desc: 'memory cache (same session)',              count: _ti.cache || 0 },
+            { emoji: '🌐', label: 'net',   desc: 'live WS2 API fetch (throttled 1 req/s)',  count: _ti.net   || 0 },
+        ].map(t => `${t.emoji} ${t.label}: ${t.count} — ${t.desc}`)
+         .join('\n');
+        _setInfoSub(
+            'mb-info-display-rel',
+            `🔗Rels: ${_fmtMs(elapsedMs)}`,
+            `Relationship icons: ${mbidCount} unique MBID${mbidCount !== 1 ? 's' : ''} / ${cellCount} cell${cellCount !== 1 ? 's' : ''}\n` +
+            _relInfoTipTiers + '\n' +
+            `Total load time: ${_fmtMs(elapsedMs)}`
+        );
+        const secs = Lib.settings.sa_rel_completion_toast_duration;
+        if (typeof secs === 'number' && secs <= 0) return;
+        const duration = (typeof secs === 'number' ? secs : 8) * 1000;
+        const _tierParts = [];
+        if (_ti.idb)   _tierParts.push(`📦 IDB: ${_ti.idb}`);
+        if (_ti.cache) _tierParts.push(`💾 cache: ${_ti.cache}`);
+        if (_ti.net)   _tierParts.push(`🌐 net: ${_ti.net}`);
         const lines = [
             `🔗 All Relationships loaded`,
             `   ${mbidCount} entities in ${_fmtMs(elapsedMs)}`,
             `   ${cellCount} cell${cellCount !== 1 ? 's' : ''} populated`,
-            `   (click to dismiss)`,
         ];
+        if (_tierParts.length) lines.push(`   ${_tierParts.join('  ')}`);
+        lines.push(`   (click to dismiss)`);
         const toast = document.createElement('div');
         toast.textContent = lines.join('\n');
         toast.style.cssText =
@@ -35811,6 +37994,10 @@ a { color: #1565c0; }`;
             await Promise.all(mbids.map(mbid =>
                 _artIdbDelete('rel-ws2', `${entityType}:${mbid}`).catch(() => {})
             ));
+            _relIdbRetryEvictCount += mbids.length;
+            _setInfoSub('mb-info-display-rel',
+                `🔗 Retry: evicted ${mbids.length} IDB record${mbids.length === 1 ? '' : 's'}`,
+                `Force-retry cleared ${mbids.length} rel-ws2 IDB record(s) for ${entityType}; fetching fresh from network`);
         }
         mbids.forEach(mbid => {
             document.querySelectorAll(`td.mb-rel-cell[data-mbid='${mbid}']`)
@@ -35987,10 +38174,44 @@ a { color: #1565c0; }`;
                     : null,
             };
 
-            // Serialize table headers (exclude the filter row)
+            // Serialize table headers (exclude the filter row).
+            //
+            // Pre-render detection: cleanupHeaders() stamps every surviving native <th>
+            // with the class mb-original-column.  If that class is absent from the
+            // first table's thead the user chose "Save to Disk" at the render-threshold
+            // dialog without rendering — the DOM thead still reflects the native
+            // MusicBrainz structure (checkbox column, foreign Relationships/Tagger
+            // columns, no synthetic columns such as CAA/Country/MB-Name/Comment).
+            //
+            // In the pre-render path we clone the native thead and run cleanupHeaders()
+            // on the clone so the stored headers match the final rendered column layout:
+            //   • removes checkbox (if sa_remove_checkbox_cell + checkbox-cell class)
+            //   • removes Relationships, Tagger, Performance Attributes (always)
+            //   • removes Rating column if sa_remove_rating is on
+            //   • injects synthetic headers from activeColumnExtractors (colIdx resolved
+            //     during the fetch loop — already set correctly for each extractor)
+            //   • injects derived headers from activeSyntheticColumnExtractors
+            //   • injects MB-Name / Comment when extractMainColumn is configured
+            //   • injects injectedColumns headers (Relationships, Release events)
+            //
+            // The clone is detached from the document, so getComputedStyle() returns
+            // only inline styles — no false-positive externally-hidden detection.
             const firstTable = document.querySelector('table.tbl');
             if (firstTable && firstTable.tHead) {
-                const headerRows = Array.from(firstTable.tHead.querySelectorAll('tr'))
+                const _theadRow = firstTable.tHead.querySelector('tr');
+                const _isPreRender = allRows.length > 0 &&
+                    !!_theadRow && !_theadRow.querySelector('th.mb-original-column');
+
+                let _theadToSerialize = firstTable.tHead;
+                if (_isPreRender) {
+                    Lib.debug('cache',
+                        'saveTableDataToDisk: pre-render state detected — cloning thead ' +
+                        'and running cleanupHeaders() to produce correct serialized headers.');
+                    _theadToSerialize = firstTable.tHead.cloneNode(true);
+                    cleanupHeaders(_theadToSerialize);
+                }
+
+                const headerRows = Array.from(_theadToSerialize.querySelectorAll('tr'))
                     .filter(row => !row.classList.contains('mb-col-filter-row')); // Exclude filter row
                 dataToSave.headers = headerRows.map(row => {
                     return Array.from(row.cells)
@@ -36285,6 +38506,7 @@ a { color: #1565c0; }`;
                 };
 
                 // Reconstruct rows from serialized data with Filtering
+                _invalidateFilterCache();
                 if (data.tableMode === 'multi' && data.groups) {
                     groupedRows = [];
                     expandedCells.clear();
@@ -36350,19 +38572,34 @@ a { color: #1565c0; }`;
                         });
 
                         // ── Derive colName and entityFeatures ─────────────────────
-                        // startFetchingProcess sets both on each groupedRows entry;
-                        // disk-load must mirror the same logic so that:
-                        //   (a) renderGroupedTable patches the first <th> of each
+                        // startFetchingProcess sets colName on each groupedRows entry
+                        // only when the page goes through the listToTable / groupByH3
+                        // fetch branch (the `else if` at the outer fetch-loop level that
+                        // guards on `activeDefinition.features?.listToTable ||
+                        // activeDefinition.features?.groupByH3`).  Standard multi-table
+                        // pages like `releasegroup-releases` use the `else` branch and
+                        // leave group.colName undefined.
+                        //
+                        // disk-load must mirror this exactly:
+                        //   (a) listToTable/groupByH3 pages  — set colName so that
+                        //       renderGroupedTable patches the first <th> of each
                         //       sub-table to the correct (singular) column name
                         //       (fixes: all sub-tables showing the first group's name)
-                        //   (b) the per-group inline-thumbnail loop in renderGroupedTable
-                        //       finds group.entityFeatures.addCAA/addEAA and calls
-                        //       _artInitInlinePics with the correct column name per table
-                        //       (fixes: inline CAA/EAA thumbnails absent on disk-load)
+                        //   (b) all other multi-table pages — leave colName undefined
+                        //       so renderGroupedTable does NOT patch the first <th>.
+                        //       Without this guard, `releasegroup-releases` would have
+                        //       its first <th> changed from "Release" to "Official
+                        //       release", causing caaFindColumnByName('Release') to
+                        //       return -1 and skipping all inline art injection.
+                        //
+                        // entityFeatures is derived independently of colName and is
+                        // always set when the definition carries an entityFeatures map.
                         const _grpCat = group.category || group.key;
-                        const _grpColName = _diskSingularTypes.has(pageType)
-                            ? _toSingular(_grpCat)
-                            : _grpCat;
+                        const _usesColNamePath = !!(activeDefinition.features?.listToTable ||
+                                                    activeDefinition.features?.groupByH3);
+                        const _grpColName = _usesColNamePath
+                            ? (_diskSingularTypes.has(pageType) ? _toSingular(_grpCat) : _grpCat)
+                            : undefined;
                         const _grpEntityFeatures = (activeDefinition.entityFeatures && _grpCat)
                             ? resolveEntityFeaturesFromH3(_grpCat, activeDefinition)
                             : null;
@@ -36370,10 +38607,12 @@ a { color: #1565c0; }`;
                         const _grpEntry = {
                             key: group.key,
                             category: _grpCat,
-                            colName: _grpColName,
                             rows: reconstructedRows,
                             originalRows: [...reconstructedRows]
                         };
+                        if (_grpColName !== undefined) {
+                            _grpEntry.colName = _grpColName;
+                        }
                         if (_grpEntityFeatures && Object.keys(_grpEntityFeatures).length > 0) {
                             _grpEntry.entityFeatures = _grpEntityFeatures;
                         }
@@ -36898,8 +39137,11 @@ a { color: #1565c0; }`;
 
                 const rowLabel = loadedRowCount === 1 ? 'row' : 'rows';
                 Lib.debug('cache', `Successfully loaded ${loadedRowCount} ${rowLabel} from disk!`);
-                infoDisplay.textContent = `✓ Loaded ${loadedRowCount} ${rowLabel} from file ${file.name} | Active Pre-Filter: ${!!filterQueryRaw}`;
-                infoDisplay.style.color = 'green';
+                _setInfoSub('mb-info-display-generic',
+                    `✓ Loaded ${loadedRowCount} ${rowLabel} from file ${file.name} | Active Pre-Filter: ${!!filterQueryRaw}`,
+                    filterQueryRaw
+                        ? `Pre-filter '${filterQueryRaw}' applied. Adjust the filter controls to show more or fewer results.`
+                        : `Use the filter and sort controls to explore the ${loadedRowCount} ${rowLabel}. Click '📂' again to load a different file.`);
 
                 // ── Auto-resize columns after disk-load ───────────────────────────
                 // Deferred by one task (setTimeout 0) so the browser has had a chance
@@ -38182,7 +40424,7 @@ a { color: #1565c0; }`;
 
         if (headerRow) {
             Array.from(headerRow.children).forEach((th, i) => {
-                const txt = th.textContent.trim();
+                const txt = _cleanColHeaderText(th);
                 if (txt === 'Barcode') barcodeColIdx = i;
                 if (txt === 'Format')  formatColIdx  = i;
             });
@@ -38236,6 +40478,8 @@ a { color: #1565c0; }`;
                     cell.style.removeProperty('padding');
                     cell.style.removeProperty('border-radius');
                     cell.style.removeProperty('cursor');
+                    // Clear mbRestBg so the _leave hover handler reverts to CSS zebra.
+                    delete cell.dataset.mbRestBg;
                     cell.removeEventListener('click', barcodeToggleMergeCheckbox);
                 });
                 return;
@@ -38251,6 +40495,9 @@ a { color: #1565c0; }`;
 
             cells.forEach(cell => {
                 cell.style.backgroundColor = color;
+                // Update mbRestBg so the applyStickyColumn _leave handler restores
+                // the barcode color after hover rather than clearing it to transparent.
+                cell.dataset.mbRestBg = color;
                 cell.style.fontWeight      = 'bold';
                 cell.style.padding         = '2px 4px';
                 cell.style.borderRadius    = '3px';
@@ -38312,14 +40559,17 @@ a { color: #1565c0; }`;
     function makeCaaQueue(maxConcurrent) {
         let running = 0;
         const pending = [];
-        let _onIdleCb = null; // called once when queue drains to idle (running=0 and pending=[])
+        let _onIdleCb  = null;  // called once when queue drains to idle (running=0 and pending=[])
+        let _cancelled = false; // set by cancel() — _next() becomes a no-op
 
         /**
          * Internal pump: starts as many queued tasks as the concurrency budget allows.
          * When the queue drains completely (running reaches 0 with nothing pending) the
          * registered onIdle callback fires once, then is cleared.
+         * A no-op after cancel() is called.
          */
         function _next() {
+            if (_cancelled) return;
             while (running < maxConcurrent && pending.length > 0) {
                 running++;
                 const { fn, resolve, reject } = pending.shift();
@@ -38365,6 +40615,18 @@ a { color: #1565c0; }`;
                 } else {
                     _onIdleCb = cb;
                 }
+            },
+            /**
+             * Cancels all queued-but-not-yet-started tasks and prevents new ones
+             * from starting.  Currently-running tasks are allowed to run to
+             * completion (their in-flight network requests cannot be recalled).
+             * After cancel() the queue is permanently inert — do not reuse it.
+             */
+            cancel() {
+                const dropped = pending.length;
+                _cancelled    = true;
+                pending.length = 0;
+                Lib.debug('caa', `_caaQueue: cancel() — dropped ${dropped} pending task(s), ${running} still running`);
             },
             /** Number of tasks waiting for a free slot. */
             get pendingCount() { return pending.length; },
@@ -38431,6 +40693,8 @@ a { color: #1565c0; }`;
         icon:   { memory: 0, idb: 0, network: 0, browser: 0 },
         inline: { memory: 0, idb: 0, network: 0, browser: 0 },
     };
+    /** True once the CAA segment has been appended to globalStatusDisplay for the current load. */
+    let _caaGlobalStatusDone = false;
 
 
     // ── Art Archive (CAA / EAA) shared feature engine ─────────────────────────
@@ -38459,10 +40723,11 @@ a { color: #1565c0; }`;
     //   caaUpdateBigBoxForTable  eaaUpdateBigBoxForTable   (called from STF)
     //
     // Call-order contract (enforced at all 4 render-completion call sites):
-    //   1. initCaaPics()         — creates _caaQueue first.
-    //   2. initEaaPics()         — consumes _caaQueue.
-    //   3. initCaaInlinePics()   — consumes _caaQueue.
-    //   4. initEaaInlinePics()   — consumes _caaQueue.
+    //   1. _artInitQueue()       — creates _caaQueue first.
+    //   2. initCaaInlinePics()   — enqueues inline thumbnails first (most visible).
+    //   3. initEaaInlinePics()   — enqueues EAA inline thumbnails.
+    //   4. initCaaPics()         — enqueues small icons + big strip.
+    //   5. initEaaPics()         — enqueues EAA small icons + big strip.
     //
     // ─────────────────────────────────────────────────────────────────────────
 
@@ -38732,6 +40997,27 @@ a { color: #1565c0; }`;
     let _artIdbPromise = null;
 
     /**
+     * Written by _artIdbSweepExpired() after each background sweep.
+     * Exposed in the Stats panel "IndexedDB Cache" section.
+     * @type {{ deleted: number, ts: number|null }}
+     */
+    let _artIdbLastSweep = { deleted: 0, ts: null };
+
+    /**
+     * Number of rel-ws2 records silently evicted by _relIdbGet() due to TTL
+     * expiry during this page session.  Exposed in the Stats panel.
+     * @type {number}
+     */
+    let _relIdbTtlEvictCount = 0;
+
+    /**
+     * Number of rel-ws2 records explicitly evicted by _relRetryMbids() during
+     * this page session (user-initiated retry).  Exposed in the Stats panel.
+     * @type {number}
+     */
+    let _relIdbRetryEvictCount = 0;
+
+    /**
      * Per-session in-memory image cache (Tier 1).
      * Maps canonical URL string → object URL string (blob:…).
      * Object URLs are revoked when the page unloads via a 'pagehide' listener.
@@ -38875,6 +41161,26 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Returns the number of records currently in one IDB object store.
+     * Resolves to 0 when IDB is unavailable or the store does not exist.
+     *
+     * @param   {string} storeName  'images' | 'metadata' | 'rel-ws2'
+     * @returns {Promise<number>}
+     */
+    function _artIdbCountStore(storeName) {
+        return _artOpenIdb()
+            .then(db => new Promise(resolve => {
+                try {
+                    const tx  = db.transaction(storeName, 'readonly');
+                    const req = tx.objectStore(storeName).count();
+                    req.onsuccess = () => resolve(req.result || 0);
+                    req.onerror   = () => resolve(0);
+                } catch (_) { resolve(0); }
+            }))
+            .catch(() => 0);
+    }
+
+    /**
      * Normalises a protocol-relative CAA/EAA URL to an https:// absolute URL
      * suitable for use as a stable IDB key.
      *
@@ -38902,6 +41208,7 @@ a { color: #1565c0; }`;
                 method:       'GET',
                 url:          url,
                 responseType: 'blob',
+                timeout:      30000,
                 onload:       (resp) => {
                     if (resp.status >= 200 && resp.status < 300) {
                         resolve(resp.response);
@@ -38909,8 +41216,9 @@ a { color: #1565c0; }`;
                         reject(new Error(`HTTP ${resp.status} for ${url}`));
                     }
                 },
-                onerror:  (err) => reject(new Error('GM_xhr network error: ' + url)),
-                ontimeout: ()  => reject(new Error('GM_xhr timeout: ' + url)),
+                onerror:   (err) => reject(new Error('GM_xhr network error: ' + url)),
+                ontimeout: ()   => reject(new Error('GM_xhr timeout: ' + url)),
+                onabort:   ()   => reject(new Error('GM_xhr aborted: ' + url)),
             });
         });
     }
@@ -39063,11 +41371,19 @@ a { color: #1565c0; }`;
                     }
                 });
 
+                const relTtlMs = _REL_IDB_TTL_MS;
                 Promise.all([
                     sweepStore('images',   imgTtlMs),
                     sweepStore('metadata', metaTtlMs),
+                    sweepStore('rel-ws2',  relTtlMs),
                 ]).then(() => {
+                    _artIdbLastSweep = { deleted, ts: Date.now() };
                     Lib.debug('idb', `_artIdbSweepExpired: sweep complete — deleted ${deleted} expired record(s)`);
+                    if (deleted > 0) {
+                        _setInfoSub('mb-info-display-generic',
+                            `🗄️ IDB sweep: removed ${deleted} expired entr${deleted === 1 ? 'y' : 'ies'}`,
+                            `Background IndexedDB sweep deleted ${deleted} expired record(s) from images, metadata, and rel-ws2 stores`);
+                    }
                 }).catch(e => {
                     Lib.warn('idb', '_artIdbSweepExpired: sweep error:', e);
                 });
@@ -41086,13 +43402,23 @@ a { color: #1565c0; }`;
         }
 
         // ── Fallback: native img element path (IDB disabled or cacheBust=true) ─
+        // A 30-second watchdog timer ensures the queue task always settles even
+        // if the browser silently drops the request (e.g. when many detached
+        // <img> elements are competing for connection slots after a filter run
+        // replaced the DOM while old queue tasks were still in-flight).
         return new Promise(resolve => {
-            const img = document.createElement('img');
+            const img    = document.createElement('img');
+            const _timer = setTimeout(() => {
+                Lib.debug(ctx.key, `${ctx.key}LoadIcon: img load watchdog fired (30 s) — ${imgurl}`);
+                resolve();
+            }, 30000);
             img.addEventListener('load', function() {
+                clearTimeout(_timer);
                 _onIconLoaded(this.src, false);
                 resolve();
             });
             img.addEventListener('error', function() {
+                clearTimeout(_timer);
                 _onIconError();
                 resolve();
             });
@@ -42788,11 +45114,13 @@ a { color: #1565c0; }`;
                 const nowVisible = !visible;
                 liveBox.style.display        = nowVisible ? 'flex' : 'none';
                 liveBox.dataset[ctx.visAttr] = nowVisible ? 'true' : 'false';
-                btn.title = nowVisible
-                    ? 'Hide ' + ctx.stripeLabel +
-                        (activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section')
-                    : 'Show ' + ctx.stripeLabel +
-                        (activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section');
+                const _caaSection = activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section';
+                const _caaDirectOn = typeof Lib !== 'undefined' && Lib.settings && Lib.settings.sa_enable_direct_ctrl_char_shortcuts;
+                const _caaKey = getShortcutDisplay('sa_shortcut_col_toggle_caa', 'Ctrl+A');
+                const _caaKbHint = _caaDirectOn
+                    ? `keyboard: ${_caaKey} or ${getPrefixDisplay()} then A when a column filter is focused`
+                    : `keyboard: ${getPrefixDisplay()} then A when a column filter is focused (or enable Direct Ctrl+Letter Shortcuts for ${_caaKey})`;
+                btn.title = (nowVisible ? 'Hide ' : 'Show ') + ctx.stripeLabel + _caaSection + ' — ' + _caaKbHint;
                 Lib.debug(ctx.key, `${ctx.key} toggle btn ${btnId}: strip ${nowVisible ? 'shown' : 'hidden'}`);
             });
 
@@ -42838,11 +45166,13 @@ a { color: #1565c0; }`;
         const visible = liveBoxForTitle
             ? liveBoxForTitle.dataset[ctx.visAttr] !== 'false'
             : false;
-        btn.title = visible
-            ? 'Hide ' + ctx.stripeLabel +
-                (activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section')
-            : 'Show ' + ctx.stripeLabel +
-                (activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section');
+        const _caaSection = activeDefinition && activeDefinition.tableMode === 'multi' ? ' for this sub-section' : ' for this section';
+        const _caaDirectOn = typeof Lib !== 'undefined' && Lib.settings && Lib.settings.sa_enable_direct_ctrl_char_shortcuts;
+        const _caaKey = getShortcutDisplay('sa_shortcut_col_toggle_caa', 'Ctrl+A');
+        const _caaKbHint = _caaDirectOn
+            ? `keyboard: ${_caaKey} or ${getPrefixDisplay()} then A when a column filter is focused`
+            : `keyboard: ${getPrefixDisplay()} then A when a column filter is focused (or enable Direct Ctrl+Letter Shortcuts for ${_caaKey})`;
+        btn.title = (visible ? 'Hide ' : 'Show ') + ctx.stripeLabel + _caaSection + ' — ' + _caaKbHint;
 
         Lib.debug(ctx.key, `${ctx.key}CreateOrUpdateToggleButton: ${isNew ? 'created' : 'updated'} btn ${btnId} (${count} link(s))`);
         return btnId;
@@ -42882,10 +45212,6 @@ a { color: #1565c0; }`;
             // containing artwork-icon spans inside art-anchor elements.
             if (hasColumn) {
                 _artInitSmallPics(ctx, table);
-                // Enrichment (count badges + multi-row cell build) is always done
-                // regardless of the sa_caa_pics_small setting.  _artEnrichIcon's
-                // own idempotency guard prevents double-work when both paths fire.
-                _artEnrichTable(ctx, table);
             }
 
             // Single-pass strategy: scan links first (read-only), create the
@@ -42917,6 +45243,17 @@ a { color: #1565c0; }`;
         });
 
         Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}Pics: processed ${processed} table(s) with ${ctx.column} column`);
+
+        // Pass 2: enqueue JSON-API enrichment after all image fetches so that
+        // small icons and big-strip loads have priority in _caaQueue.  Users who
+        // start filtering immediately will see visual feedback before count badges
+        // and multi-row art cells arrive.  _artEnrichIcon's own idempotency guard
+        // prevents double-work on re-renders.
+        tables.forEach(table => {
+            if (caaFindColumnByName(table, ctx.column) !== -1) {
+                _artEnrichTable(ctx, table);
+            }
+        });
 
         // For multi-table pages, create/refresh the global art toggle button that
         // sits in the h2 header and controls all sub-table bigboxes at once.
@@ -44218,11 +46555,36 @@ a { color: #1565c0; }`;
         ];
         const toastText = lines.join('\n');
 
-        // ── Update the global info area (compact single-line summary) ─────────
-        const infoDisplay = document.getElementById('mb-info-display');
-        if (infoDisplay) {
-            infoDisplay.textContent = `🎨 CAA/EAA: ${totalLabel} in ${timeStr}`;
-            infoDisplay.style.color = 'green';
+        // ── Build tooltip and label (shared by info sub-display and global segment) ─
+        // Tooltip: always all 4 tiers (zero counts shown explicitly)
+        const _caasdTip = tiers
+            .map(({ key, emoji, label }) => {
+                const ic = s.icon[key];
+                const il = s.inline[key];
+                const parts = [];
+                if (ic > 0) parts.push(`${ic} icon`);
+                if (il > 0) parts.push(`${il} inline`);
+                const tot = ic + il;
+                const breakdown = tot === 0 ? '0'
+                    : parts.length === 2
+                        ? `${parts[0]} + ${parts[1]} = ${tot}`
+                        : `${tot}`;
+                return `${emoji} ${label}: ${breakdown}`;
+            })
+            .join('\n');
+        const _artLabel = _getActiveArtCtx().column;  // 'CAA' or 'EAA'
+        const _caasdTipFull =
+            `CAA/EAA artwork: ${iconTotal} icon + ${inlineTotal} inline = ${grandTotal} total\n` +
+            _caasdTip + '\n' +
+            `Total load time: ${timeStr}`;
+
+        // ── Update the CAA/EAA info sub-display ──────────────────────────────
+        _setInfoSub('mb-info-display-caa', `🎨${_artLabel}: ${timeStr}`, _caasdTipFull);
+
+        // ── Append compact CAA/EAA summary to global status display (initial load only) ─
+        if (!_caaGlobalStatusDone) {
+            _caaGlobalStatusDone = true;
+            _sdAppend(`🎨${_artLabel}: ${timeStr}`, ', ', _caasdTipFull);
         }
 
         // ── Show toast ────────────────────────────────────────────────────────
@@ -44324,27 +46686,34 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Entry point for the CAA Illustrated Discography feature.
+     * Cancels the current `_caaQueue` (if any) and creates a fresh one with the
+     * configured concurrency.  Also resets per-session fetch telemetry.
      *
-     * (Re-)creates the shared `_caaQueue` — which is also consumed by
-     * initEaaPics / initCaaInlinePics / initEaaInlinePics — so this MUST be called
-     * before any of those functions at every render-completion site.
+     * Must be called once per render pass, before any art init function.
+     * Separating queue creation from `initCaaPics` allows `initCaaInlinePics` /
+     * `initEaaInlinePics` to be enqueued first so inline thumbnails appear before
+     * small icons and the big picture strip.
      *
      * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
-     *
-     * Called from: main fetch pipeline, runFilter() single-table branch,
-     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
      */
-    function initCaaPics() {
+    function _artInitQueue() {
         if (!Lib.settings.sa_enable_caa_pics) return;
 
+        // Cancel the old queue before replacing it so its pending tasks are
+        // discarded immediately.  Without this, the previous queue (possibly
+        // processing thousands of images from the pre-filter render) keeps
+        // running in the background, saturating the browser's connection pool
+        // and causing the new queue's requests to stall or never complete.
+        // Currently-running tasks (at most sa_caa_fetch_concurrency) are
+        // allowed to finish naturally — their in-flight requests cannot be
+        // recalled once submitted to the browser.
+        if (_caaQueue) _caaQueue.cancel();
+
         // (Re-)create the shared request queue so the current sa_caa_fetch_concurrency
-        // setting is picked up on every render pass.  Any previously queued requests
-        // from a prior render are abandoned — their DOM nodes no longer exist after
-        // renderFinalTable rebuilds the tbody.
+        // setting is picked up on every render pass.
         const concurrency = Math.max(1, Math.min(20, Lib.settings.sa_caa_fetch_concurrency || 4));
         _caaQueue = makeCaaQueue(concurrency);
-        Lib.debug('caa', `initCaaPics: request queue created (concurrency=${concurrency})`);
+        Lib.debug('caa', `_artInitQueue: request queue created (concurrency=${concurrency})`);
 
         // Reset per-session fetch telemetry so every render pass gets a fresh
         // count and elapsed-time measurement.  _caaFetchStats counters are
@@ -44356,12 +46725,29 @@ a { color: #1565c0; }`;
             inline: { memory: 0, idb: 0, network: 0, browser: 0 },
         };
 
-        _artInitPics(CAA_CTX);
-
         // Schedule a background IDB sweep to evict expired image blobs and metadata
         // records after the render completes.  Runs in browser idle time so it never
         // competes with the image load queue.
         _artIdbSweepExpired();
+    }
+
+    /**
+     * Entry point for the CAA Illustrated Discography feature.
+     *
+     * Enqueues small-icon loads and the big picture strip for all tables via
+     * `_artInitPics`.  Queue creation is handled by `_artInitQueue`, which call
+     * sites invoke before the first inline-thumbnail function so that inline pics
+     * are enqueued ahead of small icons and the big strip.
+     *
+     * Guards: `Lib.settings.sa_enable_caa_pics` must be true.
+     *
+     * Called from: main fetch pipeline, runFilter() single-table branch,
+     *              renderGroupedTable() multi-table re-renders, load-from-disk pipeline.
+     */
+    function initCaaPics() {
+        if (!Lib.settings.sa_enable_caa_pics) return;
+        if (!_caaQueue) _artInitQueue();
+        _artInitPics(CAA_CTX);
     }
 
     /**
@@ -44862,11 +47248,41 @@ a { color: #1565c0; }`;
         'l': { fn: () => showLoadFilterDialog(document.getElementById('mb-load-from-disk-btn')), description: 'Load from Disk' },
         'r': { fn: toggleAutoResizeColumns, description: 'Auto Resize Columns' },
         'v': { fn: openVisibleColumnsMenu, description: 'Open Visible Columns Menu' },
+        'b': { fn: () => document.getElementById('mb-barcode-highlight-btn')?.click(), description: 'Toggle Barcode Highlighting' },
         'd': { fn: openDensityMenu, description: 'Open Density Menu' },
         'i': { fn: showStatsPanel, description: 'Show Statistics Panel' },
         'e': { fn: openExportMenu, description: 'Open Export Menu' },
         'k': { fn: showShortcutsHelp, description: 'Show Keyboard Shortcuts Help' },
         ',': { fn: () => openSettingsWithConfigButtons(), description: 'Open Settings' },
-        'h': { fn: showAppHelp, description: 'Show App Help' }
+        'h': { fn: showAppHelp, description: 'Show App Help' },
+        'g': {
+            fn: () => {
+                const fi = document.getElementById('mb-global-filter-input');
+                if (fi) { fi.focus(); const p = fi.value.length; fi.setSelectionRange(p, p); }
+            },
+            description: 'Focus Global Filter'
+        },
+        'c': {
+            fn: () => {
+                const tables = document.querySelectorAll('table.tbl');
+                if (!tables.length) return;
+                _colFilterTableIndex = (_colFilterTableIndex + 1) % tables.length;
+                const tbl = tables[_colFilterTableIndex];
+                const filterRow  = tbl.querySelector('thead tr.mb-col-filter-row');
+                const headerRow  = tbl.querySelector('thead tr:first-child');
+                if (!filterRow || !headerRow) return;
+                const allInputs = filterRow.querySelectorAll('input.mb-col-filter-input');
+                for (let i = 0; i < allInputs.length; i++) {
+                    const inp    = allInputs[i];
+                    const colIdx = parseInt(inp.dataset.colIdx, 10);
+                    const th     = headerRow.cells[colIdx];
+                    if (th && !th.classList.contains('checkbox-cell') && !th.classList.contains('number-column')) {
+                        inp.focus();
+                        break;
+                    }
+                }
+            },
+            description: 'Focus Next Column Filter'
+        }
     };
 })();
