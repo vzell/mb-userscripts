@@ -5,6 +5,7 @@
 - [MusicBrainz - Customizable Language Selector on work and alias pages](#mb_customizable_language_selector)
 - [MusicBrainz - NO Label & Catalognumber Buttons](#mb_nolabel_nocatno)
 ---
+- [MusicBrainz - Springsteen Cover Art Uploader](#mb_cover_uploader)
 - [MusicBrainz - MB Page Enhancer](#mb_page_enhancer)
 - [MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities](#mb_show_all_entity_data)
 - [OBSOLETE: MusicBrainz - Accumulate Paginated MusicBrainz Pages With Filtering And Sorting Capabilities](#mb_show_all_consolidated)
@@ -46,6 +47,12 @@
 - [BruceBase – Auto 200 Revisions](#bb_auto_200_revisions)
 ---
 
+## <a name="mb_cover_uploader"></a> MusicBrainz - ArtStation plugin: imports cover art from SpringsteenLyrics.com and Jungleland.it, keyed off the release's external links on MusicBrainz
+
+ArtStation plugin: imports cover art from SpringsteenLyrics.com and Jungleland.it, keyed off the release's external links on MusicBrainz.
+
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/main/SpringsteenCoverArtUploader/SpringsteenCoverArtUploader.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/main/SpringsteenCoverArtUploader/SpringsteenCoverArtUploader.user.js)
 
 ## <a name="mb_page_enhancer"></a> MusicBrainz - MB Page Enhancer
 

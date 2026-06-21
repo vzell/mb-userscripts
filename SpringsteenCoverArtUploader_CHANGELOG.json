@@ -1,0 +1,145 @@
+[
+    {
+        "version": "1.01.006+2026-06-21",
+        "date": "2026-06-21",
+        "sections": [
+            {
+                "label": "🐛 Fix",
+                "items": [
+                    "Jungleland.it: remove the provider icon field. ArtStation's wire() function runs before hydrateImgs() and calls th.querySelector('img') to find the gallery image inside .as-thumb. For new provider-sourced items, thumbImg() returns an <span> placeholder (not an <img>), but the provider-badge favicon <img> is already present inside .as-thumb. wire() therefore misassigns the gallery-image onerror handler to the favicon: when www.jungleland.it/favicon.ico returns 404 that handler fires th.classList.add('na'), and the CSS rule .as-thumb.na img { display:none } hides the gallery JPEG that hydrateImgs() later inserts. Removing the icon property omits the badge entirely, leaves no stray <img> in .as-thumb at wire() time, and lets the gallery thumbnail render correctly."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.01.005+2026-06-21",
+        "date": "2026-06-21",
+        "sections": [
+            {
+                "label": "🐛 Fix",
+                "items": [
+                    "Jungleland.it: images now render in the ArtStation gallery. The previous approach (gmFetchDataUrl → data URL string) produced blobs that passed ArtStation's off-DOM test but failed to display in the in-DOM gallery img element. Reverted to returning plain { url } objects so ArtStation's own providerBlob → gmFetch downloads the bytes in its own realm — the documented robust default for non-CloudFlare-protected sites. Removes gmFetchDataUrl, which is no longer needed."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.01.004+2026-06-20",
+        "date": "2026-06-20",
+        "sections": [
+            {
+                "label": "🐛 Fix",
+                "items": [
+                    "Jungleland.it: return dataUrl strings instead of Blob objects so images cross the userscript sandbox boundary cleanly and render correctly in ArtStation. Replaces gmFetchBlob with gmFetchDataUrl which pipes GM.xmlHttpRequest (CORS-free, Referer header retained) through FileReader.readAsDataURL()."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.01.003+2026-06-20",
+        "date": "2026-06-20",
+        "sections": [
+            {
+                "label": "🐛 Fix",
+                "items": [
+                    "SpringsteenLyrics popup: fix postMessage silently discarded when the external link is stored as http:// but the site redirects to https://. The origin check now compares hostnames instead of full origins, so the http→https redirect no longer causes a mismatch."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.01.002+2026-06-20",
+        "date": "2026-06-20",
+        "sections": [
+            {
+                "label": "🚀 Feature",
+                "items": [
+                    "SpringsteenLyrics: add support for bootleg releases (bootlegs.php?item=<id>) alongside the existing collection releases (collection.php?item=<id>). Both page types share the same thumbnail link structure so no extractor change is needed — only @match entries for bootlegs.php are added to the userscript header."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.01.001+2026-06-20",
+        "date": "2026-06-20",
+        "sections": [
+            {
+                "label": "✨ Improve",
+                "items": [
+                    "Add match field to both providers ('springsteenlyrics.com' and 'jungleland.it'): ArtStation now resolves external links and filters provider buttons itself — 'Import from …' only appears when the release actually links that site. ctx.link supplies the matched URL to run(), removing the need for a getMBExternalURLs() call inside run().",
+                    "Jungleland.it: pass Referer: ctx.link on image blob fetches to satisfy potential hotlink protection.",
+                    "Jungleland.it: log blob.type and blob.size for each fetched image to diagnose cases where the server returns an HTML error page instead of image bytes."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.01.000+2026-06-20",
+        "date": "2026-06-20",
+        "sections": [
+            {
+                "label": "🔧 Refactor",
+                "items": [
+                    "Rewrite as an ArtStation plugin: register two providers (SpringsteenLyrics and Jungleland.it) via window.ArtStation.registerProvider() / artstation:register-provider CustomEvent instead of injecting standalone upload buttons.",
+                    "Each provider's run(ctx) keys off the release's external links (MB Web Service url-rels) to discover its source page — no hardcoded URL mapping needed.",
+                    "Remove the GM-storage queue, /add-cover-art page handler, and all upload machinery (dropFile, setImageParameters, processUploadQueue, dataUrlToFile) — ArtStation owns the staging and upload flow.",
+                    "Change Jungleland.it type inference to return ArtStation string names ('Front', 'Back', 'Booklet', 'Medium') instead of numeric MB type IDs.",
+                    "Retain the popup strategy for SpringsteenLyrics (CloudFlare bypass): the popup fetches image binaries as data URLs and postMessages them back; ArtStation resolves dataUrl to a Blob via fetch().",
+                    "Remove @match for /add-cover-art, and all GM_setValue / GM_getValue / GM_deleteValue grants — no longer needed."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.00.004+2026-06-19",
+        "date": "2026-06-19",
+        "sections": [
+            {
+                "label": "🐛 Fix",
+                "items": [
+                    "SpringsteenLyrics: fix image downloads blocked by CloudFlare. The popup now fetches each image binary as a data URL using the browser's own fetch() (same-origin, CF cookie valid) before posting the payload back to the MB opener. On the MB side, processUploadQueue reconstructs File objects from the embedded data URL instead of calling GM.xmlHttpRequest — which was returning a ~6 KB CF challenge HTML page instead of the actual JPEG for every image."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.00.003+2026-06-19",
+        "date": "2026-06-19",
+        "sections": [
+            {
+                "label": "🐛 Fix",
+                "items": [
+                    "SpringsteenLyrics: bypass CloudFlare bot detection by opening the collection page in a real browser popup instead of GM.xmlHttpRequest. The popup loads the page normally (passing CF), the userscript running inside it extracts images from the live DOM and postMessages them back to the MusicBrainz opener window, then the popup auto-closes. Added @match for springsteenlyrics.com and a usePopup provider flag to route CF-protected sites through this path."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.00.002+2026-06-19",
+        "date": "2026-06-19",
+        "sections": [
+            {
+                "label": "🔧 Refactor",
+                "items": [
+                    "Add comprehensive debug logging throughout: every GM request/response (status, headers, finalUrl, body preview), CloudFlare detection breakdown (which condition triggered), image extractor filter details (per-link pass/fail with hrefs), upload queue state, and drop/parameter-setting steps. All output is prefixed '[MB: Cover Art Upload]' and grouped in the browser console."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.00.001+2026-06-19",
+        "date": "2026-06-19",
+        "sections": [
+            {
+                "label": "🚀 Feature",
+                "items": [
+                    "Initial release.",
+                    "Detects SpringsteenLyrics.com and Jungleland.it URLs linked to a MusicBrainz release and adds upload buttons on the cover-art page.",
+                    "On button click: fetches the external page, extracts full-resolution image URLs, and navigates to the add-cover-art page where images are automatically downloaded and dropped into the upload queue.",
+                    "Infers cover-art type (Front, Back, Booklet, Medium) from Jungleland.it filenames.",
+                    "Surfaces CloudFlare challenge errors with a clear user-facing message."
+                ]
+            }
+        ]
+    }
+]
