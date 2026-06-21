@@ -1,5 +1,54 @@
 [
     {
+        "version": "1.02.003+2026-06-21",
+        "date": "2026-06-21",
+        "sections": [
+            {
+                "label": "✨ Improve",
+                "items": [
+                    "Add icons for BruceBase and Jungeland.it."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.02.002+2026-06-21",
+        "date": "2026-06-21",
+        "sections": [
+            {
+                "label": "✨ Improve",
+                "items": [
+                    "BruceBase: infer event-art type(s) and comment from the image filename via inferBrucebaseTypesAndComment(). Filename convention YYYYMMDD[char]_Category_Number[_Qualifier…] maps to ArtStation EVENT_TYPES: Pass→Ticket; Wristband→Ticket (comment: wristband, zone, ticket-class); Setlist→Setlist (qualifiers: handwritten/printed/work); Banner→Banner (qualifier Merchandise adds a second type); Merchandise→Merchandise; AdPoster/Poster→Poster; Flyer→Flyer; Schedule→Schedule; Program/Programme→Program; Map→Map; Logo→Logo. All-ASCII-uppercase qualifier tokens (GA, VIP, SHN) keep their case; others are lowercased. For Wristband, consecutive non-caps qualifiers are space-joined into one phrase so GA_Sun_Pass yields wristband, GA, sun pass."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.02.001+2026-06-21",
+        "date": "2026-06-21",
+        "sections": [
+            {
+                "label": "🐛 Fix",
+                "items": [
+                    "BruceBase: extractBrucebaseNewsUrl: replace DOMParser-based anchor lookup with a bounded regex on the raw HTML string. The rendered debug file and the live HTTP response differ in DOM structure (the anchor is outside a <p> in the raw response), causing closest('p') to return null and the link search to silently short-circuit. The regex matches <a name=\"…\"> followed within 150 characters by <strong><a href>, then extracts the category:slug to build the news: URL — works for both absolute and relative href forms."
+                ]
+            }
+        ]
+    },
+    {
+        "version": "1.02.000+2026-06-21",
+        "date": "2026-06-21",
+        "sections": [
+            {
+                "label": "🚀 Feature",
+                "items": [
+                    "Add BruceBase provider for MusicBrainz event-art pages. Matches external links of the form http://brucebase.wikidot.com/<year>#<anchor>. run() fetches the year overview page, locates the named anchor, extracts the href of the event entry (gig:/nogig:/rehearsal:/… prefix), rewrites it to news:, fetches the news page, and returns all gallery images. Two URL patterns are supported: local--files links (direct full-res JPEGs, class=with-lb) and local--resized-images links (medium thumbnails transformed to full-res by replacing the path prefix and stripping /medium.jpg). Types are left empty for the user to assign.",
+                    "Add @match for /event/*/event-art and @connect brucebase.wikidot.com to the userscript header. Update entry-point path regex to activate registerProviders() on both cover-art and event-art pages."
+                ]
+            }
+        ]
+    },
+    {
         "version": "1.01.006+2026-06-21",
         "date": "2026-06-21",
         "sections": [

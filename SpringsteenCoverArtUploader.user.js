@@ -2,7 +2,7 @@
 // @name         VZ: Springsteen Cover Art Uploader
 // @namespace    https://github.com/vzell/mb-userscripts
 // @description  ArtStation plugin: imports cover art from SpringsteenLyrics.com and Jungleland.it, keyed off the release's external links on MusicBrainz.
-// @version      1.01.006+2026-06-21
+// @version      1.02.003+2026-06-21
 // @author       vzell
 // @tag          AI generated
 // @homepageURL  https://github.com/vzell/mb-userscripts
@@ -11,6 +11,7 @@
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/SpringsteenCoverArtUploader.user.js
 // @icon         https://volkerzell.de/favicons/springsteenlyrics.ico
 // @match        *://*.musicbrainz.org/release/*/cover-art
+// @match        *://*.musicbrainz.org/event/*/event-art
 // @match        *://www.springsteenlyrics.com/collection.php*
 // @match        *://springsteenlyrics.com/collection.php*
 // @match        *://www.springsteenlyrics.com/bootlegs.php*
@@ -21,6 +22,7 @@
 // @connect      springsteenlyrics.com
 // @connect      www.jungleland.it
 // @connect      jungleland.it
+// @connect      brucebase.wikidot.com
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
 // @license      MIT
@@ -239,6 +241,191 @@
             });
     }
 
+    // ── BruceBase helpers ────────────────────────────────────────────────────
+
+    /**
+     * Given the HTML of a BruceBase year overview page and a date anchor (e.g. "150924c"),
+     * find the href of the event entry that follows the named anchor and return the
+     * corresponding "news:" URL (replacing the original category prefix).
+     *
+     * Year page structure in the raw HTTP response:
+     *   <a name="150924c"></a><br>
+     *   <strong><a href="/gig:2024-09-15c-…">…</a></strong>
+     *
+     * Note: DOMParser is not used here because the saved/rendered HTML differs from the
+     * raw HTTP response in ways that break closest('p') lookups. A bounded regex on the
+     * raw string is simpler and avoids those structural differences entirely.
+     *
+     * @param {string} html   - Raw HTML of the year page
+     * @param {string} anchor - The anchor id from the URL fragment (e.g. "150924c")
+     * @returns {string|null} - Absolute "news:" URL, or null if not found
+     */
+    function extractBrucebaseNewsUrl(html, anchor) {
+        const escaped = anchor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // Match the named anchor followed within ~150 chars by the title <strong><a href>
+        const re = new RegExp(
+            `<a[^>]*\\bname=["']?${escaped}["']?[^>]*>[\\s\\S]{0,150}` +
+            `<strong[^>]*>\\s*<a[^>]+href=["']([^"']+)["']`,
+            'i'
+        );
+        const m = html.match(re);
+        if (!m) {
+            dbg.warn(`extractBrucebaseNewsUrl: anchor "${anchor}" or title link not found`);
+            return null;
+        }
+        const href = m[1];
+        // href may be absolute ("http://brucebase.wikidot.com/gig:slug")
+        // or relative ("/gig:slug") — extract the slug after the colon.
+        const slugMatch = href.match(/\/([^/:]+):([^?#\s"']+)/);
+        if (!slugMatch) {
+            dbg.warn(`extractBrucebaseNewsUrl: unrecognised href format "${href}"`);
+            return null;
+        }
+        const newsUrl = `http://brucebase.wikidot.com/news:${slugMatch[2]}`;
+        dbg.log(`extractBrucebaseNewsUrl: "${anchor}" → ${newsUrl}`);
+        return newsUrl;
+    }
+
+    /**
+     * Infer MusicBrainz event-art type(s) and comment from a BruceBase image URL.
+     *
+     * BruceBase filename convention (basename without extension):
+     *   YYYYMMDD[char]_Category_Number[_Qualifier…]
+     *
+     * Qualifier capitalisation: all-ASCII-uppercase tokens (GA, VIP, SHN) keep
+     * their case; all others are lowercased.  For Wristband images consecutive
+     * non-all-caps qualifiers are space-joined into one phrase so that
+     * GA_Sun_Pass becomes "wristband, GA, sun pass" rather than
+     * "wristband, GA, sun, pass".
+     *
+     * Valid event-art types (ArtStation EVENT_TYPES):
+     *   Poster, Flyer, Banner, Program, Setlist, Schedule, Ticket,
+     *   Map, Logo, Merchandise, Raw/Unedited, Watermark
+     *
+     * @param {string} url - Full image URL (filename extracted from last path segment)
+     * @returns {{ types: string[], comment: string }}
+     */
+    function inferBrucebaseTypesAndComment(url) {
+        const basename = (url.split('/').pop() ?? '').replace(/\.[^.]+$/, '');
+        const parts = basename.split('_');
+        if (parts.length < 2) return { types: [], comment: '' };
+
+        const category = parts[1];
+        const rawQualifiers = parts.slice(3);
+
+        const isAllCaps = q => /^[A-Z0-9-]+$/.test(q);
+        const norm = q => isAllCaps(q) ? q : q.toLowerCase();
+        const catLower = category.toLowerCase();
+
+        if (catLower === 'pass') {
+            return { types: ['Ticket'], comment: '' };
+        }
+
+        if (catLower === 'wristband') {
+            // All-caps zone tokens (GA, VIP) each become their own comma item;
+            // consecutive non-caps tokens are space-joined into one phrase.
+            const commentParts = ['wristband'];
+            const nonCaps = [];
+            for (const q of rawQualifiers) {
+                if (isAllCaps(q)) {
+                    if (nonCaps.length) { commentParts.push(nonCaps.join(' ')); nonCaps.length = 0; }
+                    commentParts.push(q);
+                } else {
+                    nonCaps.push(q.toLowerCase());
+                }
+            }
+            if (nonCaps.length) commentParts.push(nonCaps.join(' '));
+            return { types: ['Ticket'], comment: commentParts.join(', ') };
+        }
+
+        if (catLower === 'setlist') {
+            return { types: ['Setlist'], comment: rawQualifiers.map(norm).join(', ') };
+        }
+
+        if (catLower === 'banner') {
+            const types = ['Banner'];
+            const comment = rawQualifiers
+                .filter(q => { if (q.toLowerCase() === 'merchandise') { types.push('Merchandise'); return false; } return true; })
+                .map(norm)
+                .join(', ');
+            return { types, comment };
+        }
+
+        if (catLower === 'merchandise') {
+            return { types: ['Merchandise'], comment: rawQualifiers.map(norm).join(', ') };
+        }
+
+        if (catLower === 'adposter' || catLower === 'poster') {
+            return { types: ['Poster'], comment: '' };
+        }
+
+        if (catLower === 'flyer') {
+            return { types: ['Flyer'], comment: '' };
+        }
+
+        if (catLower === 'schedule') {
+            return { types: ['Schedule'], comment: '' };
+        }
+
+        if (catLower === 'program' || catLower === 'programme') {
+            return { types: ['Program'], comment: '' };
+        }
+
+        if (catLower === 'map') {
+            return { types: ['Map'], comment: '' };
+        }
+
+        if (catLower === 'logo') {
+            return { types: ['Logo'], comment: '' };
+        }
+
+        return { types: [], comment: '' };
+    }
+
+    /**
+     * Extract full-resolution image URLs from a BruceBase news (event) page.
+     *
+     * Two link patterns are used by BruceBase:
+     *   1. Direct files:    http://brucebase.wdfiles.com/local--files/{page}/{file}.jpg
+     *      (identified by class="with-lb" on the <a>; used for candid/pass/setlist images)
+     *   2. Resized images:  http://brucebase.wdfiles.com/local--resized-images/{page}/{file}/medium.jpg
+     *      (used for posters, banners, merchandise, etc.)
+     *      Full-res URL = replace "local--resized-images" with "local--files" and strip "/medium.jpg"
+     *
+     * @param {string} html    - Raw HTML of the news page
+     * @param {string} newsUrl - Absolute URL of the news page (for base-tag resolution)
+     * @returns {Array<{url: string, types: string[], comment: string}>}
+     */
+    function extractBrucebaseImages(html, newsUrl) {
+        const doc = parseDOM(html, newsUrl);
+        const seen = new Set();
+        const images = [];
+
+        doc.querySelectorAll('a[href*="brucebase.wdfiles.com"]').forEach(a => {
+            const href = a.getAttribute('href') ?? '';
+            let url;
+            if (href.includes('/local--files/')) {
+                if (!/\.(jpg|jpeg|png|gif)$/i.test(href)) return;
+                url = href;
+            } else if (href.includes('/local--resized-images/')) {
+                url = href
+                    .replace('/local--resized-images/', '/local--files/')
+                    .replace(/\/medium\.jpg$/, '');
+            } else {
+                return;
+            }
+            url = new URL(url, newsUrl).href;
+            if (seen.has(url)) return;
+            seen.add(url);
+            const { types, comment } = inferBrucebaseTypesAndComment(url);
+            dbg.log(`  → ${url}  types=${JSON.stringify(types)}${comment ? `  comment="${comment}"` : ''}`);
+            images.push({ url, types, comment });
+        });
+
+        dbg.info(`extractBrucebaseImages: found ${images.length} image(s)`);
+        return images;
+    }
+
     // ── Popup strategy (SpringsteenLyrics — CloudFlare bypass) ───────────────
 
     /**
@@ -306,11 +493,11 @@
         });
     }
 
-    // ── ArtStation provider registration (runs on /release/*/cover-art) ──────
+    // ── ArtStation provider registration (runs on cover-art and event-art pages) ──
 
     /**
-     * Register both providers with ArtStation's plugin API.
-     * ArtStation resolves the release's external links itself using the `match` field,
+     * Register all providers with ArtStation's plugin API.
+     * ArtStation resolves the entity's external links itself using the `match` field,
      * then passes the matched URL as ctx.link into run(). No MB API call needed here.
      */
     function registerProviders() {
@@ -344,6 +531,7 @@
         const junglelandProvider = {
             id: 'jungleland',
             name: 'Jungleland.it',
+            icon: 'https://volkerzell.de/favicons/jungleland-it.png',
             /** ArtStation only shows this button when the release links jungleland.it. */
             match: 'jungleland.it',
 
@@ -370,14 +558,55 @@
             },
         };
 
+        const brucebaseProvider = {
+            id: 'brucebase',
+            name: 'BruceBase',
+            icon: 'https://volkerzell.de/favicons/brucebase.png',
+            /** ArtStation only shows this button when the event links brucebase.wikidot.com with a year+anchor URL. */
+            match: url => /^https?:\/\/brucebase\.wikidot\.com\/\d{4}#\w/.test(url),
+
+            /**
+             * @param {{ mbid: string, link: string }} ctx
+             *   ctx.link = "http://brucebase.wikidot.com/<year>#<anchor>"
+             * @returns {Promise<Array<{url: string, types: string[], comment: string, source: string}>>}
+             */
+            async run(ctx) {
+                dbg.info(`BruceBase provider run: link="${ctx.link}"`);
+
+                const hashIdx = ctx.link.indexOf('#');
+                if (hashIdx === -1) throw new Error(
+                    'BruceBase link has no anchor — expected http://brucebase.wikidot.com/<year>#<anchor>'
+                );
+                const yearPageUrl = ctx.link.slice(0, hashIdx);
+                const anchor = ctx.link.slice(hashIdx + 1);
+
+                const yearHtml = await gmFetch(yearPageUrl);
+                const newsUrl = extractBrucebaseNewsUrl(yearHtml, anchor);
+                if (!newsUrl) throw new Error(`No event link found for anchor "${anchor}" on ${yearPageUrl}`);
+
+                const newsHtml = await gmFetch(newsUrl);
+                const images = extractBrucebaseImages(newsHtml, newsUrl);
+                if (!images.length) throw new Error('No images found on the BruceBase event page.');
+
+                return images.map(img => ({
+                    url: img.url,
+                    types: img.types,
+                    comment: img.comment,
+                    source: img.url,
+                }));
+            },
+        };
+
         // Both registration paths are safe to fire — ArtStation de-dupes by id,
         // and a late registration refreshes an open Source popover.
         window.ArtStation?.registerProvider(springsteenProvider);
         window.ArtStation?.registerProvider(junglelandProvider);
+        window.ArtStation?.registerProvider(brucebaseProvider);
         document.dispatchEvent(new CustomEvent('artstation:register-provider', { detail: springsteenProvider }));
         document.dispatchEvent(new CustomEvent('artstation:register-provider', { detail: junglelandProvider }));
+        document.dispatchEvent(new CustomEvent('artstation:register-provider', { detail: brucebaseProvider }));
 
-        dbg.info('registerProviders: SpringsteenLyrics and Jungleland providers registered');
+        dbg.info('registerProviders: SpringsteenLyrics, Jungleland and BruceBase providers registered');
     }
 
     // ── Popup-side runner (springsteenlyrics.com) ────────────────────────────
@@ -469,8 +698,8 @@
     if (host === 'springsteenlyrics.com') {
         dbg.info('init: springsteenlyrics.com → runAsSpringsteenPopup()');
         runAsSpringsteenPopup();
-    } else if (/\/release\/[a-f0-9-]+\/cover-art$/.test(path)) {
-        dbg.info('init: cover-art page → registerProviders()');
+    } else if (/\/(release|event)\/[a-f0-9-]+\/(cover|event)-art$/.test(path)) {
+        dbg.info('init: art page → registerProviders()');
         registerProviders();
     } else {
         dbg.warn(`init: host+path matched no handler`);
