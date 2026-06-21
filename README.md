@@ -51,8 +51,8 @@
 
 ArtStation plugin: imports cover art from SpringsteenLyrics.com and Jungleland.it, keyed off the release's external links on MusicBrainz.
 
-[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/main/SpringsteenCoverArtUploader/SpringsteenCoverArtUploader.user.js)
-[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/main/SpringsteenCoverArtUploader/SpringsteenCoverArtUploader.user.js)
+[![Source](https://github.com/jerone/UserScripts/blob/master/_resources/Source-button.png)](https://github.com/vzell/mb-userscripts/blob/master/SpringsteenCoverArtUploader/SpringsteenCoverArtUploader.user.js)
+[![Install](https://raw.github.com/jerone/UserScripts/master/_resources/Install-button.png)](https://raw.githubusercontent.com/vzell/mb-userscripts/master/SpringsteenCoverArtUploader/SpringsteenCoverArtUploader.user.js)
 
 ## <a name="mb_page_enhancer"></a> MusicBrainz - MB Page Enhancer
 
