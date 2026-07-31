@@ -1,5 +1,78 @@
 [
   {
+    "version": "1.0.10",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "Add `// @grant GM_addStyle` so the shared `VZ_MBLibrary.user.js` settings/changelog dialogs (used by this script too) can inject CSS via `GM_addStyle()` instead of a plain `<style>` element, which MusicBrainz's `/account/*` pages block under Content-Security-Policy. See ShowAllEntityData's 9.99.737 changelog entry for the full root-cause writeup."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.9",
+    "date": "2026-06-19",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Added pe_combine_medium_buttons setting (default: true). When enabled, installMediumToggle() replaces the separate 'Expand all mediums' and 'Collapse all mediums' buttons in span#medium-toolbox with a single toggle button. The originals are hidden (not removed) and delegated to via .click() so MB's own expand/collapse logic is reused unchanged. The orphan ' | ' text node between the two hidden buttons is removed to prevent a double-separator. Initial label reflects actual state via getComputedStyle on the first medium tbody. watchTracklistReactUpdate() is extended to undo the medium toggle before React reconciles the tracklist container (removes the combined button, un-hides the originals), and to re-apply installMediumToggle() after the re-render."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.8",
+    "date": "2026-06-19",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed: watchTracklistReactUpdate() used mousedown to intercept #toggle-credits before React reconciled, but moving DOM nodes between mousedown and mouseup caused the browser to cancel the click event (the button shifts screen position during the unwrap, so mouseup no longer lands on it). Changed to click with capture: true instead. The click event is already confirmed by the time capture fires; React batches its state update and only flushes after all handlers return, so unwrapping in the capture phase gives React a clean DOM to reconcile against while still allowing the toggle to work. Added an isConnected guard to the attachHeaderBehavior click handler so stale closures over detached wrapper divs (left by the unwrap/re-init cycle) silently return instead of corrupting h2.title."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.7",
+    "date": "2026-06-19",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed: clicking 'Display credits inline / at bottom' (#toggle-credits) caused div.tracklist-and-credits to become permanently empty. Root cause: initPageHeaders() wraps the tracklist siblings in extra <div> elements inside div.tracklist-and-credits, a React-managed component. When #toggle-credits is clicked, React reconciles its VDOM against the live DOM, finds the unexpected wrapper divs, and the mismatch empties the container. Fix: added watchTracklistReactUpdate(), which listens for a click on #toggle-credits in capture phase and unwraps our modifications — restoring wrapper children to their original positions and stripping ART_HEADER_CLASS / inline styles from the managed h2 — so React's reconciliation succeeds. initPageHeaders() is then re-applied via setTimeout(0) after React has synchronously committed its re-render."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.6",
+    "date": "2026-06-19",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added new ANNOTATION config section with boolean setting pe_auto_expand_annotation (default: true). When enabled, expandAnnotation() clicks the 'Show more…' anchor (div.annotation p a.annotation-toggle) on page load, revealing the full annotation text without requiring a manual click. Runs as STEP 1/3 in the execution block, before section toggling, so the annotation body is already expanded when initPageHeaders() constructs the collapsible wrappers."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "1.0.5",
+    "date": "2026-06-19",
+    "sections": [
+      {
+        "label": "🐛 Bug Fixes",
+        "items": [
+          "Fixed tracklist content being cut off on large releases (e.g. multi-LP box sets). Root cause: applyGalleryState() and the initial wrapper/gallery state both used a hard-coded max-height of 5000 px for the expanded state. On a 5-LP release the tracklist content exceeds that limit and the overflow is hidden, so the last medium's tracks were invisible. Fix: (1) initial expanded wrappers now carry no max-height constraint (maxHeight: ''); (2) when expanding, applyGalleryState() reads the element's actual scrollHeight and animates from 0 to that value, then clears max-height on transitionend so the section can resize freely; (3) when collapsing from an unconstrained state, the function snapshots scrollHeight and forces a reflow (void el.offsetHeight) before animating to 0, giving the browser a concrete start value for the CSS transition.",
+          "Fixed annotation section: (1) The 'Annotation' h2 was never made collapsible because div.annotation-body (its first sibling) contains a Markdown-rendered h2 ('Barcode and Other Identifiers') that triggered the old sibling-collection stop guard (el.querySelector('h2')), leaving the annotation h2 with no collected siblings. (2) That same annotation-content h2 was incorrectly enhanced as an independent collapsible section header. Root cause: querySelectorAll('h2') collected all h2 elements including Markdown headings inside div.annotation-body, and the sibling-stop guard halted at any descendant h2 rather than only at candidate section-header h2s. Fix: added .filter(h2 => !h2.closest('.annotation-body')) to exclude annotation prose h2s from the candidate list; changed the sibling-collection loop guard from !el.querySelector('h2') to !nativeH2s.some(nh2 => el.contains(nh2)) so it only stops at elements that contain a genuine candidate section header. Result: 'Annotation' h2 is correctly made collapsible (its siblings div.annotation-body, 'Show more' link, and annotation-details are all included), and annotation-body content h2s are never touched."
+        ]
+      }
+    ]
+  },
+  {
     "version": "1.0.4",
     "date": "2026-04-18",
     "sections": [

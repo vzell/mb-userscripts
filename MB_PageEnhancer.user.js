@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - MB Page Enhancer
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      1.0.4+2026-04-18
+// @version      1.0.10+2026-07-31
 // @description  Enhances MusicBrainz pages with additional features
 // @author       vzell
 // @tag          AI generated
@@ -10,7 +10,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/MB_PageEnhancer.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/MB_PageEnhancer.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @require      https://cdn.jsdelivr.net/gh/vzell/mb-userscripts@master/lib/VZ_MBLibrary.user.js
+// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
 // @match        *://*.musicbrainz.org/release/*-*-*-*-*
 // @exclude      *://*.musicbrainz.org/release/*/*
 // @match        *://*.musicbrainz.org/event/*-*-*-*-*
@@ -21,6 +21,7 @@
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
 // @grant        GM_xmlhttpRequest
+// @grant        GM_addStyle
 // @license      MIT
 // ==/UserScript==
 
@@ -96,6 +97,13 @@
             description: "Add click-to-collapse behaviour to all native MusicBrainz h2 section headers on the page"
         },
 
+        pe_combine_medium_buttons: {
+            label: "Combine Expand/Collapse Buttons",
+            type: "checkbox",
+            default: true,
+            description: "Replace the separate 'Expand all mediums' and 'Collapse all mediums' buttons with a single toggle button"
+        },
+
         // ============================================================
         // CAA / EAA ILLUSTRATED SECTION
         // ============================================================
@@ -123,6 +131,21 @@
             type: "checkbox",
             default: false,
             description: "Art gallery starts hidden by default"
+        },
+
+        // ============================================================
+        // ANNOTATION
+        // ============================================================
+        divider_annotation: {
+            type: 'divider',
+            label: '📝 ANNOTATION'
+        },
+
+        pe_auto_expand_annotation: {
+            label: "Auto-expand Annotation",
+            type: "checkbox",
+            default: true,
+            description: "Automatically click 'Show more…' to reveal the full annotation text on page load"
         }
     };
 
@@ -177,8 +200,9 @@
 
     // ============================================================
     // BEGIN: SECTION TOGGLING
-    // Config key : pe_enable_section_toggling
-    // Functions  : makeTooltip, applyGalleryState, attachHeaderBehavior, initPageHeaders
+    // Config keys: pe_enable_section_toggling, pe_combine_medium_buttons
+    // Functions  : makeTooltip, applyGalleryState, attachHeaderBehavior, initPageHeaders,
+    //              watchTracklistReactUpdate, areMediumsExpanded, installMediumToggle
     // ============================================================
 
     /**
@@ -194,15 +218,40 @@
 
     /**
      * Collapse or expand a content div and keep its paired header tooltip in sync.
+     *
+     * Expand: animates from 0 to the element's current scrollHeight (so the transition
+     * exactly matches real content height), then clears max-height on transitionend so
+     * the section can grow freely without an artificial pixel cap.
+     *
+     * Collapse: if max-height is currently unconstrained (empty string after a previous
+     * expand), snapshot the scrollHeight first and force a reflow before animating to 0,
+     * so the browser has a concrete start value for the transition.
+     *
      * @param {Element} contentEl - The collapsible content div to toggle.
      * @param {Element} headerEl  - The h2 header paired with this content.
      * @param {boolean} collapse  - true = collapse, false = expand.
      */
     function applyGalleryState(contentEl, headerEl, collapse) {
         if (collapse) {
+            // If max-height is unconstrained, snapshot the real height first so the
+            // browser has a concrete start value for the collapse transition.
+            if (!contentEl.style.maxHeight) {
+                contentEl.style.maxHeight = contentEl.scrollHeight + "px";
+                void contentEl.offsetHeight; // force reflow so the snapshot is committed
+            }
             Object.assign(contentEl.style, { maxHeight: "0px", opacity: "0", marginBottom: "0px", marginTop: "0px" });
         } else {
-            Object.assign(contentEl.style, { maxHeight: "5000px", opacity: "1", marginBottom: "20px", marginTop: "20px" });
+            // Animate to the element's actual content height so the transition duration
+            // matches the real visible distance (no artificial 5000 px cap).
+            Object.assign(contentEl.style, { maxHeight: contentEl.scrollHeight + "px", opacity: "1", marginBottom: "20px", marginTop: "20px" });
+            // Once the expand transition ends, remove max-height so the section can
+            // resize freely if its content changes (e.g. lazy-loaded userscript widgets).
+            contentEl.addEventListener("transitionend", function onEnd(e) {
+                if (e.propertyName === "max-height") {
+                    contentEl.style.maxHeight = "";
+                    contentEl.removeEventListener("transitionend", onEnd);
+                }
+            });
         }
         headerEl.title = makeTooltip(headerEl._sectionLabel, collapse);
         Lib.debug('toggle', `${collapse ? "🔽" : "🔼"} Section "${headerEl._sectionLabel}" ${collapse ? "collapsed" : "expanded"}.`);
@@ -230,6 +279,11 @@
         h2.title = makeTooltip(sectionLabel, startCollapsed);
 
         h2.addEventListener("click", (event) => {
+            // Guard against stale handlers left over after watchTracklistReactUpdate unwraps
+            // and re-inits: the wrapper div (contentEl) is detached from the DOM while a new
+            // one is created.  Firing on a detached wrapper has no visible effect but would
+            // corrupt h2.title via makeTooltip.
+            if (!contentEl.isConnected) return;
             // Ignore clicks that bubbled up from an interactive descendant (button, anchor,
             // input, select, textarea).  Other userscripts (e.g. GenerateRecordingCommentForRelease)
             // legitimately append controls *inside* an h2; without this guard their clicks would
@@ -258,9 +312,18 @@
     /**
      * Extend collapsible header behaviour to all native MusicBrainz h2 elements on the page.
      * Controlled by the pe_enable_section_toggling setting; exits immediately if disabled.
-     * For each h2 not already managed by this script, all following sibling elements (up to the
-     * next h2, the next sibling that contains a descendant h2, or end of parent) are wrapped in
-     * a collapsible div and the h2 gets the shared background + Click / Ctrl+Click toggle behaviour.
+     *
+     * Candidate h2 elements are h2s not already managed by this script AND not inside
+     * div.annotation-body (MusicBrainz renders Markdown headings in annotation text as real
+     * h2 elements, which must not be treated as section boundaries).
+     *
+     * For each candidate h2, all following siblings within the same parent are collected into
+     * a collapsible div.  The sibling-collection loop stops when it hits:
+     *   a) a sibling that IS itself an h2, or
+     *   b) a sibling that CONTAINS one of the candidate h2s (e.g. div#bottom-credits).
+     * The stop condition only tests candidate h2s (not all h2s), so a container like
+     * div.annotation-body — whose only internal h2 is annotation prose excluded from
+     * candidates — is correctly swept into the "Annotation" section's collapsible group.
      */
     function initPageHeaders() {
         // Feature-flag guard
@@ -273,9 +336,14 @@
 
         const contentArea = document.querySelector("#content") || document.body;
         const nativeH2s = Array.from(contentArea.querySelectorAll("h2"))
-            .filter(h2 => !h2.classList.contains(ART_HEADER_CLASS));
+            .filter(h2 => !h2.classList.contains(ART_HEADER_CLASS))
+            // Exclude h2 elements that live inside annotation body text.  MusicBrainz
+            // renders Markdown annotation content (e.g. "## Heading") as real h2 elements
+            // inside div.annotation-body; these are annotation prose, not section headers,
+            // and must not be treated as collapsible section boundaries.
+            .filter(h2 => !h2.closest('.annotation-body'));
 
-        Lib.debug('init', `📋 [initPageHeaders] Found ${nativeH2s.length} native h2 header(s) (excluding script-managed ones).`);
+        Lib.debug('init', `📋 [initPageHeaders] Found ${nativeH2s.length} native h2 header(s) (excluding script-managed ones and annotation-body content).`);
 
         let count   = 0;
         let skipped = 0;
@@ -283,15 +351,22 @@
             const headerText = h2.textContent.trim();
 
             // Collect all following siblings within the same parent until:
-            //   a) the next sibling IS an h2, OR
-            //   b) the next sibling CONTAINS a descendant h2 (e.g. a wrapper div such as
-            //      div#bottom-credits that houses its own h2 section header).
+            //   a) the next sibling IS itself an h2, OR
+            //   b) the next sibling CONTAINS one of the candidate h2 section headers
+            //      (e.g. div#bottom-credits which houses its own h2).
             // Stopping at case (b) is critical: including such a wrapper would make two
-            // logically independent sections collapse together, because the nested h2 and
-            // its content would be hidden as part of the outer section's collapsible div.
+            // logically independent sections collapse together.
+            //
+            // Note: the old guard used el.querySelector("h2") (any descendant h2).  That
+            // was too broad — it also stopped at div.annotation-body, whose embedded h2
+            // is annotation prose and now excluded from nativeH2s, causing the "Annotation"
+            // section header itself to be skipped (no siblings collected).  Using
+            // nativeH2s.some(nh2 => el.contains(nh2)) only halts at containers that hold
+            // a genuine section-header h2, letting annotation-body be included as a
+            // collapsible sibling of the "Annotation" h2.
             const siblings = [];
             let el = h2.nextElementSibling;
-            while (el && el.tagName !== "H2" && !el.querySelector("h2")) {
+            while (el && el.tagName !== "H2" && !nativeH2s.some(nh2 => el.contains(nh2))) {
                 siblings.push(el);
                 el = el.nextElementSibling;
             }
@@ -308,7 +383,7 @@
             Object.assign(wrapper.style, {
                 overflow: "hidden",
                 transition: "max-height 0.4s ease-in-out, opacity 0.3s ease, margin 0.4s ease",
-                maxHeight: "5000px", opacity: "1", marginBottom: "20px", marginTop: "20px"
+                maxHeight: "", opacity: "1", marginBottom: "20px", marginTop: "20px"
             });
             // Insert wrapper before the first sibling, then move all siblings into it
             h2.parentNode.insertBefore(wrapper, siblings[0]);
@@ -322,6 +397,154 @@
         });
 
         Lib.info('init', `✅ [initPageHeaders] Section toggling applied to ${count} h2 header(s)${skipped > 0 ? `, ${skipped} skipped (no siblings)` : ""}.`);
+    }
+
+    /**
+     * Prevents section-toggling wrappers from breaking MB's React-managed
+     * "Display credits inline / at bottom" toggle button.
+     *
+     * Root cause: initPageHeaders() inserts extra wrapper <div> elements inside
+     * div.tracklist-and-credits, which is a React-managed component. When
+     * #toggle-credits is clicked, React reconciles its VDOM against the live DOM,
+     * finds our wrapper divs where it expects direct children, and the mismatch
+     * causes it to empty the container entirely.
+     *
+     * Fix: listen for click on #toggle-credits in CAPTURE phase (fires before
+     * React's bubble-phase onClick dispatch, but only after the browser has confirmed
+     * the full click — unlike mousedown, which fires before mouseup and causes the
+     * browser to cancel the subsequent click if the target element moves).
+     * React batches its state update and flushes AFTER all event handlers return, so
+     * unwrapping here gives React a clean DOM to reconcile against. Re-apply
+     * initPageHeaders() via setTimeout(0) after React has synchronously committed.
+     */
+    function watchTracklistReactUpdate() {
+        if (!Lib.settings.pe_enable_section_toggling) return;
+
+        const container = document.querySelector('.tracklist-and-credits');
+        if (!container) {
+            Lib.debug('init', `⏭️  [watchTracklistReactUpdate] No .tracklist-and-credits found — skipping.`);
+            return;
+        }
+
+        // Use click in CAPTURE phase (fires before React's bubble-phase onClick dispatch,
+        // but only after the browser has already confirmed the click — unlike mousedown,
+        // which fires before mouseup and can prevent the click if the target moves).
+        // React batches its state update and only flushes AFTER all event handlers return,
+        // so unwrapping here lets React reconcile against the original DOM structure.
+        container.addEventListener('click', function(e) {
+            if (!e.target.closest('#toggle-credits')) return;
+
+            Lib.debug('toggle', `🔄 [watchTracklistReactUpdate] #toggle-credits clicked (capture) — unwrapping before React reconciles.`);
+
+            // Move each wrapper's children back to their original position, then
+            // remove the now-empty wrapper div.
+            container.querySelectorAll('.' + ART_GALLERY_CLASS).forEach(wrapper => {
+                while (wrapper.firstChild) {
+                    wrapper.before(wrapper.firstChild);
+                }
+                wrapper.remove();
+            });
+
+            // Strip ART_HEADER_CLASS and our inline styles so React's reconciliation
+            // finds a clean h2 matching its VDOM.
+            container.querySelectorAll('h2.' + ART_HEADER_CLASS).forEach(h2 => {
+                h2.classList.remove(ART_HEADER_CLASS);
+                h2.removeAttribute('title');
+                ['cursor', 'user-select', 'background-color', 'padding', 'border-radius'].forEach(p => {
+                    h2.style.removeProperty(p);
+                });
+                delete h2._sectionLabel;
+            });
+
+            // Undo medium-toggle: remove our combined button, un-hide the originals so
+            // React's reconciliation finds the DOM it expects.  React will also restore
+            // the " | " text node we deleted (it's in the VDOM), so no manual restoration.
+            container.querySelectorAll('[data-vz-medium-toggle]').forEach(b => b.remove());
+            container.querySelector('#expand-all-mediums')?.removeAttribute('hidden');
+            container.querySelector('#collapse-all-mediums')?.removeAttribute('hidden');
+
+            // Re-apply after React has synchronously committed its DOM update.
+            setTimeout(() => {
+                Lib.debug('toggle', `🔄 [watchTracklistReactUpdate] Re-applying section toggling after React re-render.`);
+                initPageHeaders();
+                installMediumToggle();
+            }, 0);
+        }, true); // capture phase: fires before React's bubble-phase onClick dispatch
+
+        Lib.debug('init', `👁️  [watchTracklistReactUpdate] Watching .tracklist-and-credits for #toggle-credits clicks (capture phase).`);
+    }
+
+    /**
+     * Return true if medium track rows are currently expanded (visible).
+     * Checks the computed display of the first medium table's tbody.
+     * @returns {boolean}
+     */
+    function areMediumsExpanded() {
+        const tbody = document.querySelector('table.tbl.medium tbody');
+        return tbody ? window.getComputedStyle(tbody).display !== 'none' : true;
+    }
+
+    /**
+     * Replace the "Expand all mediums" and "Collapse all mediums" buttons with a
+     * single toggle button inserted at the same DOM position.
+     * Controlled by the pe_combine_medium_buttons setting.
+     *
+     * The originals are hidden (not removed) so MB's own expand/collapse logic can
+     * still be invoked via .click(). The " | " text node between the two original
+     * buttons is removed — text nodes always render even when adjacent elements are
+     * hidden, which would otherwise leave a dangling double-separator visible.
+     *
+     * The toggle button carries data-vz-medium-toggle="1" so watchTracklistReactUpdate()
+     * can locate and remove it before React reconciles the tracklist container.
+     */
+    function installMediumToggle() {
+        if (!Lib.settings.pe_combine_medium_buttons) {
+            Lib.debug('init', `🚫 [installMediumToggle] Combine medium buttons is disabled via pe_combine_medium_buttons setting — skipping.`);
+            return;
+        }
+
+        const expandBtn   = document.querySelector('#expand-all-mediums');
+        const collapseBtn = document.querySelector('#collapse-all-mediums');
+        if (!expandBtn || !collapseBtn) {
+            Lib.debug('init', `⏭️  [installMediumToggle] #expand-all-mediums / #collapse-all-mediums not found — skipping (event page or not yet rendered).`);
+            return;
+        }
+
+        let mediumsExpanded = areMediumsExpanded();
+
+        const toggle = document.createElement('button');
+        toggle.classList.add('btn-link');
+        toggle.type = 'button';
+        toggle.dataset.vzMediumToggle = '1';
+        toggle.textContent = mediumsExpanded ? 'Collapse all mediums' : 'Expand all mediums';
+
+        toggle.addEventListener('click', () => {
+            if (mediumsExpanded) {
+                collapseBtn.click();
+                toggle.textContent = 'Expand all mediums';
+                mediumsExpanded = false;
+            } else {
+                expandBtn.click();
+                toggle.textContent = 'Collapse all mediums';
+                mediumsExpanded = true;
+            }
+        });
+
+        // Place the toggle where the expand button was.
+        expandBtn.before(toggle);
+
+        // Hide both originals; they must stay in the DOM so .click() still works.
+        expandBtn.hidden = true;
+        collapseBtn.hidden = true;
+
+        // Remove the " | " text node between the two now-hidden buttons.
+        const sepBetween = collapseBtn.previousSibling;
+        if (sepBetween && sepBetween.nodeType === Node.TEXT_NODE &&
+                sepBetween.textContent.trim() === '|') {
+            sepBetween.remove();
+        }
+
+        Lib.info('init', `✅ [installMediumToggle] Medium expand/collapse buttons combined into one toggle.`);
     }
 
     // ============================================================
@@ -393,7 +616,7 @@
                 Object.assign(gallery.style, { maxHeight: "0px", opacity: "0", marginTop: "0px", marginBottom: "0px" });
                 Lib.debug('render', `🔽 [${artShortLabel}] Gallery will start collapsed (pe_collapsed_by_default = true).`);
             } else {
-                Object.assign(gallery.style, { maxHeight: "5000px", opacity: "1", marginTop: "20px", marginBottom: "20px" });
+                Object.assign(gallery.style, { maxHeight: "", opacity: "1", marginTop: "20px", marginBottom: "20px" });
                 Lib.debug('render', `🔼 [${artShortLabel}] Gallery will start expanded (pe_collapsed_by_default = false).`);
             }
 
@@ -454,6 +677,37 @@
 
 
     // ============================================================
+    // BEGIN: ANNOTATION
+    // Config key : pe_auto_expand_annotation
+    // Functions  : expandAnnotation
+    // ============================================================
+
+    /**
+     * Auto-click the MusicBrainz annotation "Show more…" toggle to reveal the full
+     * annotation text on page load.
+     * Controlled by the pe_auto_expand_annotation setting; exits immediately if disabled
+     * or if no toggle link is present on the page.
+     */
+    function expandAnnotation() {
+        if (!Lib.settings.pe_auto_expand_annotation) {
+            Lib.debug('init', `🚫 [expandAnnotation] Auto-expand annotation is disabled via pe_auto_expand_annotation setting — skipping.`);
+            return;
+        }
+        const toggle = document.querySelector('div.annotation p a.annotation-toggle');
+        if (!toggle) {
+            Lib.debug('init', `⏭️  [expandAnnotation] No annotation "Show more…" link found on this page — skipping.`);
+            return;
+        }
+        toggle.click();
+        Lib.info('init', `✅ [expandAnnotation] Annotation "Show more…" clicked — full annotation text now visible.`);
+    }
+
+    // ============================================================
+    // END: ANNOTATION
+    // ============================================================
+
+
+    // ============================================================
     // EXECUTION
     // Entry point: validates URL/DOM preconditions, then dispatches
     // each feature section in order.
@@ -471,11 +725,25 @@
             Lib.debug('init', `📄 [main] Overview tab is active — proceeding with page enhancements.`);
 
             // --------------------------------------------------------
-            // STEP 1/2 — SECTION TOGGLING
+            // STEP 1/3 — ANNOTATION
+            // Auto-click "Show more…" to reveal the full annotation (synchronous).
+            // Feature-flag guard: pe_auto_expand_annotation (inside expandAnnotation).
+            // Runs before section toggling so the annotation body is fully visible
+            // when the h2 wrappers are constructed.
+            // --------------------------------------------------------
+            expandAnnotation();
+
+            // --------------------------------------------------------
+            // STEP 2/3 — SECTION TOGGLING
             // Enhance all existing native MB h2 headers (synchronous).
             // Feature-flag guard: pe_enable_section_toggling (inside initPageHeaders).
+            // watchTracklistReactUpdate() registers a mousedown guard so that
+            // clicking #toggle-credits unwraps our modifications before React's
+            // reconciliation runs, preventing the container from being emptied.
             // --------------------------------------------------------
             initPageHeaders();
+            installMediumToggle();
+            watchTracklistReactUpdate();
 
             const mbid          = mbidMatch[0];
             const isEventPage   = location.pathname.startsWith("/event/");
@@ -488,7 +756,7 @@
             Lib.debug('init', `🌐 [main] Archive URL resolved to: ${archiveUrl}`);
 
             // --------------------------------------------------------
-            // STEP 2/2 — CAA / EAA ILLUSTRATED DISCOGRAPHY
+            // STEP 3/3 — CAA / EAA ILLUSTRATED DISCOGRAPHY
             // Fetch and inject the art gallery (asynchronous).
             // Wrapped in an async IIFE so that Lib.timeEnd() fires only
             // *after* the async gallery rendering resolves, giving an
