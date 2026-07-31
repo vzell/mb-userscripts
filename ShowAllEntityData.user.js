@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.674+2026-06-18
+// @version      9.99.746+2026-07-31
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -13,21 +13,10 @@
 // @require      https://cdn.jsdelivr.net/npm/@jaames/iro@5
 // @require      https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js
 // @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
-// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.org\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections|ratings)(?:\?.*)?$/
-// @match        *://*.musicbrainz.org/search?query=*
-// @match        *://*.musicbrainz.org/user/*/subscriptions/*
-// @match        *://*.musicbrainz.org/user/*/subscribers
-// @match        *://*.musicbrainz.org/user/*/collections
-// @match        *://*.musicbrainz.org/user/*/ratings/*
-// @match        *://*.musicbrainz.org/user/*/ratings
-// @match        *://*.musicbrainz.org/user/*/tags*
-// @match        *://*.musicbrainz.org/tags*
-// @match        *://*.musicbrainz.org/user/*/tag/*
-// @match        *://*.musicbrainz.org/tag/*
-// @match        *://*.musicbrainz.org/cdtoc/*
-// @match        *://*.musicbrainz.org/taglookup*
-// @match        *://*.musicbrainz.org/artist-credit/*
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.(?:org|eu)\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event|collection)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(?:\?.*)?$/
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.(?:org|eu)\/(?:artist|release-group|release|work|recording|label|series|place|area|instrument|event)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(?:aliases|releases|recordings|works|events|relationships|discids|fingerprints|performances|places|artists|labels|tags|users|collections|ratings|edits)(?:\?.*)?$/
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.(?:org|eu)\/(?:search\?query=.*|search\/edits(?:\?.*)?|edit\/(?:subscribed(?:_editors)?|notes-received)(?:\?.*)?|account\/applications(?:\?.*)?|tags.*|tag\/.*|cdtoc\/.*|taglookup.*|artist-credit\/.*|reports.*|report\/.*|elections(?:\?.*)?|election\/.*|genres(?:\?.*)?|cdstub\/.*|doc\/Edit_Types(?:\?.*)?|instruments(?:\?.*)?|privileged(?:\?.*)?)$/
+// @include      /^https?:\/\/(?:[^\/]+\.)?musicbrainz\.(?:org|eu)\/user\/[^\/]+\/(?:subscriptions\/.*|subscribers(?:\?.*)?|collections(?:\?.*)?|ratings\/.*|ratings(?:\?.*)?|tags.*|tag\/.*|edits(?:\/open)?(?:\?.*)?)$/
 // @connect      raw.githubusercontent.com
 // @connect      coverartarchive.org
 // @connect      eventartarchive.org
@@ -35,6 +24,7 @@
 // @connect      *.archive.org
 // @connect      *
 // @grant        GM_xmlhttpRequest
+// @grant        GM_addStyle
 // @grant        GM_info
 // @grant        GM_setValue
 // @grant        GM_getValue
@@ -158,6 +148,15 @@
     const REMOTE_CACHE_TTL_MS  = 60 * 60 * 1000; // 1 hour
     const CACHE_KEY_HELP       = SCRIPT_BASE_NAME.toLowerCase() + '-remote-help-text';
     const CACHE_KEY_CHANGELOG  = SCRIPT_BASE_NAME.toLowerCase() + '-remote-changelog';
+
+    // Countries — exactly as MusicBrainz renders them, e.g. "United States" —
+    // for which `splitLocation`/`splitArea` force a flagged subdivision link
+    // (added by a separately-installed userscript such as "MusicBrainz: More
+    // Flags Everywhere" or "MusicBrainz: Canadian Province Flags Everywhere",
+    // @Lotheric) into "Region" instead of "Locality". See `_flagRegionCountrySet()`
+    // for the full rationale. Not user-configurable — editing this list
+    // requires a code change, not a settings toggle.
+    const AREA_FLAG_REGION_COUNTRIES = ['United States', 'United Kingdom', 'Canada', 'Australia'];
 
 
     // CONFIG SCHEMA
@@ -695,6 +694,15 @@
             description: "Background color for the (n) occurrence count badge rendered in front of each unique-values dropdown entry"
         },
 
+        sa_enable_dropdown_flag_icons: {
+            label: "Show Flag Icons In Unique-Values Dropdown",
+            type: "checkbox",
+            default: false,
+            description: "Decorate each entry in the 📊 unique-values filter dropdown with the same " +
+                         "flag icon shown in the table cell, for Country/Area/Locality/Region/Location/" +
+                         "Place/Country-Date columns."
+        },
+
         // ============================================================
         // THRESHOLD SECTION
         // ============================================================
@@ -1037,6 +1045,18 @@
             type: 'color_picker',
             default: '#eb7231',
             description: 'Background color applied to H3 sub-table headers when the cursor hovers over them (.mb-toggle-h3:hover). Default is the original MusicBrainz light grey (#f9f9f9). Takes precedence over the non-hover H3 background (sa_ui_h3_bg).'
+        },
+
+        sa_ui_row_hover_bg: {
+            label: 'Table row hover background color',
+            type: 'color_picker',
+            default: '#c2d2e9',
+            description: 'Background color applied to a table row\'s cells while the mouse ' +
+                         'hovers over it (used by applyStickyColumn\'s hover handling for every ' +
+                         'table this script renders). This setting already existed in code but ' +
+                         'had no settings-menu entry until now, so it was never actually ' +
+                         'adjustable — default matches the value that was hardcoded as its ' +
+                         'JS-side fallback.'
         },
 
         // --- Table column-header (thead) row colors ---
@@ -1962,6 +1982,304 @@
             default: '127.0.0.1',
             description: 'IP address or hostname where Picard is running.  Change this if ' +
                          'Picard runs on a different machine on your local network.'
+        },
+
+        // ============================================================
+        // ANNOTATION COLUMNS SECTION
+        // ============================================================
+        divider_annotation: {
+            type: 'divider',
+            label: '📝 ANNOTATION COLUMNS'
+        },
+
+        sa_enable_annotation_collapse: {
+            label: 'Enable collapsible "Annotation" columns',
+            type: 'checkbox',
+            default: true,
+            description: 'Height-clamp long free-text cells in columns declared in a page\'s ' +
+                         '`collapsableColumns` (e.g. the "Annotation" column on report-detail\'s ' +
+                         'AnnotationsPlaces/AnnotationsReleases sub-reports and the instrument ' +
+                         '"Annotations" report) behind a ▶/▼ "show more/less" toggle, ' +
+                         'the same way multi-row list columns (Catalog#, Label, …) already collapse. ' +
+                         'Only cells that actually overflow the clamp get a toggle; short annotations ' +
+                         'render unchanged either way. When disabled, these columns render full, ' +
+                         'unclamped text with no toggle — the "Annotation column max width" setting ' +
+                         'below still applies regardless of this setting.'
+        },
+
+        sa_annotation_column_max_width: {
+            label: 'Annotation column max width (px)',
+            type: 'number',
+            default: 480,
+            min: 200,
+            max: 2000,
+            description: 'Cap applied by the auto-resize ("↔️ Resize" / Ctrl+R) feature to ' +
+                         'free-text collapsable columns (e.g. "Annotation"), instead of sizing the ' +
+                         'column to a long paragraph\'s unwrapped single-line width. Always active ' +
+                         'for these columns, independent of the "Enable collapsible Annotation ' +
+                         'columns" setting above.'
+        },
+
+        sa_annotation_column_max_height_em: {
+            label: 'Annotation column collapsed height (em)',
+            type: 'number',
+            default: 5.6,
+            min: 1,
+            max: 30,
+            description: 'Height (in em, i.e. relative to the table\'s font size) that a ' +
+                         'collapsed free-text cell (e.g. "Annotation") is clamped to before its ' +
+                         '▶/▼ toggle appears — the default 5.6em is roughly 4 lines at this ' +
+                         'table\'s line-height. Only takes effect when "Enable collapsible ' +
+                         '\'Annotation\' columns" above is on.'
+        },
+
+        sa_annotation_h2_bg: {
+            label: 'Annotation sub-heading background color',
+            type: 'color_picker',
+            default: '#e3f2fd',
+            description: 'Background color of wiki-rendered `<h2>` sub-headings inside table ' +
+                         'cells (e.g. "== Known performances ==" inside an "Annotation" column ' +
+                         'cell) — NOT the page-level H2 section headers (see "H2 section-header ' +
+                         'background color" above, a separate setting). Default is a pale blue ' +
+                         '(#e3f2fd, the same accent already used elsewhere in this script\'s UI) ' +
+                         'chosen to sit quietly against both the white and light-grey alternating ' +
+                         'row backgrounds inside a table, and to read as related to (rather than ' +
+                         'competing with) the standard blue hyperlink color rendered by MB inside ' +
+                         'the annotation text itself.'
+        },
+
+        sa_annotation_h2_color: {
+            label: 'Annotation sub-heading text color',
+            type: 'color_picker',
+            default: '#1565c0',
+            description: 'Text color of wiki-rendered `<h2>` sub-headings inside table cells ' +
+                         '(e.g. "== Known performances ==" inside an "Annotation" column cell) — ' +
+                         'NOT the page-level H2 section headers. Default is the same blue ' +
+                         '(#1565c0) used throughout this script\'s own UI accents, deliberately ' +
+                         'matching the standard blue of hyperlinks that commonly appear in ' +
+                         'annotation text, so the sub-heading reads as related without literally ' +
+                         'looking like a clickable link.'
+        },
+
+        // ============================================================
+        // ANNOTATION SECTION (ENTITY PAGES) — native MusicBrainz "Show
+        // more..." truncation, unrelated to the "Annotation" table-column
+        // feature above.
+        // ============================================================
+        divider_native_annotation: {
+            type: 'divider',
+            label: '📖 ANNOTATION SECTION (Entity Pages)'
+        },
+
+        sa_enable_annotation_auto_expand: {
+            label: 'Auto-expand native "Annotation" section',
+            type: 'checkbox',
+            default: false,
+            description: 'Automatically click MusicBrainz\'s native "Show more..." ' +
+                         '(`a.annotation-toggle`) link on entity pages (e.g. an ' +
+                         'artist/release/work/... page\'s own "Annotation" section), so a ' +
+                         'long annotation is fully visible on page load instead of truncated ' +
+                         'behind an extra manual click. Unrelated to the "📝 ANNOTATION ' +
+                         'COLUMNS" section above, which only affects this script\'s own ' +
+                         'rendered table columns.'
+        },
+
+        // ============================================================
+        // EDITS PAGE SECTION
+        // ============================================================
+        divider_edits_colors: {
+            type: 'divider',
+            label: '🎨 EDITS PAGE'
+        },
+
+        sa_enable_edits_type_colors: {
+            label: 'Enable "Edit#"/"Edit action" column background colors',
+            type: 'checkbox',
+            default: true,
+            description: 'Color the "Edit#" and "Edit action" columns on the edits pageType ' +
+                         '(/search/edits, /<entity>/<mbid>/edits, /edit/subscribed, ' +
+                         '/edit/subscribed_editors) by edit category and open-vs-closed state. ' +
+                         'Category/shade is derived from the edit\'s own class list (the same ' +
+                         'classification the well-known "MusicBrainz: Colourful edits" userscript ' +
+                         'uses), independent of whether that script — or any other coloring script ' +
+                         '— is installed. The colors below default to its palette.'
+        },
+
+        sa_edits_enable_details_collapse: {
+            label: 'Start "Edit details" column collapsed',
+            type: 'checkbox',
+            default: false,
+            description: 'The "Edit details" column on the edits pageType always has a "▶/▼ ' +
+                         'more/less" collapse toggle per cell (plus a column-header "collapse ' +
+                         'all"/"expand all" button) for cells long enough to overflow — this ' +
+                         'setting only controls whether they start collapsed or expanded when the ' +
+                         'page first renders. Off by default (starts expanded, since "Edit ' +
+                         'details" — the relationship/attribute diff for the edit — is usually ' +
+                         'short and more useful shown in full); turn on to match the ' +
+                         '"Annotation" column\'s classic start-collapsed default instead. Either ' +
+                         'way, any cell can still be manually collapsed/expanded at any time.'
+        },
+
+        sa_edits_enable_notes_collapse: {
+            label: 'Start "Edit notes" column collapsed',
+            type: 'checkbox',
+            default: false,
+            description: 'The "Edit notes" column on the edits pageType always has a "▶/▼ ' +
+                         'more/less" collapse toggle per cell (plus a column-header "collapse ' +
+                         'all"/"expand all" button) for cells long enough to overflow — this ' +
+                         'setting only controls whether they start collapsed or expanded when the ' +
+                         'page first renders. Off by default (starts expanded); turn on to match ' +
+                         'the "Annotation" column\'s classic start-collapsed default instead. ' +
+                         'Either way, any cell can still be manually collapsed/expanded at any time.'
+        },
+
+        sa_edits_color_add_open: {
+            label: 'Edit action — Add (open)',
+            type: 'color_picker',
+            default: 'lightgreen',
+            description: 'Background color for an open (still voting) "Add …" edit ' +
+                         '(e.g. Add relationship, Add release, Add cover art). ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_add_closed: {
+            label: 'Edit action — Add (closed/applied)',
+            type: 'color_picker',
+            default: '#D0EBD7',
+            description: 'Background color for a closed or applied "Add …" edit. ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_edit_open: {
+            label: 'Edit action — Edit (open)',
+            type: 'color_picker',
+            default: 'khaki',
+            description: 'Background color for an open (still voting) "Edit …" edit ' +
+                         '(e.g. Edit relationship, Edit release, Edit medium) — not to be confused ' +
+                         'with the wrapper class "edit-header" itself, which is excluded from this ' +
+                         'match. Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_edit_closed: {
+            label: 'Edit action — Edit (closed/applied)',
+            type: 'color_picker',
+            default: '#F1E3BF',
+            description: 'Background color for a closed or applied "Edit …" edit. ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_remove_open: {
+            label: 'Edit action — Remove (open)',
+            type: 'color_picker',
+            default: 'pink',
+            description: 'Background color for an open (still voting) "Remove …" edit ' +
+                         '(e.g. Remove relationship, Remove release, Remove cover art). ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_remove_closed: {
+            label: 'Edit action — Remove (closed/applied)',
+            type: 'color_picker',
+            default: '#FFE2E8',
+            description: 'Background color for a closed or applied "Remove …" edit. ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_merge_open: {
+            label: 'Edit action — Merge (open)',
+            type: 'color_picker',
+            default: 'plum',
+            description: 'Background color for an open (still voting) "Merge …" edit ' +
+                         '(e.g. Merge works, Merge recordings, Merge releases). ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_merge_closed: {
+            label: 'Edit action — Merge (closed/applied)',
+            type: 'color_picker',
+            default: '#DEC6D5',
+            description: 'Background color for a closed or applied "Merge …" edit. ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_other_open: {
+            label: 'Edit action — Other (open)',
+            type: 'color_picker',
+            default: 'lightblue',
+            description: 'Background color for an open (still voting) edit that is neither ' +
+                         'Add/Edit/Remove/Merge/Cancelled (e.g. Add ISWCs, Set track lengths). ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_other_closed: {
+            label: 'Edit action — Other (closed/applied)',
+            type: 'color_picker',
+            default: '#CFDDE0',
+            description: 'Background color for a closed or applied "Other" edit. ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_edits_color_cancelled: {
+            label: 'Edit action — Cancelled',
+            type: 'color_picker',
+            default: 'lightgrey',
+            description: 'Background color for a cancelled edit, regardless of category — takes ' +
+                         'priority over Add/Edit/Remove/Merge/Other. ' +
+                         'Default matches "MusicBrainz: Colourful edits".'
+        },
+
+        sa_enable_edits_diff_colors: {
+            label: 'Enable old/new value diff colors in "Edit details"',
+            type: 'checkbox',
+            default: true,
+            description: 'Colors old/new value diff cells inside the "Edit details" column\'s ' +
+                         'compare tables (e.g. a track title edit\'s "Al Lado de mi cabana" → ' +
+                         '"Al lado de mi cabana" row) — MusicBrainz\'s own site CSS does this ' +
+                         'natively via `table.details td.old`/`table.details td.new` selectors, ' +
+                         'but those require a real `<table>` ancestor, which "Edit details" no ' +
+                         'longer has after being de-tableified to avoid corrupting this script\'s ' +
+                         'own table-wide row-processing (see debug/NOTES.md) — so the colors below ' +
+                         'are applied independently instead of relying on MusicBrainz\'s stylesheet.'
+        },
+
+        sa_edits_color_diff_new: {
+            label: 'Edit details diff — new value',
+            type: 'color_picker',
+            default: '#e4fbe4',
+            description: 'Background color for a diff cell/span marking the NEW value in an ' +
+                         '"Edit details" compare table. Default matches MusicBrainz\'s own site ' +
+                         'CSS (`table.details td.new`/`span.new`, from ' +
+                         'static.metabrainz.org/MB/common-*.css).'
+        },
+
+        sa_edits_color_diff_old: {
+            label: 'Edit details diff — old value',
+            type: 'color_picker',
+            default: '#fbe3e4',
+            description: 'Background color for a diff cell/span marking the OLD value in an ' +
+                         '"Edit details" compare table. Default matches MusicBrainz\'s own site ' +
+                         'CSS (`table.details td.old`/`span.old`, from ' +
+                         'static.metabrainz.org/MB/common-*.css).'
+        },
+
+        sa_edits_color_zebra_odd: {
+            label: 'Edit details tracklist — odd row',
+            type: 'color_picker',
+            default: '#ffffff',
+            description: 'Background color for odd rows in a nested compare table inside "Edit ' +
+                         'details" (e.g. a medium edit\'s Old/New tracklist) — MusicBrainz\'s own ' +
+                         'zebra striping no longer reaches these rows once de-tableified (see ' +
+                         'debug/NOTES.md). A reasonable default, not sourced from MusicBrainz\'s ' +
+                         'stylesheet.'
+        },
+
+        sa_edits_color_zebra_even: {
+            label: 'Edit details tracklist — even row',
+            type: 'color_picker',
+            default: '#f2f2f2',
+            description: 'Background color for even rows in a nested compare table inside "Edit ' +
+                         'details". A reasonable default, not sourced from MusicBrainz\'s ' +
+                         'stylesheet.'
         }
 
     };
@@ -2099,6 +2417,118 @@
         return [tdName, tdCount, tdComment];
     }
 
+    /**
+     * _flagRegionCountrySet — builds a lowercase Set of country names from
+     * the internal `AREA_FLAG_REGION_COUNTRIES` constant, for the membership
+     * check `_routeAreaLink` uses to decide whether a flagged subdivision
+     * link should be forced into Region (see below).
+     */
+    function _flagRegionCountrySet() {
+        return new Set(AREA_FLAG_REGION_COUNTRIES.map(s => s.toLowerCase()));
+    }
+
+    /**
+     * _findRowCountryName — pre-scans a Location/Area cell node for its
+     * flag-wrapped country anchor and returns the resolved country name (from
+     * MusicBrainz's own `<abbr title="…">`), or null if none is found.
+     * `_routeAreaLink` processes anchors in document order, and the country
+     * anchor is normally last, so this lets it know the row's country before
+     * necessarily reaching that anchor.
+     *
+     * @param {HTMLElement} node - the same node `_processNode`/`splitArea` is
+     *   about to iterate (a single <li> or the whole flat cell)
+     * @returns {string|null}
+     */
+    function _findRowCountryName(node) {
+        let countryName = null;
+        node.querySelectorAll('a').forEach(a => {
+            if (countryName) return;
+            const flagSpan = a.closest('.flag');
+            if (flagSpan) {
+                const abbr = flagSpan.querySelector('abbr');
+                countryName = abbr?.getAttribute('title') || a.textContent.trim();
+            }
+        });
+        return countryName;
+    }
+
+    /**
+     * _routeAreaLink — routes ONE already-found '/area/' anchor to the correct
+     * output container, shared by `splitLocation` (Location cells, which also
+     * carry a leading '/place/' link) and `splitArea` (Area/Begin area/End area
+     * cells, which never do).
+     *
+     * The real country flag is always `a.closest('.flag')` — a
+     * `<span class="flag flag-XX">` WRAPPING the anchor. This must not be
+     * confused with subdivision-flag decorations added by separately-installed
+     * userscripts — e.g. "MusicBrainz: Canadian Province Flags Everywhere" or
+     * "MusicBrainz: More Flags Everywhere" (@Lotheric, see debug/flags.org for
+     * its full country list) — which render a SIBLING
+     * `<span class="area-icon"><img class="flag ..."></span>` immediately
+     * before the subdivision's own (unwrapped) anchor. Because
+     * `a.closest('.flag')` only walks the anchor's own ancestor chain, that
+     * sibling icon never matches it, so the subdivision anchor correctly falls
+     * into the Locality/Region branch below, with its icon carried along.
+     *
+     * Non-flag (Locality/Region) links are positional, not semantic: the
+     * FIRST one seen (per `areaState.count === 0`) is the most specific
+     * (Locality — e.g. city/neighbourhood); every subsequent one is broader
+     * (Region — e.g. county/state, comma-joined). MusicBrainz area links
+     * carry no type information, and the chain depth varies per place rather
+     * than per country, so position is the only signal available — EXCEPT
+     * when that first link itself carries a subdivision-flag icon (meaning no
+     * city/locality was ever entered, only a bare state/province) AND the
+     * row's country is in the internal `AREA_FLAG_REGION_COUNTRIES`
+     * list: that link is then forced into Region instead, since it's
+     * conceptually a Region-level entity even though it's positionally first.
+     *
+     * @param {HTMLAnchorElement} a - the '/area/' anchor to route
+     * @param {HTMLElement} containerL - Locality output container (<li> or <td>)
+     * @param {HTMLElement} containerR - Region output container (<li> or <td>)
+     * @param {HTMLElement} containerC - Country output container (<li> or <td>)
+     * @param {{count: number, countryName: string|null}} areaState - mutable
+     *   state, fresh per source cell / per-<li> (the caller creates one,
+     *   populates `countryName` via `_findRowCountryName`, and reuses it
+     *   across every anchor found in that node)
+     */
+    function _routeAreaLink(a, containerL, containerR, containerC, areaState) {
+        const clonedA   = a.cloneNode(true);
+        const flagSpan  = a.closest('.flag');
+        if (flagSpan) {
+            const flagImg     = flagSpan.querySelector('img')?.outerHTML || '';
+            const abbr        = flagSpan.querySelector('abbr');
+            const countryCode = abbr ? abbr.textContent.trim() : '';
+            const countryFull = abbr?.getAttribute('title') || '';
+            const countryHref = a.getAttribute('href') || '#';
+            const span        = document.createElement('span');
+            span.className    = flagSpan.className;
+            if (countryFull && countryCode) {
+                span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFull} (${countryCode})</a>`;
+            } else {
+                span.innerHTML = flagSpan.innerHTML;
+            }
+            containerC.appendChild(span);
+        } else {
+            // Subdivision flag icon (Canadian Province / More Flags Everywhere
+            // userscripts) sits as a sibling <span class="area-icon">
+            // immediately before the area link — carry it along so it isn't
+            // dropped by the split, and use its presence to decide whether the
+            // "first link" slot should be forced into Region instead of Locality.
+            const iconSpan = a.previousElementSibling && a.previousElementSibling.matches('span.area-icon')
+                ? a.previousElementSibling : null;
+            const forceRegion = areaState.count === 0 && iconSpan && areaState.countryName &&
+                _flagRegionCountrySet().has(areaState.countryName.toLowerCase());
+            const container = (areaState.count === 0 && !forceRegion) ? containerL : containerR;
+            areaState.count++;
+            if (container.hasChildNodes()) container.appendChild(document.createTextNode(', '));
+            if (iconSpan) {
+                container.appendChild(iconSpan.cloneNode(true));
+                container.appendChild(document.createTextNode(' '));
+            }
+            container.appendChild(clonedA);
+        }
+    }
+
     const ColumnDataExtractor = {
 
         /**
@@ -2165,58 +2595,60 @@
 
         /**
          * splitLocation — splits a "Location" cell (venue / city / country) into
-         * three separate cells: Place, Area, and Country.
-         * Place   ← links whose href contains '/place/'
-         * Area    ← links whose href contains '/area/' but NOT wrapped in a .flag span
-         * Country ← links whose href contains '/area/' wrapped in a .flag span
+         * four separate cells: Place, Locality, Region, and Country.
+         * Place    ← links whose href contains '/place/'
+         * Locality ← the first (most specific) link whose href contains '/area/'
+         *            and is NOT wrapped in a .flag span — e.g. a city or
+         *            neighbourhood
+         * Region   ← every subsequent '/area/' link (comma-joined, in existing
+         *            broad-to-specific order) — e.g. county/borough + state.
+         *            MusicBrainz area links carry no type information, and the
+         *            chain length between Place and Country varies per place
+         *            depending on how much of the hierarchy is filled in (not on
+         *            a fixed per-country format) — so "first link vs. the rest"
+         *            is a positional split, not a semantic City/County/State one.
+         * Country  ← links whose href contains '/area/' wrapped in a .flag span
+         *
+         * Canadian province flags: the "MusicBrainz: Canadian Province Flags
+         * Everywhere" userscript (@Lotheric) injects a `<span class="area-icon">`
+         * containing the province `<img class="flag flag-XX-prov">` immediately
+         * before the province's `<a href="/area/…">` link (sibling, not a wrapper —
+         * unlike the country `.flag` span). When present, that icon span is cloned
+         * alongside its link into whichever cell (Locality or Region) receives it,
+         * so the flag survives the split.
          *
          * Multi-row aware: when the source cell contains a <ul><li> structure (i.e.
          * the Location column was already wrapped by renderMultiRowCell or inherited
          * a multi-row layout from MusicBrainz), each <li> is processed independently
-         * and the results are placed into parallel <ul><li> lists in the three output
+         * and the results are placed into parallel <ul><li> lists in the four output
          * cells — one <li> per source <li> for each synthetic column.  This mirrors
-         * splitCountryDate's per-event <li> approach so that the three split columns
+         * splitCountryDate's per-event <li> approach so that the four split columns
          * stay row-aligned with the source.
          *
-         * Synthetic columns: ['Place', 'Area', 'Country']
+         * Synthetic columns: ['Place', 'Locality', 'Region', 'Country']
          */
         splitLocation(sourceCell) {
             const tdP = document.createElement('td');
-            const tdA = document.createElement('td');
+            const tdL = document.createElement('td');
+            const tdR = document.createElement('td');
             const tdC = document.createElement('td');
-            if (!sourceCell) return [tdP, tdA, tdC];
+            if (!sourceCell) return [tdP, tdL, tdR, tdC];
 
             /**
              * Process one DOM node (a single <li> content or the whole flat cell)
-             * and append the extracted Place / Area / Country fragments to the
-             * provided containers (either <li> or <td> elements).
+             * and append the extracted Place / Locality / Region / Country
+             * fragments to the provided containers (either <li> or <td> elements).
+             * The first non-flag '/area/' link found goes to containerL, every
+             * subsequent one to containerR.
              */
-            const _processNode = (node, containerP, containerA, containerC) => {
+            const _processNode = (node, containerP, containerL, containerR, containerC) => {
+                const areaState = { count: 0, countryName: _findRowCountryName(node) };
                 node.querySelectorAll('a').forEach(a => {
-                    const href    = a.getAttribute('href');
-                    const clonedA = a.cloneNode(true);
+                    const href = a.getAttribute('href');
                     if (href && href.includes('/place/')) {
-                        containerP.appendChild(clonedA);
+                        containerP.appendChild(a.cloneNode(true));
                     } else if (href && href.includes('/area/')) {
-                        const flagSpan = a.closest('.flag');
-                        if (flagSpan) {
-                            const flagImg     = flagSpan.querySelector('img')?.outerHTML || '';
-                            const abbr        = flagSpan.querySelector('abbr');
-                            const countryCode = abbr ? abbr.textContent.trim() : '';
-                            const countryFull = abbr?.getAttribute('title') || '';
-                            const countryHref = a.getAttribute('href') || '#';
-                            const span        = document.createElement('span');
-                            span.className    = flagSpan.className;
-                            if (countryFull && countryCode) {
-                                span.innerHTML = `${flagImg} <a href="${countryHref}">${countryFull} (${countryCode})</a>`;
-                            } else {
-                                span.innerHTML = flagSpan.innerHTML;
-                            }
-                            containerC.appendChild(span);
-                        } else {
-                            if (containerA.hasChildNodes()) containerA.appendChild(document.createTextNode(', '));
-                            containerA.appendChild(clonedA);
-                        }
+                        _routeAreaLink(a, containerL, containerR, containerC, areaState);
                     }
                 });
             };
@@ -2226,70 +2658,69 @@
             if (sourceLis.length > 0) {
                 // ── Multi-row path: build parallel <ul><li> lists ──────────────
                 const ulP = document.createElement('ul');
-                const ulA = document.createElement('ul');
+                const ulL = document.createElement('ul');
+                const ulR = document.createElement('ul');
                 const ulC = document.createElement('ul');
 
                 sourceLis.forEach(li => {
                     const liP = document.createElement('li');
-                    const liA = document.createElement('li');
+                    const liL = document.createElement('li');
+                    const liR = document.createElement('li');
                     const liC = document.createElement('li');
-                    _processNode(li, liP, liA, liC);
+                    _processNode(li, liP, liL, liR, liC);
                     ulP.appendChild(liP);
-                    ulA.appendChild(liA);
+                    ulL.appendChild(liL);
+                    ulR.appendChild(liR);
                     ulC.appendChild(liC);
                 });
 
                 if (ulP.querySelector('li a')) tdP.appendChild(ulP);
-                if (ulA.querySelector('li a')) tdA.appendChild(ulA);
+                if (ulL.querySelector('li a')) tdL.appendChild(ulL);
+                if (ulR.querySelector('li a')) tdR.appendChild(ulR);
                 if (ulC.querySelector('li a')) tdC.appendChild(ulC);
             } else {
                 // ── Flat path: original behaviour for non-multi-row cells ──────
-                _processNode(sourceCell, tdP, tdA, tdC);
+                _processNode(sourceCell, tdP, tdL, tdR, tdC);
             }
 
-            return [tdP, tdA, tdC];
+            return [tdP, tdL, tdR, tdC];
         },
 
         /**
-         * splitArea — splits an "Area" cell into MB-Area and Country cells.
-         * The country is identified by a .flag span; all remaining sibling nodes go
-         * to MB-Area.  Leading/trailing comma separators adjacent to the country node
-         * are stripped from both output cells.
-         * Synthetic columns: ['MB-Area', 'Country']
+         * splitArea — splits an area-hierarchy cell (no place link — e.g. "Area",
+         * "Begin area", "End area", or the "Name" column on an Areas-entity
+         * listing) into three cells: Locality, Region, and Country (caller-named
+         * via `syntheticColumns`). Uses the same per-anchor routing as
+         * `splitLocation`'s area/country handling (`_routeAreaLink`): the first
+         * non-flag '/area/' anchor is the most specific entry (Locality), every
+         * subsequent one is broader (Region, comma-joined), and the flag-wrapped
+         * anchor is Country.
+         *
+         * Previously this used a whole-cell sibling-node scan that picked "the
+         * first node whose subtree contains .flag" as the country — which wrongly
+         * matched the Canadian-province decoration (`<span class="area-icon">`
+         * containing an `<img class="flag flag-XX-prov">`) when it preceded the
+         * real country's `<span class="flag flag-XX">`, corrupting both output
+         * cells (see debug/area.org). Routing per-anchor via `a.closest('.flag')`
+         * (only the anchor's own ancestor chain, never a sibling) fixes this.
+         *
+         * Synthetic columns: caller-defined 3-name array, e.g.
+         * ['MB-Locality', 'MB-Region', 'Country']
          */
         splitArea(sourceCell) {
-            const tdArea    = document.createElement('td');
-            const tdCountry = document.createElement('td');
-
-            /** Remove leading/trailing comma-or-whitespace text nodes from a cell. */
-            const trimCell = (cell) => {
-                const isTrimTarget = (n) =>
-                    n.nodeType === Node.TEXT_NODE &&
-                    (n.textContent.trim() === ',' || !n.textContent.trim());
-                while (cell.firstChild && isTrimTarget(cell.firstChild)) cell.removeChild(cell.firstChild);
-                while (cell.lastChild  && isTrimTarget(cell.lastChild))  cell.removeChild(cell.lastChild);
-            };
-
+            const tdL = document.createElement('td');
+            const tdR = document.createElement('td');
+            const tdC = document.createElement('td');
             if (sourceCell) {
-                const nodes            = Array.from(sourceCell.childNodes);
-                const countryNodeIndex = nodes.findIndex(n =>
-                    n.nodeType === Node.ELEMENT_NODE &&
-                    (n.classList.contains('flag') || n.querySelector('.flag'))
-                );
-                nodes.forEach((n, idx) => {
-                    if (idx === countryNodeIndex) {
-                        tdCountry.appendChild(n.cloneNode(true));
-                    } else {
-                        const isCommaSep = n.nodeType === Node.TEXT_NODE && n.textContent.trim() === ',';
-                        const isAdjacent = (idx === countryNodeIndex - 1 || idx === countryNodeIndex + 1);
-                        if (isCommaSep && isAdjacent) return; // skip dangling comma
-                        tdArea.appendChild(n.cloneNode(true));
+                const areaState = { count: 0, countryName: _findRowCountryName(sourceCell) };
+                sourceCell.querySelectorAll('a').forEach(a => {
+                    const href = a.getAttribute('href');
+                    if (href && href.includes('/area/')) {
+                        _routeAreaLink(a, tdL, tdR, tdC, areaState);
                     }
                 });
-                trimCell(tdArea);
-                trimCell(tdCountry);
             }
-            return [tdArea, tdCountry];
+            return [tdL, tdR, tdC];
         },
 
         /**
@@ -2560,8 +2991,9 @@
                             // IMPORTANT: use setAttribute (not the .href property) so the
                             // browser does NOT normalise the relative path to an absolute URL.
                             // Assigning syntheticAnchor.href = "/release-group/GUID/cover-art"
-                            // would store "https://musicbrainz.org/release-group/GUID/cover-art"
-                            // in the attribute, causing _artLoadIcon() to build a broken URL:
+                            // would store "https://<current MB domain, e.g. musicbrainz.org
+                            // or musicbrainz.eu>/release-group/GUID/cover-art" in the
+                            // attribute, causing _artLoadIcon() to build a broken URL:
                             //   //coverartarchive.orghttps://musicbrainz.org/…
                             syntheticAnchor.setAttribute('href', entityPath + '/cover-art');
                             syntheticAnchor.appendChild(bareIconSpan);
@@ -2600,8 +3032,8 @@
                         //
                         // IMPORTANT: use setAttribute (not .href) so the browser does NOT
                         // normalise the path to an absolute URL — assigning .href would
-                        // produce "https://musicbrainz.org/…" which breaks _artLoadIcon's
-                        // URL construction: //coverartarchive.orghttps://…
+                        // produce "https://<current MB domain>/…" which breaks
+                        // _artLoadIcon's URL construction: //coverartarchive.orghttps://…
                         const entityAnchorC = sourceCell.querySelector(
                             'a[href*="/release-group/"],' +
                             'a[href*="/release/"]:not([href$="/cover-art"])'
@@ -2890,6 +3322,85 @@
         },
 
         /**
+         * dateTimeParts — splits a "YYYY-MM-DD HH:MM[:SS]" timestamp (e.g. the
+         * native "Last edited" column on report-detail pages) into separate
+         * date and time synthetic columns.
+         *
+         * Input examples   →  Output examples
+         *   "2025-07-21 16:19"  →  date: "2025-07-21", time: "16:19"
+         *   "2025-07-21"        →  date: "2025-07-21", time: "" (no time part)
+         *   ""                  →  date: "", time: ""
+         *
+         * Splits on the first run of whitespace — everything before is the
+         * date part, everything after is the time part — rather than parsing
+         * or validating the timestamp, so any MusicBrainz-native
+         * "<date> <time>" formatting variant (with or without seconds) is
+         * handled without over-fitting to one exact pattern.
+         *
+         * Synthetic columns: two columns, date then time (names assigned by
+         * the page definition, e.g. ['Last edited date', 'Last edited time']
+         * — this extractor is not tied to the "Last edited" column specifically).
+         *
+         * @param   {HTMLTableCellElement} sourceCell  Original timestamp <td>.
+         * @returns {HTMLTableCellElement[]}            Two synthetic <td> elements: [date, time].
+         */
+        dateTimeParts(sourceCell) {
+            const tdDate = document.createElement('td');
+            const tdTime = document.createElement('td');
+
+            if (!sourceCell) return [tdDate, tdTime];
+
+            const rawText = sourceCell.textContent.trim();
+            if (!rawText) return [tdDate, tdTime];
+
+            const spaceIdx = rawText.search(/\s/);
+            if (spaceIdx === -1) {
+                tdDate.textContent = rawText;
+            } else {
+                tdDate.textContent = rawText.slice(0, spaceIdx).trim();
+                tdTime.textContent = rawText.slice(spaceIdx + 1).trim();
+            }
+            tdDate.style.fontVariantNumeric = 'tabular-nums';
+            tdTime.style.fontVariantNumeric = 'tabular-nums';
+
+            return [tdDate, tdTime];
+        },
+
+        /**
+         * numberOfChars — counts a source cell's visible-text length into a
+         * single right-aligned numeric synthetic column (e.g. an "Annotation
+         * chars" column next to the "Annotation" column, for sorting/filtering
+         * annotations by size).
+         *
+         * Whitespace is normalised (all runs of spaces/newlines/tabs collapsed
+         * to a single space, then trimmed) before counting, so the result
+         * reflects the cell's actual visible content length rather than
+         * incidental HTML source formatting (indentation, line breaks between
+         * tags, …) inflating the count.
+         *
+         * Not tied to any specific column — usable on any text-bearing source
+         * column where a length metric is useful.
+         *
+         * Synthetic columns: one numeric column (name assigned by the page
+         * definition, e.g. ['Annotation chars']).
+         *
+         * @param   {HTMLTableCellElement} sourceCell  Original source <td>.
+         * @returns {HTMLTableCellElement[]}            One synthetic <td> with the character count.
+         */
+        numberOfChars(sourceCell) {
+            const tdChars = document.createElement('td');
+
+            if (!sourceCell) return [tdChars];
+
+            const cleanText = sourceCell.textContent.replace(/\s+/g, ' ').trim();
+            tdChars.textContent               = String(cleanText.length);
+            tdChars.style.textAlign           = 'right';
+            tdChars.style.fontVariantNumeric  = 'tabular-nums';
+
+            return [tdChars];
+        },
+
+        /**
          * tagCount_Name_Comment — splits an entity row on tag-value entity pages
          * into three synthetic columns: Name, Tag count, and Comment.
          *
@@ -3099,6 +3610,48 @@
             }
 
             return [tdCollection, tdEditor];
+        },
+
+        /**
+         * Name_Comment_Description — splits an instrument-list family cell
+         * (built by applyListToTable's Structure J from a native <li>, see
+         * pageType 'instrument-list' / debug/instruments.html) into three
+         * columns. Source shape, all three trailing parts optional:
+         *   <a href="/instrument/UUID"><bdi>Name</bdi></a>
+         *   [<span class="comment">(<bdi>Comment</bdi>)</span>]
+         *   [— <!-- -->Description text, which may itself contain nested
+         *     <a> links (e.g. a family entry naming its member instruments)]
+         * Name and Comment reuse the same extraction _tagCountBase uses for
+         * every other entity-list cell. Description is everything found
+         * after the first "—" (em dash) text node — cloned verbatim (not
+         * reduced to plain text) so nested links survive — with the
+         * MusicBrainz `<!-- -->` marker-comment artifact that immediately
+         * follows the dash skipped.
+         * Synthetic columns: ['Name', 'Comment', 'Description']
+         */
+        Name_Comment_Description(sourceCell) {
+            const [tdName, , tdComment] = _tagCountBase(sourceCell);
+            const tdDescription = document.createElement('td');
+
+            if (sourceCell) {
+                let _dashSeen = false;
+                for (const node of sourceCell.childNodes) {
+                    if (!_dashSeen) {
+                        if (node.nodeType === Node.TEXT_NODE && node.nodeValue.includes('—')) {
+                            _dashSeen = true;
+                            // Handle the rare case where real content trails the dash
+                            // within the same text node (no intervening marker comment).
+                            const _after = node.nodeValue.split('—').slice(1).join('—').trim();
+                            if (_after) tdDescription.appendChild(document.createTextNode(_after));
+                        }
+                        continue;
+                    }
+                    if (node.nodeType === Node.COMMENT_NODE) continue; // skip <!-- --> artifact
+                    tdDescription.appendChild(node.cloneNode(true));
+                }
+            }
+
+            return [tdName, tdComment, tdDescription];
         }
     };
 
@@ -3425,10 +3978,10 @@
             result.push({ sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'],    colIdx: -1 });
         }
         if (features.splitLocation && !result.some(e => e.sourceColumn === 'Location')) {
-            result.push({ sourceColumn: 'Location',     extractor: 'splitLocation',    syntheticColumns: ['Place', 'Area', 'Country'], colIdx: -1 });
+            result.push({ sourceColumn: 'Location',     extractor: 'splitLocation',    syntheticColumns: ['Place', 'Locality', 'Region', 'Country'], colIdx: -1 });
         }
         if (features.splitArea && !result.some(e => e.sourceColumn === 'Area')) {
-            result.push({ sourceColumn: 'Area',         extractor: 'splitArea',        syntheticColumns: ['MB-Area', 'Country'], colIdx: -1 });
+            result.push({ sourceColumn: 'Area',         extractor: 'splitArea',        syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'], colIdx: -1 });
         }
 
         return result;
@@ -3992,15 +4545,43 @@
      *                              h3+ul pairs under <h2>Uses</h2> into one-column
      *                              tables (singular h3 text as column header).
      *                              The <ul id="artist-credit-artists"> is not touched.
-     *   G) bare-ul (artist-credit-entity) — /artist-credit/<id>/<entity> sub-page;
-     *                              a plain <ul> without id or class is converted to
-     *                              a one-column table whose header is derived from
-     *                              the URL last path segment (e.g. "release-group"
-     *                              → "Release group").
+     *   G) bare-ul (artist-credit-entity, genres-list) — /artist-credit/<id>/<entity>
+     *                              sub-page, or /genres; a plain <ul> without id or
+     *                              class is converted to a one-column table.
+     *                              Header: artist-credit-entity derives it from the
+     *                              URL last path segment (e.g. "release-group" →
+     *                              "Release group"); genres-list uses the fixed
+     *                              literal "Genre".
+     *   J) h3+ul (reports-index, edit-types, instrument-list) — /reports,
+     *                              /doc/Edit_Types, /instruments pages after
+     *                              renameH2ToH3 has renamed their native category h2
+     *                              headings (Artists, Events, … / Area, Artist, … /
+     *                              Wind instrument, String instrument, …) to h3.
+     *                              Column header: reports-index uses the fixed
+     *                              literal "Report" (rows are report links, not
+     *                              singular entities of the category name);
+     *                              edit-types and instrument-list use the h3 text
+     *                              itself (the category IS the entity type of every
+     *                              row in that section).
+     *   K) h2+p (privileged-accounts) — /privileged; each native <h2> category is
+     *                              followed by 2-3 plain <p> siblings (intro,
+     *                              "The following N users are …:" count, and —
+     *                              always last, identified by containing /user/
+     *                              links rather than by position — the actual
+     *                              editor list as inline <a> links glued by ", "
+     *                              text nodes, NOT a <ul>). Converts just that one
+     *                              <p> into a one-column table, one row per <a>,
+     *                              fixed literal header "Editor". Splitting by
+     *                              walking the <a> elements (not the "," text)
+     *                              matters because some usernames themselves
+     *                              contain a literal comma.
      *
      * Structures A and B produce two-column tables (Name | Tag count).
      * Structures C, D, E, F, and G produce single-column tables whose header is the
      * singular form of the section heading (via `_toSingular()` or URL derivation).
+     * Structures J and K also produce single-column tables; J's header is either a
+     * fixed literal ("Report") or the h3 text itself depending on pageType, K's is
+     * always the fixed literal "Editor".
      *
      * Must run AFTER `applyRenameH2ToH3` / `applyInsertH2` and BEFORE maxPage
      * determination so that `parseDocumentForTables` finds the resulting
@@ -4104,6 +4685,66 @@
                             + ` (${_tbody.rows.length} rows, structure="h2-ul").`);
                     });
                     return; // Structure C handled all h2+ul pairs for this entry
+                }
+
+                // ── Structure J: reports index (/reports), edit types (/doc/Edit_Types),
+                //    instrument list (/instruments) ───────────────────────────────
+                // Triggered for pageTypes 'reports-index', 'edit-types', 'instrument-list'.
+                // All three render as N native <h2> category headings each immediately
+                // followed by a <ul> of links (reports: 14 categories; edit types: 17
+                // entity-type categories; instruments: 8 family categories).
+                // renameH2ToH3 has already demoted those <h2>s to <h3>; walk each and
+                // convert its sibling <ul> into a single-column table.
+                //
+                // Column header naming differs per pageType:
+                //   reports-index    — fixed literal "Report": the h3 text is a category
+                //                      label ("Release groups"), not the entity type of the
+                //                      rows (which are report links, not release groups).
+                //   edit-types /
+                //   instrument-list  — the h3 text itself (e.g. "Area", "Wind instrument"):
+                //                      here the category label IS the entity type of every
+                //                      row in that section, so it doubles as the column name.
+                if (pageType === 'reports-index' || pageType === 'edit-types' || pageType === 'instrument-list') {
+                    Array.from(_root.querySelectorAll('h3, h2')).forEach(_h3 => {
+                        let _next = _h3.nextElementSibling, _steps = 0, _ul = null;
+                        while (_next && _steps < 5) {
+                            if (_next.tagName === 'UL') { _ul = _next; break; }
+                            if (_next.tagName === 'H3' || _next.tagName === 'H2') break;
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_ul) return;
+
+                        const _colName = (pageType === 'reports-index') ? 'Report' : _h3.textContent.trim();
+                        const _table = docContext.createElement('table');
+                        _table.className = 'tbl';
+                        _table.dataset.mbOriginalColName = _colName;
+
+                        const _thead = docContext.createElement('thead');
+                        const _hr = docContext.createElement('tr');
+                        const _th = docContext.createElement('th');
+                        _th.textContent = _colName;
+                        _hr.appendChild(_th);
+                        _thead.appendChild(_hr);
+                        _table.appendChild(_thead);
+
+                        const _tbody = docContext.createElement('tbody');
+                        Array.from(_ul.querySelectorAll(':scope > li')).forEach(li => {
+                            const _tr = docContext.createElement('tr');
+                            if (li.className) _tr.className = li.className;
+                            const _td = docContext.createElement('td');
+                            Array.from(li.childNodes).forEach(n => _td.appendChild(n.cloneNode(true)));
+                            _tr.appendChild(_td);
+                            _tbody.appendChild(_tr);
+                        });
+                        _table.appendChild(_tbody);
+
+                        _ul.parentNode.replaceChild(_table, _ul);
+                        Lib.debug('init',
+                            `applyListToTable: ${pageType}: converted h3="${_h3.textContent.trim()}" ul → table`
+                            + ` (${_tbody.rows.length} rows, col="${_colName}", structure="h3-ul-category").`);
+                    });
+                    return; // Structure J handled all h3+ul pairs for this entry
                 }
 
                 // ── Structure D: h3+ul sections on one-segment tag pages ─────────
@@ -4499,18 +5140,26 @@
                     return; // Structure F handled all h3+ul pairs for this entry
                 }
 
-                // ── Structure G: artist-credit entity sub-pages ──────────────────────
+                // ── Structure G: artist-credit entity sub-pages, genre list ──────────
                 // Triggered for pageType 'artist-credit-entity'
-                // (/artist-credit/<id>/<entity>, e.g. /artist-credit/1488075/recording).
-                // The page may present its full entity list as a plain <ul> without
-                // id or class attribute.  The column name is derived from the last
-                // URL path segment with hyphens replaced by spaces and the first
-                // character capitalised (e.g. "release-group" → "Release group").
-                if (pageType === 'artist-credit-entity') {
+                // (/artist-credit/<id>/<entity>, e.g. /artist-credit/1488075/recording)
+                // and pageType 'genres-list' (/genres).
+                // Both present their full entity list as a single plain <ul> without
+                // id or class attribute (see debug/genre-list.html — an <h1>, two intro
+                // <p>s, then one bare <ul> of genre links, no h2 sections).
+                // Column name:
+                //   artist-credit-entity — derived from the last URL path segment with
+                //                          hyphens replaced by spaces and the first
+                //                          character capitalised (e.g. "release-group"
+                //                          → "Release group").
+                //   genres-list           — fixed literal "Genre" (matches the singular
+                //                          column naming convention used elsewhere for
+                //                          genre/tag lists, e.g. Structure A/B, popular-tags).
+                if (pageType === 'artist-credit-entity' || pageType === 'genres-list') {
                     const _entitySlug = _currentPath.split('/').filter(Boolean).pop() || '';
-                    const _colName = _entitySlug
-                        .replace(/-/g, ' ')
-                        .replace(/^\w/, c => c.toUpperCase());
+                    const _colName = (pageType === 'genres-list')
+                        ? 'Genre'
+                        : _entitySlug.replace(/-/g, ' ').replace(/^\w/, c => c.toUpperCase());
 
                     // Find a plain <ul> that has neither an id nor a class —
                     // the artist-credit-artists list has an id and is on the
@@ -4519,7 +5168,7 @@
                         .find(u => !u.id && !u.className);
                     if (!_ul) {
                         Lib.debug('init',
-                            `applyListToTable: artist-credit-entity: no plain <ul> found` +
+                            `applyListToTable: ${pageType}: no plain <ul> found` +
                             ` for entity="${_colName}" — skipping (page may use` +
                             ` a native <table> already).`);
                         return;
@@ -4549,10 +5198,90 @@
 
                     _ul.parentNode.replaceChild(_table, _ul);
                     Lib.debug('init',
-                        `applyListToTable: artist-credit-entity: converted plain ul → table` +
+                        `applyListToTable: ${pageType}: converted plain ul → table` +
                         ` (${_tbody.rows.length} rows, col="${_colName}",` +
                         ` entity="${_entitySlug}", structure="artist-credit-entity-ul").`);
                     return; // Structure G handled
+                }
+
+                // ── Structure K: privileged accounts (/privileged) ───────────────────
+                // Triggered for pageType 'privileged-accounts'.
+                // Each <h2> category (Auto-editors, Relationship editors, …, Bots) is
+                // followed by 2-3 plain <p> elements: an intro/description paragraph,
+                // a "The following N users are …:" count paragraph, and — always last —
+                // a paragraph holding the actual editor list as inline
+                // <a href="/user/…"> links separated by ", " text nodes (NOT a <ul>,
+                // see debug/priviledged.html). Some usernames themselves contain a
+                // literal comma (e.g. "ApeKattQuest, MonkeyPython"), so splitting is
+                // done by walking the <p>'s direct child <a> elements — never by
+                // parsing the separator text — one row per anchor, ", " glue discarded.
+                // The editor-list <p> is identified generically as the LAST <p> before
+                // the next heading that contains at least one /user/ link (works
+                // whether a section has 2 or 3 intro paragraphs, e.g. 'Bots' has no
+                // description paragraph).
+                //
+                // The other (non-list) paragraphs are stashed as HTML on the new
+                // table's dataset.mbIntroHtml and then removed from this DOM entirely —
+                // renderGroupedTable's cleanup pass only ever removes h3/table.tbl
+                // elements, and the rebuilt h3/table pairs it inserts land as one
+                // contiguous block starting from the page's single target h2/h3, so
+                // any left-behind <p> would end up stranded after every sub-table
+                // instead of before its own. See group.introHtml in
+                // startFetchingProcess / renderGroupedTable for where they get
+                // reinserted right before their table on render.
+                if (pageType === 'privileged-accounts') {
+                    Array.from(_root.querySelectorAll('h2, h3')).forEach(_h2 => {
+                        let _next = _h2.nextElementSibling, _steps = 0;
+                        let _listP = null;
+                        const _introPs = [];
+                        while (_next && _steps < 10) {
+                            if (_next.tagName === 'H2' || _next.tagName === 'H3') break;
+                            if (_next.tagName === 'P') {
+                                if (_next.querySelector('a[href*="/user/"]')) {
+                                    _listP = _next; // keep overwriting — last match wins
+                                } else {
+                                    _introPs.push(_next);
+                                }
+                            }
+                            _next = _next.nextElementSibling;
+                            _steps++;
+                        }
+                        if (!_listP) return;
+
+                        const _colName = 'Editor';
+                        const _table = docContext.createElement('table');
+                        _table.className = 'tbl';
+                        _table.dataset.mbOriginalColName = _colName;
+                        if (_introPs.length > 0) {
+                            _table.dataset.mbIntroHtml = _introPs.map(p => p.outerHTML).join('');
+                        }
+
+                        const _thead = docContext.createElement('thead');
+                        const _hr = docContext.createElement('tr');
+                        const _th = docContext.createElement('th');
+                        _th.textContent = _colName;
+                        _hr.appendChild(_th);
+                        _thead.appendChild(_hr);
+                        _table.appendChild(_thead);
+
+                        const _tbody = docContext.createElement('tbody');
+                        Array.from(_listP.querySelectorAll(':scope > a[href]')).forEach(a => {
+                            const _tr = docContext.createElement('tr');
+                            const _td = docContext.createElement('td');
+                            _td.appendChild(a.cloneNode(true));
+                            _tr.appendChild(_td);
+                            _tbody.appendChild(_tr);
+                        });
+                        _table.appendChild(_tbody);
+
+                        _listP.parentNode.replaceChild(_table, _listP);
+                        _introPs.forEach(p => p.remove());
+                        Lib.debug('init',
+                            `applyListToTable: privileged-accounts: converted h2="${_h2.textContent.trim()}" ` +
+                            `editor-list p → table (${_tbody.rows.length} rows, col="${_colName}", ` +
+                            `${_introPs.length} intro paragraph(s) stashed, structure="privileged-accounts-p").`);
+                    });
+                    return; // Structure K handled all h2+p pairs for this entry
                 }
 
                 Lib.debug('init', `applyListToTable: sectionId='' but path "${_currentPath}" matches no known structure — skipping.`);
@@ -4640,6 +5369,705 @@
     }
 
     /**
+     * Splits an "entity-credited-to-artist" element into its two logical
+     * parts. Two shapes share this same glued-together text-run pattern in
+     * MusicBrainz edit markup:
+     *   - `.entered-from` (relationship-type edits):
+     *     `Entered from: <a>Release name</a> [<a>Add Cover Art</a>] by <bdi>Artist(s)</bdi>`
+     *   - a `<td>` inside `.edit-details` for other edit types that reference
+     *     a single artist-credited entity (e.g. "Edit recording"):
+     *     `<a>Recording name</a> by <bdi>Artist(s)</bdi>` (no label prefix,
+     *     no cover-art link — those removal steps are simply no-ops here).
+     * The optional "Add Cover Art" button (present only for release edits
+     * missing cover art) is UI chrome, not data, and is dropped. The
+     * remaining nodes are split on the bare `"by"` text-node boundary.
+     *
+     * @param {Element} sourceEl - The `.entered-from` element, or a `<td>` with the same shape (not cloned by this function).
+     * @returns {{enteredFrom: (Node[]|null), by: (Node[]|null)}} Child-node arrays for
+     *   each cell, or `null` when that half is absent (caller renders "N/A").
+     */
+    function _splitEnteredFrom(sourceEl) {
+        const clone = sourceEl.cloneNode(true);
+        // Drop the leading "Entered from:" label text and any "Add Cover Art" link.
+        Array.from(clone.childNodes).forEach(n => {
+            if (n.nodeType === Node.TEXT_NODE && /^\s*Entered from:\s*$/i.test(n.textContent)) {
+                clone.removeChild(n);
+            } else if (n.nodeType === Node.ELEMENT_NODE && n.tagName === 'A' && /\/cover-art\b/.test(n.getAttribute('href') || '')) {
+                clone.removeChild(n);
+            }
+        });
+
+        const nodes = Array.from(clone.childNodes);
+        const byIdx = nodes.findIndex(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim() === 'by');
+        if (byIdx === -1) {
+            const trimmedLead = nodes.filter(n => !(n.nodeType === Node.TEXT_NODE && !n.textContent.trim()));
+            return { enteredFrom: trimmedLead.length ? trimmedLead : null, by: null };
+        }
+        const before = nodes.slice(0, byIdx).filter(n => !(n.nodeType === Node.TEXT_NODE && !n.textContent.trim()));
+
+        // The artist-credit is always the first substantial element right
+        // after "by" — a single <bdi> wrapping one or more artist <a> links
+        // joined by "&" (e.g. "Bruce Springsteen & The E Street Band"), or
+        // occasionally a bare <a>. For non-relationship edit types the
+        // sentence keeps going after that with relationship-attribute
+        // description that is NOT part of the artist value — e.g. "<bdi>
+        // Bruce Springsteen</bdi> has a discography entry at <url> [info]"
+        // or "<bdi>...</bdi> can be purchased for download at <url> [info]"
+        // (see debug/act.org 4.), debug/RG-relationship-initial.html). Stop
+        // right after that first element so trailing description text isn't
+        // included in the "By artist" column.
+        const afterAll = nodes.slice(byIdx + 1).filter(n => !(n.nodeType === Node.TEXT_NODE && !n.textContent.trim()));
+        const firstElIdx = afterAll.findIndex(n => n.nodeType === Node.ELEMENT_NODE);
+        const after = firstElIdx === -1 ? afterAll : afterAll.slice(0, firstElIdx + 1);
+
+        return {
+            enteredFrom: before.length ? before : null,
+            by: after.length ? after : null
+        };
+    }
+
+    /**
+     * Derives the human-readable "Edit status" label for one `div.edit-list` block.
+     * Prefers the explicit `.edit-status` text (present for cancelled/error/deleted
+     * edits); falls back to the 2nd class token of `.edit-header` for the two
+     * statuses that render no `.edit-status` text at all ("open", "applied").
+     *
+     * @param {Element} block - The `div.edit-list` block.
+     * @returns {string}
+     */
+    function _editStatusLabel(block) {
+        const statusEl = block.querySelector('.edit-status');
+        if (statusEl) return statusEl.textContent.trim();
+        const header = block.querySelector('.edit-header');
+        const token = header ? (header.className.split(/\s+/)[1] || '') : '';
+        if (token === 'open') return 'Open';
+        if (token === 'applied') return 'Applied';
+        return token ? token.charAt(0).toUpperCase() + token.slice(1) : 'N/A';
+    }
+
+    /**
+     * Derives the "Edit action" column background color for one edit, from
+     * `.edit-header`'s own class list — NOT from any inline or computed
+     * style. MusicBrainz does not set an inline background on `.edit-header`
+     * itself; any color visible on a live page comes from MusicBrainz's own
+     * class-based site CSS and/or a separately-installed userscript (e.g.
+     * "MusicBrainz: Colourful edits", `debug/ColourfulEdits.user.js`) —
+     * neither of which is readable from a detached `DOMParser` document
+     * (fetched pages 2+ have no stylesheet at all), and the latter obviously
+     * shouldn't be a hard dependency. Deriving the color ourselves from the
+     * class list works identically regardless of browser environment or
+     * which page was fetched how.
+     *
+     * Same 5 categories, same open-vs-closed shading, and same cancelled-wins
+     * priority as "Colourful edits" — but exact-token matching instead of
+     * its loose substring regexes (`/add-/`, `/edit-(?!header)/`, `/remove-/`,
+     * `/merge-/`), which turned out to be a real bug when tested against
+     * this script's own debug snapshots: MusicBrainz's actual category
+     * tokens are `edit-add`/`edit-edit`/`edit-remove`/`edit-merge` (confirmed
+     * via `grep` across every `debug/*.html` snapshot), so
+     * `/edit-(?!header)/` also matches inside `edit-remove`/`edit-merge`
+     * (any "edit-" not immediately followed by "header" — it doesn't stop
+     * at the token boundary), silently recoloring every Remove/Merge edit
+     * as "Edit". Matching the literal known tokens sidesteps this entirely.
+     * `open` = `/open/` found in the class list, else closed/applied. See
+     * `debug/act.org` and `debug/NOTES.md`.
+     *
+     * @param {string} headerClassName - `.edit-header`'s `className`.
+     * @returns {string|null} A CSS color value from the `sa_edits_color_*`
+     *   settings, or `null` when `sa_enable_edits_type_colors` is off.
+     */
+    function _editActionBgColor(headerClassName) {
+        if (Lib.settings.sa_enable_edits_type_colors === false) return null;
+        const isOpen = /open/.test(headerClassName);
+        if (/\bcancelled\b/.test(headerClassName)) {
+            return Lib.settings.sa_edits_color_cancelled;
+        }
+        if (/\bedit-add\b/.test(headerClassName)) {
+            return isOpen ? Lib.settings.sa_edits_color_add_open : Lib.settings.sa_edits_color_add_closed;
+        }
+        if (/\bedit-edit\b/.test(headerClassName)) {
+            return isOpen ? Lib.settings.sa_edits_color_edit_open : Lib.settings.sa_edits_color_edit_closed;
+        }
+        if (/\bedit-remove\b/.test(headerClassName)) {
+            return isOpen ? Lib.settings.sa_edits_color_remove_open : Lib.settings.sa_edits_color_remove_closed;
+        }
+        if (/\bedit-merge\b/.test(headerClassName)) {
+            return isOpen ? Lib.settings.sa_edits_color_merge_open : Lib.settings.sa_edits_color_merge_closed;
+        }
+        return isOpen ? Lib.settings.sa_edits_color_other_open : Lib.settings.sa_edits_color_other_closed;
+    }
+
+    /**
+     * Builds one `<tr>` for a single `div.edit-list` block, matching the column
+     * order produced by `applyEditsToTable`.
+     *
+     * @param {Element} block - The `div.edit-list` block to extract.
+     * @param {Document} docContext - Document used to create the new elements.
+     * @returns {Element} The populated `<tr>`.
+     */
+    function _buildEditRow(block, docContext) {
+        const tr = docContext.createElement('tr');
+
+        // Color for the "Edit action" cell — derived from .edit-header's own
+        // class list, not any inline/computed style. See _editActionBgColor's
+        // JSDoc for why (MusicBrainz sets no inline background here at all;
+        // any color visible on a live page comes from its own class-based
+        // site CSS and/or a separately-installed userscript, neither of
+        // which this can or should depend on).
+        const headerEl = block.querySelector('.edit-header');
+        const editActionBg = headerEl ? _editActionBgColor(headerEl.className) : null;
+
+        const addCell = (nodes) => {
+            const td = docContext.createElement('td');
+            if (nodes == null) {
+                td.textContent = 'N/A';
+            } else if (typeof nodes === 'string') {
+                td.textContent = nodes;
+            } else if (nodes instanceof Node) {
+                td.appendChild(nodes);
+            } else {
+                nodes.forEach(n => td.appendChild(n));
+            }
+            tr.appendChild(td);
+            return td;
+        };
+
+        // Edit# / Edit action — parsed from the h2 bdi text "Edit #NNNNNN - Action".
+        const editLink = block.querySelector('h2 a[href^="/edit/"]');
+        const bdiText  = editLink ? (editLink.querySelector('bdi')?.textContent.trim() || editLink.textContent.trim()) : '';
+        const m = bdiText.match(/^Edit #(\d+)\s*-\s*(.+)$/);
+        if (editLink && m) {
+            const a = docContext.createElement('a');
+            a.setAttribute('href', editLink.getAttribute('href'));
+            a.textContent = `#${m[1]}`;
+            const editNumTd = addCell(a);
+            const actionTd  = addCell(m[2].trim());
+            if (editActionBg) {
+                // Generic marker (not edits-specific) — see applyStickyColumn,
+                // which respects this on whichever cell carries it so the
+                // color survives its "clear inline bg so CSS zebra wins" pass
+                // (and, for Edit# specifically, its own sticky-column opaque-
+                // background computation).
+                editNumTd.style.backgroundColor = editActionBg;
+                editNumTd.dataset.mbCustomCellBg = editActionBg;
+                actionTd.style.backgroundColor = editActionBg;
+                actionTd.dataset.mbCustomCellBg = editActionBg;
+            }
+        } else {
+            addCell(null);
+            addCell(null);
+        }
+
+        // Edit details — rendered as-is; every edit type wraps this in its own
+        // native <table class="details ...">, so de-table-ify it (see
+        // _detableify's JSDoc) before it ends up nested inside a <td> of the
+        // outer edits table.
+        const detailsEl = block.querySelector('.edit-details');
+        if (detailsEl) {
+            const clone = detailsEl.cloneNode(true);
+            _detableify(clone);
+            addCell(clone);
+        } else {
+            addCell(null);
+        }
+
+        // Edit notes — rendered as-is, minus the hidden "add a note" composer
+        // widget. De-table-ify defensively too, in case a note's limited wiki
+        // formatting ever renders a table. Edits with zero real notes still
+        // have a (now-empty) .edit-notes element once the composer widget is
+        // stripped — render "N/A" rather than a blank cell, consistent with
+        // every other empty column.
+        const notesEl = block.querySelector('.edit-notes');
+        if (notesEl) {
+            const clone = notesEl.cloneNode(true);
+            clone.querySelectorAll('.add-edit-note').forEach(el => el.remove());
+            _detableify(clone);
+            addCell(clone.textContent.trim() ? clone : null);
+        } else {
+            addCell(null);
+        }
+
+        // Entered from / By — first check the dedicated .entered-from block
+        // (relationship-type edits), then fall back to scanning .edit-details
+        // for the same "<link> by <bdi>" shape MusicBrainz embeds directly in
+        // a table cell for other edit types that reference a single
+        // artist-credited entity (e.g. "Edit recording": <th>Recording:</th>
+        // <td><a href="/recording/...">Name</a> by <bdi>Artist</bdi></td> —
+        // see debug/mgv.html). Scanning generically, rather than hardcoding a
+        // list of edit-type names, means any other type sharing this shape is
+        // picked up automatically too — see debug/act.org 3.).
+        const enteredFromEl = block.querySelector('.entered-from');
+        let enteredFromSource = enteredFromEl;
+        if (!enteredFromSource) {
+            const detailsElForScan = block.querySelector('.edit-details');
+            if (detailsElForScan) {
+                enteredFromSource = Array.from(detailsElForScan.querySelectorAll('td')).find(td =>
+                    Array.from(td.childNodes).some(n => n.nodeType === Node.TEXT_NODE && n.textContent.trim() === 'by')
+                ) || null;
+            }
+        }
+        if (enteredFromSource) {
+            const { enteredFrom, by } = _splitEnteredFrom(enteredFromSource);
+            addCell(enteredFrom ? enteredFrom.map(n => n.cloneNode(true)) : null);
+            addCell(by ? by.map(n => n.cloneNode(true)) : null);
+        } else {
+            addCell(null);
+            addCell(null);
+        }
+
+        // Edit by
+        const byLink = block.querySelector('p.subheader a[href^="/user/"]');
+        addCell(byLink ? byLink.cloneNode(true) : null);
+
+        // My vote
+        const myVoteEl = block.querySelector('.my-vote');
+        addCell(myVoteEl ? myVoteEl.textContent.replace(/^\s*My vote:\s*/i, '').trim() : null);
+
+        // Vote count
+        const voteCountEl = block.querySelector('.vote-count');
+        addCell(voteCountEl ? voteCountEl.textContent.replace(/\s+/g, ' ').trim() : null);
+
+        // Closed/Approved / Voting — mutually exclusive, both read from
+        // .edit-expiration. "Approved:" is the prefix MusicBrainz uses for
+        // auto-editor edits that passed their voting period without ever
+        // being formally "Closed:" — same semantics (a final date, no more
+        // voting), so it's folded into the same column.
+        const expirationEl = block.querySelector('.edit-expiration');
+        let closedText = null, votingText = null;
+        if (expirationEl) {
+            const text = expirationEl.textContent.replace(/\s+/g, ' ').trim();
+            if (/^(Closed|Approved):/i.test(text)) closedText = text.replace(/^(?:Closed|Approved):\s*/i, '').trim();
+            else if (/^Voting:/i.test(text)) votingText = text.replace(/^Voting:\s*/i, '').trim();
+        }
+        addCell(closedText);
+        addCell(votingText);
+
+        // Edit status
+        addCell(_editStatusLabel(block));
+
+        return tr;
+    }
+
+    /**
+     * Recursively converts real `<table>/<thead>/<tbody>/<tfoot>/<tr>`
+     * elements inside `root` into `<div>`s with the equivalent CSS
+     * `display: table*` value, preserving the visual grid layout without
+     * being real `<table>`/`<tbody>`/`<tr>` DOM nodes.
+     *
+     * MusicBrainz's native `.edit-details` markup wraps its content in its
+     * own `<table class="details ...">` for EVERY edit type, not just merges
+     * (which additionally embed a second compare-grid `<table class="tbl">`).
+     * Left as real `<table>` elements, this would sit nested inside a `<td>`
+     * of the outer edits table — and the dozens of `tbl.querySelectorAll('tbody tr')`
+     * calls throughout this script (sort, filter, zebra striping, export,
+     * statistics, ...) all recurse through nested tables regardless of their
+     * class, silently corrupting row counts/content for the whole edits
+     * table. Renaming the nested table's class is not sufficient; it must
+     * not be a `<table>`/`<tbody>`/`<tr>` at all — but `tbl.querySelectorAll('tbody tr')`
+     * requires a literal `<tbody>` *and* `<tr>` ancestor chain, so converting
+     * just those three tag types (plus `<thead>`/`<tfoot>`) is already
+     * sufficient; nothing in this script queries a bare `<td>`/`<th>` at the
+     * page level expecting it to belong to the outer table's row model.
+     *
+     * `<th>`/`<td>` are deliberately left as real elements (only tagged with
+     * `.mb-dt-cell`/`.mb-dt-th` marker classes for styling) rather than also
+     * being converted to `<div>`s: `rowspan`/`colspan` are IDL properties
+     * only `HTMLTableCellElement` (i.e. actual `<td>`/`<th>`) exposes, and
+     * the CSS table-layout algorithm only honours them on elements that
+     * still have that interface — a `<div colspan="4">` is inert. Converting
+     * them anyway was the original (wrong) approach and silently broke every
+     * `rowspan`/`colspan` in `.edit-details` (a `rowspan="2"` relationship
+     * diff's old/new values rendered side-by-side instead of stacked; a
+     * medium edit's "Old tracklist"/"New tracklist" `colspan="4"` group
+     * headers collapsed to one column each) — see debug/act.org 2.)/3.),
+     * debug/relationship-original.html vs. debug/relationship-final.html,
+     * and debug/no-h2.html for the "Old tracklist"/"New tracklist" case.
+     * Real `<th>`/`<td>` default to `display: table-cell` in every browser's
+     * UA stylesheet regardless of ancestor tag names, so no explicit style
+     * is needed for them here.
+     *
+     * @param {Element} root - Element to convert in place (mutated).
+     */
+    function _detableify(root) {
+        const DISPLAY_MAP = {
+            TABLE: ['table', 'mb-dt-table'],
+            THEAD: ['table-header-group', 'mb-dt-thead'],
+            TBODY: ['table-row-group', 'mb-dt-tbody'],
+            TFOOT: ['table-footer-group', 'mb-dt-tfoot'],
+            TR:    ['table-row', 'mb-dt-tr']
+        };
+        // Reverse of document order = innermost first, so each replaceWith()
+        // only ever touches an element still attached under its (possibly
+        // already-converted) parent.
+        Array.from(root.querySelectorAll('table, thead, tbody, tfoot, tr')).reverse().forEach(el => {
+            const mapping = DISPLAY_MAP[el.tagName];
+            if (!mapping) return;
+            const [display, extraClasses] = mapping;
+            const div = el.ownerDocument.createElement('div');
+            Array.from(el.attributes).forEach(attr => div.setAttribute(attr.name, attr.value));
+            extraClasses.split(' ').forEach(c => div.classList.add(c));
+            div.style.display = display;
+            while (el.firstChild) div.appendChild(el.firstChild);
+            el.replaceWith(div);
+        });
+        // <th>/<td> keep their tag (see JSDoc above) — just mark them for CSS.
+        Array.from(root.querySelectorAll('th, td')).forEach(el => {
+            el.classList.add('mb-dt-cell');
+            if (el.tagName === 'TH') el.classList.add('mb-dt-th');
+        });
+    }
+
+    /**
+     * Injects a minimal border/padding rule for the `.mb-dt-*` grid classes
+     * `_detableify()` produces (once per document) — replaces just enough of
+     * MusicBrainz's site-wide `table.tbl`/`.details` styling to stay readable
+     * now that this content is no longer real `<table>` markup. Also
+     * replaces MusicBrainz's own old/new diff-cell highlighting
+     * (`table.details td.old`/`table.details td.new`, from
+     * static.metabrainz.org/MB/common-*.css) for the same reason: that
+     * selector requires a real `<table>` ancestor, which no longer exists
+     * once `.edit-details` has been de-tableified — the `.old`/`.new`
+     * classes survive the clone untouched, but nothing colors them anymore
+     * without this. The replacement rule needs `!important`: on zebra-striped
+     * "even" (grey) rows specifically, MusicBrainz's own zebra CSS reaches
+     * these deeply-nested cells too (a descendant selector, not just a
+     * direct-child one) and otherwise wins — a plain, non-`!important`
+     * declaration was confirmed to lose there even though its own selector
+     * is more specific ("odd"/white rows worked fine, since nothing
+     * conflicts with an unstyled/default background). See
+     * sa_enable_edits_diff_colors / debug/NOTES.md.
+     *
+     * Also restores zebra striping (`.mb-dt-tr.odd`/`.mb-dt-tr.even` —
+     * `_detableify()` preserves the original `odd`/`even` class on the
+     * converted row `<div>`, MusicBrainz's own zebra CSS just can't reach it
+     * anymore for the same real-`<table>`-ancestor reason as above) and a
+     * row-hover override (`tr:hover .mb-dt-table .mb-dt-cell`, reading the
+     * general `sa_ui_row_hover_bg` setting) for the same class of content —
+     * without it, hovering a row makes these deeply-nested cells' thin
+     * `#ddd` borders nearly invisible against whatever MusicBrainz's own
+     * native hover CSS darkens them to (same reaches-any-depth pattern as
+     * its zebra rule). The zebra rule sets background on both the row *and*
+     * its direct `.mb-dt-cell` children (not the row alone) — a row-only
+     * background relies on painting through cells with no background of
+     * their own, which silently fails to show on "even"/grey rows the
+     * moment anything sets an explicit competing background on the cell
+     * itself (see debug/NOTES.md, "row background colour fix didn't
+     * actually work"); MusicBrainz's own equivalent rule colors `<td>`
+     * directly for the same reason. All three rules use `!important` for
+     * the same defensive reason as the diff colors above; the hover rule's
+     * extra `.mb-dt-cell` class (plus `tr` type selector) gives it higher
+     * specificity than the now cell-targeting zebra rule, so it still wins
+     * during an actual hover without depending on source order, and rows
+     * correctly revert to their zebra color on mouse-leave.
+     */
+    function _ensureDetableifyStyle() {
+        if (document.getElementById('mb-detableify-style')) return;
+        const diffColorsEnabled = Lib.settings.sa_enable_edits_diff_colors !== false;
+        const diffNewColor = Lib.settings.sa_edits_color_diff_new || '#e4fbe4';
+        const diffOldColor = Lib.settings.sa_edits_color_diff_old || '#fbe3e4';
+        const zebraOdd  = Lib.settings.sa_edits_color_zebra_odd  || '#ffffff';
+        const zebraEven = Lib.settings.sa_edits_color_zebra_even || '#f2f2f2';
+        const rowHoverBg = Lib.settings.sa_ui_row_hover_bg || '#c2d2e9';
+        // GM_addStyle so this is exempt from page CSP style-src restrictions.
+        const style = GM_addStyle(`
+            .mb-dt-table {
+                border-collapse: collapse;
+                margin: 4px 0;
+            }
+            .mb-dt-cell {
+                border: 1px solid #ddd;
+                padding: 3px 6px;
+            }
+            .mb-dt-th {
+                font-weight: bold;
+            }
+            ${diffColorsEnabled ? `
+            .mb-dt-table td.new, .mb-dt-table td span.new {
+                background: ${diffNewColor} !important;
+            }
+            .mb-dt-table td.old, .mb-dt-table td span.old {
+                background: ${diffOldColor} !important;
+            }
+            ` : ''}
+            .mb-dt-tr.odd, .mb-dt-tr.odd > .mb-dt-cell {
+                background: ${zebraOdd} !important;
+            }
+            .mb-dt-tr.even, .mb-dt-tr.even > .mb-dt-cell {
+                background: ${zebraEven} !important;
+            }
+            tr:hover .mb-dt-table .mb-dt-cell {
+                background: ${rowHoverBg} !important;
+            }
+        `);
+        style.id = 'mb-detableify-style';
+    }
+
+    /**
+     * Converts the native `<div class="edit-list">` block sequence found on
+     * MusicBrainz edit-listing pages (`/search/edits`, `/<entity>/<mbid>/edits`,
+     * `/edit/subscribed`, `/edit/subscribed_editors`) into a `<table class="tbl">`
+     * so the standard fetch/filter/sort/collapse pipeline can process it like
+     * any other page type. Each `div.edit-list` block with a real `<h2>`
+     * edit#/action link becomes one `<tr>` — MusicBrainz's "bulk vote on all
+     * unvoted edits" banner (search-results pages only) reuses the same
+     * `div.edit-list` class for an unrelated button row and is skipped, though
+     * still removed from the DOM along with the real blocks. See
+     * `debug/NOTES.md` for the annotated source DOM this was reverse-engineered
+     * from.
+     *
+     * This is a DOM pre-processing step for pageTypes that carry
+     * `features.editsToTable: true` (currently just `'edits'`). Must run in the
+     * same pre-processing slot as `applyListToTable` — after
+     * `applyRenameH2ToH3`/`applyInsertH2` and before maxPage determination —
+     * and, like `applyListToTable`, must be re-applied to each freshly fetched
+     * `Document` in the pagination loop (fetched docs never had this transform
+     * applied server-side).
+     *
+     * The surrounding `<nav class="pagination">` and the rest of the `<form>`
+     * are deliberately left untouched — only the `div.edit-list` blocks
+     * themselves are removed (each is a self-contained wrapper including its
+     * own hidden vote input and trailing `.seperator`), so pagination
+     * detection keeps working unchanged.
+     *
+     * @param {object}           def        - The active merged pageDefinition object.
+     * @param {Document|Element} [docContext=document] - DOM context to search; defaults
+     *   to the live document. Pass a fetched document for paginated XHR pages.
+     */
+    function applyEditsToTable(def, docContext = document) {
+        if (!def?.features?.editsToTable) return;
+        const blocks = Array.from(docContext.querySelectorAll('div.edit-list'));
+        if (blocks.length === 0) return;
+
+        // MusicBrainz's "bulk vote on all unvoted edits" banner (search-results
+        // pages only) reuses the exact same `div.edit-list` class for an
+        // unrelated Yes/No/Abstain/None button row — it has no `<h2>` edit#/
+        // action link, unlike every real edit block. Exclude it from row
+        // building (it would otherwise produce one garbage all-"N/A" row) but
+        // still remove it below along with the real blocks.
+        const editBlocks = blocks.filter(b => b.querySelector('h2 a[href^="/edit/"]'));
+
+        _ensureDetableifyStyle();
+
+        const headers = [
+            'Edit#', 'Edit action',
+            'Edit details', 'Edit notes',
+            'Entered from release', 'By artist',
+            'Edit by', 'My vote', 'Vote count',
+            'Closed/Approved', 'Voting', 'Edit status'
+        ];
+
+        const table = docContext.createElement('table');
+        table.className = 'tbl';
+
+        const thead = docContext.createElement('thead');
+        const hr = docContext.createElement('tr');
+        headers.forEach(h => {
+            const th = docContext.createElement('th');
+            th.textContent = h;
+            hr.appendChild(th);
+        });
+        thead.appendChild(hr);
+        table.appendChild(thead);
+
+        const tbody = docContext.createElement('tbody');
+        editBlocks.forEach(block => tbody.appendChild(_buildEditRow(block, docContext)));
+        table.appendChild(tbody);
+
+        // Each div.edit-list is a fully self-contained wrapper — the per-edit
+        // hidden vote input and the trailing .seperator are children of it,
+        // not siblings between blocks — so removing the block removes both.
+        const firstBlock = blocks[0];
+        firstBlock.parentNode.insertBefore(table, firstBlock);
+        blocks.forEach(block => block.remove());
+
+        Lib.debug('init', `applyEditsToTable: converted ${tbody.rows.length} edit-list block(s) → table.`);
+    }
+
+    /**
+     * Glyph prefix for each native vote-outcome class MusicBrainz stamps on
+     * a note's own `<h3>` (e.g. `<h3 class="yes">`). Used by
+     * `_buildNotesReceivedRow`'s "Vote" column — see that call site's
+     * comment for why this can't just read MusicBrainz's own rendered
+     * `.voting-icon` glyph (an empty `<div>` styled entirely via the site's
+     * own external stylesheet, unavailable to a detached/fetched page).
+     * @type {Object<string,string>}
+     */
+    const _NOTE_VOTE_GLYPHS = { yes: '👍', no: '👎', abstain: '➖', approve: '✔️' };
+
+    /**
+     * Builds one `<tr>` for the `notes-received` page type from a single,
+     * self-contained `div.edit-list` block.
+     *
+     * Unlike the other edits-listing pages, `/edit/notes-received`'s
+     * `div.edit-list` wraps only two children: the edit-header `<h2>` and a
+     * single `div.edit-note` — none of `.edit-description`/`p.subheader`/
+     * `.edit-details`/the multi-note `.edit-notes` wrapper the other pages
+     * have. When an edit received multiple notes, MusicBrainz repeats the
+     * WHOLE `div.edit-list` block (header + that one note) once per note
+     * rather than nesting multiple notes under one heading, so each block
+     * here maps to exactly one row of Edit# / Edit action / User /
+     * Date/Time / Vote / Edit notes. See debug/notes-received.html.
+     *
+     * @param {Element}           block      - The `div.edit-list` element.
+     * @param {Document|Element}  docContext - DOM context (see `applyNotesReceivedToTable`).
+     * @returns {HTMLTableRowElement}
+     */
+    function _buildNotesReceivedRow(block, docContext) {
+        const tr = docContext.createElement('tr');
+
+        // Same edit-type background colouring as the regular edits pages —
+        // .edit-header carries the identical class shape here (e.g. "applied
+        // edit-add add-release", "edit-error edit-remove remove-cover-art").
+        const headerEl = block.querySelector('.edit-header');
+        const editActionBg = headerEl ? _editActionBgColor(headerEl.className) : null;
+
+        const addCell = (nodes) => {
+            const td = docContext.createElement('td');
+            if (nodes == null) {
+                td.textContent = 'N/A';
+            } else if (typeof nodes === 'string') {
+                td.textContent = nodes;
+            } else if (nodes instanceof Node) {
+                td.appendChild(nodes);
+            } else {
+                nodes.forEach(n => td.appendChild(n));
+            }
+            tr.appendChild(td);
+            return td;
+        };
+
+        // Edit# / Edit action — identical parsing to _buildEditRow.
+        const editLink = block.querySelector('h2 a[href^="/edit/"]');
+        const bdiText  = editLink ? (editLink.querySelector('bdi')?.textContent.trim() || editLink.textContent.trim()) : '';
+        const m = bdiText.match(/^Edit #(\d+)\s*-\s*(.+)$/);
+        if (editLink && m) {
+            const a = docContext.createElement('a');
+            a.setAttribute('href', editLink.getAttribute('href'));
+            a.textContent = `#${m[1]}`;
+            const editNumTd = addCell(a);
+            const actionTd  = addCell(m[2].trim());
+            if (editActionBg) {
+                editNumTd.style.backgroundColor = editActionBg;
+                editNumTd.dataset.mbCustomCellBg = editActionBg;
+                actionTd.style.backgroundColor = editActionBg;
+                actionTd.dataset.mbCustomCellBg = editActionBg;
+            }
+        } else {
+            addCell(null);
+            addCell(null);
+        }
+
+        // User / Date/Time — parsed from the note's own <h3>, e.g.
+        // <h3 class="yes"><a href="/user/tigerman325"><img …><bdi>tigerman325</bdi></a>
+        // <div class="voting-icon"></div> <a class="date" href="/edit-note/NNN">…</a></h3>.
+        // Both cloned as their original <a> elements so the links (to the
+        // user's profile / directly to that edit note) survive into the cell.
+        const noteH3 = block.querySelector('.edit-note h3');
+        const userLink = noteH3 ? noteH3.querySelector('a[href^="/user/"]') : null;
+        addCell(userLink ? userLink.cloneNode(true) : null);
+        const dateLink = noteH3 ? noteH3.querySelector('a.date') : null;
+        addCell(dateLink ? dateLink.cloneNode(true) : null);
+
+        // Vote — the note-h3's own class ("yes"/"no"/"abstain"/"approve";
+        // "" means no vote was cast alongside the note) is MusicBrainz's
+        // native vote-outcome marker for this note's author, normally shown
+        // via the adjacent empty <div class="voting-icon"></div> — its glyph
+        // comes entirely from MusicBrainz's own site CSS (background-image
+        // keyed off this class), which a detached/fetched page has no access
+        // to (same unreliability _editActionBgColor's JSDoc documents for
+        // reading edit-type colors). Prefixing our own fixed glyph
+        // (_NOTE_VOTE_GLYPHS) instead of trying to read the unavailable
+        // rendered icon.
+        const voteClass = noteH3 ? noteH3.className.trim().toLowerCase() : '';
+        const voteGlyph = _NOTE_VOTE_GLYPHS[voteClass];
+        addCell(voteGlyph ? `${voteGlyph} ${voteClass}` : null);
+
+        // Edit notes — the single div.edit-note nested inside this block
+        // (see this function's JSDoc). De-table-ify defensively, same as
+        // _buildEditRow, in case a note's limited wiki formatting ever
+        // renders a table.
+        const noteEl = block.querySelector('.edit-note');
+        if (noteEl) {
+            const clone = noteEl.cloneNode(true);
+            clone.querySelectorAll('.add-edit-note').forEach(el => el.remove());
+            _detableify(clone);
+            addCell(clone.textContent.trim() ? clone : null);
+        } else {
+            addCell(null);
+        }
+
+        return tr;
+    }
+
+    /**
+     * Converts the native `div.edit-list` block sequence found on
+     * `/edit/notes-received` into a `<table class="tbl">` with just six
+     * columns (Edit#, Edit action, User, Date/Time, Vote, Edit notes) — a
+     * much sparser page than the other edits-listing pages: MusicBrainz
+     * renders no status/entered-from/by-artist/edit-details data here at
+     * all, only the edit heading plus the one note that was left on it,
+     * whose own `<h3>` supplies the note author (User), timestamp
+     * (Date/Time), and vote outcome (Vote, via the `<h3>`'s own class —
+     * see `_NOTE_VOTE_GLYPHS`). See debug/notes-received.html. When an edit
+     * received multiple notes, the
+     * WHOLE `div.edit-list` block (header + note) repeats once per note
+     * rather than nesting multiple notes under one heading, so this
+     * produces one row per (edit, note) pair rather than one row per edit.
+     *
+     * This is a DOM pre-processing step for pageTypes that carry
+     * `features.notesReceivedToTable: true` (currently just
+     * 'notes-received'). Must run in the same pre-processing slot as
+     * `applyEditsToTable`/`applyListToTable` — after `applyRenameH2ToH3`/
+     * `applyInsertH2` and before maxPage determination — and, like
+     * `applyEditsToTable`, must be re-applied to each freshly fetched
+     * `Document` in the pagination loop.
+     *
+     * Deliberately NOT reusing `applyEditsToTable`/`_buildEditRow`: those
+     * expect `.edit-description`/`p.subheader`/`.edit-details`/a multi-note
+     * `.edit-notes` wrapper, none of which exist on this page — only the
+     * edit-header `<h2>` and a single `div.edit-note`.
+     *
+     * @param {object}           def        - The active merged pageDefinition object.
+     * @param {Document|Element} [docContext=document] - DOM context to search; defaults
+     *   to the live document. Pass a fetched document for paginated XHR pages.
+     */
+    function applyNotesReceivedToTable(def, docContext = document) {
+        if (!def?.features?.notesReceivedToTable) return;
+        const blocks = Array.from(docContext.querySelectorAll('div.edit-list'))
+            .filter(b => b.querySelector('h2 a[href^="/edit/"]'));
+        if (blocks.length === 0) return;
+
+        _ensureDetableifyStyle();
+
+        const headers = [ 'Edit#', 'Edit action', 'User', 'Date/Time', 'Vote', 'Edit notes' ];
+
+        const table = docContext.createElement('table');
+        table.className = 'tbl';
+
+        const thead = docContext.createElement('thead');
+        const hr = docContext.createElement('tr');
+        headers.forEach(h => {
+            const th = docContext.createElement('th');
+            th.textContent = h;
+            hr.appendChild(th);
+        });
+        thead.appendChild(hr);
+        table.appendChild(thead);
+
+        const tbody = docContext.createElement('tbody');
+        blocks.forEach(block => tbody.appendChild(_buildNotesReceivedRow(block, docContext)));
+        table.appendChild(tbody);
+
+        // Each div.edit-list is a fully self-contained wrapper (header + its
+        // one note), same as applyEditsToTable — removing the block is enough.
+        const firstBlock = blocks[0];
+        firstBlock.parentNode.insertBefore(table, firstBlock);
+        blocks.forEach(block => block.remove());
+
+        Lib.debug('init', `applyNotesReceivedToTable: converted ${tbody.rows.length} edit-list block(s) → table.`);
+    }
+
+    /**
      * Renames every `<h2>` element in the page body to `<h3>`, preserving all
      * attributes and child nodes.
      *
@@ -4679,6 +6107,69 @@
     }
 
     /**
+     * Promotes every `<h2>` element in the page body to `<h1>`, preserving all
+     * attributes and child nodes. Mirror image of `applyRenameH2ToH3()` above
+     * — identical DOM-manipulation approach, just `<h1>` instead of `<h3>`.
+     *
+     * This is a DOM pre-processing step for pageTypes that carry
+     * `features.renameH2ToH1: true` (currently 'user-edits'/'user-open-edits').
+     * Those pages render no native `<h1>` at all — their only heading is a
+     * `<h2>` ("Edits by <username>" / "Open edits by <username>"). Left as an
+     * `<h2>`, both the page-load button-toolbar injection and the post-render
+     * filter/count/CAA-toggle injection resolve to that SAME element (there is
+     * nothing else to pick), cramming the whole action-button toolbar, row-count
+     * badge, CAA toggle, and filter bar into one native heading — which then
+     * also gets made collapsible by `makeH2sCollapsible()` (every `<h2>` is
+     * fair game, unlike an `<h1>` page title). See debug/user-edits-wrong.org.
+     * Promoting it to `<h1>` first frees up `<h2>` for the subsequent
+     * `insertH2()` call's dedicated anchor, matching every other single-table
+     * page type's h1-title / h2-anchor split.
+     *
+     * The button-toolbar container is appended into `headerContainer` at
+     * page-load time — before this function has run, since it's a
+     * click-triggered pre-processing step and the button must already exist
+     * somewhere to be clicked. That's fine: because this function MOVES the
+     * old `<h2>`'s child nodes into the new `<h1>` (rather than discarding
+     * them), the toolbar travels with it into the correct final element.
+     *
+     * Excludes any `<h2>` nested inside a `div.edit-list` block — every real
+     * edit on an (as yet unconverted) edits-listing page carries its OWN
+     * native `<h2>Edit #NNNNNN - Action</h2>` heading (see `_buildEditRow`'s
+     * `block.querySelector('h2 a[href^="/edit/"]')` lookup), and this
+     * function runs BEFORE `applyEditsToTable()` has removed those blocks.
+     * Without this exclusion every one of those per-edit headings gets
+     * promoted to `<h1>` too — confirmed via a jsdom run against the real
+     * `debug/edits-by-vzell.html` snapshot (51 `<h1>`s instead of 1) before
+     * this filter was added. Mirrors `applyInsertH2()`'s own identical
+     * `!h.closest('div.edit-list')` exclusion, same underlying reason.
+     *
+     * Operates on `document` directly (the live page DOM).
+     *
+     * @param {object} def - The active merged pageDefinition object.
+     */
+    function applyRenameH2ToH1(def) {
+        if (!def?.features?.renameH2ToH1) return;
+
+        const _h2s = Array.from(document.querySelectorAll('h2'))
+            .filter(h => !h.closest('div.edit-list'));
+        if (_h2s.length === 0) {
+            Lib.debug('init', 'applyRenameH2ToH1: no <h2> elements found — nothing to rename.');
+            return;
+        }
+
+        _h2s.forEach(_h2 => {
+            const _h1 = document.createElement('h1');
+            // Copy all attributes
+            Array.from(_h2.attributes).forEach(attr => _h1.setAttribute(attr.name, attr.value));
+            // Move all child nodes
+            while (_h2.firstChild) _h1.appendChild(_h2.firstChild);
+            _h2.parentNode.replaceChild(_h1, _h2);
+        });
+
+        Lib.debug('init', `applyRenameH2ToH1: renamed ${_h2s.length} <h2> element(s) to <h1>.`);
+    }
+
+    /**
      * Inserts a new `<h2>` element with the text supplied by
      * `features.insertH2` immediately after the `<div class="tabs">` container
      * in the page body.
@@ -4711,10 +6202,21 @@
         // allH2s sequence that renderGroupedTable uses to locate targetHeader,
         // which can cause targetHeader to resolve to the duplicate instead of
         // the intended anchor — breaking group insertion order.
-        // Guard: if any existing <h2> in the page already carries the exact
-        // same text, skip the insertion entirely.
-        const _existing = Array.from(document.querySelectorAll('h2'))
-            .find(h => h.textContent.trim() === _text.trim());
+        // Guard: matches on a `data-mb-injected-h2` marker this function
+        // stamps on its own output (checked below), not on text content or
+        // DOM position. A text-based guard (the original approach) is
+        // fooled by unrelated native headings that happen to carry the same
+        // text — e.g. a wiki-formatted Edit-note whose own content contains
+        // a "== Edits ==" sub-heading, colliding with an 'edits' pageType's
+        // insertH2: 'Edits' label. An ancestor-exclusion guard (e.g.
+        // `!h.closest('table.tbl')`, tried and found insufficient) doesn't
+        // work either: this function runs during PRE-PROCESSING, before
+        // applyEditsToTable has built the table.tbl the colliding heading
+        // will eventually end up inside of — at guard-check time it's just
+        // sitting in a bare div.edit-list, no table.tbl ancestor yet. A
+        // script-owned marker sidesteps DOM position/timing entirely. See
+        // debug/no-h2.html / debug/still-no.html / debug/act.org.
+        const _existing = document.querySelector(`h2[data-mb-injected-h2="1"]`);
         if (_existing) {
             Lib.debug('init', `applyInsertH2: <h2>"${_text}"</h2> already present — skipping (idempotency).`);
             return;
@@ -4722,6 +6224,7 @@
 
         const _h2 = document.createElement('h2');
         _h2.textContent = _text;
+        _h2.dataset.mbInjectedH2 = '1';
 
         // Prefer insertion right after the last <div class="tabs"> block.
         const _tabsDivs = document.querySelectorAll('div#page div.tabs, div#content div.tabs, div.tabs');
@@ -4739,10 +6242,37 @@
         // an intro <p>) should remain ABOVE the new <h2> anchor — inserting
         // beforebegin the first <h3> achieves this regardless of how many such nodes
         // exist.  Falls through to the after-h1 path when no <h3> is present yet.
+        //
+        // h3 elements nested inside table.tbl cells are excluded from this search
+        // (e.g. wiki-rendered "=== Heading ===" markup inside an Annotation-column
+        // cell on report-detail pages, present on the page's native first table
+        // before any DOM pre-processing runs). Picking one of those up would insert
+        // the new <h2> as a sibling deep inside that <td> instead of at the page
+        // level — the h2 still "exists" (idempotency/querySelectorAll checks still
+        // find it) but is positioned after the table, breaking updateH2Count's
+        // "table follows h2" search and everything anchored to it. See
+        // debug/report-detail.org (AnnotationsPlaces/AnnotationsReleases).
+        //
+        // Also excludes h3s nested inside div.edit-list — every real edit note
+        // has its own native <h3 class="owner"> (author + date), and this
+        // function runs BEFORE applyEditsToTable has converted those raw
+        // div.edit-list blocks into table.tbl rows, so the table.tbl
+        // exclusion above doesn't catch them yet. Without this, insertH2
+        // lands the new <h2> as a sibling inside the FIRST edit's own
+        // .edit-note — which then gets cloned into that edit's "Edit notes"
+        // table cell by applyEditsToTable, i.e. the filterline "disappears"
+        // into a data row instead of sitting above the table. See
+        // debug/still-no.html / debug/act.org. This also covers
+        // '/edit/notes-received' (features.notesReceivedToTable): its
+        // div.edit-list wraps just the edit-header <h2> plus one nested
+        // div.edit-note (its own <h3> author/date heading), so the same
+        // div.edit-list exclusion already applies there too — see
+        // debug/notes-received.html.
         const _contentRoot = document.getElementById('content') ||
                              document.getElementById('page') ||
                              document.body;
-        const _firstH3 = _contentRoot.querySelector('h3');
+        const _firstH3 = Array.from(_contentRoot.querySelectorAll('h3'))
+            .find(h => !h.closest('table.tbl') && !h.closest('div.edit-list'));
         if (_firstH3) {
             _firstH3.insertAdjacentElement('beforebegin', _h2);
             Lib.debug('init', `applyInsertH2: inserted <h2>"${_text}"</h2> before first <h3> in content area.`);
@@ -5434,6 +6964,27 @@
             },
             tableMode: 'single'
         },
+        // Account applications page (/account/applications) — 'Authorized
+        // applications' (OAuth2 apps the editor granted access to) and
+        // 'Developer applications' (apps the editor registered) each render as
+        // a native <h2> immediately followed by a <table class="tbl"> — no
+        // listToTable conversion needed. There is no div#content wrapper (h1 is
+        // a direct child of div#page, same as user-tags), but unlike user-tags
+        // the table.tbl and its labelling h2 are siblings under div#page
+        // directly (no intermediate sub-wrapper), so renderGroupedTable's
+        // generic re-root logic is a no-op here — see debug/applications.html.
+        // groupByH3's backward-walk already accepts a native H2 directly
+        // (renameH2ToH3 is not required). Single static page, no pagination.
+        {
+            type: 'account-applications',
+            match: (path) => path.match(/\/account\/applications/),
+            buttons: [ { label: 'Show all Applications' } ],
+            features: {
+                groupByH3: true
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
         // Entity tags sub-pages (/<entity>/<mbid>/tags e.g. /artist/<mbid>/tags)
         // must come before the generic 'tags' entry because its match is narrower.
         {
@@ -5788,6 +7339,292 @@
             },
             tableMode: 'multi'
         },
+        // Reports index (/reports) — 14 category sections (Artists, Events, Labels,
+        // Release groups, …), each a static <h2>+<ul> list of report links. No
+        // pagination (complete single-page list) → non_paginated: true.
+        {
+            type: 'reports-index',
+            match: (path) => path.match(/^\/reports\/?$/),
+            buttons: [ { label: 'Show all Reports' } ],
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Reports',
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        // Individual report (/report/<ReportName>?filter=0|1) — native paginated
+        // table.tbl, already in the exact DOM shape renderFinalTable expects, so no
+        // listToTable / columnExtractors are needed. Column sets vary per report
+        // (117 distinct reports across 14 categories) — MVP is column-agnostic.
+        // filter=0 (all) / filter=1 (my subscribed entities only) render identical
+        // markup with different row counts; one definition handles both via the two
+        // buttons' params override (mirrors 'user-tags' show_downvoted pattern).
+        {
+            type: 'report-detail',
+            match: (path) => path.match(/^\/report\/[^/]+\/?$/),
+            buttons: [
+                { label: 'Show all (unfiltered)', params: { filter: '0' } },
+                { label: 'Show all (subscribed only)', params: { filter: '1' } }
+            ],
+            features: {
+                columnExtractors: [
+                    { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Locality', 'Region', 'Country'] },
+                    // 'Place' is itself a candidate source column on Place-category
+                    // reports (e.g. AnnotationsPlaces — see debug/place.html): its native
+                    // cell is "<place link> in <area chain>[, <flag country>]", the same
+                    // shape splitLocation already handles for 'Location'. The first
+                    // synthetic column is named 'MB-Place' (not 'Place') so it doesn't
+                    // collide with the source column name — the source 'Place' column is
+                    // kept as-is (it carries the place name plus the full area/country
+                    // chain), while 'MB-Place' isolates just the place name.
+                    { sourceColumn: 'Place', extractor: 'splitLocation', syntheticColumns: ['MB-Place', 'Locality', 'Region', 'Country'] },
+                    { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] },
+                    { sourceColumn: 'Last edited', extractor: 'dateTimeParts', syntheticColumns: ['Last edited date', 'Last edited time'] },
+                    { sourceColumn: 'Annotation', extractor: 'numberOfChars', syntheticColumns: ['Annotation chars'] }
+                ],
+                collapsableColumns: [ 'Artists', 'Authors', 'Recording artists', 'Annotation' ],
+                integerColumns: [
+                    { sourceColumn: 'DD', align: 'R' }, { sourceColumn: 'MM', align: 'R' }, { sourceColumn: 'YYYY', align: 'C' },
+                    { sourceColumn: 'Annotation chars', align: 'R' }
+                ],
+                // Report pages have a native <h1> but no native <h2>, so the
+                // collapsible-header / filter-bar / CAA-EAA-toggle infrastructure has
+                // nothing to attach to without a synthetic one (see applyInsertH2).
+                // The specific report name is already shown in the native <h1> above,
+                // so a generic label (mirrors reports-index's insertH2: 'Reports') is
+                // enough here.
+                insertH2: 'Report',
+                // report-detail is column-agnostic (117 differently-shaped reports —
+                // see debug/NOTES.md); a given report's table only ever carries ONE
+                // of these candidate columns, so array form picks whichever is present.
+                addCAA: [ 'Release', 'Release group' ],
+                addEAA: 'Event',
+                // The native description block includes "Show only results that are
+                // in my subscribed entities." — redundant with the "Show all
+                // (subscribed only)" button above, so remove it if present.
+                removeSelector: 'li:has(a[href*="?filter=1"])'
+            },
+            tableMode: 'single'
+        },
+        // Auto-editor elections (/elections) — native <h1> directly followed by a
+        // single native <table class="tbl"> (Candidate / Status / Start date /
+        // End date / Proposer / 1st seconder / 2nd seconder / Votes for / Votes
+        // against / blank "View details" column) — no div#content, no native h2,
+        // no pagination (complete single-page history of every election). See
+        // debug/auto-editor-elections.html.
+        {
+            type: 'auto-elections',
+            match: (path) => path.match(/^\/elections\/?$/),
+            buttons: [ { label: 'Show all Elections' } ],
+            features: {
+                insertH2: 'Auto-editor elections',
+                integerColumns: [
+                    { sourceColumn: 'Votes for', align: 'R' },
+                    { sourceColumn: 'Votes against', align: 'R' }
+                ],
+                stickyColumn: 'Candidate'
+            },
+            tableMode: 'single',
+            non_paginated: true
+        },
+        // Genre list (/genres) — div#content with <h1>, two intro <p>s, then a
+        // single bare <ul> (no id/class) of genre links — no h2 sections, no
+        // pagination. See debug/genre-list.html.
+        {
+            type: 'genres-list',
+            match: (path) => path.match(/^\/genres\/?$/),
+            buttons: [ { label: 'Show all Genres' } ],
+            features: {
+                // Empty sectionId triggers Structure G in applyListToTable: the
+                // plain <ul> (no id/class) is converted to a one-column table
+                // with the fixed literal column name "Genre".
+                insertH2: 'Genre list',
+                listToTable: [ '' ]
+            },
+            tableMode: 'single',
+            non_paginated: true
+        },
+        // Top CD stubs (/cdstub/browse) — native <h1> ("Top CD stubs"), no
+        // div#content, no native h2, native paginated <table class="tbl">
+        // (Title / Artist / Lookup count / Modify count). Every data row is
+        // immediately followed by an informational
+        // <tr><td class="lastupdate" colspan="4">Added … ago, last modified …
+        // ago</td></tr> row; a colSpan=4 single cell already fails the generic
+        // single-table row-extraction's "allow single-cell rows only when the
+        // cell does NOT span multiple columns" guard, so this row is never
+        // added as a garbage row on its own. A pageType==='top-cd-stub'-scoped
+        // branch in startFetchingProcess (mirrors the existing 'cdtoc'
+        // tracklist-row interception) instead folds its text into the
+        // preceding row's Title cell as a disambiguation comment span, and
+        // into the synthetic Comment cell produced by extractMainColumn
+        // below. Named 'top-cd-stub' (not 'cd-stub') to leave that name free
+        // for the individual CD stub detail page (/cdstub/<disc-id>).
+        // See debug/top-cd-stub.html.
+        {
+            type: 'top-cd-stub',
+            match: (path) => path.match(/^\/cdstub\/browse\/?$/),
+            buttons: [ { label: 'Show all CD Stubs' } ],
+            features: {
+                insertH2: 'CD stubs',
+                integerColumns: [
+                    { sourceColumn: 'Lookup count', align: 'R' },
+                    { sourceColumn: 'Modify count', align: 'R' }
+                ],
+                // Title never carries a native .comment span — Comment is
+                // populated exclusively from the merged "lastupdate" info row
+                // (see the pageType==='top-cd-stub' branch in startFetchingProcess).
+                extractMainColumn: 'Title',
+                stickyColumn: 'Title'
+            },
+            tableMode: 'single'
+        },
+        // Individual CD stub page (/cdstub/<disc-id>, e.g.
+        // /cdstub/3p1LmJIWtNn4rzXGF4Xk.I7vh90-) — div#content, div.blankheader
+        // (h1 + subheader), native <h2>Tracklist</h2> immediately followed by
+        // an ALREADY tbl-shaped <table class="tbl"> (# / Title / Length) — no
+        // listToTable/insertH2 needed. A second <h2>Disc ID information</h2> +
+        // <table class="details"> (note: class "details", not "tbl") holds
+        // Disc ID / Total tracks / Total length / Full TOC — left untouched,
+        // since the generic table.tbl scan never matches it. No pagination —
+        // a stub's tracklist is fixed and already fully rendered. Must be
+        // excluded from matching /cdstub/browse (handled by 'top-cd-stub').
+        // See debug/cd-stub-pagetype.html.
+        {
+            type: 'cd-stub',
+            match: (path) => path.match(/^\/cdstub\/(?!browse(?:\/|$))[^/]+\/?$/),
+            buttons: [ { label: 'Show all Tracks' } ],
+            features: {
+                integerColumns: [ { sourceColumn: '#', align: 'R' } ]
+            },
+            tableMode: 'single',
+            non_paginated: true
+        },
+        // Individual auto-editor election page (/election/<n>, e.g.
+        // /election/473) — no div#content, native <h1>, a "Back to elections"
+        // <p>, <h2>Details</h2> + <table class="properties"> (Candidate /
+        // Proposer / 1st seconder / 2nd seconder / Total votes / Votes for /
+        // Votes against / Abstentions / Status — note: class "properties", not
+        // "tbl", so left completely untouched by the generic table.tbl scan),
+        // <h2>Voting</h2> + a status <p> ("Voting is closed." — no ballot form
+        // once closed), then native <h2>Votes cast</h2> immediately followed by
+        // an ALREADY tbl-shaped <table class="tbl"> (Voter / Vote / Date) — no
+        // listToTable/insertH2 needed, same minimal shape as 'cd-stub' above.
+        // No pagination — a closed election's vote list is fixed and already
+        // fully rendered. See debug/auto-editor.html.
+        {
+            type: 'auto-editor-election',
+            match: (path) => path.match(/^\/election\/\d+\/?$/),
+            buttons: [ { label: 'Show all Votes cast' } ],
+            features: {
+                stickyColumn: 'Voter'
+            },
+            tableMode: 'single',
+            non_paginated: true
+        },
+        // Edit types (/doc/Edit_Types) — div#content (class "wikicontent"), <h1>
+        // directly followed by 17 native <h2>Category</h2><ul>…</ul> sections
+        // (Area, Artist, Event, …, Work, Historic), each <ul> immediately
+        // adjacent to its <h2> — no pagination. See debug/edit-types.html.
+        {
+            type: 'edit-types',
+            match: (path) => path.match(/^\/doc\/Edit_Types\/?$/),
+            buttons: [ { label: 'Show all Edit Types' } ],
+            features: {
+                // renameH2ToH3 demotes the 17 native category h2 headings to h3,
+                // insertH2 adds a synthetic top-level anchor, then the empty
+                // sectionId triggers Structure J in applyListToTable: each h3+ul
+                // pair becomes a one-column table named after the h3 text itself
+                // (e.g. "Area", "Artist", …) — reuses the same loop as
+                // 'reports-index' with a per-section column name instead of a
+                // fixed literal.
+                renameH2ToH3: true,
+                insertH2: 'Edit types',
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        // Instrument list (/instruments) — div#content, <h1> directly followed by
+        // 8 native <h2>Family</h2><ul>…</ul> sections (Wind instrument, String
+        // instrument, Percussion instrument, Electronic instrument, Other
+        // instrument, Ensemble, Family, Unclassified instrument). Each <li> holds
+        // a name link, an optional short comment span, and a longer free-text
+        // description (see the Name_Comment_Description extractor for the exact
+        // shape). Structure J converts each family's <ul> into a table whose
+        // single native column is named after the family itself (e.g. "Wind
+        // instrument") — entityFeatures below is keyed by those exact family
+        // names so each group's table gets its own Name/Comment/Description
+        // columnExtractor re-resolved against ITS OWN header text (mirrors how
+        // 'tag-value' resolves a different columnExtractor per entity-type
+        // group — see the pageType === 'instrument-list' addition to the
+        // per-table extractor colIdx re-resolution gate in startFetchingProcess).
+        // The original family column is left in place alongside the three new
+        // ones (same convention as every other columnExtractor in this script,
+        // e.g. 'Location' staying next to its derived Place/Area/Country).
+        // No pagination. See debug/instruments.html.
+        {
+            type: 'instrument-list',
+            match: (path) => path.match(/^\/instruments\/?$/),
+            buttons: [ { label: 'Show all Instruments' } ],
+            entityFeatures: {
+                'Wind instrument': {
+                    columnExtractors: [ { sourceColumn: 'Wind instrument', extractor: 'Name_Comment_Description', syntheticColumns: ['Name', 'Comment', 'Description'] } ]
+                },
+                'String instrument': {
+                    columnExtractors: [ { sourceColumn: 'String instrument', extractor: 'Name_Comment_Description', syntheticColumns: ['Name', 'Comment', 'Description'] } ]
+                },
+                'Percussion instrument': {
+                    columnExtractors: [ { sourceColumn: 'Percussion instrument', extractor: 'Name_Comment_Description', syntheticColumns: ['Name', 'Comment', 'Description'] } ]
+                },
+                'Electronic instrument': {
+                    columnExtractors: [ { sourceColumn: 'Electronic instrument', extractor: 'Name_Comment_Description', syntheticColumns: ['Name', 'Comment', 'Description'] } ]
+                },
+                'Other instrument': {
+                    columnExtractors: [ { sourceColumn: 'Other instrument', extractor: 'Name_Comment_Description', syntheticColumns: ['Name', 'Comment', 'Description'] } ]
+                },
+                'Ensemble': {
+                    columnExtractors: [ { sourceColumn: 'Ensemble', extractor: 'Name_Comment_Description', syntheticColumns: ['Name', 'Comment', 'Description'] } ]
+                },
+                'Family': {
+                    columnExtractors: [ { sourceColumn: 'Family', extractor: 'Name_Comment_Description', syntheticColumns: ['Name', 'Comment', 'Description'] } ]
+                },
+                'Unclassified instrument': {
+                    columnExtractors: [ { sourceColumn: 'Unclassified instrument', extractor: 'Name_Comment_Description', syntheticColumns: ['Name', 'Comment', 'Description'] } ]
+                }
+            },
+            features: {
+                // Same Structure J reuse as 'edit-types' — see comment there.
+                renameH2ToH3: true,
+                insertH2: 'Instrument list',
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
+        // Privileged user accounts (/privileged) — div#content, <h1> directly
+        // followed by 7 native <h2>Category</h2> sections (Auto-editors,
+        // Relationship editors, Transclusion editors, Location editors, Banner
+        // message editors, Account administrators, Bots), each with 2-3 plain
+        // <p> siblings (an intro/description paragraph, a "The following N
+        // users are …:" count paragraph, and — always last — the actual editor
+        // list as inline <a href="/user/…"> links glued by ", " text nodes, NOT
+        // a <ul>). Structure K in applyListToTable converts just that one <p>
+        // per section into a one-column "Editor" table; the other paragraphs
+        // are left untouched. No pagination. See debug/priviledged.html.
+        {
+            type: 'privileged-accounts',
+            match: (path) => path.match(/^\/privileged\/?$/),
+            buttons: [ { label: 'Show all Privileged Accounts' } ],
+            features: {
+                renameH2ToH3: true,
+                insertH2: 'Privileged accounts',
+                listToTable: [ '' ]
+            },
+            tableMode: 'multi',
+            non_paginated: true
+        },
         // User tag value entity pages (/user/<username>/tag/<tag>/<entity>
         // e.g. /user/vzell/tag/gig/event) — must come before user-tag-value
         // (same /user/.*/tag/ prefix, but has an additional entity segment).
@@ -6118,16 +7955,16 @@
             entityFeatures: {
                 'Areas': {
                     columnExtractors: [
-                        { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                        { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] }
                     ],
                     extractMainColumn: 'Area',
                     stickyColumn: 'Area'
                 },
                 'Artists': {
                     columnExtractors: [
-                        { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
-                        { sourceColumn: 'Begin area', extractor: 'splitArea', syntheticColumns: ['MB-Begin area', 'Begin country'] },
-                        { sourceColumn: 'End area',   extractor: 'splitArea', syntheticColumns: ['MB-End area', 'End country'] },
+                        { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] },
+                        { sourceColumn: 'Begin area', extractor: 'splitArea', syntheticColumns: ['MB-Begin locality', 'MB-Begin region', 'Begin country'] },
+                        { sourceColumn: 'End area',   extractor: 'splitArea', syntheticColumns: ['MB-End locality', 'MB-End region', 'End country'] },
                         { sourceColumn: 'Begin',      extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
                         { sourceColumn: 'End',        extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
                     ],
@@ -6139,11 +7976,11 @@
                     columnExtractors: [
                         { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
                         { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
-                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Locality', 'Region', 'Country'] },
                         { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
                         { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                     ],
-                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Locality', 'Region', 'Country' ],
                     integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                     addEAA: 'Event',
@@ -6160,7 +7997,7 @@
                 },
                 'Labels': {
                     columnExtractors: [
-                        { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
+                        { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] },
                         { sourceColumn: 'Begin',      extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
                         { sourceColumn: 'End',        extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
                     ],
@@ -6229,6 +8066,124 @@
             },
             tableMode: 'single'
         },
+        // Edit-listing pages ('/search/edits', '/<entity>/<mbid>/edits',
+        // '/edit/subscribed', '/edit/subscribed_editors'). Must be checked
+        // BEFORE 'search' below — routing is first-match-wins and
+        // '/search/edits' would otherwise be swallowed by 'search''s
+        // path.includes('/search') match.
+        {
+            type: 'edits',
+            match: (path) => {
+                if (path === '/search/edits') return true;
+                if (path === '/edit/subscribed' || path === '/edit/subscribed_editors') return true;
+                // Generic "/<entity>/<mbid>/edits" — e.g. /release/<mbid>/edits,
+                // /artist/<mbid>/edits, /work/<mbid>/edits, …
+                return /^\/[a-z-]+\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/edits$/.test(path);
+            },
+            buttons: [ { label: 'Show all Edits' } ],
+            features: {
+                editsToTable: true,
+                // Marks this pageType as edits-pagination-aware; the actual
+                // "is this listing's pagination ambiguous" check is dynamic
+                // (isAmbiguousEditsPagination / _hasAmbiguousEditsPagination),
+                // not a blanket assumption — see debug/act.org 1.).
+                unboundedPagination: true,
+                // No native <h2> survives applyEditsToTable (every div.edit-list
+                // block, including its own <h2>, is removed) and there's no
+                // div.tabs on any edits page, so without this the single-table
+                // filterline/collapsible-section header is missing entirely —
+                // see debug/act.org 2.) / debug/no-h2-filterline.html.
+                insertH2: 'Edits',
+                collapsableColumns: [ 'Edit details', 'Edit notes' ],
+                // Inline CAA cover-art thumbnails for any /release/ or
+                // /release-group/ link found in this column — see
+                // debug/act.org 4.) (numbered "3.)" in the source file).
+                // Harmless no-op for rows whose "Entered from release" cell
+                // links to a non-release entity (e.g. a recording, for
+                // "Edit recording" edits) — CAA_CTX.entityGuard only matches
+                // release/release-group hrefs.
+                addCAA: 'Entered from release'
+            },
+            tableMode: 'single'
+        },
+        // "Recent notes left on your edits" ('/edit/notes-received'). Native
+        // <h1>Recent notes left on your edits</h1> exists (unlike
+        // 'user-edits'/'user-open-edits' above — no renameH2ToH1 needed
+        // here), but no <h2> at all, so insertH2 still creates the
+        // filter/count anchor same as base 'edits'.  Each div.edit-list here
+        // wraps only two children — the edit-header <h2> and a single
+        // div.edit-note — none of the status/entered-from/details content
+        // or the multi-note .edit-notes wrapper the other edits-listing
+        // pages have. Only 6 columns exist as a result: Edit#, Edit action,
+        // User, Date/Time, Vote, Edit notes (User/Date-Time/Vote all parsed
+        // from the note's own <h3> — author link, date link, and vote-
+        // outcome class respectively). See debug/notes-received.html and
+        // applyNotesReceivedToTable's JSDoc for why this needs its own
+        // notesReceivedToTable feature/converter instead of editsToTable.
+        {
+            type: 'notes-received',
+            match: (path) => path === '/edit/notes-received',
+            buttons: [ { label: 'Show all Notes Received' } ],
+            features: {
+                notesReceivedToTable: true,
+                unboundedPagination: true,
+                insertH2: 'Edit Notes',
+                collapsableColumns: [ 'Edit notes' ]
+            },
+            tableMode: 'single'
+        },
+        // User edit-listing pages ('/user/<username>/edits/open',
+        // '/user/<username>/edits'). Same div.edit-list → table.tbl pipeline as
+        // 'edits' above, but — unlike every '/edits' listing 'edits' covers —
+        // these pages render no native <h1> at all: their only heading is a
+        // native <h2>: "Open edits by <username>" / "Edits by <username>"
+        // (see debug/open-edits-by-vzell.html, debug/edits-by-vzell.html).
+        // Leaving that <h2> as the sole heading (an earlier version of this
+        // pageType did exactly that) makes the page-load button toolbar AND
+        // the post-render filter/count/CAA-toggle UI both resolve to the
+        // SAME element, cramming everything onto one collapsible line — see
+        // debug/user-edits-wrong.org. renameH2ToH1 promotes that native
+        // heading to <h1> (carrying the already-injected button toolbar with
+        // it, since the promotion moves child nodes rather than discarding
+        // them), and insertH2 then injects a fresh, dedicated <h2> as the
+        // filter/count/CAA-toggle anchor — the same "reshape heading, then
+        // inject a clean anchor" pattern 'artist-tags' etc. already use with
+        // renameH2ToH3+insertH2. Neither page has a div.tabs or any <h3>
+        // outside a div.edit-list, so insertH2 falls through to its "after
+        // the first <h1>" placement — right after the just-promoted heading.
+        // Each match is anchored with '$', so '/edits/open' can never satisfy
+        // 'user-edits' and '/edits' (no '/open' suffix) can never satisfy
+        // 'user-open-edits' — array order between the two does not matter,
+        // but 'user-open-edits' (the more specific path) is listed first to
+        // mirror the tag-page convention (entity tags before generic 'tags').
+        {
+            type: 'user-open-edits',
+            match: (path) => /^\/user\/[^/]+\/edits\/open$/.test(path),
+            buttons: [ { label: 'Show all Open Edits for User' } ],
+            features: {
+                editsToTable: true,
+                unboundedPagination: true,
+                renameH2ToH1: true,
+                insertH2: 'Open edits',
+                collapsableColumns: [ 'Edit details', 'Edit notes' ],
+                addCAA: 'Entered from release'
+            },
+            tableMode: 'single'
+        },
+        {
+            type: 'user-edits',
+            match: (path) => /^\/user\/[^/]+\/edits$/.test(path),
+            buttons: [ { label: 'Show all Edits for User' } ],
+            features: {
+                editsToTable: true,
+                unboundedPagination: true,
+                renameH2ToH1: true,
+                insertH2: 'Edits',
+                collapsableColumns: [ 'Edit details', 'Edit notes' ],
+                addCAA: 'Entered from release'
+            },
+            tableMode: 'single'
+        },
         // Search pages
         {
             type: 'search',
@@ -6277,11 +8232,11 @@
                     columnExtractors: [
                         { sourceColumn: 'Name',     extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
                         { sourceColumn: 'Name',     extractor: 'caa',            syntheticColumns: ['EAA'] },
-                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Locality', 'Region', 'Country'] },
                         { sourceColumn: 'Name',     extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
                         { sourceColumn: 'Name',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                     ],
-                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Locality', 'Region', 'Country' ],
                     integerColumns: [
                         { sourceColumn: 'DD',   align: 'R' },
                         { sourceColumn: 'MM',   align: 'R' },
@@ -6331,7 +8286,7 @@
                 },
                 'Places': {
                     columnExtractors: [
-                        { sourceColumn: 'Area',  extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
+                        { sourceColumn: 'Area',  extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] },
                         { sourceColumn: 'Begin', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
                         { sourceColumn: 'End',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
                     ],
@@ -6344,7 +8299,7 @@
                 },
                 'Areas': {
                     columnExtractors: [
-                        { sourceColumn: 'Name',  extractor: 'splitArea', syntheticColumns: ['Area', 'Country'] },
+                        { sourceColumn: 'Name',  extractor: 'splitArea', syntheticColumns: ['Locality', 'Region', 'Country'] },
                         { sourceColumn: 'Begin', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
                         { sourceColumn: 'End',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
                     ],
@@ -6406,7 +8361,7 @@
             buttons: [ { label: 'Show all Artists for Instrument' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] }
                 ],
                 renderMultiRowCell: [ 'Relationship types' ],
                 collapsableColumns: [ 'Relationship types' ],
@@ -6496,9 +8451,9 @@
             buttons: [ { label: 'Show all Artists for Area' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
-                    { sourceColumn: 'Begin area', extractor: 'splitArea', syntheticColumns: ['MB-Begin area', 'Begin country'] },
-                    { sourceColumn: 'End area',   extractor: 'splitArea', syntheticColumns: ['MB-End area', 'End country'] },
+                    { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] },
+                    { sourceColumn: 'Begin area', extractor: 'splitArea', syntheticColumns: ['MB-Begin locality', 'MB-Begin region', 'Begin country'] },
+                    { sourceColumn: 'End area',   extractor: 'splitArea', syntheticColumns: ['MB-End locality', 'MB-End region', 'End country'] },
                     { sourceColumn: 'Begin',      extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
                     { sourceColumn: 'End',        extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
                 ],
@@ -6516,11 +8471,11 @@
                 columnExtractors: [
                     { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
                     { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
-                    { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Locality', 'Region', 'Country'] },
                     { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
                     { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Locality', 'Region', 'Country' ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                 addEAA: 'Event',
@@ -6535,7 +8490,7 @@
             buttons: [ { label: 'Show all Labels for Area' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Area',  extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] },
+                    { sourceColumn: 'Area',  extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] },
                     { sourceColumn: 'Begin', extractor: 'dateParts', syntheticColumns: ['B-DD', 'B-MM', 'B-YYYY', 'B-Day', 'B-Month'] },
                     { sourceColumn: 'End',   extractor: 'dateParts', syntheticColumns: ['E-DD', 'E-MM', 'E-YYYY', 'E-Day', 'E-Month'] }
                 ],
@@ -6643,7 +8598,7 @@
             buttons: [ { label: 'Show all Places for Area' } ],
             features: {
                 columnExtractors: [
-                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Area', 'Country'] }
+                    { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] }
                 ],
                 extractMainColumn: 'Place',
                 stickyColumn: 'Place'
@@ -6891,11 +8846,11 @@
                     columnExtractors: [
                         { sourceColumn: 'Event', extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
                         { sourceColumn: 'Event', extractor: 'caa', syntheticColumns: ['EAA'] },
-                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Area', 'Country'] },
+                        { sourceColumn: 'Location', extractor: 'splitLocation', syntheticColumns: ['Place', 'Locality', 'Region', 'Country'] },
                         { sourceColumn: 'Event', extractor: 'primaryAlias', syntheticColumns: ['Primary Alias'] },
                         { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                     ],
-                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                    collapsableColumns: [ 'Artists', 'Location', 'EAA', 'Place', 'Locality', 'Region', 'Country' ],
                     integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                     tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', '---', 'Artists', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                     addEAA: 'Event',
@@ -7419,11 +9374,11 @@
                 columnExtractors: [
                     { sourceColumn: 'Event',    extractor: 'cancelledEvent', syntheticColumns: ['Cancelled'] },
                     { sourceColumn: 'Event',    extractor: 'caa',            syntheticColumns: ['EAA'] },
-                    { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Area', 'Country'] },
+                    { sourceColumn: 'Location', extractor: 'splitLocation',  syntheticColumns: ['Place', 'Locality', 'Region', 'Country'] },
                     { sourceColumn: 'Event',    extractor: 'primaryAlias',   syntheticColumns: ['Primary Alias'] },
                     { sourceColumn: 'Date',     extractor: 'dateParts',      syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
                 ],
-                collapsableColumns: [ 'Location', 'EAA', 'Place', 'Area', 'Country' ],
+                collapsableColumns: [ 'Location', 'EAA', 'Place', 'Locality', 'Region', 'Country' ],
                 integerColumns: [ {sourceColumn: 'DD', align: 'R'}, {sourceColumn: 'MM', align: 'R'}, {sourceColumn: 'YYYY', align: 'C'} ],
                 tooltipColumns: [ 'MB-Name', 'italic:Comment', 'Primary Alias', 'Type', '---', 'Role', 'Location', ['Date', '(', 'Time', ')'], 'Cancelled' ],
                 addEAA: 'Event',
@@ -7585,12 +9540,27 @@
             return; // Tooltip disabled in settings or Lib not available
         }
 
+        // GM_addStyle so this tooltip's CSS is exempt from page CSP style-src
+        // restrictions (see other dialogs' identical treatment). Fully
+        // static — safe to inject once, idempotent.
+        if (!document.getElementById('sa-ctrlm-tooltip-style')) {
+            const ctrlMStyle = GM_addStyle(`
+                .sa-ctrlm-indent { margin-left: 4px; }
+                .sa-ctrlm-more { margin-left: 4px; font-size: 0.9em; color: #666; }
+                .sa-ctrlm-col-active { color: #006600; }
+                .sa-ctrlm-col-inactive { color: #999999; }
+            `);
+            ctrlMStyle.id = 'sa-ctrlm-tooltip-style';
+        }
+
         // Remove existing tooltip if any
         hideCtrlMTooltip();
 
         const contentDiv = document.getElementById('content');
         const sidebarDiv = document.getElementById('sidebar');
-        if (!contentDiv) return;
+        // Some page types (e.g. /account/applications) have no div#content —
+        // only the positioning below depends on it, so don't bail out of the
+        // whole tooltip; fall back to viewport-relative positioning instead.
 
         // Create tooltip element
         ctrlMTooltipElement = document.createElement('div');
@@ -7617,10 +9587,10 @@
             for (let i = 0; i < Math.min(actionButtons.length, 9); i++) {
                 const key = buttonKeys[i];
                 const text = actionButtons[i].textContent.trim().substring(0, 20);
-                tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${text}${actionButtons[i].textContent.trim().length > 20 ? '...' : ''}</div>`;
+                tooltipHTML += `<div class="sa-ctrlm-indent"><strong>${key}</strong>: ${text}${actionButtons[i].textContent.trim().length > 20 ? '...' : ''}</div>`;
             }
             if (actionButtons.length > 9) {
-                tooltipHTML += `<div style="margin-left: 4px; font-size: 0.9em; color: #666;">+ ${actionButtons.length - 9} more (a-${String.fromCharCode(97 + Math.min(actionButtons.length - 10, 25))})</div>`;
+                tooltipHTML += `<div class="sa-ctrlm-more">+ ${actionButtons.length - 9} more (a-${String.fromCharCode(97 + Math.min(actionButtons.length - 10, 25))})</div>`;
             }
             tooltipHTML += '<br/>';
         }
@@ -7636,28 +9606,29 @@
         // Regular function shortcuts
         tooltipHTML += '<strong>Functions:</strong><br/>';
         for (const [key, entry] of _regularEntries) {
-            tooltipHTML += `<div style="margin-left: 4px;"><strong>${key}</strong>: ${entry.description}</div>`;
+            tooltipHTML += `<div class="sa-ctrlm-indent"><strong>${key}</strong>: ${entry.description}</div>`;
         }
 
         // Column-context shortcuts (o/q/a) — shown separately with focus status
         if (_colCtxEntries.length > 0) {
-            const _ccColor  = _colFilterFocused ? '#006600' : '#999999';
+            const _ccClass  = _colFilterFocused ? 'sa-ctrlm-col-active' : 'sa-ctrlm-col-inactive';
             const _ccStatus = _colFilterFocused ? '✓ col filter active' : '⚠ focus col filter first';
-            tooltipHTML += `<br/><strong style="color:${_ccColor}">Col-filter context (${_ccStatus}):</strong><br/>`;
+            tooltipHTML += `<br/><strong class="${_ccClass}">Col-filter context (${_ccStatus}):</strong><br/>`;
             for (const [key, entry] of _colCtxEntries) {
-                tooltipHTML += `<div style="margin-left: 4px; color:${_ccColor};"><strong>${key}</strong>: ${entry.description}</div>`;
+                tooltipHTML += `<div class="sa-ctrlm-indent ${_ccClass}"><strong>${key}</strong>: ${entry.description}</div>`;
             }
         }
 
         ctrlMTooltipElement.innerHTML = tooltipHTML;
         document.body.appendChild(ctrlMTooltipElement);
 
-        // Position in upper right of content div, not overlapping sidebar
+        // Position in upper right of content div, not overlapping sidebar.
+        // Falls back to viewport-relative positioning on page types with no
+        // div#content (e.g. /account/applications).
         setTimeout(() => {
-            if (contentDiv && sidebarDiv) {
+            const tooltipRect = ctrlMTooltipElement.getBoundingClientRect();
+            if (contentDiv) {
                 const contentRect = contentDiv.getBoundingClientRect();
-                const sidebarRect = sidebarDiv.getBoundingClientRect();
-                const tooltipRect = ctrlMTooltipElement.getBoundingClientRect();
 
                 // Position in upper right, respecting sidebar
                 let left = Math.min(contentRect.right - tooltipRect.width - 10, window.innerWidth - tooltipRect.width - 10);
@@ -7665,11 +9636,17 @@
 
                 if (sidebarDiv) {
                     // Ensure doesn't overlap sidebar
+                    const sidebarRect = sidebarDiv.getBoundingClientRect();
                     left = Math.min(left, sidebarRect.left - tooltipRect.width - 10);
                 }
 
                 ctrlMTooltipElement.style.left = left + 'px';
                 ctrlMTooltipElement.style.top = (contentRect.top + 10) + 'px';
+            } else {
+                // No div#content on this page type — anchor to the viewport's
+                // upper right instead.
+                ctrlMTooltipElement.style.left = (window.innerWidth - tooltipRect.width - 20) + 'px';
+                ctrlMTooltipElement.style.top = '20px';
             }
         }, 0);
     }
@@ -8082,9 +10059,8 @@
             return;
         }
 
-        const style = document.createElement('style');
-        style.id = 'mb-sticky-headers-style';
-        style.textContent = `
+        // GM_addStyle so this is exempt from page CSP style-src restrictions.
+        const style = GM_addStyle(`
             /* Ensure the table borders play nicely with sticky elements */
             table.tbl {
                 border-collapse: separate;
@@ -8140,9 +10116,8 @@
                 word-break:    normal  !important;
             }
 
-        `;
-
-        document.head.appendChild(style);
+        `);
+        style.id = 'mb-sticky-headers-style';
         Lib.debug('ui', 'Sticky headers enabled - column headers will remain visible while scrolling');
     }
 
@@ -8562,7 +10537,7 @@
             // data-mb-sticky-bg.  The attribute is refreshed on every _apply() call
             // so re-runs after zebra re-striping always have the current rest colour.
             // Row hover highlight colour — read once, shared by all row handlers.
-            const hoverBgColor = Lib.settings.sa_ui_row_hover_bg || '#e2e2e2';
+            const hoverBgColor = Lib.settings.sa_ui_row_hover_bg || '#c2d2e9';
 
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const cell = tr.cells[stickyIdx];
@@ -8619,8 +10594,12 @@
                 }
                 cell.style.background = '';
                 const cellBg = getComputedStyle(cell).backgroundColor;
-                const trueRestBg = (cellBg === 'rgba(0, 0, 0, 0)' || cellBg === 'transparent')
-                    ? '#ffffff' : cellBg;
+                // A cell carrying its own data-mb-custom-cell-bg marker (e.g.
+                // the edits pageType's colored "Edit#" cell — see
+                // _buildEditRow) always wins over the computed zebra colour —
+                // same reasoning as the non-sticky-cell loop below.
+                const trueRestBg = cell.dataset.mbCustomCellBg ||
+                    ((cellBg === 'rgba(0, 0, 0, 0)' || cellBg === 'transparent') ? '#ffffff' : cellBg);
                 cell.dataset.mbRestBg = trueRestBg;
                 if (_activeTintClass) {
                     // Tint was already applied (renderFinalTable path): restore the
@@ -8640,13 +10619,24 @@
                 // span.comment </bdi>) bidi-boundary wrap is handled globally by
                 // normalizeCommentSpans(), called after every render pass.
 
-                // Snapshot all non-sticky cells (clear inline bg so CSS zebra wins).
+                // Snapshot all non-sticky cells (clear inline bg so CSS zebra wins) —
+                // UNLESS the individual cell carries its own data-mb-custom-cell-bg
+                // marker (e.g. the edits pageType's colored "Edit action" cell — see
+                // _buildEditRow), in which case that custom colour must win over
+                // MusicBrainz's native `tr.even > td`/`tr.odd > td` zebra rule, which
+                // targets <td> directly and would otherwise paint right over it.
+                // Inline styles beat class rules, so re-applying the colour here (not
+                // just clearing to '') is what actually makes it win. Deliberately a
+                // per-cell, not per-row, check: this function stays page-type-agnostic
+                // and just respects whichever specific cell opted in, rather than
+                // knowing anything about 'edits'.
                 Array.from(tr.cells).forEach(td => {
                     if (td === cell) return;
-                    td.style.background = '';
+                    const customBg = td.dataset.mbCustomCellBg;
+                    td.style.background = customBg || '';
                     const bg = getComputedStyle(td).backgroundColor;
-                    td.dataset.mbRestBg = (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')
-                        ? '#ffffff' : bg;
+                    td.dataset.mbRestBg = customBg ||
+                        ((bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent') ? '#ffffff' : bg);
                 });
 
                 // Wire hover handlers — always rewire, because after sort/filter
@@ -8728,6 +10718,54 @@
      * @type {Map<string, {applyGlobalConfig: function(Object): void}>}
      */
     const subTableColVisRegistry = new Map();
+
+    /**
+     * Fallback cap for `_getProseColumnMaxWidth()` — only used if the
+     * `sa_annotation_column_max_width` setting is somehow unavailable.
+     * Matches that setting's configSchema `default`.
+     * @type {number}
+     */
+    const PROSE_COLUMN_MAX_WIDTH_PX_FALLBACK = 480;
+
+    /**
+     * Cap applied to auto-resize's measured width for "prose" collapsable
+     * columns (e.g. "Annotation") — see `_isProseCollapseColumn`. Without
+     * this, measuring a long free-text cell's natural single-line width via
+     * a `white-space: nowrap` clone can produce a multi-thousand-pixel
+     * column, since `initCollapsableColumns`'s height-clamp only constrains
+     * the live cell's vertical size, not the width of the detached
+     * measurement clone. User-configurable via `sa_annotation_column_max_width`
+     * — always applied regardless of `sa_enable_annotation_collapse`.
+     * @returns {number}
+     */
+    function _getProseColumnMaxWidth() {
+        const configured = Number(Lib.settings.sa_annotation_column_max_width);
+        return Number.isFinite(configured) && configured > 0
+            ? configured
+            : PROSE_COLUMN_MAX_WIDTH_PX_FALLBACK;
+    }
+
+    /**
+     * True if `colIndex` in `table` is a "prose" collapsable column — i.e. its
+     * body cells were wrapped in `.mb-text-clamp-marker` by
+     * `initCollapsableColumns` (all candidate cells in a declared
+     * `collapsableColumns` column get this marker, whether or not the
+     * "Enable collapsible Annotation columns" setting is on, and whether or
+     * not they actually overflow the clamp when it is — see
+     * initCollapsableColumns). Used by the auto-resize measurement paths to
+     * cap these columns' width instead of sizing them to a paragraph's
+     * unwrapped natural width — this cap is intentionally independent of
+     * `sa_enable_annotation_collapse` (always active).
+     * @param {HTMLTableElement} table
+     * @param {number} colIndex
+     * @returns {boolean}
+     */
+    function _isProseCollapseColumn(table, colIndex) {
+        return Array.from(table.querySelectorAll('tbody tr')).some(tr => {
+            const td = tr.cells[colIndex];
+            return !!(td && td.querySelector(':scope > .mb-text-clamp-marker'));
+        });
+    }
 
     /**
      * Toggle visibility of a column across all tables
@@ -8815,6 +10853,13 @@
                         }
 
                         document.body.removeChild(measureDiv);
+
+                        // Prose collapsable columns (e.g. "Annotation"): cap the
+                        // measured width instead of sizing to a paragraph's
+                        // unwrapped nowrap width — see _getProseColumnMaxWidth().
+                        if (_isProseCollapseColumn(currentTable, columnIndex)) {
+                            maxWidth = Math.min(maxWidth, _getProseColumnMaxWidth());
+                        }
 
                         // Set the measured width
                         const finalWidth = Math.ceil(maxWidth + 20);
@@ -8928,6 +10973,9 @@
                         }
                     }
                     document.body.removeChild(measureDiv);
+                    if (_isProseCollapseColumn(table, columnIndex)) {
+                        maxWidth = Math.min(maxWidth, _getProseColumnMaxWidth());
+                    }
                     col.style.width   = `${Math.ceil(maxWidth + 20)}px`;
                     col.style.display = '';
                 } else {
@@ -9152,15 +11200,23 @@
         // of a single-line inline-block button whose line-height is ~1.4.
         // The outer button carries display:inline-flex; align-items:center; gap:4px
         // which is still required for the two-column layout to render correctly.
+        //
+        // GM_addStyle so this widely-reused button label's CSS is exempt from
+        // page CSP style-src restrictions. Fully static, safe to inject once.
+        if (!document.getElementById('sa-collapse-btn-style')) {
+            const cebStyle = GM_addStyle(`
+                .sa-ceb-arrow { align-self:center; font-size:1em; }
+                .sa-ceb-col { display:flex; flex-direction:column; align-items:center; line-height:1; font-size:0.72em; }
+            `);
+            cebStyle.id = 'sa-collapse-btn-style';
+        }
         const arrow  = expand ? '▶' : '▼';
         const action = expand ? 'Expand' : 'Collapse';
-        return `<span style="align-self:center;font-size:1em;">${arrow}</span>` +
-            `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;">` +
+        return `<span class="sa-ceb-arrow">${arrow}</span>` +
+            `<span class="sa-ceb-col">` +
             `<span>${action}</span>` +
             `<span>all</span></span>` +
-            `<span style="display:flex;flex-direction:column;align-items:center;` +
-            `line-height:1;font-size:0.72em;"><span>multi-row</span>` +
+            `<span class="sa-ceb-col"><span>multi-row</span>` +
             `<span>cells</span></span>`;
     }
 
@@ -9304,6 +11360,99 @@
         '.mb-subtable-filter-highlight';
 
     /**
+     * Finds the `<li>` items that belong to a cell's "own" list, for
+     * collapse-toggle purposes — the `<li>` children of the first `<ul>`/`<ol>`
+     * in the cell, but ONLY when that list is (modulo non-competing wrapper
+     * markup) the cell's entire meaningful content.
+     *
+     * Correctly recognises two different real-world shapes as "list cells":
+     *   - Script-generated lists whose `<ul>` is a direct child of `<td>`
+     *     (Catalog#, Label, video, … via `renderMultiRowCell`).
+     *   - Native MusicBrainz markup that wraps its list one level deeper —
+     *     e.g. the "Authors" column on report-detail pages:
+     *     `<td><script type="application/json">…</script>
+     *     <div class="artist-roles-container"><ul class="artist-roles">…
+     *     </ul></div></td>` — the JSON `<script>` blob and the wrapper `<div>`
+     *     don't carry competing rendered text, so they're ignored while
+     *     walking from the `<ul>` up to the `<td>`.
+     *
+     * …while correctly REJECTING a wiki-rendered bullet/numbered list
+     * embedded inside free-text "Annotation" prose — e.g.
+     * `<td><div><p>Some text…</p><ul><li>a</li><li>b</li></ul>
+     * <p>more text…</p></div></td>` — the sibling `<p>` elements carry real
+     * text, so the list is not the cell's sole content and this returns `[]`,
+     * letting the cell be treated as "prose" (height-clamp) instead of
+     * "list" (item hide/show).
+     *
+     * A cell with no `<ul>`/`<ol>` at all, or where a sibling anywhere along
+     * that walk has non-trivial text, returns `[]`.
+     *
+     * @param {HTMLTableCellElement} cell
+     * @returns {HTMLLIElement[]}
+     */
+    function _findCellListItems(cell) {
+        if (!cell) return [];
+        const list = cell.querySelector('ul, ol');
+        if (!list) return [];
+
+        let node = list;
+        while (node && node !== cell) {
+            const parent = node.parentNode;
+            if (!parent) return [];
+            for (const sib of parent.children) {
+                if (sib === node) continue;
+                // SCRIPT/STYLE never render; another UL/OL is still "just list
+                // content"; _CLEAN_STRIP_SEL covers every other injected/
+                // decorative UI element this script adds to a cell — critically
+                // including .mb-cell-collapse-toggle itself (the "▶ 3 ▤" span
+                // this very function's own gathering pass appends as a sibling
+                // of the list). Without this exclusion, calling this function
+                // AGAIN after the toggle exists (e.g. from ensureCollapseDelegate
+                // at click time) sees the toggle's own glyph/count text ("▶3▤")
+                // as competing sibling content and wrongly returns [] — the
+                // toggle renders correctly once, then clicking it does nothing.
+                const t = sib.tagName;
+                if (t === 'SCRIPT' || t === 'STYLE' || t === 'UL' || t === 'OL') continue;
+                if (sib.matches(_CLEAN_STRIP_SEL)) continue;
+                if (sib.textContent && sib.textContent.trim()) return [];
+            }
+            node = parent;
+        }
+        return Array.from(list.querySelectorAll(':scope > li'));
+    }
+
+    /**
+     * Classifies a table cell's "collapse structure" — unifies list cells
+     * (see `_findCellListItems`, e.g. Catalog#/Label/Authors) and prose cells
+     * (free-text columns like "Annotation" that overflow their height-clamp
+     * and get a `.mb-cell-collapse-toggle` — see `initCollapsableColumns`)
+     * under one "is this cell multi-row / single-row?" concept.
+     *
+     * Used by every place that needs to answer that question independently
+     * of `initCollapsableColumns` itself: the multi-row state column filter
+     * (`testRowMatch`'s `f.isMultiRowFilter` branch), the unique-values
+     * dropdown's "Cell structure" counts (`openUniqDrop`), and the
+     * column-header `.mb-col-collapse-count` live count
+     * (`_updateAllColHeaderCounts`). Keep this the single source of truth
+     * for that classification — do not re-implement list-cell detection
+     * ad hoc at a new call site.
+     *
+     * @param {HTMLTableCellElement} cell
+     * @returns {{ isMultiRow: boolean, isSingleRow: boolean }}
+     */
+    function _classifyCollapseCell(cell) {
+        if (!cell) return { isMultiRow: false, isSingleRow: false };
+        const lis = _findCellListItems(cell);
+        if (lis.length >= 2) return { isMultiRow: true,  isSingleRow: false };
+        if (lis.length === 1) return { isMultiRow: false, isSingleRow: true  };
+        // No qualifying list: a prose cell counts as "multi-row" only once
+        // it actually overflowed its clamp and got a real toggle — a short,
+        // never-clamped annotation is plain content, not a collapse state.
+        const hasProseToggle = !!cell.querySelector(':scope > .mb-cell-collapse-toggle');
+        return { isMultiRow: hasProseToggle, isSingleRow: false };
+    }
+
+    /**
      * Re-evaluates the `mb-collapse-toggle-has-match` class on every
      * `.mb-cell-collapse-toggle` span inside `table`.
      *
@@ -9340,9 +11489,8 @@
                 return;
             }
             // Collapsed: check hidden items (lis[1..n]) for any filter highlight.
-            const ul = td.querySelector(':scope > ul');
-            if (!ul) return;
-            const lis = Array.from(ul.querySelectorAll(':scope > li'));
+            const lis = _findCellListItems(td);
+            if (lis.length < 2) return;
             const hasHiddenMatch = lis.slice(1).some(li =>
                 li.querySelector(_COLLAPSE_MATCH_SEL)
             );
@@ -9367,6 +11515,25 @@
             const artLis = Array.from(artUl.querySelectorAll(':scope > li.mb-caa-art-li-image'));
             const hasHiddenMatch = artLis.some(li => li.querySelector(_COLLAPSE_MATCH_SEL));
             expandBtn.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
+        });
+
+        // ── Pass 3: prose (free-text) cells (.mb-text-clamp-inner) ──────────────
+        // Content isn't display:none-hidden per node here — just visually
+        // clamped — so (unlike Pass 1's "hidden lis only") a whole-wrapper
+        // check is the correct equivalent, not an approximation of it.
+        table.querySelectorAll('td.mb-has-collapse-toggle').forEach(td => {
+            const inner = td.querySelector(':scope > .mb-text-clamp-inner');
+            if (!inner) return;
+            const toggle = td.querySelector(':scope > .mb-cell-collapse-toggle');
+            if (!toggle) return;
+            if (toggle.getAttribute('aria-expanded') === 'true') {
+                toggle.classList.remove('mb-collapse-toggle-has-match');
+                return;
+            }
+            toggle.classList.toggle(
+                'mb-collapse-toggle-has-match',
+                !!inner.querySelector(_COLLAPSE_MATCH_SEL)
+            );
         });
     }
 
@@ -11492,7 +13659,7 @@ ${sections.join('\n')}
 
         const isFiltered   = rowsTotal > rowsExported;
         const rowSummary   = isFiltered
-            ? `<strong>${rowsExported.toLocaleString()}</strong> of ${rowsTotal.toLocaleString()} rows <span style="color:#888;font-size:0.9em;">(${rowsTotal - rowsExported} filtered out)</span>`
+            ? `<strong>${rowsExported.toLocaleString()}</strong> of ${rowsTotal.toLocaleString()} rows <span class="sa-ed-filtered-note">(${rowsTotal - rowsExported} filtered out)</span>`
             : `<strong>${rowsExported.toLocaleString()}</strong> rows`;
 
         const dialog = document.createElement('div');
@@ -11515,27 +13682,49 @@ ${sections.join('\n')}
             'box-sizing:border-box',
         ].join(';');
 
+        // GM_addStyle so this dialog shell's CSS is exempt from page CSP
+        // style-src restrictions (see showSaveDialog's identical treatment).
+        // Idempotent — headerFontSz/statusFontSz only change via a settings
+        // save, which reloads the page.
+        if (!document.getElementById('sa-export-shell-style')) {
+            const shellStyle = GM_addStyle(`
+                #sa-ed-drag-handle { margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px; cursor:move; user-select:none; }
+                #sa-ed-title { margin:0; color:#222; font-size:1.2em; }
+                #sa-ed-description { margin:8px 0 0; color:#555; font-size:${headerFontSz}; }
+                #sa-ed-row-summary { margin:6px 0 0; color:#666; font-size:0.9em; }
+                .sa-ed-filtered-note { color:#888; font-size:0.9em; }
+                #sa-ed-meta-block { margin-bottom:16px; border:1px solid #eee; border-radius:6px; padding:10px 14px; background:#fafafa; }
+                #sa-ed-filename-row { margin-bottom:14px; }
+                #sa-ed-filename-label { display:block; font-size:0.88em; font-weight:600; color:#444; margin-bottom:5px; }
+                #sa-ed-filename-input { width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:0.9em; font-family:monospace; outline:none; }
+                #sa-ed-btn-row { display:flex; gap:12px; margin-bottom:8px; }
+                #sa-ed-save-confirm { flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                #sa-ed-cancel { flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                #sa-ed-status { display:none; padding:5px 2px; font-size:${statusFontSz}; min-height:20px; }
+            `);
+            shellStyle.id = 'sa-export-shell-style';
+        }
+
         dialog.innerHTML = `
-            <div id="sa-ed-drag-handle" style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;cursor:move;user-select:none;">
-                <h3 style="margin:0;color:#222;font-size:1.2em;">&#128229; ${customTitle ? String(customTitle).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : `Export Table Data &mdash; ${format}`}</h3>
-                <p style="margin:8px 0 0;color:#555;font-size:${headerFontSz};">${description}</p>
-                <p style="margin:6px 0 0;color:#666;font-size:0.9em;">Exporting ${rowSummary}. Review the metadata below, optionally edit the filename, then click <strong>Save Data</strong>.</p>
+            <div id="sa-ed-drag-handle">
+                <h3 id="sa-ed-title">&#128229; ${customTitle ? String(customTitle).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') : `Export Table Data &mdash; ${format}`}</h3>
+                <p id="sa-ed-description">${description}</p>
+                <p id="sa-ed-row-summary">Exporting ${rowSummary}. Review the metadata below, optionally edit the filename, then click <strong>Save Data</strong>.</p>
             </div>
-            <div id="sa-ed-meta-block" style="margin-bottom:16px;border:1px solid #eee;border-radius:6px;padding:10px 14px;background:#fafafa;">
+            <div id="sa-ed-meta-block">
                 ${buildMetaBlockHTML(metaData, rowsExported, null)}
             </div>
-            <div style="margin-bottom:14px;">
-                <label for="sa-ed-filename-input" style="display:block;font-size:0.88em;font-weight:600;color:#444;margin-bottom:5px;">&#128462; Filename</label>
-                <input id="sa-ed-filename-input" type="text" value=""
-                    style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;font-family:monospace;outline:none;">
+            <div id="sa-ed-filename-row">
+                <label for="sa-ed-filename-input" id="sa-ed-filename-label">&#128462; Filename</label>
+                <input id="sa-ed-filename-input" type="text" value="">
             </div>
-            <div style="display:flex;gap:12px;margin-bottom:8px;">
-                <button id="sa-ed-save-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                    <span>&#128229; <span style="text-decoration:underline">S</span>ave Data</span>
+            <div id="sa-ed-btn-row">
+                <button id="sa-ed-save-confirm">
+                    <span>&#128229; <u>S</u>ave Data</span>
                 </button>
-                <button id="sa-ed-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">Cancel</button>
+                <button id="sa-ed-cancel">Cancel</button>
             </div>
-            <div id="sa-ed-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
+            <div id="sa-ed-status"></div>
         `;
 
         document.body.appendChild(dialog);
@@ -11562,9 +13751,8 @@ ${sections.join('\n')}
         // ── Hover styles ──────────────────────────────────────────────────────
         const styleId = 'sa-export-dialog-styles';
         if (!document.getElementById(styleId)) {
-            const s = document.createElement('style');
-            s.id = styleId;
-            s.textContent = `
+            // GM_addStyle so this is exempt from page CSP style-src restrictions.
+            const s = GM_addStyle(`
                 #sa-ed-save-confirm:hover:not([disabled]) { background:#45a049 !important; }
                 #sa-ed-cancel:hover                        { background:#e0e0e0 !important; }
                 #sa-ed-save-confirm:active:not([disabled]),
@@ -11572,8 +13760,8 @@ ${sections.join('\n')}
                     transform: translateY(1px);
                     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
                 }
-            `;
-            document.head.appendChild(s);
+            `);
+            s.id = styleId;
         }
 
         // ── Refs ──────────────────────────────────────────────────────────────
@@ -11648,7 +13836,7 @@ ${sections.join('\n')}
             statusDiv.innerHTML     = `\u2705 Download initiated for <em>"${chosenFilename}"</em>. Monitor your browser for the file.`;
             statusDiv.style.color   = '#2e7d32';
             statusDiv.style.display = 'block';
-            saveBtn.innerHTML  = '&#128229; <span style="text-decoration:underline">S</span>ave Data';
+            saveBtn.innerHTML  = '&#128229; <u>S</u>ave Data';
             saveBtn.disabled   = false; saveBtn.style.opacity = '';
 
             // Parse the setting robustly: GM storage returns strings, not numbers.
@@ -11950,7 +14138,7 @@ ${sections.join('\n')}
             label = text;
         } else {
             label = text.slice(0, idx) +
-                '<span style="text-decoration:underline">' + underlineChar + '</span>' +
+                '<u>' + underlineChar + '</u>' +
                 text.slice(idx + underlineChar.length);
         }
         const content = icon ? icon + ' ' + label : label;
@@ -12151,7 +14339,73 @@ ${sections.join('\n')}
      *   saveToLru:       Function,           – call to push current query+state to LRU
      * }}
      */
+    /**
+     * Lazily injects the shared, id-guarded stylesheet for
+     * {@link createFilterHistoryWidget}'s history-row markup (badges, mark
+     * highlight, history rows). Uses GM_addStyle (not a plain
+     * document.createElement('style') + head.appendChild) so it is exempt
+     * from page CSP style-src restrictions — MusicBrainz's account/* pages
+     * block plain inline stylesheets. Classes here are generic (not scoped
+     * per filter-input instance), so this only needs to run once for the
+     * whole page regardless of how many filter inputs get a history widget.
+     */
+    function _ensureFilterHistoryWidgetStyle() {
+        if (document.getElementById('mb-fhw-style')) return;
+        const style = GM_addStyle(`
+            .mb-fhw-badge {
+                font-size: 0.78em;
+                font-weight: 700;
+                border-radius: 2px;
+                padding: 0 2px;
+            }
+            .mb-fhw-badge-cs { color: #1976D2; border: 1px solid #1976D2; }
+            .mb-fhw-badge-re { color: #7B1FA2; border: 1px solid #7B1FA2; }
+            .mb-fhw-badge-ex { color: #c62828; border: 1px solid #c62828; }
+            .mb-fhw-mark {
+                background: #fff176;
+                padding: 0;
+            }
+            .mb-fhw-lru-label {
+                font-size: 0.76em;
+                font-weight: 700;
+                color: #1565c0;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+            .mb-fhw-hist-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 6px 10px;
+                cursor: pointer;
+                font-size: 0.9em;
+                border-bottom: 1px dotted #eee;
+                gap: 6px;
+            }
+            .mb-fhw-hist-label {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            .mb-fhw-glyphs {
+                flex-shrink: 0;
+                display: flex;
+                gap: 3px;
+                align-items: center;
+            }
+            .mb-fhw-empty {
+                padding: 8px 10px;
+                color: #aaa;
+                font-size: 0.85em;
+                text-align: center;
+            }
+        `);
+        style.id = 'mb-fhw-style';
+    }
+
     function createFilterHistoryWidget(cfg) {
+        _ensureFilterHistoryWidgetStyle();
         const { filterInput, caseCheckbox, rxCheckbox, exCheckbox, onApply } = cfg;
         const getQuery  = cfg.getQuery  || (() => filterInput.value.trim());
         const setQuery  = cfg.setQuery  || ((q) => { filterInput.value = q; });
@@ -12176,9 +14430,9 @@ ${sections.join('\n')}
 
         const _histGlyphs = (e) => {
             const parts = [];
-            if (e.useCase)    parts.push('<span title="Case Sensitive" style="color:#1976D2;font-size:0.78em;font-weight:700;border:1px solid #1976D2;border-radius:2px;padding:0 2px;">Cs</span>');
-            if (e.useRegex)   parts.push('<span title="Regular Expression" style="color:#7B1FA2;font-size:0.78em;font-weight:700;border:1px solid #7B1FA2;border-radius:2px;padding:0 2px;">Re</span>');
-            if (e.useExclude) parts.push('<span title="Exclude Matches" style="color:#c62828;font-size:0.78em;font-weight:700;border:1px solid #c62828;border-radius:2px;padding:0 2px;">Ex</span>');
+            if (e.useCase)    parts.push('<span title="Case Sensitive" class="mb-fhw-badge mb-fhw-badge-cs">Cs</span>');
+            if (e.useRegex)   parts.push('<span title="Regular Expression" class="mb-fhw-badge mb-fhw-badge-re">Re</span>');
+            if (e.useExclude) parts.push('<span title="Exclude Matches" class="mb-fhw-badge mb-fhw-badge-ex">Ex</span>');
             return parts.length ? '&nbsp;' + parts.join('&nbsp;') : '';
         };
 
@@ -12187,7 +14441,7 @@ ${sections.join('\n')}
             const idx = haystack.toLowerCase().indexOf(needle.toLowerCase());
             if (idx < 0) return haystack;
             return haystack.slice(0, idx) +
-                `<mark style="background:#fff176;padding:0;">${haystack.slice(idx, idx + needle.length)}</mark>` +
+                `<mark class="mb-fhw-mark">${haystack.slice(idx, idx + needle.length)}</mark>` +
                 haystack.slice(idx + needle.length);
         };
 
@@ -12213,7 +14467,7 @@ ${sections.join('\n')}
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.title = 'Show/hide filter history (Alt+H)';
-        toggleBtn.innerHTML = '&#128337; <span style="text-decoration:underline">H</span>istory &#9660;';
+        toggleBtn.innerHTML = '&#128337; <u>H</u>istory &#9660;';
         toggleBtn.style.cssText = 'padding:0 8px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer; font-size:0.85em; white-space:nowrap; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; height:24px; box-sizing:border-box;';
 
         // ── DOM: Dropdown panel ───────────────────────────────────────────────────
@@ -12248,7 +14502,7 @@ ${sections.join('\n')}
         const pinHeaderEditBtn = document.createElement('button');
         pinHeaderEditBtn.type = 'button';
         pinHeaderEditBtn.title = 'Edit the persistent pinned filter list (Alt+E)';
-        pinHeaderEditBtn.innerHTML = '&#9998; <span style="text-decoration:underline">E</span>dit Pinned Filter List';
+        pinHeaderEditBtn.innerHTML = '&#9998; <u>E</u>dit Pinned Filter List';
         pinHeaderEditBtn.style.cssText = 'padding:2px 7px;background:#fff8e1;border:1px solid #ffe082;border-radius:5px;cursor:pointer;font-size:0.76em;font-weight:600;color:#e65100;white-space:nowrap;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;line-height:1.6;';
         pinHeader.appendChild(pinHeaderLabel);
         pinHeader.appendChild(pinHeaderEditBtn);
@@ -12265,7 +14519,7 @@ ${sections.join('\n')}
         // LRU section header
         const lruHeader = document.createElement('div');
         lruHeader.style.cssText = 'padding:4px 8px 2px; background:#e3f2fd; border-bottom:1px solid #bbdefb;';
-        lruHeader.innerHTML = '<span style="font-size:0.76em;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:0.04em;">&#128337; Recent (LRU)</span>';
+        lruHeader.innerHTML = '<span class="mb-fhw-lru-label">&#128337; Recent (LRU)</span>';
 
         const lruList   = document.createElement('div');
         lruList.style.cssText = `max-height:${histDropdownPx}px; overflow-y:auto;`;
@@ -12298,12 +14552,11 @@ ${sections.join('\n')}
                 const esc   = e.query.replace(/&/g, '&amp;').replace(/</g, '&lt;');
                 const label = _histHighlight(esc, esc_qf);
                 const glyphs = _histGlyphs(e);
-                return `<div class="mb-fhw-hist-row" data-idx="${i}" data-list="${listId}"
-                    style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;gap:6px;">
-                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${label}</span>
-                    <span style="flex-shrink:0;display:flex;gap:3px;align-items:center;">${glyphs}</span>
+                return `<div class="mb-fhw-hist-row" data-idx="${i}" data-list="${listId}">
+                    <span class="mb-fhw-hist-label">${label}</span>
+                    <span class="mb-fhw-glyphs">${glyphs}</span>
                 </div>`;
-            }).join('') || `<div style="padding:8px 10px;color:#aaa;font-size:0.85em;text-align:center;">No matching entries</div>`;
+            }).join('') || `<div class="mb-fhw-empty">No matching entries</div>`;
 
             container.querySelectorAll('.mb-fhw-hist-row').forEach(row => {
                 row.addEventListener('mouseenter', () => {
@@ -13349,8 +15602,17 @@ ${sections.join('\n')}
                 // Both fetch and cache failed — show error with Retry button
                 const errEl = document.createElement('div');
                 errEl.style.cssText = 'text-align:center; padding:30px; color:#c62828;';
-                errEl.innerHTML = `<div style="font-size:1.1em; margin-bottom:12px;">⚠️ Could not load help text</div>
-<div style="color:#555; margin-bottom:18px; font-size:0.9em;">${error}</div>`;
+                // GM_addStyle so this error message's CSS is exempt from page
+                // CSP style-src restrictions. Fully static, safe to inject once.
+                if (!document.getElementById('sa-help-error-style')) {
+                    const heStyle = GM_addStyle(`
+                        .sa-help-err-title { font-size:1.1em; margin-bottom:12px; }
+                        .sa-help-err-msg { color:#555; margin-bottom:18px; font-size:0.9em; }
+                    `);
+                    heStyle.id = 'sa-help-error-style';
+                }
+                errEl.innerHTML = `<div class="sa-help-err-title">⚠️ Could not load help text</div>
+<div class="sa-help-err-msg">${error}</div>`;
                 const retryBtn = document.createElement('button');
                 retryBtn.textContent = '↺ Retry';
                 retryBtn.style.cssText = 'padding:7px 20px; border-radius:6px; border:1px solid #888; cursor:pointer; background:#eee; font-size:0.95em;';
@@ -13812,7 +16074,7 @@ ${sections.join('\n')}
                     const tables = document.querySelectorAll('table.tbl');
                     if (isExpanding) {
                         // Show all
-                        tables.forEach(t => t.style.display = '');
+                        tables.forEach(t => { t.style.display = ''; _syncGroupIntroVisibility(t); });
                         h3s.forEach(h => {
                             const icon = h.querySelector('.mb-toggle-icon');
                             if (icon) icon.textContent = '▼';
@@ -13820,7 +16082,7 @@ ${sections.join('\n')}
                         Lib.debug('shortcuts', `All h3 headers (types) shown via ${getShortcutDisplay('sa_shortcut_toggle_h3', 'Ctrl+3')}`);
                     } else {
                         // Hide all
-                        tables.forEach(t => t.style.display = 'none');
+                        tables.forEach(t => { t.style.display = 'none'; _syncGroupIntroVisibility(t); });
                         h3s.forEach(h => {
                             const icon = h.querySelector('.mb-toggle-icon');
                             if (icon) icon.textContent = '▲';
@@ -13921,6 +16183,7 @@ ${sections.join('\n')}
                         e.target.value = _pfx;
                         e.target.setSelectionRange(_pfx.length, _pfx.length);
                         delete e.target.dataset.mbMultirowMode;
+                        delete e.target.dataset.mbUniqValues;
                         runFilter();
                         Lib.debug('shortcuts', `${filterType} filter cleared via Escape (first press, focus kept)`);
                     }
@@ -14244,7 +16507,46 @@ ${sections.join('\n')}
      * Memory Usage reports JS heap size via performance.memory (Chromium-only)
      * rather than the old fictional "100 bytes × row count" estimate.
      */
+    /**
+     * Lazily injects the shared, id-guarded stylesheet for
+     * {@link showStatsPanel}'s data-cell markup (colors/weights from the
+     * panel's fixed palette `C`, defined further down in showStatsPanel).
+     * Uses GM_addStyle (not a plain document.createElement('style') +
+     * head.appendChild) so it is exempt from page CSP style-src
+     * restrictions — MusicBrainz's account/* pages block plain inline
+     * stylesheets and inline style="..." attributes alike. The palette is
+     * a hardcoded constant (not settings-driven), so these class values
+     * never go stale; safe to inject once regardless of how many times
+     * the panel is opened/closed within a page load.
+     */
+    function _ensureStatsPanelStyle() {
+        if (document.getElementById('sa-stats-panel-style')) return;
+        const style = GM_addStyle(`
+            .sa-stats-section-icon { font-size:1.1em; }
+            .sa-stats-pill { display:inline-block; font-size:0.72em; font-weight:700; padding:0 4px; border-radius:3px; background:#e3f2fd; color:#1565c0; border:1px solid #90caf9; margin-left:3px; vertical-align:middle; }
+            .sa-stats-code { font-size:0.9em; }
+            .sa-stats-strong-600 { font-weight:600; }
+            .sa-stats-strong-700 { font-weight:700; }
+            .sa-stats-accent { color:#1565c0; }
+            .sa-stats-accent-600 { color:#1565c0; font-weight:600; }
+            .sa-stats-accent-700 { color:#1565c0; font-weight:700; }
+            .sa-stats-alert { color:#c62828; }
+            .sa-stats-alert-600 { color:#c62828; font-weight:600; }
+            .sa-stats-muted { color:#555; }
+            .sa-stats-muted-label { font-size:0.8em; color:#555; }
+            .sa-stats-muted-small { font-size:0.83em; color:#555; }
+            .sa-stats-muted-999 { color:#999; }
+            .sa-stats-faint { color:#aaa; }
+            .sa-stats-bbb { color:#bbb; }
+            .sa-stats-bbb-small { color:#bbb; font-size:0.9em; }
+            .sa-stats-strikethrough { text-decoration:line-through; color:#aaa; }
+            .sa-stats-green { color:#388e3c; }
+        `);
+        style.id = 'sa-stats-panel-style';
+    }
+
     function showStatsPanel() {
+        _ensureStatsPanelStyle();
         // Toggle: remove if already open
         const existing = document.getElementById('mb-stats-panel');
         if (existing) { existing.remove(); return; }
@@ -14336,10 +16638,7 @@ ${sections.join('\n')}
         const _filterFlagsHtml = (flags) => {
             if (!flags || (!flags.cc && !flags.rx && !flags.ex)) return '';
             const pill = (label, title) =>
-                `<span style="display:inline-block;font-size:0.72em;font-weight:700;` +
-                `padding:0 4px;border-radius:3px;background:#e3f2fd;color:#1565c0;` +
-                `border:1px solid #90caf9;margin-left:3px;vertical-align:middle;" ` +
-                `title="${title}">${label}</span>`;
+                `<span class="sa-stats-pill" title="${title}">${label}</span>`;
             let out = '';
             if (flags.cc) out += pill('Cc', 'Case-sensitive filter');
             if (flags.rx) out += pill('Rx', 'RegExp filter');
@@ -14500,7 +16799,9 @@ ${sections.join('\n')}
                     let n = 0;
                     tbl.querySelectorAll('tbody tr').forEach(row => {
                         const cell = row.cells[ci];
-                        if (cell && cell.querySelectorAll('ul > li').length > 1) n++;
+                        // _classifyCollapseCell unifies list cells and prose cells
+                        // (e.g. "Annotation") under one multi-row concept.
+                        if (_classifyCollapseCell(cell).isMultiRow) n++;
                     });
                     return n;
                 })();
@@ -14697,7 +16998,7 @@ ${sections.join('\n')}
             h.style.cssText = `font-size:1.0em;font-weight:700;color:${C.green};
                 margin:10px 0 4px;padding:3px 0 3px 2px;
                 border-bottom:2px solid ${C.greenL};display:flex;align-items:center;gap:6px;`;
-            h.innerHTML = `<span style="font-size:1.1em">${icon}</span><span>${text}</span>`;
+            h.innerHTML = `<span class="sa-stats-section-icon">${icon}</span><span>${text}</span>`;
             return h;
         };
 
@@ -14853,12 +17154,12 @@ ${sections.join('\n')}
             },
             {
                 stat: '📄 Page type',
-                value: `<code style="font-size:0.9em">${pageType || 'unknown'}</code>`,
+                value: `<code class="sa-stats-code">${pageType || 'unknown'}</code>`,
                 comment: '',
             },
             {
                 stat: '🗂️ Table mode',
-                value: `<code style="font-size:0.9em">${tableMode}</code>`,
+                value: `<code class="sa-stats-code">${tableMode}</code>`,
                 comment: tableMode === 'multi'
                     ? 'Multiple h3-grouped sub-tables' : 'Single consolidated table',
             },
@@ -14869,15 +17170,15 @@ ${sections.join('\n')}
             },
             {
                 stat: '📋 Total table rows',
-                value: `<span style="font-weight:600">${_snapshotTotalRows.toLocaleString()}</span>`,
+                value: `<span class="sa-stats-strong-600">${_snapshotTotalRows.toLocaleString()}</span>`,
                 comment: 'Total number of unfiltered table rows',
             },
             {
                 // id used for live refresh from _showCaaCompletionToast when panel is open.
                 stat: `🖼️ Total table rows with ${_artKey} artwork`,
                 value: _totalCaaCount > 0
-                    ? `<span style="color:${C.accent};font-weight:600">${_totalCaaCount.toLocaleString()}</span>`
-                    : '<span id="mb-stats-art-count-val" style="color:#999">—</span>',
+                    ? `<span class="sa-stats-accent-600">${_totalCaaCount.toLocaleString()}</span>`
+                    : '<span id="mb-stats-art-count-val" class="sa-stats-muted-999">—</span>',
                 comment: _totalCaaCount > 0
                     ? `Rows with confirmed ${_artKey} front artwork across ${subTblCount} sub-table${subTblCount > 1 ? 's' : ''}`
                     : `Counting ${_artKey} artwork… (updates when image loading completes)`,
@@ -14892,7 +17193,7 @@ ${sections.join('\n')}
             {
                 stat: '🔀 Total extracted columns',
                 value: _extractedCols > 0
-                    ? `<span style="color:${C.accent};font-weight:600">${_extractedCols}</span>`
+                    ? `<span class="sa-stats-accent-600">${_extractedCols}</span>`
                     : '0',
                 comment: _extractedCols > 0
                     ? 'Columns split/extracted from original columns via columnExtractors'
@@ -14901,7 +17202,7 @@ ${sections.join('\n')}
             {
                 stat: '🔁 Total derived columns',
                 value: _derivedCols > 0
-                    ? `<span style="color:${C.accent};font-weight:600">${_derivedCols}</span>`
+                    ? `<span class="sa-stats-accent-600">${_derivedCols}</span>`
                     : '0',
                 comment: _derivedCols > 0
                     ? 'Columns further derived from extracted columns via syntheticColumnExtractors'
@@ -14910,7 +17211,7 @@ ${sections.join('\n')}
             {
                 stat: '🔗 Total injected derived columns',
                 value: _iceDerivedCols > 0
-                    ? `<span style="color:${C.accent};font-weight:600">${_iceDerivedCols}</span>`
+                    ? `<span class="sa-stats-accent-600">${_iceDerivedCols}</span>`
                     : '0',
                 comment: _iceDerivedCols > 0
                     ? 'Columns derived from injected columns via injectedColumnExtractors (e.g. Release country, Release date, R-DD … R-Month)'
@@ -14919,7 +17220,7 @@ ${sections.join('\n')}
             {
                 stat: '💉 Total injected columns',
                 value: _injectedCols > 0
-                    ? `<span style="color:${C.accent};font-weight:600">${_injectedCols}</span>`
+                    ? `<span class="sa-stats-accent-600">${_injectedCols}</span>`
                     : '0',
                 comment: _injectedCols > 0
                     ? 'Columns populated asynchronously via external API calls (e.g. Relationships via WS2)'
@@ -14927,7 +17228,7 @@ ${sections.join('\n')}
             },
             {
                 stat: '⬛ Total columns',
-                value: `<span style="font-weight:600">${totalCols}</span>`,
+                value: `<span class="sa-stats-strong-600">${totalCols}</span>`,
                 comment: 'Total effective columns in the final rendered table',
             },
             {
@@ -14938,28 +17239,28 @@ ${sections.join('\n')}
             {
                 stat: '🙈 Hidden columns',
                 value: hiddenCols > 0
-                    ? `<span style="color:${C.alert};font-weight:600">${hiddenCols}</span>`
+                    ? `<span class="sa-stats-alert-600">${hiddenCols}</span>`
                     : '0',
                 comment: hiddenCols > 0 ? 'Use 👁️ Visible menu to restore' : '',
             },
             {
                 stat: '🔍 Global filter',
                 value: _gfRaw
-                    ? `<em style="color:${C.accent}">"${_gfRaw}"</em>${_filterFlagsHtml(_gfFlags)}`
-                    : '<span style="color:#999">none</span>',
+                    ? `<em class="sa-stats-accent">"${_gfRaw}"</em>${_filterFlagsHtml(_gfFlags)}`
+                    : '<span class="sa-stats-muted-999">none</span>',
                 comment: "check the '🔍 Filter' column in the 'Table Detail' section below",
             },
             {
                 stat: '📂 Sub-table filters',
                 value: _stFlt > 0
-                    ? `<span style="color:${C.accent};font-weight:600">${_stFlt} active</span>`
+                    ? `<span class="sa-stats-accent-600">${_stFlt} active</span>`
                     : '0',
                 comment: '',
             },
             {
                 stat: '🔠 Column filters',
                 value: _colFlt > 0
-                    ? `<span style="color:${C.accent};font-weight:600">${_colFlt} active</span>`
+                    ? `<span class="sa-stats-accent-600">${_colFlt} active</span>`
                     : '0',
                 comment: '',
             },
@@ -15003,7 +17304,7 @@ ${sections.join('\n')}
             const _idbPlaceholderRows = [
                 {
                     stat:    `🖼️ Art images store (IDB)`,
-                    value:   '<em style="color:#aaa">querying…</em>',
+                    value:   '<em class="sa-stats-faint">querying…</em>',
                     comment: _idbEnabled
                         ? `TTL: ${Lib.settings.sa_art_idb_image_ttl_days || 30} days — blob cache (sa_art_idb_enable)`
                         : '⚠️ IDB art cache disabled (sa_art_idb_enable = false)',
@@ -15011,7 +17312,7 @@ ${sections.join('\n')}
                 },
                 {
                     stat:    `📋 Art metadata store (IDB)`,
-                    value:   '<em style="color:#aaa">querying…</em>',
+                    value:   '<em class="sa-stats-faint">querying…</em>',
                     comment: _idbEnabled
                         ? `TTL: ${Lib.settings.sa_art_idb_metadata_ttl_days || 7} days — archive JSON metadata`
                         : '⚠️ IDB art cache disabled',
@@ -15019,7 +17320,7 @@ ${sections.join('\n')}
                 },
                 {
                     stat:    `🔗 Rel WS2 store (IDB)`,
-                    value:   '<em style="color:#aaa">querying…</em>',
+                    value:   '<em class="sa-stats-faint">querying…</em>',
                     comment: _relIdbEnabled
                         ? 'TTL: 7 days — relationship WS2 JSON responses (sa_rels_idb_enable)'
                         : '⚠️ IDB rel cache disabled (sa_rels_idb_enable = false)',
@@ -15114,7 +17415,7 @@ ${sections.join('\n')}
                 const _allRows = Array.from(_idbTbl.querySelectorAll('tbody tr'));
                 [0, 1, 2].forEach(i => {
                     const td = _allRows[i] && _allRows[i].querySelectorAll('td')[1];
-                    if (td) td.innerHTML = '<em style="color:#aaa">disabled</em>';
+                    if (td) td.innerHTML = '<em class="sa-stats-faint">disabled</em>';
                 });
             }
         }
@@ -15230,12 +17531,12 @@ ${sections.join('\n')}
 
             // Col 1: entity-type label (e.g. "Place", "Artist", …)
             chRow.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">${_entityTypeLabel}</span>`,
+                `<span class="sa-stats-muted-label">${_entityTypeLabel}</span>`,
                 { nowrap: true }));
 
             // Col 2: h1 entity name
             chRow.appendChild(_chTd(
-                `<strong style="color:${C.accent}">${_h1Text || '—'}</strong>`, {}));
+                `<strong class="sa-stats-accent">${_h1Text || '—'}</strong>`, {}));
 
             // Col 3: active filter value for this table.
             // For single-table pages there is no per-table sub-table filter;
@@ -15247,8 +17548,8 @@ ${sections.join('\n')}
                               : '';
             chRow.appendChild(_chTd(
                 _filterVal
-                    ? `<em style="color:${C.accent}">"${_filterVal}"</em>${_filterFlagsHtml(td.filter ? td.filterFlags : _gfFlags)}`
-                    : '<span style="color:#bbb">—</span>',
+                    ? `<em class="sa-stats-accent">"${_filterVal}"</em>${_filterFlagsHtml(td.filter ? td.filterFlags : _gfFlags)}`
+                    : '<span class="sa-stats-bbb">—</span>',
                 { nowrap: true,
                   title: _filterVal
                     ? `${_filterSrc}: "${_filterVal}"`
@@ -15258,9 +17559,9 @@ ${sections.join('\n')}
             const _hiddenRows = td.total - td.visible;
             chRow.appendChild(_chTd(
                 _hiddenRows > 0
-                    ? `<span style="color:${C.accent};font-weight:700">${td.visible.toLocaleString()}</span>` +
-                      ` <span style="font-size:0.83em;color:${C.muted}">/ ${td.total.toLocaleString()}</span>`
-                    : `<span style="font-weight:700">${td.total.toLocaleString()}</span>`,
+                    ? `<span class="sa-stats-accent-700">${td.visible.toLocaleString()}</span>` +
+                      ` <span class="sa-stats-muted-small">/ ${td.total.toLocaleString()}</span>`
+                    : `<span class="sa-stats-strong-700">${td.total.toLocaleString()}</span>`,
                 { right: true, nowrap: true }));
 
             // Col 5: artwork count — rows with confirmed front artwork for this sub-table.
@@ -15269,8 +17570,8 @@ ${sections.join('\n')}
             // started or loading not yet complete).
             chRow.appendChild(_chTd(
                 td.caaCount > 0
-                    ? `🖼️ <span style="color:${C.accent};font-weight:700">${td.caaCount.toLocaleString()}</span>`
-                    : '<span style="color:#bbb;font-size:0.9em" title="Loading artwork — count updates when image loading completes">—</span>',
+                    ? `🖼️ <span class="sa-stats-accent-700">${td.caaCount.toLocaleString()}</span>`
+                    : '<span class="sa-stats-bbb-small" title="Loading artwork — count updates when image loading completes">—</span>',
                 { right: true, nowrap: true }));
 
             // ── Row 2: "Table name" label | table name | column labels ─────────
@@ -15278,22 +17579,22 @@ ${sections.join('\n')}
 
             // Col 1: "Table name" label (replaces old "h2/h3")
             chRow2.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Table name</span>`,
+                `<span class="sa-stats-muted-label">Table name</span>`,
                 { nowrap: true }));
 
             // Col 2: table name (from h3 or h2)
             chRow2.appendChild(_chTd(
-                `<span style="font-weight:600">${td.name}</span>`, {}));
+                `<span class="sa-stats-strong-600">${td.name}</span>`, {}));
 
             // Col 3–5: column-header labels (muted, small)
             chRow2.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Active filter</span>`,
+                `<span class="sa-stats-muted-label">Active filter</span>`,
                 { small: true }));
             chRow2.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Filtered rows</span>`,
+                `<span class="sa-stats-muted-label">Filtered rows</span>`,
                 { small: true, right: true }));
             chRow2.appendChild(_chTd(
-                `<span style="font-size:0.8em;color:${C.muted}">Rows with ${_artKey} artwork</span>`,
+                `<span class="sa-stats-muted-label">Rows with ${_artKey} artwork</span>`,
                 { small: true, right: true }));
 
             cardHdr.appendChild(chRow);
@@ -15378,37 +17679,37 @@ ${sections.join('\n')}
                     // Column name cell — tinted background for synthetic columns
                     cr.appendChild(_mkColTd(
                         col.visible
-                            ? `<strong${col.colType !== 'original' ? ` style="color:${C.accent}"` : ''}>${col.name}</strong>`
-                            : `<span style="text-decoration:line-through;color:#aaa">${col.name}</span>`
+                            ? `<strong${col.colType !== 'original' ? ` class="sa-stats-accent"` : ''}>${col.name}</strong>`
+                            : `<span class="sa-stats-strikethrough">${col.name}</span>`
                     ));
                     cr.appendChild(_mkColTd(
                         col.visible
-                            ? `<span style="color:#388e3c">✔ yes</span>`
-                            : `<span style="color:#c62828">✘ no</span>`,
+                            ? `<span class="sa-stats-green">✔ yes</span>`
+                            : `<span class="sa-stats-alert">✘ no</span>`,
                         { center: true }
                     ));
-                    const _sc = col.sort.startsWith('▲') ? C.accent
-                        : col.sort.startsWith('▼') ? C.alert : C.muted;
+                    const _scClass = col.sort.startsWith('▲') ? 'sa-stats-accent'
+                        : col.sort.startsWith('▼') ? 'sa-stats-alert' : 'sa-stats-muted';
                     cr.appendChild(_mkColTd(
-                        `<span style="color:${_sc}">${col.sort}</span>`,
+                        `<span class="${_scClass}">${col.sort}</span>`,
                         { center: true }
                     ));
                     cr.appendChild(_mkColTd(String(col.unique), { right: true }));
                     cr.appendChild(_mkColTd(
                         col.multiRow > 0
-                            ? `<span style="color:${C.accent}">${col.multiRow}</span>`
-                            : `<span style="color:#bbb">0</span>`,
+                            ? `<span class="sa-stats-accent">${col.multiRow}</span>`
+                            : `<span class="sa-stats-bbb">0</span>`,
                         { right: true }
                     ));
                     cr.appendChild(_mkColTd(
                         col.filter
-                            ? `<em style="color:${C.accent}">"${col.filter}"</em>`
-                            : '<span style="color:#bbb">—</span>'
+                            ? `<em class="sa-stats-accent">"${col.filter}"</em>`
+                            : '<span class="sa-stats-bbb">—</span>'
                     ));
                     cr.appendChild(_mkColTd(
                         col.resize === 'default'
-                            ? '<span style="color:#bbb">default</span>'
-                            : `<span style="color:${C.accent}">${col.resize}</span>`
+                            ? '<span class="sa-stats-bbb">default</span>'
+                            : `<span class="sa-stats-accent">${col.resize}</span>`
                     ));
                     colTbody.appendChild(cr);
                 });
@@ -16916,6 +19217,20 @@ a { color: #1565c0; }`;
                 }
             }
 
+            // ── Cap prose collapsable columns (e.g. "Annotation") ──────────────
+            // The measurement pass above clones cell content into a
+            // white-space:nowrap div, which for a long free-text paragraph
+            // produces its full unwrapped single-line width — the live cell's
+            // initCollapsableColumns height-clamp only constrains vertical
+            // size, not that detached clone's width. Cap instead of measuring
+            // these columns at their natural width. See _getProseColumnMaxWidth().
+            for (let colIndex = 0; colIndex < columnCount; colIndex++) {
+                if (!columnVisible[colIndex]) continue;
+                if (_isProseCollapseColumn(table, colIndex)) {
+                    columnWidths[colIndex] = Math.min(columnWidths[colIndex], _getProseColumnMaxWidth());
+                }
+            }
+
             // Apply widths via colgroup
             let colgroup = table.querySelector('colgroup');
             if (!colgroup) {
@@ -17137,9 +19452,18 @@ a { color: #1565c0; }`;
             font-size: 16px;
             text-align: center;
         `;
+        // GM_addStyle so this overlay's CSS is exempt from page CSP style-src
+        // restrictions. Fully static, safe to inject once.
+        if (!document.getElementById('sa-resize-overlay-style')) {
+            const roStyle = GM_addStyle(`
+                #mb-resize-heading { margin-bottom: 10px; }
+                #mb-resize-progress { font-size: 14px; }
+            `);
+            roStyle.id = 'sa-resize-overlay-style';
+        }
         _resizeOverlay.innerHTML = `
-            <div id="mb-resize-heading" style="margin-bottom: 10px;">📐 Measuring column widths…</div>
-            <div id="mb-resize-progress" style="font-size: 14px;">Preparing…</div>
+            <div id="mb-resize-heading">📐 Measuring column widths…</div>
+            <div id="mb-resize-progress">Preparing…</div>
         `;
         document.body.appendChild(_resizeOverlay);
         const _resizeHeading  = _resizeOverlay.querySelector('#mb-resize-heading');
@@ -17341,6 +19665,18 @@ a { color: #1565c0; }`;
                 }
             }
 
+            // ── Cap prose collapsable columns (e.g. "Annotation") ──────────────
+            // The live-table nowrap pass above expands each column's <th> to fit
+            // the widest single-line cell content — for a long free-text
+            // paragraph that's its full unwrapped width. initCollapsableColumns's
+            // height-clamp only constrains vertical size, not this nowrap
+            // measurement, so cap these columns instead. See _getProseColumnMaxWidth().
+            for (let colIndex = 0; colIndex < columnCount; colIndex++) {
+                if (!columnVisible[colIndex]) continue;
+                if (_isProseCollapseColumn(table, colIndex)) {
+                    columnWidths[colIndex] = Math.min(columnWidths[colIndex], _getProseColumnMaxWidth());
+                }
+            }
 
             // Apply widths to table columns
             // Use colgroup for better performance
@@ -17508,8 +19844,8 @@ a { color: #1565c0; }`;
 
         const sidebarWidth = '240px';
 
-        const style = document.createElement('style');
-        style.textContent = `
+        // GM_addStyle so this is exempt from page CSP style-src restrictions.
+        const style = GM_addStyle(`
             /* Sidebar with proper overflow handling */
             #sidebar {
                 transition: transform 0.3s ease, width 0.3s ease, opacity 0.3s ease, margin-right 0.3s ease;
@@ -17612,8 +19948,7 @@ a { color: #1565c0; }`;
             body.sidebar-is-collapsed #content {
                 margin-right: 0 !important;
             }
-        `;
-        document.head.appendChild(style);
+        `);
 
         const handle = document.createElement('div');
         handle.id = 'sidebar-toggle-handle';
@@ -17770,6 +20105,33 @@ a { color: #1565c0; }`;
         });
     }
 
+    /**
+     * Auto-clicks MusicBrainz's own native "Show more..." annotation-toggle
+     * link (`<a class="annotation-toggle" href="#">Show more...</a>`) on
+     * entity pages, so a long Annotation section is already fully expanded
+     * on load instead of truncated behind `div.annotation-body
+     * .annotation-collapsed` (see `debug/showmore.html`).
+     *
+     * Deliberately calls `.click()` rather than replicating MB's own
+     * collapse/expand DOM logic — this defers entirely to whatever MB's
+     * native handler actually does (removing `.annotation-collapsed`,
+     * dropping the toggle `<p>`, …) and stays correct even if MB changes
+     * that implementation.
+     *
+     * Called unconditionally, before page-type detection below — bare
+     * entity pages (e.g. `/work/<mbid>`) have no matching `pageDefinitions`
+     * entry, and the init block below returns early for those
+     * (`!pageType || !headerContainer`), so this must not depend on
+     * `pageType`/`headerContainer` at all to still run there.
+     */
+    function autoExpandNativeAnnotation() {
+        document.querySelectorAll('a.annotation-toggle').forEach(link => link.click());
+    }
+
+    if (Lib.settings.sa_enable_annotation_auto_expand) {
+        autoExpandNativeAnnotation();
+    }
+
     // --- Initialization Logic ---
 
     // 1. Detect Page Type
@@ -17803,6 +20165,19 @@ a { color: #1565c0; }`;
                           document.querySelector('h1 a bdi')?.parentNode ||
                           document.querySelector('#content h1') || // Often catches search result headers
                           document.querySelector('h1');
+
+    // user-edits / user-open-edits ('/user/<username>/edits[/open]') render no
+    // <h1> at all — confirmed live, not just in the debug snapshots (every
+    // fallback above requires an <h1>, so headerContainer would otherwise stay
+    // null and the whole script aborts at the check below). The only heading
+    // on these pages is the native <h2>Edits by <username></h2> / <h2>Open
+    // edits by <username></h2> — use that instead. Scoped to these two
+    // pageTypes specifically (not a blanket "no h1 → fall back to any h2"
+    // rule) so no other page type's legitimately-missing-h1 case starts
+    // silently picking up an unrelated h2.
+    if (!headerContainer && (pageType === 'user-edits' || pageType === 'user-open-edits')) {
+        headerContainer = document.querySelector('#content h2') || document.querySelector('h2');
+    }
 
     if (pageType) Lib.prefix = `[VZ-${SCRIPT_BASE_NAME}: ${pageType}]`;
     Lib.debug('init', 'Initializing script for path:', path);
@@ -18721,6 +21096,7 @@ a { color: #1565c0; }`;
             input.value = '';
             input.style.backgroundColor = '';
             delete input.dataset.mbMultirowMode;
+            delete input.dataset.mbUniqValues;
         });
 
         // Re-run filter to update display
@@ -18914,6 +21290,7 @@ a { color: #1565c0; }`;
             input.value = '';
             input.style.backgroundColor = '';
             delete input.dataset.mbMultirowMode;
+            delete input.dataset.mbUniqValues;
         });
 
         // Also clear the sub-table (STF) filter input for this table and restore
@@ -18960,8 +21337,10 @@ a { color: #1565c0; }`;
     controlsContainer.insertBefore(stopBtn, initialDivider);
     // Filter container is NOT appended here anymore; moved to H2 later
 
-    const style = document.createElement('style');
-    style.textContent = `
+    // GM_addStyle so this is exempt from page CSP style-src restrictions
+    // (MusicBrainz's account/* pages serve a CSP with no 'unsafe-inline' for
+    // style-src, which silently drops plain injected <style> tags).
+    const style = GM_addStyle(`
         .mb-sorting-active, .mb-sorting-active * { cursor: wait !important; }
         .mb-show-all-btn-active { transform: translateY(1px); box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
         button.mb-show-all-btn-loading:disabled {
@@ -19172,6 +21551,18 @@ a { color: #1565c0; }`;
         .mb-filter-status { font-family: 'Courier New', monospace; font-size: 1.0em; vertical-align: middle; margin-right: 4px; }
         .mb-sort-status { font-family: 'Arial', sans-serif; font-size: 1.0em; font-style: italic; vertical-align: middle; }
         .mb-toggle-h2 { cursor: pointer; user-select: none; background-color: ${Lib.settings.sa_ui_h2_bg || '#fff3e0'}; }
+        /* Wiki-rendered <h2> sub-headings nested inside table.tbl cells (e.g. an
+           "Annotation" column's "== Known performances ==") reuse the same
+           .mb-toggle-h2 class as page-level H2 sections (see makeH2sCollapsible() /
+           _rewireNestedTableH2Toggles()), but get their own colors — deliberately
+           different from sa_ui_h2_bg/sa_ui_h2_color so a table-cell sub-heading
+           never gets confused with a page-level section heading. Higher selector
+           specificity than the bare .mb-toggle-h2 rule above wins here without
+           needing !important. */
+        table.tbl h2.mb-toggle-h2 {
+            background-color: ${Lib.settings.sa_annotation_h2_bg || '#e3f2fd'};
+            color: ${Lib.settings.sa_annotation_h2_color || '#1565c0'};
+        }
         .mb-toggle-icon { font-size: 0.8em; margin-right: 8px; color: #666; width: 12px; display: inline-block; cursor: pointer; }
         .mb-master-toggle {
             cursor: pointer;
@@ -19412,6 +21803,27 @@ a { color: #1565c0; }`;
             padding-right: 22px !important;
         }
 
+        /* Prose (free-text) collapsable cells — e.g. "Annotation" columns.
+           Wraps a cell's existing content; height-clamped by default and
+           expanded via .mb-text-clamp-expanded (toggled by the same
+           .mb-cell-collapse-toggle used for list cells, see
+           initCollapsableColumns / ensureCollapseDelegate / _applyCollapseState).
+           No fade-out gradient at the clamp edge: some source cells (e.g.
+           Discogs-sourced release annotations) carry an explicit inline
+           background colour on the <td>, and a hardcoded gradient would not
+           reliably match it — the ▶ more toggle alone signals truncation. */
+        .mb-text-clamp-inner {
+            max-height: ${Lib.settings.sa_annotation_column_max_height_em || 5.6}em; /* sa_annotation_column_max_height_em */
+            overflow: hidden;
+        }
+        .mb-text-clamp-inner.mb-text-clamp-expanded {
+            max-height: none;
+        }
+        .mb-cell-collapse-label {
+            pointer-events: none;
+            user-select: none;
+        }
+
         /* Per-column ▶▤/▼▤ toggle button inserted into the .mb-col-hdr-flex row
            with margin-left:auto, immediately before the 📊 unique-values button.
            ▶▤ = all cells collapsed; ▼▤ = at least one cell expanded. */
@@ -19517,6 +21929,23 @@ a { color: #1565c0; }`;
         .mb-col-uniq-multirow-item {
             background: #f0f4f8;
             font-style: italic;
+        }
+        /* Checkbox glyph (☑/☐) prefixed to each regular value item, enabling
+           multi-select. Not a native <input type="checkbox"> — see renderItems(). */
+        .mb-col-uniq-checkbox {
+            display: inline-block;
+            width: 1.1em;
+            margin-right: 5px;
+            text-align: center;
+            user-select: none;
+            flex-shrink: 0;
+        }
+        /* Checked state: distinct resting background so multi-selected items
+           remain visually identifiable even when not hovered/focused. The
+           higher-specificity :hover / .mb-uniq-focused rules above still win. */
+        .mb-col-uniq-item.mb-col-uniq-checked {
+            background: #eaf7e6;
+            font-weight: 600;
         }
         .mb-col-uniq-empty {
             padding: 7px 12px;
@@ -19685,14 +22114,12 @@ a { color: #1565c0; }`;
                 box-shadow: 0 0 0 4px rgba(26,115,232,0.28) !important;
             }
         }
-    `;
-    document.head.appendChild(style);
+    `);
 
     // ── Relationships-column CSS ───────────────────────────────────────
+    // GM_addStyle so this is exempt from page CSP style-src restrictions.
     (() => {
-        const _rs = document.createElement('style');
-        _rs.id = 'mb-rel-column-style';
-        _rs.textContent = `
+        const _rs = GM_addStyle(`
             th.mb-injected-column { font-style: italic; }
             /* td.mb-rel-cell: host cell for async relationship icon links.
                No CSS rules on the <a> elements — they are plain inline anchors
@@ -19748,8 +22175,8 @@ a { color: #1565c0; }`;
                 margin: 1px;
                 padding: 0;
             }
-        `;
-        document.head.appendChild(_rs);
+        `);
+        _rs.id = 'mb-rel-column-style';
     })();
 
     if (Lib.settings.sa_enable_count_stat_tooltip) {
@@ -20058,6 +22485,22 @@ a { color: #1565c0; }`;
     // Updated by every toggle click; read by initCollapsableColumns, testRowMatch,
     // and openUniqDrop so they all agree even after renderFinalTable+init resets the DOM.
     const expandedCells = new Map();
+    // Tracks which "rowIdx:localityColIdx" pairs have already had their Locality
+    // value forced into Region by initAreaFlagRegionObserver() (see near
+    // initTreleasesObserver) — an idempotency guard so a row is never corrected
+    // twice. Applied directly to the master row (allRows / groupedRows), so
+    // unlike expandedCells no per-render replay is needed: cloneNode(true)
+    // carries the corrected DOM content forward automatically.
+    const _areaFlagRegionCorrected = new Set();
+    // Tracks which "Edit details"/"Edit notes" columns (edits pageType) have
+    // already had their overflowing cells pre-populated into expandedCells
+    // for this fetch — see initCollapsableColumns. Ensures the "start
+    // expanded by default" behavior (sa_edits_enable_details_collapse /
+    // sa_edits_enable_notes_collapse off) only forces cells open ONCE, on
+    // the first render after a fetch; a user's subsequent manual collapse
+    // must stick across later sort/filter re-renders instead of being
+    // silently re-expanded every time initCollapsableColumns runs again.
+    const _editsProseDefaultExpandedCols = new Set();
     // Sparse text cache for source rows, keyed by TR element.
     // Populated lazily by _cachedFullText / _cachedColText on matchOnly=true passes.
     // Entries are GC'd automatically when allRows / groupedRows are replaced.
@@ -20142,6 +22585,13 @@ a { color: #1565c0; }`;
     let multiTableSortStates = new Map();
     // Registry of per-table tint functions so renderFinalTable can re-apply tints after re-render
     let multiSortTintRegistry = new Map(); // sortKey → { applyTints, clearTints }
+    // Registry of per-table comparator getters, keyed the same way as multiTableSortStates.
+    // Lets runFilter()/_applyDiscographyViewFilter('merged') re-sort a category's combined
+    // row set (rows pulled from several groupedRows entries) using the sort currently active
+    // on the visible (first-occurrence) table for that category, instead of leaving
+    // non-resorted contributor groups' rows in their original concatenation order.
+    // sortKey → () => compareFn|null (null = no active sort, keep insertion order)
+    let mergedSortComparatorRegistry = new Map();
 
     // Track highlight toggle states separately
     let prefilterHighlightEnabled = true;
@@ -20189,11 +22639,42 @@ a { color: #1565c0; }`;
      * @param {File|null}   file       - The File object (for legacy filename parsing), or null.
      * @returns {string} HTML string for the meta block (ready to set as innerHTML).
      */
+    /**
+     * Lazily injects the shared, id-guarded stylesheet for
+     * {@link buildMetaBlockHTML}'s output. Uses GM_addStyle (not a plain
+     * document.createElement('style') + head.appendChild) so it is exempt
+     * from page CSP style-src restrictions — MusicBrainz's account/* pages
+     * block plain inline stylesheets and inline style="..." attributes
+     * alike. Classes here are generic (not scoped per dialog instance), so
+     * this only needs to run once regardless of how many dialogs
+     * (Save/Load) render a metadata block.
+     */
+    function _ensureMetaBlockStyle() {
+        if (document.getElementById('sa-meta-block-style')) return;
+        const style = GM_addStyle(`
+            .sa-meta-dash { color:#bbb; }
+            .sa-meta-legacy { color:#888; font-style:italic; }
+            .sa-meta-legacy-hint { font-size:0.85em; }
+            .sa-meta-label { padding:3px 10px 3px 0; color:#666; font-weight:600; white-space:nowrap; vertical-align:top; }
+            .sa-meta-value { padding:3px 0; word-break:break-all; }
+            .sa-meta-filtered-note { color:#e65100; font-size:0.85em; }
+            .sa-meta-mode-badge { color:#fff; border-radius:3px; padding:0 5px; font-size:0.82em; }
+            .sa-meta-mode-multi { background:#1565c0; }
+            .sa-meta-mode-single { background:#2e7d32; }
+            .sa-meta-url-link { color:#1565c0; font-size:0.88em; word-break:break-all; }
+            .sa-meta-version-badge { background:#f5f5f5; border:1px solid #ddd; border-radius:3px; padding:0 5px; font-size:0.85em; }
+            .sa-meta-header { font-size:0.82em; color:#555; margin-bottom:6px; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; }
+            .sa-meta-table { border-collapse:collapse; width:100%; font-size:0.88em; line-height:1.5; }
+        `);
+        style.id = 'sa-meta-block-style';
+    }
+
     function buildMetaBlockHTML(data, totalRows, file = null) {
+        _ensureMetaBlockStyle();
         const esc  = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const dash = '<span style="color:#bbb;">—</span>';
+        const dash = '<span class="sa-meta-dash">—</span>';
         const legacyVal = (val) => val
-            ? `<span style="color:#888;font-style:italic;">${esc(val)} <span style="font-size:0.85em;">(from filename)</span></span>`
+            ? `<span class="sa-meta-legacy">${esc(val)} <span class="sa-meta-legacy-hint">(from filename)</span></span>`
             : dash;
         const fmtDate = (ts) => {
             if (!ts) return '\u2014';
@@ -20201,8 +22682,8 @@ a { color: #1565c0; }`;
         };
         const row = (label, value) =>
             `<tr>` +
-            `<td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">${label}</td>` +
-            `<td style="padding:3px 0;word-break:break-all;">${value}</td>` +
+            `<td class="sa-meta-label">${label}</td>` +
+            `<td class="sa-meta-value">${value}</td>` +
             `</tr>`;
 
         const fname     = file ? file.name : '';
@@ -20245,22 +22726,22 @@ a { color: #1565c0; }`;
         const displayDetail   = data.detailSegment ? esc(data.detailSegment) : dash;
         const isFiltered      = (data.pageType || '').endsWith('-filtered');
         const pageTypeDisplay = esc(data.pageType || '')
-            + (isFiltered ? ' <span style="color:#e65100;font-size:0.85em;">(filtered)</span>' : '');
-        const modeColor   = data.tableMode === 'multi' ? '#1565c0' : '#2e7d32';
+            + (isFiltered ? ' <span class="sa-meta-filtered-note">(filtered)</span>' : '');
+        const modeClass   = data.tableMode === 'multi' ? 'sa-meta-mode-multi' : 'sa-meta-mode-single';
         const modeDisplay = data.tableMode
-            ? `<span style="background:${modeColor};color:#fff;border-radius:3px;padding:0 5px;font-size:0.82em;">${esc(data.tableMode)}</span>`
+            ? `<span class="sa-meta-mode-badge ${modeClass}">${esc(data.tableMode)}</span>`
             : dash;
         const btnLabelDisplay = data.buttonLabel ? `<em>${esc(data.buttonLabel)}</em>` : dash;
         const urlDisplay = data.url
-            ? `<a href="${esc(data.url)}" target="_blank" style="color:#1565c0;font-size:0.88em;word-break:break-all;">${esc(data.url)}</a>`
+            ? `<a href="${esc(data.url)}" target="_blank" class="sa-meta-url-link">${esc(data.url)}</a>`
             : dash;
         const verDisplay = data.version
-            ? `<span style="background:#f5f5f5;border:1px solid #ddd;border-radius:3px;padding:0 5px;font-size:0.85em;">${esc(data.version)}</span>`
+            ? `<span class="sa-meta-version-badge">${esc(data.version)}</span>`
             : dash;
 
         return (
-            `<div style="font-size:0.82em;color:#555;margin-bottom:6px;font-weight:700;letter-spacing:0.03em;text-transform:uppercase;">&#128196; File Metadata</div>` +
-            `<table style="border-collapse:collapse;width:100%;font-size:0.88em;line-height:1.5;">` +
+            `<div class="sa-meta-header">&#128196; File Metadata</div>` +
+            `<table class="sa-meta-table">` +
             row('Entity type',  displayEntityType) +
             row('Entity name',  displayEntityName) +
             row('Section',      displaySectionSuffix) +
@@ -20318,26 +22799,46 @@ a { color: #1565c0; }`;
 
         const totalRows = dataToSave.rowCount || 0;
 
+        // GM_addStyle so this dialog shell's CSS is exempt from page CSP
+        // style-src restrictions (see showLoadFilterDialog's identical
+        // treatment). Idempotent — headerFontSz/statusFontSz only change via
+        // a settings save, which reloads the page.
+        if (!document.getElementById('sa-save-shell-style')) {
+            const shellStyle = GM_addStyle(`
+                #sa-sd-drag-handle { margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px; cursor:move; user-select:none; }
+                #sa-sd-title { margin:0; color:#222; font-size:1.2em; }
+                #sa-sd-subtitle { margin:5px 0 0; color:#666; font-size:${headerFontSz}; }
+                #sa-sd-meta-block { margin-bottom:16px; border:1px solid #eee; border-radius:6px; padding:10px 14px; background:#fafafa; }
+                #sa-sd-filename-row { margin-bottom:14px; }
+                #sa-sd-filename-label { display:block; font-size:0.88em; font-weight:600; color:#444; margin-bottom:5px; }
+                #sa-sd-filename-input { width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #ccc; border-radius:6px; font-size:0.9em; font-family:monospace; outline:none; }
+                #sa-sd-btn-row { display:flex; gap:12px; margin-bottom:8px; }
+                #sa-sd-save-confirm { flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                #sa-sd-cancel { flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                #sa-sd-status { display:none; padding:5px 2px; font-size:${statusFontSz}; min-height:20px; }
+            `);
+            shellStyle.id = 'sa-save-shell-style';
+        }
+
         dialog.innerHTML = `
-            <div id="sa-sd-drag-handle" style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;cursor:move;user-select:none;">
-                <h3 style="margin:0;color:#222;font-size:1.2em;">&#128190; Save Table Data</h3>
-                <p style="margin:5px 0 0;color:#666;font-size:${headerFontSz};">Review the metadata below, optionally edit the filename, then click <strong>Save Data</strong> to download the compressed JSON file.</p>
+            <div id="sa-sd-drag-handle">
+                <h3 id="sa-sd-title">&#128190; Save Table Data</h3>
+                <p id="sa-sd-subtitle">Review the metadata below, optionally edit the filename, then click <strong>Save Data</strong> to download the compressed JSON file.</p>
             </div>
-            <div id="sa-sd-meta-block" style="margin-bottom:16px;border:1px solid #eee;border-radius:6px;padding:10px 14px;background:#fafafa;">
+            <div id="sa-sd-meta-block">
                 ${buildMetaBlockHTML(dataToSave, totalRows, null)}
             </div>
-            <div style="margin-bottom:14px;">
-                <label for="sa-sd-filename-input" style="display:block;font-size:0.88em;font-weight:600;color:#444;margin-bottom:5px;">&#128462; Filename</label>
-                <input id="sa-sd-filename-input" type="text" value=""
-                    style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;font-family:monospace;outline:none;">
+            <div id="sa-sd-filename-row">
+                <label for="sa-sd-filename-input" id="sa-sd-filename-label">&#128462; Filename</label>
+                <input id="sa-sd-filename-input" type="text" value="">
             </div>
-            <div style="display:flex;gap:12px;margin-bottom:8px;">
-                <button id="sa-sd-save-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                    <span>&#128190; <span style="text-decoration:underline">S</span>ave Data</span>
+            <div id="sa-sd-btn-row">
+                <button id="sa-sd-save-confirm">
+                    <span>&#128190; <u>S</u>ave Data</span>
                 </button>
-                <button id="sa-sd-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">Cancel</button>
+                <button id="sa-sd-cancel">Cancel</button>
             </div>
-            <div id="sa-sd-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
+            <div id="sa-sd-status"></div>
         `;
 
         document.body.appendChild(dialog);
@@ -20366,9 +22867,8 @@ a { color: #1565c0; }`;
         // ── Hover styles ──────────────────────────────────────────────────────
         const styleId = 'sa-save-dialog-styles';
         if (!document.getElementById(styleId)) {
-            const s = document.createElement('style');
-            s.id = styleId;
-            s.textContent = `
+            // GM_addStyle so this is exempt from page CSP style-src restrictions.
+            const s = GM_addStyle(`
                 #sa-sd-save-confirm:hover:not([disabled]) { background:#45a049 !important; }
                 #sa-sd-cancel:hover                        { background:#e0e0e0 !important; }
                 #sa-sd-save-confirm:active:not([disabled]),
@@ -20376,8 +22876,8 @@ a { color: #1565c0; }`;
                     transform: translateY(1px);
                     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
                 }
-            `;
-            document.head.appendChild(s);
+            `);
+            s.id = styleId;
         }
 
         // ── Refs ──────────────────────────────────────────────────────────────
@@ -20466,7 +22966,7 @@ a { color: #1565c0; }`;
             statusDiv.style.color   = '#2e7d32';
             statusDiv.style.display = 'block';
 
-            saveBtn.innerHTML     = '&#128190; <span style="text-decoration:underline">S</span>ave Data';
+            saveBtn.innerHTML     = '&#128190; <u>S</u>ave Data';
             saveBtn.disabled      = false;
             saveBtn.style.opacity = '';
 
@@ -20523,77 +23023,124 @@ a { color: #1565c0; }`;
             'max-height:calc(100vh - 60px)', 'overflow-y:auto', 'resize:both', 'box-sizing:border-box',
         ].join(';');
 
+        // GM_addStyle so this dialog's CSS is exempt from page CSP style-src
+        // restrictions (see showSaveDialog/showLoadFilterDialog's identical
+        // treatment). Idempotent — headerFontSz only changes via a settings
+        // save, which reloads the page. Reuses the shared .mb-fhw-mark class
+        // from _ensureFilterHistoryWidgetStyle() for the quick-filter
+        // highlight (same visual as every other filter-history mark).
+        _ensureFilterHistoryWidgetStyle();
+        if (!document.getElementById('sa-epl-style')) {
+            const eplStyle = GM_addStyle(`
+                #sa-epl-drag { margin-bottom:14px; border-bottom:1px solid #eee; padding-bottom:10px; cursor:move; user-select:none; }
+                #sa-epl-title { margin:0; color:#222; font-size:1.1em; }
+                #sa-epl-subtitle { margin:4px 0 0; color:#666; font-size:${headerFontSz}; }
+                #sa-epl-qf-row { margin-bottom:10px; }
+                #sa-epl-qf-inner { position:relative; display:flex; align-items:center; }
+                #sa-epl-qf { width:100%; box-sizing:border-box; padding:6px 32px 6px 10px; border:1px solid #ccc; border-radius:6px; font-size:0.9em; outline:none; }
+                #sa-epl-qf-clear-btn { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#c0392b; font-size:0.95em; font-weight:bold; line-height:1; padding:2px 3px; border-radius:3px; display:none; }
+                #sa-epl-table-wrap { border:1px solid #ddd; border-radius:6px; overflow:auto; max-height:320px; margin-bottom:12px; }
+                #sa-epl-table { width:100%; border-collapse:collapse; font-size:0.88em; }
+                #sa-epl-thead-row { background:#f5f5f5; position:sticky; top:0; z-index:1; }
+                .sa-epl-th-left, .sa-epl-th-center { border-bottom:2px solid #ddd; font-weight:700; }
+                .sa-epl-th-left { padding:6px 10px; text-align:left; }
+                .sa-epl-th-center { padding:6px 4px; text-align:center; }
+                #sa-epl-form { display:none; background:#f9f9f9; border:1px solid #ddd; border-radius:6px; padding:12px; margin-bottom:12px; }
+                #sa-epl-form-input-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+                #sa-epl-input { flex:1; padding:7px 10px; border:1px solid #ccc; border-radius:6px; font-size:0.9em; outline:none; }
+                #sa-epl-checkbox-row { display:flex; gap:16px; margin-bottom:8px; flex-wrap:wrap; }
+                .sa-epl-checkbox-label { cursor:pointer; display:flex; align-items:center; gap:5px; font-size:0.88em; font-weight:600; }
+                #sa-epl-form-btn-row { display:flex; gap:8px; }
+                #sa-epl-form-apply { padding:6px 14px; background:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.88em; }
+                #sa-epl-form-discard { padding:6px 14px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer; font-size:0.88em; }
+                #sa-epl-status { min-height:18px; font-size:0.82em; color:#888; margin-bottom:10px; }
+                #sa-epl-action-row { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+                #sa-epl-add-btn { padding:7px 12px; background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.85em; }
+                #sa-epl-edit-btn { padding:7px 12px; background:#fff8e1; color:#e65100; border:1px solid #ffe082; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.85em; }
+                #sa-epl-remove-btn { padding:7px 12px; background:#ffebee; color:#c62828; border:1px solid #ef9a9a; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.85em; }
+                .sa-epl-spacer { flex:1; }
+                #sa-epl-save-btn { padding:7px 14px; background:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; font-size:0.88em; }
+                #sa-epl-cancel-btn { padding:7px 14px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer; font-size:0.88em; }
+                .sa-epl-mark-icon { font-size:0.9em; cursor:default; user-select:none; }
+                .sa-epl-row { cursor:pointer; border-bottom:1px solid #eee; }
+                .sa-epl-row-sel { background:#e3f2fd; outline:2px solid #90caf9; }
+                .sa-epl-row-mrk { background:#fffde7; outline:1px dashed #f9a825; }
+                .sa-epl-td-idx { padding:5px 6px; color:#aaa; font-size:0.82em; white-space:nowrap; }
+                .sa-epl-td-query { padding:5px 10px; font-size:0.9em; word-break:break-all; }
+                .sa-epl-td-center { padding:5px 4px; text-align:center; }
+                .sa-epl-empty { padding:12px; text-align:center; color:#aaa; font-size:0.88em; }
+            `);
+            eplStyle.id = 'sa-epl-style';
+        }
+
         dlg.innerHTML = `
-            <div id="sa-epl-drag" style="margin-bottom:14px;border-bottom:1px solid #eee;padding-bottom:10px;cursor:move;user-select:none;">
-                <h3 style="margin:0;color:#222;font-size:1.1em;">&#128204; Edit Pinned Filter List</h3>
-                <p style="margin:4px 0 0;color:#666;font-size:${headerFontSz};">Add, edit or remove entries from the persistent pinned filter list. Changes take effect only when you click <strong>Save</strong>.</p>
+            <div id="sa-epl-drag">
+                <h3 id="sa-epl-title">&#128204; Edit Pinned Filter List</h3>
+                <p id="sa-epl-subtitle">Add, edit or remove entries from the persistent pinned filter list. Changes take effect only when you click <strong>Save</strong>.</p>
             </div>
             <!-- Quick filter -->
-            <div style="margin-bottom:10px;">
-                <div style="position:relative;display:flex;align-items:center;">
-                    <input id="sa-epl-qf" type="text" placeholder="&#128269; Quick filter list..."
-                        style="width:100%;box-sizing:border-box;padding:6px 32px 6px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;outline:none;">
+            <div id="sa-epl-qf-row">
+                <div id="sa-epl-qf-inner">
+                    <input id="sa-epl-qf" type="text" placeholder="&#128269; Quick filter list...">
                     <button id="sa-epl-qf-clear-btn" tabindex="-1"
-                        title="Clear quick filter"
-                        style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#c0392b;font-size:0.95em;font-weight:bold;line-height:1;padding:2px 3px;border-radius:3px;display:none;">&#10005;</button>
+                        title="Clear quick filter">&#10005;</button>
                 </div>
             </div>
             <!-- Entry table -->
-            <div id="sa-epl-table-wrap" style="border:1px solid #ddd;border-radius:6px;overflow:auto;max-height:320px;margin-bottom:12px;">
-                <table id="sa-epl-table" style="width:100%;border-collapse:collapse;font-size:0.88em;">
+            <div id="sa-epl-table-wrap">
+                <table id="sa-epl-table">
                     <thead>
-                        <tr style="background:#f5f5f5;position:sticky;top:0;z-index:1;">
-                            <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #ddd;font-weight:700;">#</th>
-                            <th style="padding:6px 10px;text-align:left;border-bottom:2px solid #ddd;font-weight:700;">Filter Expression</th>
-                            <th style="padding:6px 4px;text-align:center;border-bottom:2px solid #ddd;font-weight:700;" title="Case Sensitive">Cs</th>
-                            <th style="padding:6px 4px;text-align:center;border-bottom:2px solid #ddd;font-weight:700;" title="Regular Expression">Re</th>
-                            <th style="padding:6px 4px;text-align:center;border-bottom:2px solid #ddd;font-weight:700;" title="Exclude Matches">Ex</th>
+                        <tr id="sa-epl-thead-row">
+                            <th class="sa-epl-th-left">#</th>
+                            <th class="sa-epl-th-left">Filter Expression</th>
+                            <th class="sa-epl-th-center" title="Case Sensitive">Cs</th>
+                            <th class="sa-epl-th-center" title="Regular Expression">Re</th>
+                            <th class="sa-epl-th-center" title="Exclude Matches">Ex</th>
                         </tr>
                     </thead>
                     <tbody id="sa-epl-tbody"></tbody>
                 </table>
             </div>
             <!-- Edit form (hidden until Add/Edit clicked) -->
-            <div id="sa-epl-form" style="display:none;background:#f9f9f9;border:1px solid #ddd;border-radius:6px;padding:12px;margin-bottom:12px;">
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-                    <input id="sa-epl-input" type="text" placeholder="Filter expression..."
-                        style="flex:1;padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:0.9em;outline:none;">
+            <div id="sa-epl-form">
+                <div id="sa-epl-form-input-row">
+                    <input id="sa-epl-input" type="text" placeholder="Filter expression...">
                 </div>
-                <div style="display:flex;gap:16px;margin-bottom:8px;flex-wrap:wrap;">
-                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:0.88em;font-weight:600;">
+                <div id="sa-epl-checkbox-row">
+                    <label class="sa-epl-checkbox-label">
                         <input type="checkbox" id="sa-epl-case"> Case Sensitive
                     </label>
-                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:0.88em;font-weight:600;">
+                    <label class="sa-epl-checkbox-label">
                         <input type="checkbox" id="sa-epl-regex"> Regular Expression
                     </label>
-                    <label style="cursor:pointer;display:flex;align-items:center;gap:5px;font-size:0.88em;font-weight:600;">
+                    <label class="sa-epl-checkbox-label">
                         <input type="checkbox" id="sa-epl-exclude"> Exclude Matches
                     </label>
                 </div>
-                <div style="display:flex;gap:8px;">
-                    <button id="sa-epl-form-apply" style="padding:6px 14px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:0.88em;">Apply</button>
-                    <button id="sa-epl-form-discard" style="padding:6px 14px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:0.88em;">Discard</button>
+                <div id="sa-epl-form-btn-row">
+                    <button id="sa-epl-form-apply">Apply</button>
+                    <button id="sa-epl-form-discard">Discard</button>
                 </div>
             </div>
             <!-- Status line -->
-            <div id="sa-epl-status" style="min-height:18px;font-size:0.82em;color:#888;margin-bottom:10px;"></div>
+            <div id="sa-epl-status"></div>
             <!-- Action buttons row -->
-            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-                <button id="sa-epl-add-btn" style="padding:7px 12px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85em;" title="Add new entry (Alt+A)">
-                    + <span style="text-decoration:underline">A</span>dd
+            <div id="sa-epl-action-row">
+                <button id="sa-epl-add-btn" title="Add new entry (Alt+A)">
+                    + <u>A</u>dd
                 </button>
-                <button id="sa-epl-edit-btn" style="padding:7px 12px;background:#fff8e1;color:#e65100;border:1px solid #ffe082;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85em;" title="Edit selected entry (Alt+E)" disabled>
-                    &#9998; <span style="text-decoration:underline">E</span>dit
+                <button id="sa-epl-edit-btn" title="Edit selected entry (Alt+E)" disabled>
+                    &#9998; <u>E</u>dit
                 </button>
-                <button id="sa-epl-remove-btn" style="padding:7px 12px;background:#ffebee;color:#c62828;border:1px solid #ef9a9a;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85em;" title="Remove selected entry (Alt+R)" disabled>
-                    &#10005; <span style="text-decoration:underline">R</span>emove
+                <button id="sa-epl-remove-btn" title="Remove selected entry (Alt+R)" disabled>
+                    &#10005; <u>R</u>emove
                 </button>
-                <div style="flex:1;"></div>
-                <button id="sa-epl-save-btn" style="padding:7px 14px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;font-size:0.88em;" title="Save changes (Alt+S)">
-                    &#128190; <span style="text-decoration:underline">S</span>ave
+                <div class="sa-epl-spacer"></div>
+                <button id="sa-epl-save-btn" title="Save changes (Alt+S)">
+                    &#128190; <u>S</u>ave
                 </button>
-                <button id="sa-epl-cancel-btn" style="padding:7px 14px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:0.88em;" title="Cancel (Alt+C / Escape)">
-                    <span style="text-decoration:underline">C</span>ancel
+                <button id="sa-epl-cancel-btn" title="Cancel (Alt+C / Escape)">
+                    <u>C</u>ancel
                 </button>
             </div>
         `;
@@ -20661,7 +23208,7 @@ a { color: #1565c0; }`;
             const nesc = needle.replace(/&/g,'&amp;').replace(/</g,'&lt;');
             const idx = esc.toLowerCase().indexOf(nesc.toLowerCase());
             if (idx < 0) return esc;
-            return esc.slice(0,idx) + `<mark style="background:#fff176;padding:0;">${esc.slice(idx, idx+nesc.length)}</mark>` + esc.slice(idx+nesc.length);
+            return esc.slice(0,idx) + `<mark class="mb-fhw-mark">${esc.slice(idx, idx+nesc.length)}</mark>` + esc.slice(idx+nesc.length);
         };
 
         const _eplStatus = (msg, color = '#888') => {
@@ -20702,14 +23249,14 @@ a { color: #1565c0; }`;
                 eplRemoveBtn.disabled      = false;
                 eplRemoveBtn.style.opacity = '';
                 eplRemoveBtn.innerHTML     =
-                    `&#10005; <span style="text-decoration:underline">R</span>emove (${n} marked)`;
+                    `&#10005; <u>R</u>emove (${n} marked)`;
                 eplRemoveBtn.title = `Remove all ${n} marked entries (Alt+R)`;
             } else {
                 const hasSel               = selectedIdx >= 0;
                 eplRemoveBtn.disabled      = !hasSel;
                 eplRemoveBtn.style.opacity = hasSel ? '' : '0.4';
                 eplRemoveBtn.innerHTML     =
-                    '&#10005; <span style="text-decoration:underline">R</span>emove';
+                    '&#10005; <u>R</u>emove';
                 eplRemoveBtn.title = 'Remove selected entry (Alt+R)';
             }
         };
@@ -20741,22 +23288,19 @@ a { color: #1565c0; }`;
                 const hl       = _eplHighlight(e.query, qf);
                 const isMrk    = markedSet.has(origIdx);
                 const isSel    = origIdx === selectedIdx;
-                const rowStyle = isSel ? 'background:#e3f2fd;outline:2px solid #90caf9;'
-                               : isMrk ? 'background:#fffde7;outline:1px dashed #f9a825;'
-                               : '';
-                const markIcon = `<span class="sa-epl-mark-icon" title="Tab → mark/unmark for bulk removal" `
-                               + `style="font-size:0.9em;cursor:default;user-select:none;">`
+                const rowClass = isSel ? 'sa-epl-row-sel' : isMrk ? 'sa-epl-row-mrk' : '';
+                const markIcon = `<span class="sa-epl-mark-icon" title="Tab → mark/unmark for bulk removal">`
                                + (isMrk ? '&#9745;' : '&#9744;') + `</span>`;
                 return `<tr data-orig-idx="${origIdx}" tabindex="0" `
-                     + `style="cursor:pointer;border-bottom:1px solid #eee;${rowStyle}">`
-                     + `<td style="padding:5px 6px;color:#aaa;font-size:0.82em;white-space:nowrap;">`
+                     + `class="sa-epl-row ${rowClass}">`
+                     + `<td class="sa-epl-td-idx">`
                      + `${markIcon}&thinsp;${origIdx + 1}</td>`
-                     + `<td style="padding:5px 10px;font-size:0.9em;word-break:break-all;">${hl}</td>`
-                     + `<td style="padding:5px 4px;text-align:center;">${e.useCase    ? '&#10003;' : ''}</td>`
-                     + `<td style="padding:5px 4px;text-align:center;">${e.useRegex   ? '&#10003;' : ''}</td>`
-                     + `<td style="padding:5px 4px;text-align:center;">${e.useExclude ? '&#10003;' : ''}</td>`
+                     + `<td class="sa-epl-td-query">${hl}</td>`
+                     + `<td class="sa-epl-td-center">${e.useCase    ? '&#10003;' : ''}</td>`
+                     + `<td class="sa-epl-td-center">${e.useRegex   ? '&#10003;' : ''}</td>`
+                     + `<td class="sa-epl-td-center">${e.useExclude ? '&#10003;' : ''}</td>`
                      + `</tr>`;
-            }).join('') || `<tr><td colspan="5" style="padding:12px;text-align:center;color:#aaa;font-size:0.88em;">No entries</td></tr>`;
+            }).join('') || `<tr><td colspan="5" class="sa-epl-empty">No entries</td></tr>`;
 
             // ── Wire row interactions ─────────────────────────────────────────
             const rows = Array.from(eplTbody.querySelectorAll('tr[data-orig-idx]'));
@@ -21108,119 +23652,164 @@ a { color: #1565c0; }`;
             'box-sizing:border-box',
         ].join(';');
 
+        // GM_addStyle (not inline style="..." attributes in the innerHTML below)
+        // so this dialog's CSS is exempt from page CSP style-src restrictions —
+        // MusicBrainz's account/* pages block inline styles the same way as
+        // <style> elements. Idempotent (id-guarded): the interpolated settings
+        // values (headerFontSz/statusFontSz/histDropdownPx) only change via a
+        // settings save, which reloads the page, so this is safe to inject once
+        // and reuse across repeated dialog opens within the same page load.
+        // Reuses the shared .mb-fhw-* classes from
+        // _ensureFilterHistoryWidgetStyle() for the history-row/badge/mark
+        // markup, matching createFilterHistoryWidget's identical widget.
+        _ensureFilterHistoryWidgetStyle();
+        if (!document.getElementById('sa-load-dialog-style')) {
+            const ldStyle = GM_addStyle(`
+                #sa-ld-drag-handle { margin-bottom:18px; border-bottom:1px solid #eee; padding-bottom:12px; cursor:move; user-select:none; }
+                #sa-ld-title { margin:0; color:#222; font-size:1.2em; }
+                #sa-ld-subtitle { margin:5px 0 0; color:#666; font-size:${headerFontSz}; }
+                .sa-ld-btn-row { display:flex; gap:12px; margin-bottom:8px; }
+                #sa-load-confirm, #sa-render-confirm { flex:2; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                #sa-load-cancel { flex:1; padding:10px; background:#f0f0f0; color:#333; border:1px solid #ccc; border-radius:6px; cursor:pointer; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                .sa-ld-status { display:none; padding:5px 2px; font-size:${statusFontSz}; min-height:20px; }
+                #sa-ld-meta-block { display:none; margin-top:10px; border-top:1px solid #eee; padding-top:10px; }
+                .sa-ld-phase { display:none; margin-top:18px; border-top:1px solid #eee; padding-top:16px; }
+                #sa-ld-filter-row { margin-bottom:10px; position:relative; }
+                #sa-ld-filter-row-inner { display:flex; gap:4px; align-items:stretch; }
+                #sa-ld-filter-input-wrap { position:relative; flex:1; display:flex; align-items:center; }
+                #sa-load-filter-input { width:100%; padding:8px 32px 8px 12px; border:1px solid #ccc; border-radius:6px; font-size:1em; outline:none; box-sizing:border-box; }
+                #sa-filter-clear-btn, #sa-hist-qf-clear-btn { position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#c0392b; font-weight:bold; line-height:1; padding:2px 3px; border-radius:3px; display:none; }
+                #sa-filter-clear-btn { font-size:1em; }
+                #sa-hist-qf-clear-btn { font-size:0.95em; }
+                #sa-hist-pin-btn { padding:0 10px; background:#e8f5e9; border:1px solid #a5d6a7; border-radius:6px; cursor:pointer; font-size:1.1em; font-weight:bold; color:#2e7d32; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                #sa-load-history-toggle { padding:0 10px; background:#f0f0f0; border:1px solid #ccc; border-radius:6px; cursor:pointer; font-size:0.85em; white-space:nowrap; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                #sa-load-history-dropdown { display:none; position:absolute; top:calc(100% + 4px); left:0; right:0; background:white; border:1px solid #ccc; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,0.15); z-index:20001; box-sizing:border-box; }
+                #sa-ld-qf-wrap { padding:8px 8px 6px; border-bottom:1px solid #eee; }
+                #sa-ld-qf-inner { position:relative; display:flex; align-items:center; }
+                #sa-hist-quick-filter { width:100%; box-sizing:border-box; padding:5px 32px 5px 8px; border:1px solid #ccc; border-radius:4px; font-size:0.88em; outline:none; }
+                #sa-ld-pin-header { padding:4px 8px 2px; background:#e8f5e9; border-bottom:1px solid #c8e6c9; display:flex; align-items:center; justify-content:space-between; }
+                .sa-ld-pin-label { font-size:0.76em; font-weight:700; color:#2e7d32; text-transform:uppercase; letter-spacing:0.04em; }
+                #sa-hist-edit-btn { padding:2px 7px; background:#fff8e1; border:1px solid #ffe082; border-radius:5px; cursor:pointer; font-size:0.76em; font-weight:600; color:#e65100; white-space:nowrap; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; line-height:1.6; }
+                .sa-ld-hist-list { max-height:${histDropdownPx}px; overflow-y:auto; }
+                #persistent-sa-hist-footer { padding:3px 8px; border-top:1px solid #eee; border-bottom:1px solid #ddd; font-size:0.76em; color:#666; display:flex; justify-content:space-between; background:#f9fbe7; }
+                #sa-ld-lru-header { padding:4px 8px 2px; background:#e3f2fd; border-bottom:1px solid #bbdefb; }
+                #lru-sa-hist-footer { padding:3px 8px; border-top:1px solid #eee; font-size:0.76em; color:#888; display:flex; justify-content:space-between; }
+                #sa-ld-checkbox-row { display:flex; gap:12px; align-items:center; margin-bottom:14px; background:#f9f9f9; padding:10px; border-radius:8px; flex-wrap:wrap; }
+                #sa-ld-checkbox-inner { display:flex; gap:20px; justify-content:center; flex:1; flex-wrap:wrap; }
+                .sa-ld-checkbox-label { cursor:pointer; display:flex; align-items:center; gap:6px; font-size:0.9em; font-weight:600; }
+                #sa-filter-confirm { flex:2; padding:10px; background:#1976D2; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                #sa-render-no-filter-confirm { flex:1; padding:10px; background:#4CAF50; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s; }
+                .sa-ld-excluded-note { color:#888; }
+            `);
+            ldStyle.id = 'sa-load-dialog-style';
+        }
+
         dialog.innerHTML = `
             <!-- ── Shared header (also drag handle) ── -->
-            <div id="sa-ld-drag-handle" style="margin-bottom:18px;border-bottom:1px solid #eee;padding-bottom:12px;cursor:move;user-select:none;">
-                <h3 style="margin:0;color:#222;font-size:1.2em;">&#128194; Load Table Data</h3>
-                <p style="margin:5px 0 0;color:#666;font-size:${headerFontSz};">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
+            <div id="sa-ld-drag-handle">
+                <h3 id="sa-ld-title">&#128194; Load Table Data</h3>
+                <p id="sa-ld-subtitle">Load serialized data from disk. Remember you must have at least saved a dataset before to the filesystem (with the "Save to Disk" button)</p>
             </div>
 
             <!-- ── Phase 1 — Load ── -->
             <div id="sa-ld-phase1">
-                <div style="display:flex;gap:12px;margin-bottom:8px;">
-                    <button id="sa-load-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                        <span><span style="text-decoration:underline">L</span>oad Data</span>
+                <div class="sa-ld-btn-row">
+                    <button id="sa-load-confirm">
+                        <span><u>L</u>oad Data</span>
                     </button>
-                    <button id="sa-load-cancel" style="flex:1;padding:10px;background:#f0f0f0;color:#333;border:1px solid #ccc;border-radius:6px;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">Cancel</button>
+                    <button id="sa-load-cancel">Cancel</button>
                 </div>
-                <div id="sa-ld-load-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
-                <div id="sa-ld-meta-block" style="display:none;margin-top:10px;border-top:1px solid #eee;padding-top:10px;"></div>
+                <div id="sa-ld-load-status" class="sa-ld-status"></div>
+                <div id="sa-ld-meta-block"></div>
             </div>
 
             <!-- ── Phase 2 — Filter (hidden until load complete) ── -->
-            <div id="sa-ld-phase2" style="display:none;margin-top:18px;border-top:1px solid #eee;padding-top:16px;">
+            <div id="sa-ld-phase2" class="sa-ld-phase">
                 <!-- Filter expression row: input + Pin + History button -->
-                <div style="margin-bottom:10px;position:relative;">
-                    <div style="display:flex;gap:4px;align-items:stretch;">
-                        <div style="position:relative;flex:1;display:flex;align-items:center;">
+                <div id="sa-ld-filter-row">
+                    <div id="sa-ld-filter-row-inner">
+                        <div id="sa-ld-filter-input-wrap">
                             <input id="sa-load-filter-input" type="text"
-                                placeholder="Filter expression... evaluated for each column"
-                                style="width:100%;padding:8px 32px 8px 12px;border:1px solid #ccc;border-radius:6px;font-size:1em;outline:none;box-sizing:border-box;">
+                                placeholder="Filter expression... evaluated for each column">
                             <button id="sa-filter-clear-btn" tabindex="-1"
-                                title="Clear filter expression"
-                                style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#c0392b;font-size:1em;font-weight:bold;line-height:1;padding:2px 3px;border-radius:3px;display:none;">&#10005;</button>
+                                title="Clear filter expression">&#10005;</button>
                         </div>
                         <button id="sa-hist-pin-btn"
-                            title="Pin current filter to persistent list (saves query + checkbox states)"
-                            style="padding:0 10px;background:#e8f5e9;border:1px solid #a5d6a7;border-radius:6px;cursor:pointer;font-size:1.1em;font-weight:bold;color:#2e7d32;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">+</button>
+                            title="Pin current filter to persistent list (saves query + checkbox states)">+</button>
                         <button id="sa-load-history-toggle"
-                            title="Show/hide filter history (Alt+H)"
-                            style="padding:0 10px;background:#f0f0f0;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:0.85em;white-space:nowrap;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                            &#128337; <span style="text-decoration:underline">H</span>istory &#9660;
+                            title="Show/hide filter history (Alt+H)">
+                            &#128337; <u>H</u>istory &#9660;
                         </button>
                     </div>
                     <!-- ── History dropdown panel ── -->
-                    <div id="sa-load-history-dropdown" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:white;border:1px solid #ccc;border-radius:6px;box-shadow:0 4px 16px rgba(0,0,0,0.15);z-index:20001;box-sizing:border-box;">
+                    <div id="sa-load-history-dropdown">
                         <!-- Quick-filter input inside the panel -->
-                        <div style="padding:8px 8px 6px;border-bottom:1px solid #eee;">
-                            <div style="position:relative;display:flex;align-items:center;">
+                        <div id="sa-ld-qf-wrap">
+                            <div id="sa-ld-qf-inner">
                                 <input id="sa-hist-quick-filter" type="text"
-                                    placeholder="&#128269; Quick filter both lists..."
-                                    style="width:100%;box-sizing:border-box;padding:5px 32px 5px 8px;border:1px solid #ccc;border-radius:4px;font-size:0.88em;outline:none;">
+                                    placeholder="&#128269; Quick filter both lists...">
                                 <button id="sa-hist-qf-clear-btn" tabindex="-1"
-                                    title="Clear quick filter"
-                                    style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#c0392b;font-size:0.95em;font-weight:bold;line-height:1;padding:2px 3px;border-radius:3px;display:none;">&#10005;</button>
+                                    title="Clear quick filter">&#10005;</button>
                             </div>
                         </div>
                         <!-- Persistent pinned list -->
-                        <div style="padding:4px 8px 2px;background:#e8f5e9;border-bottom:1px solid #c8e6c9;display:flex;align-items:center;justify-content:space-between;">
-                            <span style="font-size:0.76em;font-weight:700;color:#2e7d32;text-transform:uppercase;letter-spacing:0.04em;">&#128204; Pinned</span>
+                        <div id="sa-ld-pin-header">
+                            <span class="sa-ld-pin-label">&#128204; Pinned</span>
                             <button id="sa-hist-edit-btn"
-                                title="Edit the persistent pinned filter list (Alt+E)"
-                                style="padding:2px 7px;background:#fff8e1;border:1px solid #ffe082;border-radius:5px;cursor:pointer;font-size:0.76em;font-weight:600;color:#e65100;white-space:nowrap;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;line-height:1.6;">
-                                &#9998; <span style="text-decoration:underline">E</span>dit Pinned Filter List
+                                title="Edit the persistent pinned filter list (Alt+E)">
+                                &#9998; <u>E</u>dit Pinned Filter List
                             </button>
                         </div>
-                        <div id="persistent-sa-hist-list" style="max-height:${histDropdownPx}px;overflow-y:auto;"></div>
-                        <div id="persistent-sa-hist-footer" style="padding:3px 8px;border-top:1px solid #eee;border-bottom:1px solid #ddd;font-size:0.76em;color:#666;display:flex;justify-content:space-between;background:#f9fbe7;">
+                        <div id="persistent-sa-hist-list" class="sa-ld-hist-list"></div>
+                        <div id="persistent-sa-hist-footer">
                             <span id="persistent-sa-hist-count"></span>
                             <span>&#8593;&#8595; navigate &nbsp; Enter: apply</span>
                         </div>
                         <!-- LRU recent list -->
-                        <div style="padding:4px 8px 2px;background:#e3f2fd;border-bottom:1px solid #bbdefb;">
-                            <span style="font-size:0.76em;font-weight:700;color:#1565c0;text-transform:uppercase;letter-spacing:0.04em;">&#128337; Recent (LRU)</span>
+                        <div id="sa-ld-lru-header">
+                            <span class="mb-fhw-lru-label">&#128337; Recent (LRU)</span>
                         </div>
-                        <div id="lru-sa-hist-list" style="max-height:${histDropdownPx}px;overflow-y:auto;"></div>
-                        <div id="lru-sa-hist-footer" style="padding:3px 8px;border-top:1px solid #eee;font-size:0.76em;color:#888;display:flex;justify-content:space-between;">
+                        <div id="lru-sa-hist-list" class="sa-ld-hist-list"></div>
+                        <div id="lru-sa-hist-footer">
                             <span id="lru-sa-hist-count"></span>
                             <span>&#8593;&#8595; navigate &nbsp; Enter: apply &nbsp; Esc: close</span>
                         </div>
                     </div>
                 </div>
                 <!-- Checkbox row -->
-                <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px;background:#f9f9f9;padding:10px;border-radius:8px;flex-wrap:wrap;">
-                    <div style="display:flex;gap:20px;justify-content:center;flex:1;flex-wrap:wrap;">
-                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Match filter expression with exact case (uppercase/lowercase must match)">
+                <div id="sa-ld-checkbox-row">
+                    <div id="sa-ld-checkbox-inner">
+                        <label class="sa-ld-checkbox-label" title="Match filter expression with exact case (uppercase/lowercase must match)">
                             <input type="checkbox" id="sa-load-case"> Case Sensitive
                         </label>
-                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Interpret filter expression as a regular expression (JavaScript RegExp syntax)">
+                        <label class="sa-ld-checkbox-label" title="Interpret filter expression as a regular expression (JavaScript RegExp syntax)">
                             <input type="checkbox" id="sa-load-regex"> Regular Expression
                         </label>
-                        <label style="cursor:pointer;display:flex;align-items:center;gap:6px;font-size:0.9em;font-weight:600;" title="Exclude rows that match the filter expression instead of keeping them">
+                        <label class="sa-ld-checkbox-label" title="Exclude rows that match the filter expression instead of keeping them">
                             <input type="checkbox" id="sa-load-exclude"> Exclude Matches
                         </label>
                     </div>
                 </div>
                 <!-- Action buttons -->
-                <div style="display:flex;gap:12px;margin-bottom:8px;">
-                    <button id="sa-filter-confirm" style="flex:2;padding:10px;background:#1976D2;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                        <span><span style="text-decoration:underline">F</span>ilter Data</span>
+                <div class="sa-ld-btn-row">
+                    <button id="sa-filter-confirm">
+                        <span><u>F</u>ilter Data</span>
                     </button>
-                    <button id="sa-render-no-filter-confirm" style="flex:1;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;" title="Render all rows from the loaded file without applying any filter">
-                        <span>&#9654; <span style="text-decoration:underline">R</span>ender All Rows</span>
+                    <button id="sa-render-no-filter-confirm" title="Render all rows from the loaded file without applying any filter">
+                        <span>&#9654; <u>R</u>ender All Rows</span>
                     </button>
                 </div>
-                <div id="sa-ld-filter-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
+                <div id="sa-ld-filter-status" class="sa-ld-status"></div>
             </div>
 
             <!-- ── Phase 3 — Render (hidden until filter count computed) ── -->
-            <div id="sa-ld-phase3" style="display:none;margin-top:18px;border-top:1px solid #eee;padding-top:16px;">
-                <div style="display:flex;gap:12px;margin-bottom:8px;">
-                    <button id="sa-render-confirm" style="flex:2;padding:10px;background:#4CAF50;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;transition:background-color 0.2s,transform 0.1s,box-shadow 0.1s;">
-                        <span><span style="text-decoration:underline">R</span>ender Data</span>
+            <div id="sa-ld-phase3" class="sa-ld-phase">
+                <div class="sa-ld-btn-row">
+                    <button id="sa-render-confirm">
+                        <span><u>R</u>ender Data</span>
                     </button>
                 </div>
-                <div id="sa-ld-render-status" style="display:none;padding:5px 2px;font-size:${statusFontSz};min-height:20px;"></div>
+                <div id="sa-ld-render-status" class="sa-ld-status"></div>
             </div>
         `;
 
@@ -21288,9 +23877,8 @@ a { color: #1565c0; }`;
         // ── Hover styles ────────────────────────────────────────────────────
         const styleId = 'sa-load-popup-styles';
         if (!document.getElementById(styleId)) {
-            const s = document.createElement('style');
-            s.id = styleId;
-            s.textContent = `
+            // GM_addStyle so this is exempt from page CSP style-src restrictions.
+            const s = GM_addStyle(`
                 .sa-history-item:hover { background:#f0f0f0 !important; }
                 #sa-load-confirm:hover:not([disabled])           { background:#45a049 !important; }
                 #sa-load-cancel:hover                            { background:#e0e0e0 !important; }
@@ -21306,8 +23894,8 @@ a { color: #1565c0; }`;
                     transform: translateY(1px);
                     box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
                 }
-            `;
-            document.head.appendChild(s);
+            `);
+            s.id = styleId;
         }
 
         // ── Element refs ────────────────────────────────────────────────────
@@ -21528,7 +24116,7 @@ a { color: #1565c0; }`;
                     if (!loadAnywayConfirmed) {
                         rawData = null;
                         rawFile = null;
-                        loadBtn.innerHTML  = '<span><span style="text-decoration:underline">L</span>oad Data</span>';
+                        loadBtn.innerHTML  = '<span><u>L</u>oad Data</span>';
                         loadBtn.disabled   = false;
                         loadBtn.style.opacity = '';
                         loadStatus.innerHTML   = '\u{1F6AB} Load cancelled \u2014 page type mismatch.';
@@ -21549,7 +24137,7 @@ a { color: #1565c0; }`;
                 const rowLabel = totalRows === 1 ? 'row' : 'rows';
 
                 // Restore Load button
-                loadBtn.innerHTML  = '<span><span style="text-decoration:underline">L</span>oad Data</span>';
+                loadBtn.innerHTML  = '<span><u>L</u>oad Data</span>';
                 loadBtn.disabled   = false;
                 loadBtn.style.opacity = '';
 
@@ -21573,7 +24161,7 @@ a { color: #1565c0; }`;
             } catch (err) {
                 rawData = null;
                 rawFile = null;
-                loadBtn.innerHTML  = '<span><span style="text-decoration:underline">L</span>oad Data</span>';
+                loadBtn.innerHTML  = '<span><u>L</u>oad Data</span>';
                 loadBtn.disabled   = false;
                 loadBtn.style.opacity = '';
                 loadStatus.innerHTML   = `\u274C Error: ${err.message}`;
@@ -21634,7 +24222,7 @@ a { color: #1565c0; }`;
                 filterStatus.innerHTML = `<strong>${matchCount.toLocaleString()}</strong> ${rl} will be rendered (no filter applied)`;
             } else if (useExclude) {
                 const excluded = totalRows - matchCount;
-                filterStatus.innerHTML = `<strong>${matchCount.toLocaleString()}</strong> ${rl} will be rendered &nbsp;\u00B7&nbsp; <span style="color:#888;">${excluded.toLocaleString()} excluded</span>`;
+                filterStatus.innerHTML = `<strong>${matchCount.toLocaleString()}</strong> ${rl} will be rendered &nbsp;\u00B7&nbsp; <span class="sa-ld-excluded-note">${excluded.toLocaleString()} excluded</span>`;
             } else {
                 filterStatus.innerHTML = `<strong>${matchCount.toLocaleString()}</strong> of ${totalRows.toLocaleString()} ${rl} match \u2192 will be rendered`;
             }
@@ -21724,11 +24312,14 @@ a { color: #1565c0; }`;
             : { query: String(h), useCase: false, useRegex: false, useExclude: false };
 
         // Build compact checkbox-state glyphs.
+        // Reuses the shared .mb-fhw-badge* classes from
+        // _ensureFilterHistoryWidgetStyle() (see createFilterHistoryWidget's
+        // identical _histGlyphs, which this duplicates).
         const _histGlyphs = (e) => {
             const parts = [];
-            if (e.useCase)    parts.push('<span title="Case Sensitive" style="color:#1976D2;font-size:0.78em;font-weight:700;border:1px solid #1976D2;border-radius:2px;padding:0 2px;">Cs</span>');
-            if (e.useRegex)   parts.push('<span title="Regular Expression" style="color:#7B1FA2;font-size:0.78em;font-weight:700;border:1px solid #7B1FA2;border-radius:2px;padding:0 2px;">Re</span>');
-            if (e.useExclude) parts.push('<span title="Exclude Matches" style="color:#c62828;font-size:0.78em;font-weight:700;border:1px solid #c62828;border-radius:2px;padding:0 2px;">Ex</span>');
+            if (e.useCase)    parts.push('<span title="Case Sensitive" class="mb-fhw-badge mb-fhw-badge-cs">Cs</span>');
+            if (e.useRegex)   parts.push('<span title="Regular Expression" class="mb-fhw-badge mb-fhw-badge-re">Re</span>');
+            if (e.useExclude) parts.push('<span title="Exclude Matches" class="mb-fhw-badge mb-fhw-badge-ex">Ex</span>');
             return parts.length ? '&nbsp;' + parts.join('&nbsp;') : '';
         };
 
@@ -21738,7 +24329,7 @@ a { color: #1565c0; }`;
             const idx = haystack.toLowerCase().indexOf(needle.toLowerCase());
             if (idx < 0) return haystack;
             return haystack.slice(0, idx) +
-                `<mark style="background:#fff176;padding:0;">${haystack.slice(idx, idx + needle.length)}</mark>` +
+                `<mark class="mb-fhw-mark">${haystack.slice(idx, idx + needle.length)}</mark>` +
                 haystack.slice(idx + needle.length);
         };
 
@@ -21757,14 +24348,13 @@ a { color: #1565c0; }`;
                 const esc   = e.query.replace(/&/g, '&amp;').replace(/</g, '&lt;');
                 const label = _histHighlight(esc, escaped_qf);
                 const glyphs = _histGlyphs(e);
-                return `<div class="sa-hist-row" data-idx="${i}" data-list="${listId}"
-                    style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;cursor:pointer;font-size:0.9em;border-bottom:1px dotted #eee;gap:6px;">
-                    <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${label}</span>
-                    <span style="flex-shrink:0;display:flex;gap:3px;align-items:center;">${glyphs}</span>
+                return `<div class="mb-fhw-hist-row" data-idx="${i}" data-list="${listId}">
+                    <span class="mb-fhw-hist-label">${label}</span>
+                    <span class="mb-fhw-glyphs">${glyphs}</span>
                 </div>`;
-            }).join('') || `<div style="padding:8px 10px;color:#aaa;font-size:0.85em;text-align:center;">No matching entries</div>`;
+            }).join('') || `<div class="mb-fhw-empty">No matching entries</div>`;
 
-            container.querySelectorAll('.sa-hist-row').forEach(row => {
+            container.querySelectorAll('.mb-fhw-hist-row').forEach(row => {
                 row.addEventListener('mouseenter', () => {
                     _histActiveList = listId;
                     _histSelectRow(parseInt(row.dataset.idx), listId);
@@ -21801,13 +24391,13 @@ a { color: #1565c0; }`;
             const other     = isPin ? histLruList : histPinList;
             if (isPin) _histPinSelIdx = i; else _histLruSelIdx = i;
             // Clear other list selection
-            if (other) other.querySelectorAll('.sa-hist-row').forEach(r => { r.style.background=''; r.style.outline=''; });
+            if (other) other.querySelectorAll('.mb-fhw-hist-row').forEach(r => { r.style.background=''; r.style.outline=''; });
             if (!container) return;
-            container.querySelectorAll('.sa-hist-row').forEach((row, j) => {
+            container.querySelectorAll('.mb-fhw-hist-row').forEach((row, j) => {
                 row.style.background = j === i ? '#e3f2fd' : '';
                 row.style.outline    = j === i ? '1px solid #90caf9' : '';
             });
-            const sel = container.querySelector(`.sa-hist-row[data-idx="${i}"]`);
+            const sel = container.querySelector(`.mb-fhw-hist-row[data-idx="${i}"]`);
             if (sel) sel.scrollIntoView({ block: 'nearest' });
         };
 
@@ -22425,16 +25015,38 @@ a { color: #1565c0; }`;
      * @param {'gf'|'stf'|'cf'} type - CSS variable prefix.
      * @returns {string} HTML span.
      */
+    /**
+     * Lazily injects the shared, id-guarded stylesheet for
+     * {@link _mbttLabel}/{@link _mbttColName}/{@link _mbttCount}'s rich
+     * tooltip spans. GM_addStyle so it is exempt from page CSP style-src
+     * restrictions. The colors read from Lib.settings here are fixed for
+     * the lifetime of the page — any settings change reloads the page
+     * (see the settings dialog's save handler) — so computing them once
+     * at first call and caching as CSS classes is safe.
+     */
+    function _ensureMbttStyle() {
+        if (document.getElementById('sa-mbtt-style')) return;
+        const gfBg     = Lib.settings.sa_global_filter_highlight_bg    || '#FFD700';
+        const gfCol    = Lib.settings.sa_global_filter_highlight_color || 'red';
+        const cfBg     = Lib.settings.sa_column_filter_highlight_bg    || '#add8e6';
+        const cfCol    = Lib.settings.sa_column_filter_highlight_color || 'red';
+        const countBg  = Lib.settings.sa_ui_row_count_bg               || '#e8e8e8';
+        const countCol = Lib.settings.sa_ui_row_count_color            || '#111111';
+        const style = GM_addStyle(`
+            .mb-mbtt-gf, .mb-mbtt-stf, .mb-mbtt-cf { border-radius:2px; padding:0 3px; font-style:italic; }
+            .mb-mbtt-gf { background:${gfBg}; color:${gfCol}; }
+            .mb-mbtt-stf { background:#90ee90; color:#000; }
+            .mb-mbtt-cf { background:${cfBg}; color:${cfCol}; }
+            .mb-mbtt-colname { color:${cfBg}; font-weight:bold; }
+            .mb-mbtt-count { background:${countBg}; color:${countCol}; border-radius:2px; padding:0 3px; font-weight:bold; }
+        `);
+        style.id = 'sa-mbtt-style';
+    }
+
     function _mbttLabel(word, type) {
-        // Same CSS vars as the #mb-stat-tooltip .mbtt-* rules; inline style
-        // is used so the label works outside the tooltip context too.
-        const bg  = type === 'gf'  ? (Lib.settings.sa_global_filter_highlight_bg   || '#FFD700')
-                  : type === 'stf' ? '#90ee90'
-                  :                  (Lib.settings.sa_column_filter_highlight_bg    || '#add8e6');
-        const col = type === 'gf'  ? (Lib.settings.sa_global_filter_highlight_color || 'red')
-                  : type === 'stf' ? '#000'
-                  :                  (Lib.settings.sa_column_filter_highlight_color  || 'red');
-        return `<span style="background:${bg};color:${col};border-radius:2px;padding:0 3px;font-style:italic;">${word}</span>`;
+        _ensureMbttStyle();
+        const cls = type === 'gf' ? 'mb-mbtt-gf' : type === 'stf' ? 'mb-mbtt-stf' : 'mb-mbtt-cf';
+        return `<span class="${cls}">${word}</span>`;
     }
 
     /**
@@ -22447,15 +25059,13 @@ a { color: #1565c0; }`;
      * @returns {string} HTML span.
      */
     function _mbttColName(name) {
-        // Use the cf highlight background as the text color so the column name
-        // visually "belongs to" the adjacent filter-expression pill.
-        const cfBg = Lib.settings.sa_column_filter_highlight_bg || '#add8e6';
+        _ensureMbttStyle();
         const safe = name
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
-        return `<span style="color:${cfBg};font-weight:bold;">'${safe}'</span>`;
+        return `<span class="mb-mbtt-colname">'${safe}'</span>`;
     }
 
     /**
@@ -22470,10 +25080,8 @@ a { color: #1565c0; }`;
      * @returns {string} HTML string.
      */
     function _mbttCount(n) {
-        const bg  = Lib.settings.sa_ui_row_count_bg    || '#e8e8e8';
-        const col = Lib.settings.sa_ui_row_count_color || '#111111';
-        return `<span style="background:${bg};color:${col};border-radius:2px;` +
-               `padding:0 3px;font-weight:bold;">${n}</span>`;
+        _ensureMbttStyle();
+        return `<span class="mb-mbtt-count">${n}</span>`;
     }
 
     /**
@@ -22627,6 +25235,22 @@ a { color: #1565c0; }`;
      */
     function updateH2Count(filteredCount, totalCount, absoluteTotal = null) {
         Lib.debug('render', `Starting updateH2Count: filtered=${filteredCount}, total=${totalCount}, absoluteTotal=${absoluteTotal}`);
+
+        // ── Group-3 self-heal (defensive mitigation, not a confirmed root-cause
+        // fix — see debug/report-detail.org). Scoped to report-detail only. ────
+        // On some report-detail sub-reports (AnnotationsPlaces,
+        // AnnotationsReleases) the applyInsertH2()-injected "Report" <h2> is
+        // absent from the DOM by the time this function — the earliest consumer
+        // of that h2 — runs, even though static code reading says
+        // applyInsertH2() should always succeed for these pages. Root cause
+        // unconfirmed (needs live reproduction). Re-invoking applyInsertH2()
+        // here is a no-op whenever the h2 is already present (its own
+        // idempotency guard handles that), so this is safe to run
+        // unconditionally on every report-detail call.
+        if (activeDefinition && activeDefinition.type === 'report-detail' &&
+            activeDefinition.features && activeDefinition.features.insertH2) {
+            applyInsertH2(activeDefinition);
+        }
 
         const table = document.querySelector('table.tbl');
         if (!table) {
@@ -22876,34 +25500,44 @@ a { color: #1565c0; }`;
 
     /**
      * Extracts all visible text from `element`, skipping script/style/head
-     * subtrees, and returns a normalised filter-ready string.
+     * subtrees, and returns a normalised filter-ready string. Used by
+     * createSortComparator()/createMultiColumnComparator() to build sort
+     * keys, and by the non-regex global filter's whole-row text match.
+     *
+     * Strips the same structural noise `_CLEAN_STRIP_SEL` strips for
+     * getCleanColumnText() — inline CAA/EAA thumbnail placeholders,
+     * cache-hint emoji, count badges, the collapse-toggle widget — plus
+     * its own `.mb-rel-filter-key` exclusion. Without this, whether a row's
+     * inline-art cache-hint span happened to resolve by render time leaks
+     * into the sort key ahead of the real text, splitting otherwise-correct
+     * rows into wrongly-ordered clusters. `ul.dataset.mbArtSearch` (the
+     * CAA/EAA per-image search-index string) is intentionally NOT appended
+     * here as it is in getCleanColumnText() — sort/global-filter keys must
+     * stay free of that metadata.
      *
      * @param {Element} element - DOM element to extract text from.
      * @returns {string} Normalised visible text content.
      */
     function getCleanVisibleText(element) {
+        const _STRIP_SEL = _CLEAN_STRIP_SEL + ',.mb-rel-filter-key';
+        let root = element;
+        if (element.querySelector(_STRIP_SEL)) {
+            root = element.cloneNode(true);
+            root.querySelectorAll(_STRIP_SEL).forEach(el => el.remove());
+        }
+
         let textParts = [];
-        const walker = document.createTreeWalker(element, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
             acceptNode: (node) => {
                 if (node.nodeType === Node.ELEMENT_NODE) {
                     const tag = node.tagName.toLowerCase();
                     if (tag === 'script' || tag === 'style' || tag === 'head') return NodeFilter.FILTER_REJECT;
-                    // Skip per-image CAA/EAA rows and rel filter key spans.
+                    // Secondary guard (belt-and-braces — should already have
+                    // been stripped by the clone pass above).
                     if (node.classList && (
                         node.classList.contains('mb-caa-art-li-image') ||
                         node.classList.contains('mb-rel-filter-key') ||
-                        // .mb-inline-art-sort-key carries the invisible sentinel text
-                        // 'caa-inline-yes' / 'caa-inline-no' (see _artSetInlineSortKey).
-                        // It is excluded here for the same reason it is in _CLEAN_STRIP_SEL:
-                        // without this guard, any plain-text global filter string that
-                        // happens to be a substring of those sentinels (e.g. "nl" from
-                        // "caa-i[nl]ine-yes") matches every row that has a loaded inline
-                        // thumbnail, producing wholesale false-positive hits.
                         node.classList.contains('mb-inline-art-sort-key') ||
-                        // .mb-caa-sort-key / .mb-eaa-sort-key hold 'yes'/'no' — artwork-
-                        // presence sentinels for the CAA/EAA column quick-filter entries.
-                        // Must be excluded to prevent 'no' (from '✗ no artwork') from
-                        // highlighting inside sort-key spans or matching visible cell text.
                         node.classList.contains('mb-caa-sort-key') ||
                         node.classList.contains('mb-eaa-sort-key')
                     )) return NodeFilter.FILTER_REJECT;
@@ -22914,7 +25548,12 @@ a { color: #1565c0; }`;
 
         let node;
         while (node = walker.nextNode()) {
-            if (node.nodeType === Node.TEXT_NODE) textParts.push(node.nodeValue);
+            if (node.nodeType === Node.TEXT_NODE) {
+                const trimmed = node.nodeValue.trim();
+                if (trimmed && !isDecorativeIcon(trimmed)) {
+                    textParts.push(node.nodeValue);
+                }
+            }
         }
         return normalizeExtractedText(textParts.join(' '));
     }
@@ -23267,11 +25906,31 @@ a { color: #1565c0; }`;
                 : 'mb-column-filter-highlight';
         }
 
-        row.querySelectorAll('td').forEach((td, idx) => {
-            if (targetColIndex !== -1 && idx !== targetColIndex) return;
-            td.normalize();
-            highlightCrossTag(td, regex, className);
-        });
+        // targetColIndex (when set) is a row.cells index — the SAME numbering
+        // testRowMatch()/getColFilters use for f.idx. A flat, recursive
+        // querySelectorAll('td') NodeList does NOT share that numbering: any
+        // column whose cell contains nested real <td>/<th> elements (e.g. a
+        // de-tableified 'edits' "Edit details" cell — see _detableify's
+        // JSDoc, which deliberately keeps <td>/<th> real for rowspan/colspan)
+        // shifts the flat index for every column after it, so the two
+        // schemes only coincide by chance. Resolving the cell directly via
+        // row.cells[targetColIndex] keeps this aligned with the match logic;
+        // highlightCrossTag() still walks the whole subtree of that cell, so
+        // nested content is still searched correctly. The global-filter case
+        // (targetColIndex === -1) has no column to align to, so it keeps
+        // scanning every <td> at every depth, matching its previous behavior.
+        if (targetColIndex === -1) {
+            row.querySelectorAll('td').forEach(td => {
+                td.normalize();
+                highlightCrossTag(td, regex, className);
+            });
+        } else {
+            const td = row.cells[targetColIndex];
+            if (td) {
+                td.normalize();
+                highlightCrossTag(td, regex, className);
+            }
+        }
     }
 
     /**
@@ -23827,9 +26486,10 @@ a { color: #1565c0; }`;
             clear.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                // Drop any active multi-row state filter mode so the cleared field
-                // reverts to normal text-filter behaviour.
+                // Drop any active multi-row state filter mode / checkbox value-set
+                // so the cleared field reverts to normal text-filter behaviour.
                 delete input.dataset.mbMultirowMode;
+                delete input.dataset.mbUniqValues;
                 // Clicking ✕ is identical to pressing Escape the first time while
                 // the field is focused: clear any user-entered text, keep the field
                 // focused with the decorative prefix in place.
@@ -23855,10 +26515,14 @@ a { color: #1565c0; }`;
 
             input.addEventListener('input', (e) => {
                 e.stopPropagation();
-                // If the user manually edits a field that carried a multi-row state filter,
-                // drop the mode so subsequent key strokes act as a normal text filter.
+                // If the user manually edits a field that carried a multi-row state filter
+                // or a checkbox value-set, drop the special mode so subsequent key strokes
+                // act as a normal text filter.
                 if (input.dataset.mbMultirowMode) {
                     delete input.dataset.mbMultirowMode;
+                }
+                if (input.dataset.mbUniqValues) {
+                    delete input.dataset.mbUniqValues;
                 }
                 // If the user just started typing into a focused-but-empty field the prefix
                 // was deliberately kept out of the value (so the placeholder hint was visible).
@@ -23966,8 +26630,9 @@ a { color: #1565c0; }`;
             const raw = stripColFilterPrefix(inp.value);
 
             if (!raw) {
-                // Empty field: clear any stale multi-row mode and error styling, skip
+                // Empty field: clear any stale multi-row mode / value-set and error styling, skip
                 delete inp.dataset.mbMultirowMode;
+                delete inp.dataset.mbUniqValues;
                 inp.style.boxShadow   = '';
                 inp.style.borderColor = '';
                 inp.style.borderWidth = '';
@@ -23980,6 +26645,30 @@ a { color: #1565c0; }`;
             const colName = headers[colIdx]
                 ? headers[colIdx].textContent.replace(/[⇅▲▼⁰-⁹📊▶◀▤0-9]/g, '').trim()
                 : `Col ${colIdx}`;
+
+            // ── Value-set filter (set by applyUniqValueSet via uniq-drop checkboxes) ──
+            // Bypasses normal text matching; testRowMatch() checks cell-text set membership.
+            if (inp.dataset.mbUniqValues) {
+                inp.style.boxShadow   = '0 0 2px 2px green';
+                inp.style.borderColor = '';
+                inp.style.borderWidth = '';
+                let valueSet;
+                try {
+                    const arr = JSON.parse(inp.dataset.mbUniqValues);
+                    valueSet = new Set(isCaseSensitive ? arr : arr.map(v => v.toLowerCase()));
+                } catch (e) {
+                    valueSet = new Set(); // corrupt dataset — fail safe to "match nothing extra"
+                }
+                result.push({
+                    val:                raw,
+                    idx:                colIdx,
+                    isMultiValueFilter: true,
+                    valueSet,
+                    isCaseSensitive,
+                    isExclude
+                });
+                return;
+            }
 
             // ── Multi-row state filter (set by applyMultiRowStateFilter via uniq-drop) ──
             // Bypasses normal text matching; testRowMatch() checks the toggle DOM state.
@@ -24217,15 +26906,19 @@ a { color: #1565c0; }`;
             // always reflects the user's actual expand/collapse actions.
             if (f.isMultiRowFilter) {
                 const cell   = row.cells[f.idx];
-                const lis    = cell ? Array.from(cell.querySelectorAll('ul > li')) : [];
-                // hasEmpty: no ul>li structure AND no visible text content.
-                // Checking text content is essential for non-collapsable columns where
-                // lis.length === 0 is always true regardless of whether the cell is
-                // empty or contains plain text — without the text check every row in a
-                // non-collapsable column would be matched by the 'empty' filter mode.
-                const hasEmpty      = lis.length === 0 && !(matchOnly ? _cachedColText(row, f.idx) : getCleanColumnText(cell));
-                const hasMultiRow   = lis.length >= 2;
-                const hasSingleRow  = lis.length === 1;
+                // _classifyCollapseCell unifies list cells (direct-child <ul><li>,
+                // ≥2 items) and prose cells (e.g. "Annotation" — a
+                // .mb-cell-collapse-toggle from an overflowing height-clamp)
+                // under one multi-row/single-row concept.
+                const { isMultiRow: hasMultiRow, isSingleRow: hasSingleRow } = _classifyCollapseCell(cell);
+                // hasEmpty: neither multi- nor single-row structure AND no visible
+                // text content. Checking text content is essential for non-
+                // collapsable columns where hasMultiRow/hasSingleRow are always
+                // false regardless of whether the cell is empty or contains plain
+                // text — without the text check every row in a non-collapsable
+                // column would be matched by the 'empty' filter mode.
+                const hasEmpty = !hasMultiRow && !hasSingleRow &&
+                    !(matchOnly ? _cachedColText(row, f.idx) : getCleanColumnText(cell));
                 const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
                 const ecKey  = rowIdx !== undefined ? `${rowIdx}:${f.idx}` : undefined;
                 const isExpanded = ecKey !== undefined && expandedCells.get(ecKey) === true;
@@ -24243,6 +26936,19 @@ a { color: #1565c0; }`;
                 }
                 if (!match) { colHit = false; break; }
                 continue; // no text highlight for state-based filters
+            }
+
+            // ── Value-set filter (set by applyUniqValueSet via uniq-drop checkboxes) ──
+            // A row passes if its cell text matches ANY checked value (OR'd within
+            // the column). f.val is a human-readable summary label, not matchable
+            // text, so no highlight is produced (mirrors isMultiRowFilter above).
+            if (f.isMultiValueFilter) {
+                const cellText = matchOnly ? _cachedColText(row, f.idx) : getCleanColumnText(row.cells[f.idx]);
+                const probe = f.isCaseSensitive ? cellText : cellText.toLowerCase();
+                const isMember = f.valueSet.has(probe);
+                const match = f.isExclude ? !isMember : isMember;
+                if (!match) { colHit = false; break; }
+                continue;
             }
 
             // Use per-filter flags embedded by getColFilters from the per-subtable
@@ -24327,7 +27033,7 @@ a { color: #1565c0; }`;
             // Multi-row state filters operate on DOM structure, not on text → skip highlight.
             // Use per-filter case/regexp flags so highlight patterns match what was actually tested.
             colFilters.forEach(f => {
-                if (!f.isMultiRowFilter) {
+                if (!f.isMultiRowFilter && !f.isMultiValueFilter) {
                     const _fIsExclude = f.isExclude       !== undefined ? f.isExclude       : isExclude;
                     const _fIsCase    = f.isCaseSensitive !== undefined ? f.isCaseSensitive : isCaseSensitive;
                     const _fIsRegExp  = f.isRegExp        !== undefined ? f.isRegExp        : isRegExp;
@@ -24355,7 +27061,7 @@ a { color: #1565c0; }`;
             // column rel-icon highlights work correctly when the sub-table Ex checkbox
             // differs from the global one.
             colFilters.forEach(f => {
-                if (!f.isMultiRowFilter) {
+                if (!f.isMultiRowFilter && !f.isMultiValueFilter) {
                     const _fIsExclude = f.isExclude       !== undefined ? f.isExclude       : isExclude;
                     const _fIsCase    = f.isCaseSensitive !== undefined ? f.isCaseSensitive : isCaseSensitive;
                     const _fIsRegExp  = f.isRegExp        !== undefined ? f.isRegExp        : isRegExp;
@@ -24400,6 +27106,8 @@ a { color: #1565c0; }`;
             x: matchCtx.isExclude,
             f: matchCtx.colFilters.map(f => f.isMultiRowFilter
                 ? { i: f.idx, m: f.multiRowMode }
+                : f.isMultiValueFilter
+                ? { i: f.idx, u: Array.from(f.valueSet).sort(), c: f.isCaseSensitive, x: f.isExclude }
                 : { i: f.idx, v: f.val,
                     c: f.isCaseSensitive, r: f.isRegExp, x: f.isExclude })
         });
@@ -24435,6 +27143,8 @@ a { color: #1565c0; }`;
             x: matchCtx.isExclude,
             f: matchCtx.colFilters.map(f => f.isMultiRowFilter
                 ? { i: f.idx, m: f.multiRowMode }
+                : f.isMultiValueFilter
+                ? { i: f.idx, u: Array.from(f.valueSet).sort(), c: f.isCaseSensitive, x: f.isExclude }
                 : { i: f.idx, v: f.val,
                     c: f.isCaseSensitive, r: f.isRegExp, x: f.isExclude })
         });
@@ -24616,6 +27326,17 @@ a { color: #1565c0; }`;
                             : (_g.category || _g.key || 'Other');
                         if (_gCat === _cat) _combined.push(..._g.rows);
                     });
+                    // Only the FIRST-occurrence group (this one — groupIdx) has an
+                    // interactive, visible sort header; other same-category groups just
+                    // contributed rows above without ever being resorted themselves.
+                    // Re-sort the combined set using the sort currently active on this
+                    // visible table so the merged view reflects it, instead of leaving
+                    // non-resorted contributors' rows in their original concatenation
+                    // position (see mergedSortComparatorRegistry doc comment).
+                    const _selfSortKey = `${group.category || group.key || 'Unknown'}_${groupIdx}`;
+                    const _getMergedCmp = mergedSortComparatorRegistry.get(_selfSortKey);
+                    const _mergedCmp = _getMergedCmp ? _getMergedCmp() : null;
+                    if (_mergedCmp) _combined.sort(_mergedCmp);
                     _sourceRows = _combined;
                 }
 
@@ -24849,6 +27570,12 @@ a { color: #1565c0; }`;
             // CDtoc: re-inject tracklist sub-rows and re-wire toggle links after
             // every re-render (cloneNode(true) strips event listeners).
             _cdtocInitTracklistToggles();
+
+            // Re-wire wiki-rendered <h2> headings nested inside table cells
+            // (e.g. "Annotation" column sub-sections) — same
+            // cloneNode(true)-drops-listeners reason as initExpandRGsFeature()
+            // and _cdtocInitTracklistToggles() above.
+            _rewireNestedTableH2Toggles();
 
             // Refresh the Picard tagger column after every filter / sort re-render.
             // rewireOnly=true: only re-attach listeners on existing picard cells;
@@ -25162,17 +27889,23 @@ a { color: #1565c0; }`;
                 break;
             case 'splitLocation':
                 if (colName === 'Place')
-                    return `Extracted from '${src}': the venue or place name, split from the Location field.`;
-                if (colName === 'Area')
-                    return `Extracted from '${src}': the city or region, split from the Location field.`;
+                    return `Extracted from '${src}': the venue or place name, split from the ${src} field.`;
+                if (colName === 'MB-Place')
+                    return `Extracted from '${src}': just the place name, split out of the combined ${src} cell (which also carries the area/country chain).`;
+                if (colName === 'Locality')
+                    return `Extracted from '${src}': the most specific area (city or neighbourhood), split from the ${src} field.`;
+                if (colName === 'Region')
+                    return `Extracted from '${src}': the broader administrative area (county, state/province, or equivalent), split from the ${src} field. May contain multiple comma-joined levels.`;
                 if (colName === 'Country')
-                    return `Extracted from '${src}': the country, split from the Location field.`;
+                    return `Extracted from '${src}': the country, split from the ${src} field.`;
                 break;
             case 'splitArea':
-                if (colName === 'MB-Area')
-                    return `Extracted from '${src}': the MusicBrainz area name (city/region), split from the Area cell.`;
-                if (colName === 'Country')
-                    return `Extracted from '${src}': the country code, split from the Area cell.`;
+                if (colName.endsWith('ocality'))
+                    return `Extracted from '${src}': the most specific area (city or neighbourhood), split from the ${src} field.`;
+                if (colName.endsWith('egion'))
+                    return `Extracted from '${src}': the broader administrative area (county, state/province, or equivalent), split from the ${src} field. May contain multiple comma-joined levels.`;
+                if (colName.endsWith('ountry'))
+                    return `Extracted from '${src}': the country, split from the ${src} field.`;
                 break;
             case 'caa':
                 if (colName === 'CAA')
@@ -25390,6 +28123,14 @@ a { color: #1565c0; }`;
                 Lib.debug('cleanup', `Marking column ${idx} for removal: checkbox-cell (sa_remove_checkbox_cell enabled).`);
                 indicesToRemove.push(idx);
             }
+
+            // Unconditionally remove the "MusicBrainz Nuclear Tags" bulk-tag column
+            // (foreign userscript injection; has no header text, so it can't be
+            // matched via removalMapAlways — matched by CSS class instead).
+            if (th.classList.contains('elephant-tag-col')) {
+                Lib.debug('cleanup', `Marking column ${idx} for removal: elephant-tag-col (foreign userscript column).`);
+                indicesToRemove.push(idx);
+            }
         });
 
         if (indicesToRemove.length > 0) {
@@ -25570,6 +28311,33 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Detects whether a MusicBrainz edit-listing page's pagination widget is
+     * "ambiguous" — i.e. MusicBrainz could not compute an exact result count
+     * (see `debug/NOTES.md` / `debug/act.org`) and the widget shows a
+     * milestone-with-ellipsis window (`1 … 6 7 8 9 10 11 … Next`) instead of
+     * the true last page. True only when an ellipsis placeholder
+     * (`<li><span>…</span></li>`) appears anywhere inside `ul.pagination`.
+     *
+     * Returns `false` both when there is no pagination at all (small result
+     * sets render every edit on one page, no `ul.pagination` present at
+     * all — see `debug/willow.html`) and when the widget lists every page up
+     * to the real last one with no gaps (small-enough result sets that
+     * MusicBrainz *did* compute exactly, even when paginated — see
+     * `debug/mgv.html`, 54 edits / 2 pages, `1 2 Next`). In both of those
+     * cases `determineMaxPageFromDOM()`/`fetchMaxPageGeneric()` already
+     * compute the correct `maxPage`.
+     *
+     * @param {Document} doc
+     * @returns {boolean}
+     */
+    function _hasAmbiguousEditsPagination(doc) {
+        const pagination = doc.querySelector('ul.pagination');
+        if (!pagination) return false;
+        return Array.from(pagination.querySelectorAll('li > span'))
+            .some(s => { const t = s.textContent.trim(); return t === '…' || t === '...'; });
+    }
+
+    /**
      * Determines the maximum page number by parsing the pagination UI on the current page
      * @returns {number} The maximum page number found, defaults to 1 if no pagination is present
      */
@@ -25643,47 +28411,37 @@ a { color: #1565c0; }`;
 
             const pageLabel = (pagesProcessed === 1) ? 'page' : 'pages';
 
+            // GM_addStyle so this dialog's CSS is exempt from page CSP
+            // style-src restrictions (see other dialogs' identical treatment).
+            // Fully static — safe to inject once, idempotent.
+            if (!document.getElementById('sa-render-decision-style')) {
+                const rdStyle = GM_addStyle(`
+                    #sa-rd-title { margin-top: 0; color: #333; }
+                    #sa-rd-summary { font-size: 16px; margin: 20px 0; }
+                    #sa-rd-warning { font-size: 14px; color: #666; margin: 20px 0; }
+                    #sa-rd-btn-row { display: flex; gap: 10px; justify-content: center; margin-top: 25px; }
+                    .sa-rd-btn { padding: 10px 20px; font-size: 14px; cursor: pointer; color: white; border: none; border-radius: 6px; font-weight: bold; }
+                    #mb-dialog-save { background: #4CAF50; }
+                    #mb-dialog-render { background: #2196F3; }
+                    #mb-dialog-cancel { background: #f44336; }
+                `);
+                rdStyle.id = 'sa-render-decision-style';
+            }
+
             dialog.innerHTML = `
-                <h2 style="margin-top: 0; color: #333;">Large Dataset Fetched</h2>
-                <p style="font-size: 16px; margin: 20px 0;">
+                <h2 id="sa-rd-title">Large Dataset Fetched</h2>
+                <p id="sa-rd-summary">
                     Successfully fetched <strong>${totalRows.toLocaleString()} rows</strong> from <strong>${pagesProcessed} ${pageLabel}</strong>.
                 </p>
-                <p style="font-size: 14px; color: #666; margin: 20px 0;">
+                <p id="sa-rd-warning">
                     Rendering this many rows may take a considerable amount of time and could impact your browser performance
                     or even make your browser completely unusable. You can instead SAVE the data directly to disk and LOAD it
                     with a PRE-FILTER condition LATER (to decrease the number of rows to make the rendering feasible) or proceed with rendering now.
                 </p>
-                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 25px;">
-                    <button id="mb-dialog-save" style="
-                        padding: 10px 20px;
-                        font-size: 14px;
-                        cursor: pointer;
-                        background: #4CAF50;
-                        color: white;
-                        border: none;
-                        border-radius: 6px;
-                        font-weight: bold;
-                    ">💾 Save to Disk</button>
-                    <button id="mb-dialog-render" style="
-                        padding: 10px 20px;
-                        font-size: 14px;
-                        cursor: pointer;
-                        background: #2196F3;
-                        color: white;
-                        border: none;
-                        border-radius: 6px;
-                        font-weight: bold;
-                    ">🎨 Render Now</button>
-                    <button id="mb-dialog-cancel" style="
-                        padding: 10px 20px;
-                        font-size: 14px;
-                        cursor: pointer;
-                        background: #f44336;
-                        color: white;
-                        border: none;
-                        border-radius: 6px;
-                        font-weight: bold;
-                    ">❌ Cancel</button>
+                <div id="sa-rd-btn-row">
+                    <button id="mb-dialog-save" class="sa-rd-btn">💾 Save to Disk</button>
+                    <button id="mb-dialog-render" class="sa-rd-btn">🎨 Render Now</button>
+                    <button id="mb-dialog-cancel" class="sa-rd-btn">❌ Cancel</button>
                 </div>
             `;
 
@@ -26322,19 +29080,28 @@ a { color: #1565c0; }`;
             await applyShowAllTags(activeDefinition);
         }
 
-        // ── renameH2ToH3 / insertH2 pre-processing ───────────────────────────
-        // For pageTypes that carry features.renameH2ToH3 and/or features.insertH2
-        // (e.g. 'artist-tags'), reshape the native heading hierarchy so that the
-        // collapsible-header, filter-container, and multi-table infrastructure
-        // attaches correctly:
-        //   1. Demote all existing <h2> elements to <h3> (section labels).
-        //   2. Inject a fresh <h2> after <div class="tabs"> as the anchor node.
+        // ── renameH2ToH3 / renameH2ToH1 / insertH2 pre-processing ────────────
+        // For pageTypes that carry features.renameH2ToH3, features.renameH2ToH1,
+        // and/or features.insertH2 (e.g. 'artist-tags', 'user-edits'), reshape
+        // the native heading hierarchy so that the collapsible-header,
+        // filter-container, and multi-table infrastructure attaches correctly:
+        //   1. Demote all existing <h2> elements to <h3> (section labels) — OR
+        //      promote them to <h1> (page title) when the page has no native
+        //      <h1> of its own at all (e.g. 'user-edits'/'user-open-edits' —
+        //      see debug/user-edits-wrong.org).
+        //   2. Inject a fresh <h2> after <div class="tabs"> (or, absent that,
+        //      before the first qualifying <h3>, or after the first <h1>) as
+        //      the anchor node.
         // Must run BEFORE listToTable so that the DOM heading structure is already
         // in its final form when applyListToTable() walks the DOM for <div id="…">
-        // containers.  Internal order is also significant: renameH2ToH3 must run
-        // before insertH2 so the newly inserted <h2> is NOT immediately demoted.
+        // containers.  Internal order is also significant: renameH2ToH3/
+        // renameH2ToH1 must run before insertH2 so the newly inserted <h2> is
+        // NOT immediately demoted/promoted itself.
         if (activeDefinition.features?.renameH2ToH3) {
             applyRenameH2ToH3(activeDefinition);
+        }
+        if (activeDefinition.features?.renameH2ToH1) {
+            applyRenameH2ToH1(activeDefinition);
         }
         if (activeDefinition.features?.insertH2) {
             applyInsertH2(activeDefinition);
@@ -26354,6 +29121,24 @@ a { color: #1565c0; }`;
         // DOM for tables).
         if (Array.isArray(activeDefinition.features?.listToTable)) {
             applyListToTable(activeDefinition);
+        }
+
+        // ── editsToTable pre-processing ─────────────────────────────────────
+        // For the 'edits' pageType, convert the native div.edit-list block
+        // sequence into a proper <table class="tbl"> the same way listToTable
+        // does for <ul> lists above. Same ordering constraints apply.
+        if (activeDefinition.features?.editsToTable) {
+            applyEditsToTable(activeDefinition);
+        }
+
+        // ── notesReceivedToTable pre-processing ──────────────────────────────
+        // For the 'notes-received' pageType, convert the div.edit-list +
+        // div.edit-note sibling-pair sequence into a proper <table class="tbl">
+        // — see applyNotesReceivedToTable's JSDoc for why this needs its own
+        // converter instead of reusing applyEditsToTable. Same ordering
+        // constraints apply.
+        if (activeDefinition.features?.notesReceivedToTable) {
+            applyNotesReceivedToTable(activeDefinition);
         }
 
         // Clear existing highlights immediately from DOM for visual feedback
@@ -26399,8 +29184,35 @@ a { color: #1565c0; }`;
             ? path.replace(/\/[^/]*$/, buttonConfig.virtualPath)
             : path;
 
+        // --- USERSCRIPT WARNING POPUP --- (hoisted above maxPage determination so
+        // the unboundedPagination branch below can use it directly)
+        const maxThreshold = Lib.settings.sa_max_page;
+
+        // For edits pageTypes, MusicBrainz's pagination is only ambiguous
+        // (no true last page discoverable — see debug/NOTES.md / debug/act.org)
+        // when the widget shows an ellipsis milestone window. Small result
+        // sets either have no pagination at all (debug/willow.html) or a
+        // complete, gap-free widget that already reveals the real last page
+        // (debug/mgv.html) — determineMaxPageFromDOM() is correct for both,
+        // so only fall back to the safety-cap + fetch-until-empty strategy
+        // when the ellipsis is actually present.
+        const isAmbiguousEditsPagination =
+            !!activeDefinition?.features?.unboundedPagination &&
+            _hasAmbiguousEditsPagination(document);
+
         // Determine maxPage based on context
-        if (activeDefinition && activeDefinition.non_paginated) {
+        if (isAmbiguousEditsPagination) {
+            // MusicBrainz edit-listing pagination never reveals a true last page
+            // (the widget is a sliding window around the current page, and
+            // "Found at least N edits" keeps growing the deeper you page — see
+            // debug/NOTES.md). determineMaxPageFromDOM()/fetchMaxPageGeneric()
+            // would silently undercount, so skip them entirely: use the
+            // configured safety cap as the loop bound, and rely on the
+            // empty-page break in the fetch loop below to stop at the real end.
+            Lib.debug('fetch', `Context: unboundedPagination page definition, ambiguous widget detected. Using safety cap as maxPage: ${maxThreshold}.`);
+            maxPage = maxThreshold;
+            globalStatusDisplay.textContent = `Getting number of pages to fetch... Unbounded pagination; capped at ${maxThreshold}`;
+        } else if (activeDefinition && activeDefinition.non_paginated) {
             // For non-paginated types, initially assume maxPage is 1
             Lib.debug('fetch', 'Context: Non-paginated page definition. Initially assuming maxPage = 1.');
             maxPage = 1;
@@ -26419,12 +29231,28 @@ a { color: #1565c0; }`;
             globalStatusDisplay.textContent = `Getting number of pages to fetch... Paginated page definition. Fetching maxPage from DOM: ${maxPage}`;
         }
 
-        // --- USERSCRIPT WARNING POPUP ---
-        const maxThreshold = Lib.settings.sa_max_page;
         Lib.debug('fetch', `Total pages to fetch: ${maxPage}`);
 
-        // If page count is above threshold, show modal
-        if (maxPage > maxThreshold) {
+        // Warn the user before committing to the fetch — the reason differs
+        // depending on whether maxPage is a real detected total (normal
+        // pageTypes, and edits pages with a non-ambiguous pagination widget)
+        // or just the configured safety cap standing in for an unknown total
+        // (edits pages with an ambiguous widget — see isAmbiguousEditsPagination above).
+        if (isAmbiguousEditsPagination) {
+            const proceedConfirmed = await Lib.showCustomConfirm(
+                `This MusicBrainz edit listing does not report an exact page count — MusicBrainz's pagination keeps going indefinitely for large result sets.\n\nFetching will stop automatically once no more edits are found, up to a safety cap of ${maxThreshold} pages (configurable in Settings).\n\nProceed?`,
+                'ℹ️ Unknown Page Count',
+                activeBtn
+            );
+            if (!proceedConfirmed) {
+                Lib.warn('warn', 'Unbounded-pagination fetch canceled by user.');
+                activeBtn.style.backgroundColor = '';
+                activeBtn.style.color = '';
+                activeBtn.disabled = false;
+                _setInfoSub('mb-info-display-generic', '');
+                return;
+            }
+        } else if (maxPage > maxThreshold) {
             const proceedConfirmed = await Lib.showCustomConfirm(
                 `Warning: This MusicBrainz entity has ${maxPage} pages. It's more than the configured maximum value (${maxThreshold}) and could result in severe performance, memory consumption and timing issues.\n\nProceed?`,
                 '⚠️ High Page Count',
@@ -26446,6 +29274,8 @@ a { color: #1565c0; }`;
         originalAllRows = [];
         groupedRows = [];
         expandedCells.clear();
+        _areaFlagRegionCorrected.clear();
+        _editsProseDefaultExpandedCols.clear();
         _mbRowIdxCounter = 0;
 
         // Reset the arrays that are populated by the MAIN fetch pass.
@@ -26585,6 +29415,44 @@ a { color: #1565c0; }`;
                     applyListToTable(activeDefinition, doc);
                 }
 
+                // ── editsToTable on fetched pages ────────────────────────────
+                // Mirrors the listToTable handling above. On pages where
+                // isAmbiguousEditsPagination is true, maxPage is just the
+                // configured safety cap (MusicBrainz's edit-listing pagination
+                // never reveals a true last page for large result sets — see
+                // debug/NOTES.md). The real "we're done" signal there is a
+                // fetched page with zero real edit blocks; stop the whole fetch
+                // loop right here rather than the generic
+                // tablesToProcess.length === 0 → continue below, which would
+                // otherwise burn through every remaining page up to the cap.
+                // Counts only div.edit-list blocks with a real h2 edit#/action
+                // link — MusicBrainz's "bulk vote on all unvoted edits" banner
+                // (search-results pages only) reuses the same div.edit-list
+                // class without one, so a page with only that banner must not
+                // be mistaken for "more data ahead".
+                if (doc !== document && activeDefinition.features?.editsToTable) {
+                    if (isAmbiguousEditsPagination &&
+                        doc.querySelectorAll('div.edit-list h2 a[href^="/edit/"]').length === 0) {
+                        Lib.debug('fetch', `edits: page ${p} has no edit-list blocks — reached the end of an unbounded listing, stopping.`);
+                        break;
+                    }
+                    applyEditsToTable(activeDefinition, doc);
+                }
+
+                // ── notesReceivedToTable on fetched pages ────────────────────
+                // Mirrors the editsToTable handling directly above — same
+                // ambiguous-pagination early-stop logic, same div.edit-list
+                // h2 detection (notes-received's div.edit-list carries the
+                // same h2 edit#/action link as every other edits-listing page).
+                if (doc !== document && activeDefinition.features?.notesReceivedToTable) {
+                    if (isAmbiguousEditsPagination &&
+                        doc.querySelectorAll('div.edit-list h2 a[href^="/edit/"]').length === 0) {
+                        Lib.debug('fetch', `notes-received: page ${p} has no edit-list blocks — reached the end of an unbounded listing, stopping.`);
+                        break;
+                    }
+                    applyNotesReceivedToTable(activeDefinition, doc);
+                }
+
                 // Use parseDocumentForTables to filter which tables we actually process
                 const tablesToProcess = parseDocumentForTables(doc, targetHeader);
 
@@ -26697,6 +29565,13 @@ a { color: #1565c0; }`;
                         // Setting-gated exclusion: checkbox-cell column (identified by CSS class)
                         if (Lib.settings.sa_remove_checkbox_cell && th.classList.contains('checkbox-cell')) {
                             Lib.debug('cleanup', `Excluding column ${idx} from index tracking: checkbox-cell (sa_remove_checkbox_cell enabled).`);
+                            indicesToExclude.push(idx);
+                        }
+
+                        // Unconditionally exclude the "MusicBrainz Nuclear Tags" bulk-tag column
+                        // from index tracking (foreign userscript injection, no header text).
+                        if (th.classList.contains('elephant-tag-col')) {
+                            Lib.debug('cleanup', `Excluding column ${idx} from index tracking: elephant-tag-col (foreign userscript column).`);
                             indicesToExclude.push(idx);
                         }
 
@@ -27143,9 +30018,21 @@ a { color: #1565c0; }`;
                                 'series-tags', 'place-tags', 'area-tags', 'instrument-tags',
                                 'artist-credit'
                             ]);
-                            const _colName = _singularPageTypes.has(pageType)
-                                ? _toSingular(category)
-                                : category;
+                            // reports-index and privileged-accounts always use a fixed
+                            // literal column header ("Report" / "Editor"), regardless of
+                            // the category label (Artists, Release groups, … / Auto-editors,
+                            // Bots, …) — Structure J/K already built the group's <th> with
+                            // that same literal at conversion time, so this must match or
+                            // renderGroupedTable's per-group thead patch (which sets the
+                            // first <th> text to group.colName) would silently overwrite it
+                            // back to the category name.
+                            const _colName = (pageType === 'reports-index')
+                                ? 'Report'
+                                : (pageType === 'privileged-accounts')
+                                    ? 'Editor'
+                                    : _singularPageTypes.has(pageType)
+                                        ? _toSingular(category)
+                                        : category;
                             groupedRows.push({ category: category, colName: _colName, rows: [] });
                             lastCategorySeenAcrossPages = category;
                             // Store the per-entity feature set (resolved from entityFeatures map)
@@ -27166,16 +30053,28 @@ a { color: #1565c0; }`;
                             if (pageType === 'user-ratings' && table.dataset.mbColHeaders) {
                                 try { _lastGroup.colHeaders = JSON.parse(table.dataset.mbColHeaders); } catch (_e) {}
                             }
+                            // For privileged-accounts, carry over the intro/description
+                            // paragraphs Structure K stashed on the table (everything in
+                            // the section before the editor-list <p> it converted) so
+                            // renderGroupedTable can re-insert them between the h3 and
+                            // the table — otherwise they are left orphaned in their
+                            // original DOM position while the rebuilt h3/table pairs are
+                            // inserted as one contiguous block elsewhere, making them
+                            // appear after every sub-table instead of before their own.
+                            if (table.dataset.mbIntroHtml) {
+                                _lastGroup.introHtml = table.dataset.mbIntroHtml;
+                            }
                         }
                         const currentGroup = groupedRows[groupedRows.length - 1];
 
                         // ── Per-table extractor colIdx resolution ─────────────────────
                         // For multi-table pages where each group table has a different
-                        // entity-type column (e.g. 'tag-value': Area / Artist / Event /…),
+                        // entity-type column (e.g. 'tag-value': Area / Artist / Event /…;
+                        // 'instrument-list': Wind instrument / String instrument / …),
                         // activeColumnExtractors must be re-resolved against the CURRENT
                         // table's headers — otherwise previous tables' resolved colIdx
                         // values linger and cause multiple extractors to fire on every row.
-                        if (pageType === 'tag-value' || pageType === 'user-tag-value' || pageType === 'user-ratings') {
+                        if (pageType === 'tag-value' || pageType === 'user-tag-value' || pageType === 'user-ratings' || pageType === 'instrument-list') {
                             // If this group has entity-specific features (from entityFeatures map),
                             // rebuild the active extractors and integer columns from that feature set,
                             // merged with the base features (listToTable, removeSelector, etc.).
@@ -27487,6 +30386,51 @@ a { color: #1565c0; }`;
                                         }
                                     }
                                     // Skip — do not add to allRows / groupedRows
+                                } else if (pageType === 'top-cd-stub' && node.cells.length === 1 && node.cells[0].classList.contains('lastupdate')) {
+                                    // ── top-cd-stub: "Added N years ago, last modified M years
+                                    //    ago" info row ────────────────────────────────────────
+                                    // MusicBrainz renders one <tr><td class="lastupdate"
+                                    // colspan="4">…</td></tr> immediately after each real data
+                                    // row. A colSpan=4 single cell already fails the generic
+                                    // "allow single-cell rows only when the cell does NOT span
+                                    // multiple columns" guard below, so this row would otherwise
+                                    // be silently dropped. Instead, fold its text into the
+                                    // preceding data row's Title cell as a disambiguation comment
+                                    // — <span class="comment">(<bdi>…</bdi>)</span> — matching the
+                                    // native MB "Name <span class="comment">(disambiguation)
+                                    // </span>" convention, and mirror it into the row's synthetic
+                                    // Comment cell (see 'top-cd-stub' features.extractMainColumn).
+                                    const _lastRow = allRows.length > 0 ? allRows[allRows.length - 1] : null;
+                                    const _infoText = node.cells[0].textContent.trim();
+                                    if (_lastRow && _infoText) {
+                                        const _titleCell = _lastRow.cells[0];
+                                        if (_titleCell) {
+                                            const _commentSpan = document.createElement('span');
+                                            _commentSpan.className = 'comment';
+                                            _commentSpan.append('(');
+                                            const _bdi = document.createElement('bdi');
+                                            _bdi.textContent = _infoText;
+                                            _commentSpan.appendChild(_bdi);
+                                            _commentSpan.append(')');
+                                            _titleCell.appendChild(document.createTextNode(' '));
+                                            _titleCell.appendChild(_commentSpan);
+                                        }
+
+                                        // extractMainColumn already ran for this row (this info
+                                        // row is a later sibling in document order) and produced
+                                        // an empty Comment cell, since the Title cell had no
+                                        // native .comment span at extraction time — top-cd-stub's
+                                        // Comment column is populated exclusively from here. It
+                                        // is always the row's last cell for this page type (no
+                                        // injectedColumns/addCAA/addEAA configured on it).
+                                        if (mainColIdx !== -1) {
+                                            const _commentCell = _lastRow.cells[_lastRow.cells.length - 1];
+                                            if (_commentCell) _commentCell.textContent = _infoText;
+                                        }
+
+                                        Lib.debug('parse', `top-cd-stub: merged lastupdate info into preceding row: "${_infoText}"`);
+                                    }
+                                    // Skip — do not add to allRows
                                 } else if (
                                     (node.cells.length > 1 ||
                                      // Allow single-cell rows only when the cell does NOT span multiple
@@ -28016,6 +30960,11 @@ a { color: #1565c0; }`;
                 }
                 await renderFinalTable(allRows);
                 document.querySelectorAll('table.tbl thead').forEach(cleanupHeaders);
+                // Must run after the cleanupHeaders() pass above (so the
+                // MB-Locality/MB-Region/Country synthetic <th>s the observer's
+                // trio-finder scans for actually exist) — see the comment at
+                // the end of renderFinalTable() for why it can't live there.
+                initAreaFlagRegionObserver();
                 const mainTable = document.querySelector('table.tbl');
                 if (mainTable) addColumnFilterRow(mainTable);
 
@@ -28558,6 +31507,229 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Finds the master row (in `allRows`, or nested inside `groupedRows[*].rows`)
+     * carrying the given `data-mb-row-idx` value.
+     *
+     * `renderFinalTable`/`renderGroupedTable` insert `cloneNode(true)` copies of
+     * these master rows into the live DOM (see the cloneNode-drops-listeners
+     * pitfall documented elsewhere) — mutating the master row directly, rather
+     * than only the live clone, is what lets `_forceLocalityToRegion` survive
+     * every subsequent sort/filter re-render without needing a separate replay
+     * step (unlike `expandedCells`, which exists precisely because THAT state
+     * can't be baked into the master row).
+     *
+     * @param {string} rowIdx
+     * @returns {HTMLTableRowElement|null}
+     */
+    function _findMasterRowByIdx(rowIdx) {
+        const fromSingle = allRows.find(r => r.dataset.mbRowIdx === rowIdx);
+        if (fromSingle) return fromSingle;
+        for (const group of groupedRows) {
+            const found = group.rows.find(r => r.dataset.mbRowIdx === rowIdx);
+            if (found) return found;
+        }
+        return null;
+    }
+
+    /**
+     * Scans one live table's header row for Locality/Region/Country column
+     * triplets produced by `splitLocation`/`splitArea` (via the shared
+     * `_routeAreaLink` helper) — these are always injected as adjacent
+     * synthetic columns in that exact order, so a name ending in "ocality"
+     * immediately followed by one ending in "egion" then one ending in
+     * "ountry" reliably identifies a triplet regardless of its caller-chosen
+     * prefix (`Locality`/`MB-Locality`/`MB-Begin locality`/…, see
+     * `AREA_FLAG_REGION_COUNTRIES`'s comment for the full naming set).
+     *
+     * @param {HTMLTableElement} table
+     * @returns {Array<{localityIdx: number, regionIdx: number, countryIdx: number}>}
+     */
+    function _flagRegionColumnTrios(table) {
+        const headers = Array.from(table.querySelectorAll('thead tr:first-child th'));
+        const names = headers.map(th => th.dataset.colName ||
+            th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' '));
+        const trios = [];
+        for (let i = 0; i < names.length - 2; i++) {
+            if (names[i].endsWith('ocality') && names[i + 1].endsWith('egion') && names[i + 2].endsWith('ountry')) {
+                trios.push({ localityIdx: i, regionIdx: i + 1, countryIdx: i + 2 });
+            }
+        }
+        return trios;
+    }
+
+    /**
+     * Moves a Locality cell's entire content into the Region cell of the same
+     * row, preserving narrow-to-broad order (the moved content is inserted
+     * BEFORE whatever Region already holds, since it was always the more
+     * specific entry). No-op if Locality is already empty.
+     *
+     * @param {HTMLTableRowElement} tr
+     * @param {{localityIdx: number, regionIdx: number}} trio
+     */
+    function _forceLocalityToRegion(tr, trio) {
+        const localityTd = tr.cells[trio.localityIdx];
+        const regionTd    = tr.cells[trio.regionIdx];
+        if (!localityTd || !regionTd || !localityTd.hasChildNodes()) return;
+        const movedNodes = Array.from(localityTd.childNodes);
+        localityTd.textContent = '';
+        if (regionTd.firstChild) {
+            const sep = document.createTextNode(', ');
+            regionTd.insertBefore(sep, regionTd.firstChild);
+            movedNodes.forEach(n => regionTd.insertBefore(n, sep));
+        } else {
+            movedNodes.forEach(n => regionTd.appendChild(n));
+        }
+    }
+
+    /**
+     * Checks one row against one Locality/Region/Country trio and, if its
+     * Locality cell has just been decorated with a subdivision flag icon
+     * (`a[data-flag-processed]`, set by the "MusicBrainz: More Flags
+     * Everywhere" / "Canadian Province Flags Everywhere" userscripts,
+     * @Lotheric) AND its resolved Country is in the internal
+     * `AREA_FLAG_REGION_COUNTRIES` list, moves that Locality value into
+     * Region — on both the live row (immediate visual feedback) and the
+     * master row (so the correction survives future re-renders; see
+     * `_findMasterRowByIdx`).
+     *
+     * This is the deferred counterpart to the same check `_routeAreaLink`
+     * already performs at extraction time: extraction only sees whatever the
+     * live DOM looked like at fetch time, which is accurate for the current
+     * page (page 1) but NOT for pages 2..Max, whose rows are parsed from a
+     * detached `DOMParser` document (see `fetchHtml`) that the flag-decorating
+     * userscript never touches. By the time this row is inserted into the
+     * live tbody and re-scanned by that userscript, the icon becomes
+     * available — this function is what reacts to it.
+     *
+     * @param {HTMLTableRowElement} tr
+     * @param {Array<{localityIdx: number, regionIdx: number, countryIdx: number}>} trios
+     */
+    function _maybeCorrectAreaFlagRegion(tr, trios) {
+        const rowIdx = tr.dataset.mbRowIdx;
+        if (rowIdx === undefined) return;
+        trios.forEach(trio => {
+            const key = `${rowIdx}:${trio.localityIdx}`;
+            if (_areaFlagRegionCorrected.has(key)) return;
+            const localityTd = tr.cells[trio.localityIdx];
+            if (!localityTd) {
+                Lib.debug('render', `_maybeCorrectAreaFlagRegion: rowIdx=${rowIdx} has no cell at localityIdx=${trio.localityIdx} (row has ${tr.cells.length} cells)`);
+                return;
+            }
+            if (!localityTd.querySelector('a[data-flag-processed]')) return; // not decorated yet — normal, not an error
+            const countryTd   = tr.cells[trio.countryIdx];
+            const countryName = (countryTd?.textContent || '')
+                .replace(/\s*\([^)]*\)\s*$/, '').trim().toLowerCase();
+            if (!countryName) {
+                Lib.debug('render', `_maybeCorrectAreaFlagRegion: rowIdx=${rowIdx} localityIdx=${trio.localityIdx} is flagged but countryIdx=${trio.countryIdx} resolved to empty text (raw="${countryTd?.textContent}")`);
+                return;
+            }
+            if (!_flagRegionCountrySet().has(countryName)) {
+                Lib.debug('render', `_maybeCorrectAreaFlagRegion: rowIdx=${rowIdx} is flagged but country "${countryName}" is not in AREA_FLAG_REGION_COUNTRIES`);
+                return;
+            }
+
+            _forceLocalityToRegion(tr, trio);
+            _areaFlagRegionCorrected.add(key);
+            const masterRow = _findMasterRowByIdx(rowIdx);
+            if (masterRow && masterRow !== tr) _forceLocalityToRegion(masterRow, trio);
+            Lib.debug('render', `_maybeCorrectAreaFlagRegion: moved Locality->Region for rowIdx=${rowIdx} (${countryName})`);
+        });
+    }
+
+    const _areaFlagObservedTbodies = new WeakSet();
+    /**
+     * Re-checks every row currently in `tbody` against `trios` — a full sweep,
+     * used both as the initial pass (in case a flag-decorating userscript
+     * already finished before this function was called) and as a bounded
+     * fallback safety net (see `initAreaFlagRegionObserver`) for whatever
+     * timing/DOM-replacement strategy that userscript happens to use, since we
+     * have no visibility into its internals.
+     *
+     * @param {HTMLTableSectionElement} tbody
+     * @param {Array<{localityIdx: number, regionIdx: number, countryIdx: number}>} trios
+     */
+    function _sweepAreaFlagRegionCorrections(tbody, trios) {
+        Array.from(tbody.rows).forEach(tr => _maybeCorrectAreaFlagRegion(tr, trios));
+    }
+
+    /**
+     * Attaches a `MutationObserver` to every `<tbody>` of every `table.tbl`
+     * currently in the DOM, reacting to a flag-decorating userscript
+     * ("MusicBrainz: More Flags Everywhere" / "Canadian Province Flags
+     * Everywhere", @Lotheric) processing a link that was still undecorated
+     * when `splitLocation`/`splitArea` originally ran (always true for pages
+     * 2..Max — see `_maybeCorrectAreaFlagRegion`'s doc comment).
+     *
+     * Watches BOTH `attributes` (the userscript sets `data-flag-processed` on
+     * the existing anchor — confirmed for both userscripts via debug/area.org
+     * and debug/florida.html) AND `childList` (in case it instead replaces the
+     * anchor/cell subtree wholesale, e.g. via `innerHTML`/`outerHTML`
+     * assignment, which fires no attribute-mutation event on the new node at
+     * all) — we have no source access to either userscript to know for
+     * certain which strategy applies, so both are covered defensively.
+     *
+     * Belt-and-suspenders: also runs `_sweepAreaFlagRegionCorrections`
+     * immediately (covers decoration that already completed before this
+     * function was called) and again on a few bounded delays (covers
+     * whatever asynchronous timing the decorating userscript uses that
+     * neither mutation type above happens to catch, e.g. a full re-render of
+     * an ancestor node that MutationObserver's subtree walk still SHOULD see,
+     * but the specific record shape wasn't anticipated here).
+     *
+     * No-ops entirely when `AREA_FLAG_REGION_COUNTRIES` is empty, or when a
+     * table has no Locality/Region/Country column triplet (see
+     * `_flagRegionColumnTrios`) — most pages pay zero overhead.
+     *
+     * Observed tbodies are tracked in `_areaFlagObservedTbodies` (a `WeakSet`)
+     * so repeated calls (e.g. after a filter re-render) do not attach
+     * duplicate observers — mirrors `initTreleasesObserver`'s pattern.
+     */
+    function initAreaFlagRegionObserver() {
+        if (_flagRegionCountrySet().size === 0) return;
+        document.querySelectorAll('table.tbl tbody').forEach(tbody => {
+            if (_areaFlagObservedTbodies.has(tbody)) return;
+            const table = tbody.closest('table');
+            if (!table) return;
+            const trios = _flagRegionColumnTrios(table);
+            if (trios.length === 0) {
+                const headerNames = Array.from(table.querySelectorAll('thead tr:first-child th'))
+                    .map(th => th.dataset.colName || th.textContent.trim());
+                Lib.debug('render', `initAreaFlagRegionObserver: no Locality/Region/Country trio found on this table. Headers: [${headerNames.join(', ')}]`);
+                return;
+            }
+            _areaFlagObservedTbodies.add(tbody);
+
+            const observer = new MutationObserver(mutations => {
+                const rowsToCheck = new Set();
+                for (const mutation of mutations) {
+                    if (mutation.type === 'attributes') {
+                        const tr = mutation.target.closest && mutation.target.closest('tr');
+                        if (tr) rowsToCheck.add(tr);
+                    } else if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType !== Node.ELEMENT_NODE) return;
+                            const tr = node.closest ? node.closest('tr')
+                                : (node.parentElement ? node.parentElement.closest('tr') : null);
+                            if (tr) rowsToCheck.add(tr);
+                        });
+                    }
+                }
+                rowsToCheck.forEach(tr => _maybeCorrectAreaFlagRegion(tr, trios));
+            });
+            observer.observe(tbody, {
+                childList: true, subtree: true,
+                attributes: true, attributeFilter: ['data-flag-processed']
+            });
+            Lib.debug('render', `initAreaFlagRegionObserver: watching tbody (${trios.length} Locality/Region/Country trio(s))`);
+
+            _sweepAreaFlagRegionCorrections(tbody, trios);
+            [500, 1500, 3000, 6000].forEach(delay => {
+                setTimeout(() => _sweepAreaFlagRegionCorrections(tbody, trios), delay);
+            });
+        });
+    }
+
+    /**
      * Renders a flat array of collected data rows into the single `<table class="tbl">`
      * on the page (single-table mode).
      *
@@ -28642,6 +31814,15 @@ a { color: #1565c0; }`;
         if (Lib.settings.sa_enable_numeric_alignment !== false) {
             initTreleasesObserver();
         }
+
+        // NOTE: initAreaFlagRegionObserver() is intentionally NOT called here.
+        // For tableMode: 'single' pages, startFetchingProcess() calls
+        // cleanupHeaders() (which injects the MB-Locality/MB-Region/Country
+        // synthetic <th>s the observer's trio-finder depends on) AFTER
+        // renderFinalTable() returns — so calling it here would always scan a
+        // thead that still only has the raw native headers (e.g. 'Area',
+        // 'Begin area') and never find a trio. See the call in
+        // startFetchingProcess right after that cleanupHeaders() pass.
     }
 
     /**
@@ -28676,9 +31857,18 @@ a { color: #1565c0; }`;
             font-size: 16px;
             text-align: center;
         `;
+        // GM_addStyle so this overlay's CSS is exempt from page CSP style-src
+        // restrictions. Fully static, safe to inject once.
+        if (!document.getElementById('sa-render-progress-style')) {
+            const rpStyle = GM_addStyle(`
+                #mb-render-heading { margin-bottom: 10px; }
+                #mb-render-progress { font-size: 14px; }
+            `);
+            rpStyle.id = 'sa-render-progress-style';
+        }
         progressMsg.innerHTML = `
-            <div style="margin-bottom: 10px;">🎨 Rendering rows...</div>
-            <div id="mb-render-progress" style="font-size: 14px;">0 / ${totalRows.toLocaleString()}</div>
+            <div id="mb-render-heading">🎨 Rendering rows...</div>
+            <div id="mb-render-progress">0 / ${totalRows.toLocaleString()}</div>
         `;
         document.body.appendChild(progressMsg);
         const progressText = document.getElementById('mb-render-progress');
@@ -29621,6 +32811,31 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Mirrors a grouped sub-table's `display` onto its associated intro-paragraph
+     * wrapper (`.mb-group-intro`, see `group.introHtml` / Structure K in
+     * `applyListToTable`, e.g. privileged-accounts), so the two always
+     * collapse/expand together when the h3 header is clicked. Normally the
+     * wrapper sits directly at `table.previousElementSibling` (inserted via
+     * `h3.after(introEl); introEl.after(table);` in `renderGroupedTable`), but
+     * this walks back to the h3 boundary rather than assuming strict adjacency
+     * so it keeps working if something else (e.g. a CAA/EAA art bigbox, which
+     * also targets table.previousElementSibling) is ever inserted between them
+     * on a page that also carries an intro wrapper. No-op for every page
+     * without one (the vast majority).
+     * @param {HTMLTableElement} table
+     */
+    function _syncGroupIntroVisibility(table) {
+        let _sib = table.previousElementSibling;
+        while (_sib && _sib.tagName !== 'H3') {
+            if (_sib.classList.contains('mb-group-intro')) {
+                _sib.style.display = table.style.display;
+                return;
+            }
+            _sib = _sib.previousElementSibling;
+        }
+    }
+
+    /**
      * Renders multiple tables grouped by category (e.g., Official, Various Artists) with H3 headers
      * @param {Array} dataArray - Array of grouped data objects, each containing a label and rows
      * @param {boolean} isArtistMain - Whether this is the main artist page (affects rendering logic)
@@ -29690,7 +32905,9 @@ a { color: #1565c0; }`;
         if (!query) {
             Lib.debug('render', 'No query provided; performing initial cleanup of existing elements.');
             // Updated cleanup: remove H3s and tables, but NEVER remove H3s containing 'span.worklink'
-            container.querySelectorAll('h3, table.tbl, .mb-master-toggle').forEach(el => {
+            // .mb-group-intro: per-group intro paragraphs (see group.introHtml below) —
+            // removed and rebuilt alongside their h3/table pair on every re-render.
+            container.querySelectorAll('h3, table.tbl, .mb-master-toggle, .mb-group-intro').forEach(el => {
                 if (el.tagName === 'H3' && el.querySelector('span.worklink')) {
                     Lib.debug('render', 'Skipping removal of H3 containing worklink.');
                     return;
@@ -29757,6 +32974,7 @@ a { color: #1565c0; }`;
                         Lib.debug('render', 'Master toggle button: Showing all tables.');
                         container.querySelectorAll('table.tbl').forEach(t => {
                             t.style.display = '';
+                            _syncGroupIntroVisibility(t);
                             _artRestoreBigboxesForTable(t);
                         });
                         container.querySelectorAll('.mb-toggle-h3').forEach(h => {
@@ -29767,6 +32985,7 @@ a { color: #1565c0; }`;
                         Lib.debug('render', 'Master toggle button: Hiding all tables.');
                         container.querySelectorAll('table.tbl').forEach(t => {
                             t.style.display = 'none';
+                            _syncGroupIntroVisibility(t);
                             _artHideBigboxesForTable(t);
                         });
                         container.querySelectorAll('.mb-toggle-h3').forEach(h => {
@@ -29976,12 +33195,14 @@ a { color: #1565c0; }`;
                             });
                             cleanupHeaders(_theadForGroup);
                         }
-                    } else if ((pageType === 'tag-value' || pageType === 'user-tag-value') && rawTemplateHead) {
-                        // ── Per-group thead for tag-value multi-table mode ────────────
-                        // Each group has a different entity-type column and therefore
-                        // different synthetic columns.  Resolve extractors from the group's
-                        // entity-specific features (entityFeatures map), rebuild active lists,
-                        // then call cleanupHeaders so it injects the correct headers.
+                    } else if ((pageType === 'tag-value' || pageType === 'user-tag-value' || pageType === 'instrument-list') && rawTemplateHead) {
+                        // ── Per-group thead for tag-value / instrument-list multi-table
+                        //    mode ─────────────────────────────────────────────────────
+                        // Each group has a different entity-type (or, for instrument-list,
+                        // family) column and therefore different synthetic columns.
+                        // Resolve extractors from the group's entity-specific features
+                        // (entityFeatures map), rebuild active lists, then call
+                        // cleanupHeaders so it injects the correct headers.
                         const _groupEntityFeatures = group.entityFeatures || {};
                         if (Object.keys(_groupEntityFeatures).length > 0) {
                             const _mf = { ...(activeDefinition.features || {}), ..._groupEntityFeatures };
@@ -30383,12 +33604,41 @@ a { color: #1565c0; }`;
                 const subCollapseBtn = createSubTableCollapseButton(table, categoryName);
                 h3.insertBefore(subCollapseBtn, subTableControls);
 
+                // ── Per-group intro paragraphs (e.g. privileged-accounts) ────────────
+                // group.introHtml (set from table.dataset.mbIntroHtml — see Structure K
+                // in applyListToTable) holds any descriptive <p>s that originally sat
+                // between this section's heading and its editor/report/etc. list, now
+                // stashed there because the cleanup pass above only removes h3/table.tbl
+                // elements, and the rebuilt h3/table pairs are inserted as one
+                // contiguous block starting from targetHeader — leaving such paragraphs
+                // orphaned after every sub-table instead of before their own. Rebuilding
+                // one small wrapper per group here keeps each paragraph pinned directly
+                // before the table it actually describes.
+                let introEl = null;
+                if (group.introHtml) {
+                    introEl = document.createElement('div');
+                    introEl.className = 'mb-group-intro';
+                    introEl.innerHTML = group.introHtml;
+                    // Match the table's just-decided initial collapsed/expanded state
+                    // (set above by the auto-expand logic) — every later toggle path
+                    // (h3 click, Ctrl+Click all, Ctrl+3, master toggle) re-syncs via
+                    // _syncGroupIntroVisibility(table), which relies on this element
+                    // already sitting at table.previousElementSibling.
+                    introEl.style.display = table.style.display;
+                }
+
                 if (lastInsertedElement) {
                     lastInsertedElement.after(h3);
-                    h3.after(table);
+                    if (introEl) {
+                        h3.after(introEl);
+                        introEl.after(table);
+                    } else {
+                        h3.after(table);
+                    }
                     lastInsertedElement = table; // Update pointer for the next group
                 } else {
                     container.appendChild(h3);
+                    if (introEl) container.appendChild(introEl);
                     container.appendChild(table);
                 }
                 // Propagate the disc-section stamp to the table element so
@@ -30458,6 +33708,7 @@ a { color: #1565c0; }`;
                             // own tracked visibility state (caaVisible / eaaVisible dataset attrs).
                             allTables.forEach(t => {
                                 t.style.display = '';
+                                _syncGroupIntroVisibility(t);
                                 _artRestoreBigboxesForTable(t);
                             });
                             allH3s.forEach(h => {
@@ -30471,6 +33722,7 @@ a { color: #1565c0; }`;
                             // they can be restored correctly when expanding again.
                             allTables.forEach(t => {
                                 t.style.display = 'none';
+                                _syncGroupIntroVisibility(t);
                                 _artHideBigboxesForTable(t);
                             });
                             allH3s.forEach(h => {
@@ -30484,6 +33736,7 @@ a { color: #1565c0; }`;
                         const isHidden = table.style.display === 'none';
                         Lib.debug('render', `Toggling table for "${categoryName}". New state: ${isHidden ? 'visible' : 'hidden'}`);
                         table.style.display = isHidden ? '' : 'none';
+                        _syncGroupIntroVisibility(table);
                         h3.querySelector('.mb-toggle-icon').textContent = isHidden ? '▼' : '▲';
 
                         // Mirror the table visibility on any art bigbox(es) (CAA / EAA) that
@@ -30605,6 +33858,16 @@ a { color: #1565c0; }`;
         if (activeDefinition && activeDefinition.tableMode === 'multi') {
             rewireGlobalCollapseButtonMulti();
         }
+
+        // Re-wire wiki-rendered <h2> headings nested inside table cells
+        // (e.g. "Annotation" column sub-sections) across every sub-table —
+        // same cloneNode(true)-drops-listeners reason as
+        // initExpandRGsFeature() in runFilter()'s single-table branch. Safe
+        // to call here unconditionally (including on the true initial
+        // render): makeH2sCollapsible(), called once afterward by
+        // startFetchingProcess()/disk-load, resets and rebuilds whatever
+        // this wires up with its full page-level apparatus — no conflict.
+        _rewireNestedTableH2Toggles();
 
         // Generation guard: if a newer renderFinalTable or renderGroupedTable
         // call started while we were in the forEach loop above, skip the
@@ -30786,6 +34049,11 @@ a { color: #1565c0; }`;
         if (Lib.settings.sa_enable_numeric_alignment !== false) {
             initTreleasesObserver();
         }
+
+        // Install (or re-confirm) the MutationObserver that corrects flagged
+        // subdivisions still sitting in Locality once a flag-decorating userscript
+        // processes them (no-ops when AREA_FLAG_REGION_COUNTRIES is empty).
+        initAreaFlagRegionObserver();
     }
 
     /**
@@ -31331,6 +34599,21 @@ a { color: #1565c0; }`;
                     _mergedRowsByName.get(_cat).push(...groupedRows[_idx].rows);
                 }
             });
+
+            // Re-sort each category's combined rows using the sort currently active
+            // on its first-occurrence (visible) table — see mergedSortComparatorRegistry
+            // doc comment. Without this, switching into merged view on an
+            // already-sorted table would show non-first-occurrence contributors'
+            // rows in their original concatenation order instead of the active sort.
+            _mergedRowsByName.forEach((_rows, _cat) => {
+                const _firstIdx = _mergedFirstIdxByName.get(_cat);
+                const _firstGroup = groupedRows[_firstIdx];
+                if (!_firstGroup) return;
+                const _selfSortKey = `${_firstGroup.category || _firstGroup.key || 'Unknown'}_${_firstIdx}`;
+                const _getMergedCmp = mergedSortComparatorRegistry.get(_selfSortKey);
+                const _mergedCmp = _getMergedCmp ? _getMergedCmp() : null;
+                if (_mergedCmp) _rows.sort(_mergedCmp);
+            });
         }
 
         // ── Show / hide each h3 + its bigboxes + its table ───────────────────
@@ -31825,6 +35108,129 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Re-wires collapse/expand click handling for wiki-rendered `<h2>`
+     * headings nested inside `table.tbl` cells — e.g. a "== Known
+     * performances ==" heading inside an "Annotation" column cell (see
+     * `debug/collapsable.html` / `debug/non-collapsable.html`).
+     *
+     * Why this exists: `renderFinalTable()` / `renderGroupedTable()` insert
+     * `cloneNode(true)` copies of each row on every sort/filter re-render.
+     * `cloneNode(true)` copies DOM attributes — including the
+     * `mb-h2-processed`/`mb-toggle-h2` classes and the `.mb-toggle-icon` span
+     * that `makeH2sCollapsible()` added to the ORIGINAL node — but does NOT
+     * copy `addEventListener`-registered listeners or custom JS properties
+     * (`h2._mbClickHandler` / `h2._mbToggle`). A cloned nested h2 therefore
+     * LOOKS already processed (its marker classes would satisfy
+     * `makeH2sCollapsible()`'s idempotency guard) but is actually inert —
+     * clicking it does nothing. Since `makeH2sCollapsible()` itself only runs
+     * once after the initial full-page render and once after a disk-load
+     * (never after a sort/filter re-render — see its two call sites), it
+     * never gets a chance to notice and re-wire these clones.
+     *
+     * Deliberately does NOT touch page-level h2 sections (Genres, Tags,
+     * Relationships, the main data header, …): those live outside
+     * `table.tbl` and are never cloned by sort/filter, so re-running
+     * `makeH2sCollapsible()`'s full logic on them here would incorrectly
+     * reset any section a user had manually collapsed/expanded back to its
+     * default state. This function only ever looks at `table.tbl h2`, and
+     * skips any h2 that still has a live `_mbClickHandler` (i.e. is not a
+     * stale clone and needs no work).
+     *
+     * Also deliberately simpler than `makeH2sCollapsible()`'s per-h2 toggle
+     * logic: a nested h2's siblings are always plain content (`<p>`, text,
+     * a further nested `<h2>` starting the next wiki heading) — never
+     * `<h3>`/`<table>`/CAA-EAA-bigbox nodes, so none of
+     * `makeH2sCollapsible()`'s page-level special-casing (discography views,
+     * artwork strips, …) applies, and Ctrl+Click "toggle all peer sections"
+     * is intentionally not replicated here (its page-wide "peers" grouping
+     * doesn't have an obviously useful meaning for a single cell's heading).
+     *
+     * Safe to call unconditionally, including from the true initial render:
+     * if `makeH2sCollapsible()` runs afterward (as it always does on initial
+     * render), its own reset step tears down whatever this function wired up
+     * and rebuilds it with the full apparatus — no conflict either way.
+     *
+     * Call this after any render that may have replaced `table.tbl` rows
+     * with fresh clones — i.e. from `runFilter()`'s single-table branch and
+     * from `renderGroupedTable()` (covers the multi-table branch), the same
+     * places `initExpandRGsFeature()` / `_cdtocInitTracklistToggles()` are
+     * already called for the identical "cloneNode(true) drops listeners"
+     * reason.
+     */
+    function _rewireNestedTableH2Toggles() {
+        document.querySelectorAll('table.tbl h2').forEach(h2 => {
+            if (h2._mbClickHandler) return; // still wired — untouched original node
+
+            // isFreshH2: true for a genuinely first-seen nested h2 (no prior
+            // makeH2sCollapsible()/rewire pass ever touched it — e.g. a
+            // sub-table category that just reappeared after a filter
+            // change). false for a stale clone that already carries its
+            // last-known icon/classes — those are left as cloneNode(true)
+            // copied them (that already reflects the user's last toggle
+            // state) rather than being reset to a default.
+            const existingIcon = h2.querySelector(':scope > .mb-toggle-icon');
+            const isFreshH2 = !existingIcon;
+
+            h2.classList.add('mb-h2-processed', 'mb-toggle-h2');
+            h2.title = 'Click to collapse/uncollapse this section';
+            h2.style.cursor = 'pointer';
+            h2.style.userSelect = 'none';
+
+            const icon = existingIcon || document.createElement('span');
+            if (isFreshH2) {
+                icon.className = 'mb-toggle-icon';
+                icon.textContent = '▲'; // default collapsed, matches makeH2sCollapsible()
+                h2.prepend(icon);
+            }
+
+            // Collect sibling content nodes up to the next <h2> (or end of
+            // parent) — same walk makeH2sCollapsible() uses, wrapping bare
+            // non-empty text nodes in a <span> so they can be shown/hidden
+            // the same way as element siblings.
+            const contentNodes = [];
+            let _cur = h2.nextSibling;
+            while (_cur) {
+                const _nxt = _cur.nextSibling; // save before any DOM mutation
+                if (_cur.nodeType === Node.ELEMENT_NODE && _cur.tagName === 'H2') break;
+                if (_cur.nodeType === Node.TEXT_NODE && _cur.textContent.trim()) {
+                    const _wrap = document.createElement('span');
+                    _cur.parentNode.insertBefore(_wrap, _cur);
+                    _wrap.appendChild(_cur);
+                    contentNodes.push(_wrap);
+                } else if (_cur.nodeType === Node.ELEMENT_NODE) {
+                    contentNodes.push(_cur);
+                }
+                _cur = _nxt;
+            }
+
+            // Fresh h2: hide content by default (collapsed, matching
+            // makeH2sCollapsible()'s non-main-data-header default). Re-wired
+            // clone: leave each node's current display exactly as
+            // cloneNode(true) copied it.
+            if (isFreshH2) {
+                contentNodes.forEach(node => { node.style.display = 'none'; });
+            }
+
+            h2._mbToggle = (forceExpand) => {
+                const isCurrentlyExpanded = icon.textContent === '▼';
+                const shouldExpand = (forceExpand !== undefined) ? forceExpand : !isCurrentlyExpanded;
+                if (shouldExpand === isCurrentlyExpanded) return;
+                contentNodes.forEach(node => { node.style.display = shouldExpand ? '' : 'none'; });
+                icon.textContent = shouldExpand ? '▼' : '▲';
+            };
+
+            const toggleFn = (e) => {
+                if (['A', 'BUTTON', 'INPUT', 'LABEL', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
+                e.preventDefault();
+                e.stopPropagation();
+                h2._mbToggle();
+            };
+            h2._mbClickHandler = toggleFn;
+            h2.addEventListener('click', toggleFn);
+        });
+    }
+
+    /**
      * Unified sorting logic for both single and multi-table pages.
      * Handles UI highlighting, wait cursors, and state persistence.
      *
@@ -31973,6 +35379,20 @@ a { color: #1565c0; }`;
         _uniqDropOwner = btn;
         btn.classList.add('mb-col-uniq-active');
 
+        // ---- Restore prior checkbox selection (if any) --------------------------
+        // Read the column's filter input's dataset.mbUniqValues so re-opening the
+        // dropdown shows previously-checked values still checked.
+        const _uniqFilterRow = table.querySelector('thead tr.mb-col-filter-row');
+        const _uniqColInput  = _uniqFilterRow
+            ? _uniqFilterRow.querySelector(`.mb-col-filter-input[data-col-idx="${colIndex}"]`)
+            : null;
+        const checkedValues = new Set();
+        if (_uniqColInput && _uniqColInput.dataset.mbUniqValues) {
+            try {
+                JSON.parse(_uniqColInput.dataset.mbUniqValues).forEach(v => checkedValues.add(v));
+            } catch (e) { /* corrupt dataset — start with an empty selection */ }
+        }
+
         // ---- Collect distinct non-empty values with occurrence counts from visible tbody rows ----
         const valueCounts = new Map();
         // Counts for synthetic cell-structure entries (only shown for collapsable columns):
@@ -32002,19 +35422,21 @@ a { color: #1565c0; }`;
                 // Count cell-structure state using expandedCells as source of truth.
                 // Counting from DOM toggle.textContent would give wrong results after a
                 // runFilter() cycle because initCollapsableColumns resets all toggles to '▶'.
-                const lis = cell.querySelectorAll('ul > li');
+                // _classifyCollapseCell unifies list cells and prose cells (e.g.
+                // "Annotation") under one multi-row/single-row concept.
+                const { isMultiRow, isSingleRow } = _classifyCollapseCell(cell);
                 const rowIdx = row.dataset ? row.dataset.mbRowIdx : undefined;
-                if (lis.length >= 2) {
+                if (isMultiRow) {
                     const key = rowIdx !== undefined ? `${rowIdx}:${colIndex}` : null;
                     if (key !== null && expandedCells.get(key) === true) {
                         multiRowExpandedCount++;
                     } else {
                         multiRowCollapsedCount++;
                     }
-                } else if (lis.length === 1) {
+                } else if (isSingleRow) {
                     singleRowCount++;
                 } else {
-                    // lis.length === 0: no list structure at all.
+                    // Neither multi- nor single-row structure.
                     // Re-use the already-computed `v` (zero extra DOM work) to confirm
                     // the cell is genuinely empty (no hidden text, no spurious whitespace).
                     if (!v) emptyCellCount++;
@@ -32097,12 +35519,23 @@ a { color: #1565c0; }`;
 
             matching.forEach(v => {
                 const item = document.createElement('div');
-                item.className = 'mb-col-uniq-item';
+                const isChecked = checkedValues.has(v);
+                item.className = isChecked ? 'mb-col-uniq-item mb-col-uniq-checked' : 'mb-col-uniq-item';
                 item.setAttribute('role', 'option');
+                item.setAttribute('aria-selected', String(isChecked));
                 // title holds the raw value only — used by the Enter-key handler
                 // and applyUniqVal() so the badge text is never copied into the
                 // filter input field.
                 item.title = v;
+
+                // ---- Checkbox glyph: ☑/☐, enables multi-select (OR'd within column) ----
+                // Not a native <input type="checkbox"> — the whole row is the click
+                // target, mirroring the rest of this dropdown's item interaction model.
+                const checkbox = document.createElement('span');
+                checkbox.className = 'mb-col-uniq-checkbox';
+                checkbox.setAttribute('aria-hidden', 'true');
+                checkbox.textContent = isChecked ? '☑' : '☐';
+                item.appendChild(checkbox);
 
                 // ---- Occurrence count badge: "(n) " prefix, display only ----
                 const count = valueCounts.get(v) || 0;
@@ -32126,23 +35559,28 @@ a { color: #1565c0; }`;
                 badge.style.textAlign          = 'right';
                 item.appendChild(badge);
 
-                // ---- Country flag icon (Country columns only) ---------------
-                // For synthetic Country columns (splitCountryDate / splitLocation
-                // / splitArea), prepend the CSS flag <span class="flag flag-XX">
-                // so each dropdown entry matches the visual appearance of the
-                // table cells.  MusicBrainz renders flags as CSS background-image
-                // sprites on the span itself — there is no child <img> element.
-                // countryFlagMap stores a pre-built span clone (className copied
-                // from the source cell) keyed by the country text value.
-                if (isCountryCol) {
-                    const flagSpan = countryFlagMap.get(v);
-                    if (flagSpan) {
-                        // Clone so each item gets its own independent node.
-                        const flagClone = flagSpan.cloneNode(false);
-                        flagClone.setAttribute('aria-hidden', 'true');
-                        flagClone.style.cssText =
-                            'display:inline-block; margin-right:4px; vertical-align:middle;';
-                        item.appendChild(flagClone);
+                // ---- Flag icon(s) (Country / Locality / Region / Area cols) -
+                // Prepend a clone of every flag icon found in the source cell
+                // (native CSS-sprite <span class="flag flag-XX"> and/or
+                // third-party "More Flags Everywhere" <span class="area-icon">
+                // <img></span>) so each dropdown entry matches the visual
+                // appearance of the table cells. flagIconMap stores a
+                // pre-built array of already-baked/cloned icon nodes (keyed
+                // by the cell's full text value, which may bundle more than
+                // one icon — see flagIconMap's JSDoc). Each is appended as
+                // its own independent sibling node directly in `item` — NOT
+                // wrapped in a container span — so there is no extra layout
+                // context (e.g. flex) that could interfere with the native
+                // CSS-sprite flag's baked width/height/background rendering.
+                if (hasFlagIcons) {
+                    const icons = flagIconMap.get(v);
+                    if (icons) {
+                        for (const icon of icons) {
+                            const iconClone = icon.cloneNode(true);
+                            iconClone.setAttribute('aria-hidden', 'true');
+                            iconClone.style.marginRight = '4px';
+                            item.appendChild(iconClone);
+                        }
                     }
                 }
 
@@ -32169,8 +35607,20 @@ a { color: #1565c0; }`;
 
                 item.addEventListener('mousedown', ev => ev.preventDefault());
                 item.addEventListener('click', () => {
-                    applyUniqVal(v, table, colIndex);
-                    closeUniqDrop();
+                    // Toggle membership in the checked-value set and re-apply the
+                    // whole set as an OR'd column filter. Deliberately do NOT call
+                    // closeUniqDrop() here — multi-select requires the panel to
+                    // stay open so more values can be checked/unchecked.
+                    if (checkedValues.has(v)) {
+                        checkedValues.delete(v);
+                    } else {
+                        checkedValues.add(v);
+                    }
+                    const nowChecked = checkedValues.has(v);
+                    item.classList.toggle('mb-col-uniq-checked', nowChecked);
+                    item.setAttribute('aria-selected', String(nowChecked));
+                    checkbox.textContent = nowChecked ? '☑' : '☐';
+                    applyUniqValueSet(Array.from(checkedValues), table, colIndex);
                 });
                 listBox.appendChild(item);
             });
@@ -32209,99 +35659,295 @@ a { color: #1565c0; }`;
         const caaYesCount = 0; // unused after 9.99.569 — artwork-presence filtered via makeSynItem rename
         const caaNoCount  = 0;
 
-        // Is this a synthetic Country column produced by splitCountryDate,
-        // splitLocation, or splitArea?  Detected by column header name so that
-        // the unique-values dropdown can decorate each entry with its country
-        // flag icon (the same <img> already rendered in the table cell).
-        const _COUNTRY_COL_NAMES = new Set([
-            'Country', 'Begin country', 'End country'
-        ]);
-        const isCountryCol = (() => {
+        // Does this column's cells carry flag icon(s) the unique-values
+        // dropdown should decorate each entry with? Detected by column
+        // header name (suffix match, mirroring _flagRegionColumnTrios' own
+        // convention for this exact column-name family), covering:
+        //   - Country columns ('ountry' suffix): native CSS-sprite
+        //     <span class="flag flag-XX">.
+        //   - Locality/Region columns ('ocality'/'egion' suffix):
+        //     third-party "More Flags Everywhere" <span class="area-icon">
+        //     <img></span>.
+        //   - the unsplit Area column ('rea' suffix — 'Area'/'Begin area'/
+        //     'End area', the SOURCE column splitArea/splitLocation operate
+        //     on): can hold BOTH shapes in the same cell (a locality/region
+        //     subdivision icon followed by the country's own flag — see
+        //     debug/with-flag.html), so it needs both scans at once.
+        //   - 'Location'/'Place' (exact match — the SOURCE column
+        //     splitLocation operates on; 'Place' is ambiguous with an
+        //     unrelated Name_Comment source column of the same name on
+        //     Place-entity listings, but those cells simply have no
+        //     flag/area-icon span to find, so the scan below is a harmless
+        //     no-op there): same combined Locality/Region + Country flag
+        //     shape as the unsplit Area column above (debug/with-flag.html).
+        //   - 'Country/Date' (exact match — the native, un-split SOURCE
+        //     column splitCountryDate operates on, e.g. release-group
+        //     release lists): native MusicBrainz markup, per release event,
+        //     is <span class="flag flag-XX release-country"><a><abbr>...
+        //     </abbr></a></span> — the SAME shape as the already-handled
+        //     Country column flag span (just with an extra class), so no
+        //     new scan logic is needed, only recognising the column name.
+        //     NOTE: deliberately NOT extended to 'Release events' — that
+        //     source column's flag is a script-rebuilt <li class="flag
+        //     flag-XX"> with no wrapping <span>/<a>, a different shape that
+        //     caused a regression when decoration was attempted for it
+        //     (reverted; see git history) and is out of scope here.
+        const hasFlagIcons = Lib.settings.sa_enable_dropdown_flag_icons && (() => {
             const headers = table.querySelectorAll('thead tr:first-child th');
             const th = headers[colIndex];
             if (!th) return false;
             const name = th.dataset.colName ||
                 th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim().replace(/\s+/g, ' ');
-            return _COUNTRY_COL_NAMES.has(name);
+            return name.endsWith('ountry') || name.endsWith('ocality') ||
+                name.endsWith('egion') || name.endsWith('rea') ||
+                name === 'Location' || name === 'Place' || name === 'Country/Date';
         })();
 
         /**
-         * Maps each unique country text value (e.g. "Germany (DE)") to a
-         * clone of the MusicBrainz flag <span class="flag flag-XX ..."> element
-         * scraped from the first visible tbody cell that contains that value.
-         * Built only when isCountryCol is true to avoid the DOM scan overhead
-         * on every other column type.
+         * Reads the browser's already-resolved visual appearance of a live
+         * MusicBrainz flag <span class="flag flag-XX"> from the table cell
+         * (background sprite, size, border, vertical-align, …) via
+         * getComputedStyle(), so it can be baked as inline styles onto a
+         * clone destined for the unique-values dropdown.
          *
-         * MusicBrainz country flags are rendered exclusively via CSS background-
-         * image on a <span class="flag flag-XX"> element — there is no child
-         * <img> tag.  The extractors (splitCountryDate, splitLocation, splitArea)
-         * preserve the original className verbatim on the reconstructed span, so
-         * the CSS rules from MusicBrainz continue to apply in the cloned node.
+         * The dropdown panel lives outside #content/table.tbl (appended
+         * directly to document.body by getUniqDropEl()) and in a shrunk
+         * font-size context (#mb-col-uniq-dropdown sets font-size: 0.87em).
+         * Simply copying className and hoping MusicBrainz's own stylesheet
+         * cascades onto the clone wherever it lands is fragile — ancestor-
+         * scoped selectors, em-relative sizing, or MB rendering the flag via
+         * a ::before/::after pseudo-element instead of a direct background
+         * would all silently produce a flatter/blanker-looking icon. Reading
+         * the resolved values directly from a real, correctly-rendered span
+         * sidesteps all of that: inline values are immune to DOM location,
+         * ambient font-size, and cascade/specificity, and are already
+         * resolved to absolute px rather than em.
          *
-         * The text label is derived from the cell value produced by
-         * getCleanColumnText() so the Map keys are guaranteed to match the keys
-         * in valueCounts (which is also built via getCleanColumnText()).
+         * Falls back to the span's ::before then ::after pseudo-element if
+         * the span itself has no background-image, since some CSS flag
+         * techniques paint the icon on a pseudo-element rather than the
+         * element itself.
          *
-         * @type {Map<string, HTMLSpanElement>}  value → cloned flag span element
+         * 'Location' and 'Country/Date' (unlike 'Country'/'Area', which are
+         * never multi-row) are declared in several page definitions'
+         * `collapsableColumns`, so a flag span here can sit inside a
+         * collapsed multi-event `<li>` that `initCollapsableColumns` hid via
+         * inline `style.display = 'none'` on the `<li>` itself (not on the
+         * span) — pseudo-elements are not generated at all for anything
+         * inside a display:none subtree, so the ::before/::after fallback
+         * above would silently find nothing for a collapsed-but-not-first
+         * event. Temporarily revealing that `<li>` around the read (and
+         * restoring it immediately after, synchronously — no visible
+         * flicker) avoids that.
+         *
+         * @param {Element} span - a live (attached) `.flag.flag-XX` element
+         * @returns {?Object} resolved style properties to bake as inline
+         *   styles on a clone, or null if no flag visual could be found
          */
-        const countryFlagMap = isCountryCol ? (() => {
-            const flagMap = new Map();
-            if (!tbody) return flagMap;
+        function resolveFlagVisual(span) {
+            const pick = (cs) => {
+                const bgImg = cs.backgroundImage;
+                if (!bgImg || bgImg === 'none') return null;
+                return {
+                    backgroundImage:    bgImg,
+                    backgroundPosition: cs.backgroundPosition,
+                    backgroundRepeat:   cs.backgroundRepeat,
+                    backgroundSize:     cs.backgroundSize,
+                    backgroundColor:    cs.backgroundColor,
+                    width:              cs.width,
+                    height:             cs.height,
+                    display:            cs.display,
+                    border:             cs.border,
+                    borderRadius:       cs.borderRadius,
+                    boxShadow:          cs.boxShadow,
+                    verticalAlign:      cs.verticalAlign,
+                };
+            };
+            const li = span.closest('li');
+            const wasHidden = !!li && li.style.display === 'none';
+            if (wasHidden) li.style.display = '';
+            let visual = pick(window.getComputedStyle(span));
+            if (!visual) visual = pick(window.getComputedStyle(span, '::before'));
+            if (!visual) visual = pick(window.getComputedStyle(span, '::after'));
+            if (wasHidden) li.style.display = 'none';
+            return visual;
+        }
+
+        /**
+         * When a resolved flag visual's `backgroundImage` is a
+         * `data:image/png;base64,…` URI AND `backgroundSize` is `auto`
+         * (meaning the image already paints at its own natural pixel size,
+         * not stretched/cropped to fill some other box), returns that
+         * image's real `{width, height}` in px by reading the PNG's IHDR
+         * chunk directly out of the base64 payload — no `<img>`/decode
+         * round-trip needed, so this stays synchronous.
+         *
+         * Exists because 'release-country' spans (Country/Date column) size
+         * their box to fit BOTH the flag AND a visible country-code
+         * abbreviation (e.g. "AT") that flagIconMap's clone deliberately
+         * strips (see below) to avoid duplicating the dropdown's own value
+         * text — baking that box's full width verbatim (as resolveFlagVisual
+         * reports it) leaves a large empty gap after the now-childless icon
+         * where the stripped text used to be (confirmed against a live
+         * cell's computed style: box 48x14.4px vs. the PNG's actual 16x11px).
+         * Since `background-position-x: 0%` is invariant to box width and
+         * matching height to the image's own natural height makes the Y
+         * offset moot too, sizing the box to the image's real dimensions
+         * renders identically, just without the leftover space.
+         *
+         * @param {string} backgroundImage - resolved `background-image` CSS value
+         * @param {string} backgroundSize  - resolved `background-size` CSS value
+         * @returns {?{width: number, height: number}} natural size in px, or
+         *   null if not a background-size:auto PNG data URI, or on any parse failure
+         */
+        function _pngDataUriNaturalSize(backgroundImage, backgroundSize) {
+            if (backgroundSize !== 'auto') return null;
+            const m = /^url\(["']?(data:image\/png;base64,[^"')]+)["']?\)$/.exec(backgroundImage || '');
+            if (!m) return null;
+            try {
+                const bin = atob(m[1].slice(m[1].indexOf(',') + 1));
+                if (bin.length < 24 || bin.slice(0, 8) !== '\x89PNG\r\n\x1a\n') return null;
+                const readUint32 = (offset) => (bin.charCodeAt(offset) << 24 |
+                    bin.charCodeAt(offset + 1) << 16 | bin.charCodeAt(offset + 2) << 8 |
+                    bin.charCodeAt(offset + 3)) >>> 0;
+                const width  = readUint32(16);
+                const height = readUint32(20);
+                return (width > 0 && height > 0) ? { width, height } : null;
+            } catch {
+                return null;
+            }
+        }
+
+        /**
+         * Maps each unique flag-bearing column text value (e.g.
+         * "Germany (DE)", "Illinois", or a combined "Noord-Holland, Kingdom
+         * of the Netherlands" value — see below) to an array of already
+         * baked/cloned flag icon nodes — in cell document order — found in
+         * the first visible tbody cell that produced that value. Built only
+         * when hasFlagIcons is true, to avoid the DOM scan overhead on every
+         * other column type.
+         *
+         * Two independent flag shapes exist in these columns, and a single
+         * cell can contain either or BOTH (the unsplit "Area"/"Begin area"/
+         * "End area" column shows the full "Locality in Region, Country"
+         * chain in one cell, so it can have a subdivision icon AND the
+         * country's own flag together — see debug/with-flag.html):
+         *   - Native country flag: <span class="flag flag-XX"> — rendered
+         *     exclusively via a CSS background-image sprite, no <img> child.
+         *     This userscript defines no CSS of its own for `.flag`/
+         *     `.flag-XX` — it relies entirely on MusicBrainz's own page
+         *     stylesheet, which the dropdown (parented outside #content, in
+         *     a shrunk font-size context — see getUniqDropEl()) may not
+         *     inherit correctly. resolveFlagVisual()'s getComputedStyle()
+         *     baking (see its JSDoc) bakes the resolved visual as inline
+         *     styles instead of relying on that cascade.
+         *   - Third-party subdivision icon: <span class="area-icon"><img
+         *     class="flag ..."></span>, injected by "More Flags Everywhere"/
+         *     "Canadian Province Flags Everywhere". A self-contained <img>
+         *     (own `src` — external SVG URL or base64 data URI) that
+         *     renders identically anywhere, so no CSS baking is needed here
+         *     — cloning the node is sufficient. The `span.area-icon`
+         *     wrapper (rather than the <img>'s own class, which varies —
+         *     "flag-XX-prov" for Canadian provinces, "flag-custom-region"
+         *     for US states, possibly others) is the reliable structural
+         *     marker: it's exactly what _routeAreaLink() (the
+         *     splitArea/splitLocation extractor helper, line ~2507) already
+         *     keys off to detect and carry this icon into the reconstructed
+         *     cell in the first place.
+         *
+         * cell.querySelectorAll() with both selectors combined returns
+         * matches in DOCUMENT ORDER regardless of which part of the
+         * selector list matched them, so a combined Area cell's icons come
+         * out correctly interleaved (locality/region icon(s) first,
+         * country flag last) rather than grouped by shape.
+         *
+         * Each icon is stored as an independent node (NOT wrapped in a
+         * shared container element) so the per-row insertion code can
+         * append them as direct siblings of the dropdown item's other
+         * content — a wrapper element (e.g. a flex container) would add an
+         * extra layout context that isn't present in the table cell itself
+         * and risks interfering with the native flag's baked
+         * width/height/background rendering.
+         *
+         * The Map key is the cell's full getCleanColumnText() value — i.e.
+         * exactly how valueCounts itself is keyed (line ~35087) — rather
+         * than a label parsed from a single icon's own adjacent text. A
+         * cell can hold MORE THAN ONE icon (a multi-event ul>li list; or a
+         * Region cell where a third-party userscript decorates both a
+         * subdivision AND its sovereign state with custom icons, e.g.
+         * "Noord-Holland, Kingdom of the Netherlands" — see
+         * debug/noord-holland.html) and the dropdown's unique value is
+         * always the whole cell's text, never one sub-entry's — keying by
+         * a per-icon label would silently never match such a value, leaving
+         * it with no icon at all.
+         *
+         * @type {Map<string, HTMLElement[]>}  value → array of cloned icon nodes
+         */
+        const flagIconMap = hasFlagIcons ? (() => {
+            const iconMap = new Map();
+            if (!tbody) return iconMap;
             for (const row of tbody.rows) {
                 if (row.style.display === 'none') continue;
                 const cell = row.cells[colIndex];
                 if (!cell) continue;
-                // Each cell may hold a flat span or a ul>li list (multi-event).
-                // Walk every span that carries at least one "flag-XX" class
-                // (e.g. "flag flag-DE release-country", "flag flag-US", …).
-                // "flag" alone is not enough — we need a country code class
-                // so we can be sure it is a flag icon and not just a wrapper.
-                const flagSpans = cell.querySelectorAll('span[class*="flag-"]');
-                for (const span of flagSpans) {
-                    // Derive the text label for this flag span — must match the
-                    // key produced by getCleanColumnText() for the same cell.
-                    // The extractors rebuild the span innerHTML as:
-                    //   "${flagImg} <a href="...">${countryFull} (${countryCode})</a>"
-                    //   or fallback to flagSpan.innerHTML (which preserves the
-                    //   original <a><abbr title="Country">CODE</abbr></a>).
-                    // In either case the visible text normalised by
-                    // normalizeExtractedText() becomes "Country (CODE)" or "CODE".
-                    const a = span.querySelector('a');
-                    let label = '';
-                    if (a) {
-                        const abbr = a.querySelector('abbr');
-                        if (abbr) {
-                            // Original MusicBrainz markup: <abbr title="Japan">JP</abbr>
-                            const code = abbr.textContent.trim();
-                            const full = abbr.getAttribute('title') || '';
-                            label = (full && code) ? `${full} (${code})` : (full || code);
-                        } else {
-                            // Rebuilt markup: plain text inside <a>: "Japan (JP)"
-                            label = a.textContent.trim().replace(/\s+/g, ' ');
+                const label = getCleanColumnText(cell);
+                if (!label || !valueCounts.has(label) || iconMap.has(label)) continue;
+                const icons = cell.querySelectorAll('span[class*="flag-"], span.area-icon');
+                if (icons.length === 0) continue;
+                const clones = [];
+                for (const el of icons) {
+                    if (el.classList.contains('area-icon')) {
+                        // Self-contained <img> — clone verbatim, no baking needed.
+                        clones.push(el.cloneNode(true));
+                        continue;
+                    }
+                    // Native country flag span — clone it, strip child nodes
+                    // (we only want the CSS flag background, not the link
+                    // text), and bake the resolved visual as inline styles.
+                    const flagClone = document.createElement('span');
+                    // Copy the CSS class too (harmless belt-and-suspenders —
+                    // inline styles below always win the cascade regardless,
+                    // so there is no conflict risk; kept in case any
+                    // non-visual behavior is keyed off the class name).
+                    flagClone.className = el.className;
+                    const visual = resolveFlagVisual(el);
+                    if (visual) {
+                        flagClone.style.backgroundImage    = visual.backgroundImage;
+                        flagClone.style.backgroundPosition = visual.backgroundPosition;
+                        flagClone.style.backgroundRepeat   = visual.backgroundRepeat;
+                        flagClone.style.backgroundSize     = visual.backgroundSize;
+                        if (visual.backgroundColor &&
+                            visual.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
+                            visual.backgroundColor !== 'transparent') {
+                            flagClone.style.backgroundColor = visual.backgroundColor;
                         }
+                        const natural = _pngDataUriNaturalSize(visual.backgroundImage, visual.backgroundSize);
+                        flagClone.style.width         = natural ? natural.width + 'px'  : visual.width;
+                        flagClone.style.height        = natural ? natural.height + 'px' : visual.height;
+                        // Only pass a resolved `display` through verbatim when it is
+                        // context-free (renders the same regardless of its ancestor
+                        // chain). Values like 'block', 'list-item', 'table-cell', or
+                        // 'flex'/'grid' (in addition to 'none') depend on layout context
+                        // that no longer exists once the flag is cloned standalone into
+                        // the dropdown item as a bare sibling of its text — e.g.
+                        // 'release-country' spans (Country/Date column) carry extra
+                        // column-alignment CSS beyond the shared '.flag' sprite rule,
+                        // and baking a table/list/block display verbatim here forces the
+                        // dropdown's value text onto its own new line after the icon
+                        // instead of sitting inline right behind it.
+                        flagClone.style.display = /^(inline|inline-block|inline-flex|inline-grid)$/.test(visual.display)
+                            ? visual.display : 'inline-block';
+                        flagClone.style.border        = visual.border;
+                        flagClone.style.borderRadius  = visual.borderRadius;
+                        flagClone.style.boxShadow     = visual.boxShadow;
+                        flagClone.style.verticalAlign = visual.verticalAlign;
                     }
-                    if (!label) {
-                        // Last resort: raw text content of the whole span,
-                        // normalised the same way as getCleanColumnText().
-                        label = span.textContent.trim().replace(/\s+/g, ' ')
-                            .replace(/\( /g, '(').replace(/ \)/g, ')');
-                    }
-                    // Register only if this label is a known unique value and
-                    // we have not yet stored a flag element for it.
-                    if (label && valueCounts.has(label) && !flagMap.has(label)) {
-                        // Clone the span, strip child nodes (we only want the
-                        // CSS flag background, not the link text), and record it.
-                        const flagClone = document.createElement('span');
-                        // Copy every CSS class from the source span so the
-                        // MusicBrainz stylesheet applies the correct flag sprite.
-                        flagClone.className = span.className;
-                        flagMap.set(label, flagClone);
-                    }
-                    if (flagMap.size === valueCounts.size) break;
+                    clones.push(flagClone);
                 }
-                if (flagMap.size === valueCounts.size) break;
+                iconMap.set(label, clones);
+                if (iconMap.size === valueCounts.size) break;
             }
-            return flagMap;
+            return iconMap;
         })() : new Map();
 
         const isRelCellCol = (() => {
@@ -32849,15 +36495,11 @@ a { color: #1565c0; }`;
                         focused.click();
                         closeUniqDrop();
                     } else {
-                        // Regular value entry: apply as text filter, then keep the
-                        // column filter field focused with the cursor at the end.
-                        const colInput = applyUniqVal(focused.title, table, colIndex);
-                        closeUniqDrop();
-                        if (colInput) {
-                            colInput.focus();
-                            const len = colInput.value.length;
-                            colInput.setSelectionRange(len, len);
-                        }
+                        // Regular value entry: toggle its checkbox state via the
+                        // same click handler renderItems() wired up, keeping the
+                        // panel open for continued multi-select (mirrors the
+                        // mouse-click behavior — do NOT close the dropdown).
+                        focused.click();
                     }
                 }
             } else if (ev.key === 'Escape') {
@@ -32943,8 +36585,10 @@ a { color: #1565c0; }`;
         );
         if (!input) return;
 
-        // Clear any stale multi-row state filter mode so the text value takes effect
+        // Clear any stale multi-row state filter mode / checkbox value-set so the
+        // single text value takes effect (mutually exclusive with both).
         delete input.dataset.mbMultirowMode;
+        delete input.dataset.mbUniqValues;
         input.value = value;
 
         // Apply the "active" background tint so the field looks highlighted
@@ -32993,6 +36637,8 @@ a { color: #1565c0; }`;
 
         // Tag the input so getColFilters produces a multi-row state filter object.
         input.dataset.mbMultirowMode = mode;
+        // Mutually exclusive with the uniq-drop checkbox value-set filter.
+        delete input.dataset.mbUniqValues;
 
         // Store a human-readable display label so the field looks intentionally set.
         const label = mode === 'empty'    ? '○ empty cells'         :
@@ -33018,6 +36664,77 @@ a { color: #1565c0; }`;
         }
 
         Lib.debug('filter', `Uniq-drop: multi-row state filter "${mode}" applied to col ${colIndex}`);
+    }
+
+    /**
+     * Activates (or clears) a checkbox-driven multi-value filter on a single
+     * column, applying every currently-checked unique value as an OR'd set.
+     *
+     * Unlike `applyUniqVal()` (single value, replaces the filter, closes the
+     * dropdown) this supports selecting multiple values at once: a row passes
+     * the column filter if its cell text matches ANY checked value. An empty
+     * `selectedValues` array means "no constraint" — the column filter is fully
+     * cleared, not "match nothing."
+     *
+     * Mirrors `applyMultiRowStateFilter()`: state is stashed on
+     * `input.dataset.mbUniqValues` (JSON-encoded array), a human-readable
+     * summary label is written to `input.value` so existing "is this column
+     * filter active" checks elsewhere (which just test non-empty `input.value`)
+     * keep working unmodified, and `runFilter()` is called directly rather than
+     * dispatching a synthetic 'input' event — that event is caught by the
+     * column filter's own input handler, which unconditionally deletes
+     * `dataset.mbUniqValues` before `getColFilters()` can read it.
+     *
+     * @param {string[]}         selectedValues - Currently-checked raw values.
+     * @param {HTMLTableElement} table          - The table owning the column.
+     * @param {number}           colIndex       - Zero-based column index.
+     */
+    function applyUniqValueSet(selectedValues, table, colIndex) {
+        const filterRow = table.querySelector('thead tr.mb-col-filter-row');
+        if (!filterRow) return;
+        const input = filterRow.querySelector(
+            `.mb-col-filter-input[data-col-idx="${colIndex}"]`
+        );
+        if (!input) return;
+
+        const values = Array.from(new Set(selectedValues || []));
+
+        if (values.length === 0) {
+            // Empty checked-set = "no constraint" = fully clear this column filter.
+            delete input.dataset.mbUniqValues;
+            delete input.dataset.mbMultirowMode;
+            input.value = '';
+            input.style.backgroundColor = '';
+            input.style.boxShadow       = '';
+            input.style.borderColor     = '';
+            input.style.borderWidth     = '';
+            if (typeof runFilter === 'function') {
+                runFilter();
+            }
+            Lib.debug('filter', `Uniq-drop: value-set cleared on col ${colIndex}`);
+            return;
+        }
+
+        // Mutually exclusive with the multi-row state filter.
+        delete input.dataset.mbMultirowMode;
+        input.dataset.mbUniqValues = JSON.stringify(values);
+
+        // Human-readable summary label — the authoritative state always lives in
+        // dataset.mbUniqValues, never re-derived from this display string.
+        input.value = values.length === 1 ? values[0] : `${values.length} selected`;
+
+        const activeBg = Lib.settings.sa_col_filter_active_bg || '#fff9c4';
+        input.style.backgroundColor = activeBg;
+        input.style.boxShadow       = '0 0 2px 2px green';
+        input.style.borderColor     = '';
+        input.style.borderWidth     = '';
+
+        // Direct call, not a synthetic 'input' event — see comment above.
+        if (typeof runFilter === 'function') {
+            runFilter();
+        }
+
+        Lib.debug('filter', `Uniq-drop: value-set [${values.join(', ')}] applied to col ${colIndex}`);
     }
 
     // =========================================================================
@@ -33084,6 +36801,28 @@ a { color: #1565c0; }`;
     }
 
     /**
+     * Builds the tooltip text for a prose cell's `.mb-cell-collapse-toggle`.
+     * Mentions the Ctrl+Click "also expand all wiki sub-headings" shortcut
+     * only when the cell actually contains a nested wiki `<h2>` — avoids a
+     * misleading hint on annotations that have no sub-headings.
+     *
+     * @param {boolean}     expand     - The state being described (true = expanded).
+     * @param {HTMLElement} proseInner - The cell's `.mb-text-clamp-inner` wrapper.
+     * @returns {string}
+     */
+    function _proseToggleTitle(expand, proseInner) {
+        const hasNestedH2 = !!proseInner.querySelector('h2');
+        if (expand) {
+            return hasNestedH2
+                ? 'Collapse this cell back to a short preview (Ctrl+Click to expand all wiki sub-headings inside it without collapsing)'
+                : 'Collapse this cell back to a short preview';
+        }
+        return hasNestedH2
+            ? 'Show the full text of this cell (Ctrl+Click to also expand all wiki sub-headings inside it)'
+            : 'Show the full text of this cell';
+    }
+
+    /**
      * _applyCollapseState — expand or collapse a single multi-row cell toggle
      * WITHOUT dispatching a synthetic click event.
      *
@@ -33094,15 +36833,65 @@ a { color: #1565c0; }`;
      * mass-collapse from column-header, sub-table, and global collapse buttons
      * works in all environments.
      *
-     * @param {HTMLSpanElement} toggle  - The `.mb-cell-collapse-toggle` span.
-     * @param {boolean}         expand  - true → expand; false → collapse.
+     * @param {HTMLSpanElement} toggle     - The `.mb-cell-collapse-toggle` span.
+     * @param {boolean}         expand     - true → expand; false → collapse.
+     * @param {boolean}         [expandH2s=false] - Prose cells only: also force-expand
+     *   every nested wiki `<h2>` sub-heading inside the cell (Ctrl+Click behaviour,
+     *   driven here by the column-header toggle's own Ctrl+Click handler). Runs even
+     *   when the cell is already at the target `expand` state — Ctrl+Click always
+     *   uncollapses nested headings regardless of the cell's own current state.
      */
-    function _applyCollapseState(toggle, expand) {
+    function _applyCollapseState(toggle, expand, expandH2s = false) {
         const td = toggle.closest('td');
         if (!td) return;
-        const ul = td.querySelector(':scope > ul') || td.querySelector('ul');
-        if (!ul) return;
-        const lis = Array.from(ul.querySelectorAll(':scope > li'));
+
+        // ── Prose (free-text) cell: height-clamp toggle ───────────────────────
+        const proseInner = td.querySelector(':scope > .mb-text-clamp-inner');
+        if (proseInner) {
+            const currentlyExpanded = toggle.getAttribute('aria-expanded') === 'true';
+            if (currentlyExpanded !== expand) {
+                proseInner.classList.toggle('mb-text-clamp-expanded', expand);
+
+                const glyphEl = toggle.querySelector('.mb-cell-collapse-glyph');
+                if (glyphEl) glyphEl.textContent = expand ? '▼' : '▶';
+                const labelEl = toggle.querySelector('.mb-cell-collapse-label');
+                if (labelEl) labelEl.textContent = expand ? 'less' : 'more';
+                toggle.title = _proseToggleTitle(expand, proseInner);
+                toggle.setAttribute('aria-expanded', expand ? 'true' : 'false');
+                toggle.setAttribute('aria-label',
+                    expand ? 'Collapse: showing full text' : 'Expand: text is truncated');
+
+                const tr     = toggle.closest('tr');
+                const rowIdx = tr ? tr.dataset.mbRowIdx : undefined;
+                if (rowIdx !== undefined) {
+                    const colIdx = Array.from(tr.cells).indexOf(td);
+                    if (colIdx >= 0) {
+                        const key = `${rowIdx}:${colIdx}`;
+                        if (expand) expandedCells.set(key, true);
+                        else        expandedCells.delete(key);
+                    }
+                }
+
+                const hasMatch = !expand && !!proseInner.querySelector(_COLLAPSE_MATCH_SEL);
+                toggle.classList.toggle('mb-collapse-toggle-has-match', hasMatch);
+
+                const tbl = td.closest('table.tbl');
+                if (tbl) updateSubTableCollapseButton(tbl);
+                updateGlobalCollapseButtonHighlight(tbl || null);
+            }
+
+            // Ctrl+Click (column-header toggle): uncollapse every nested wiki
+            // <h2> sub-heading inside this cell, regardless of whether the
+            // cell's own expand state changed above.
+            if (expandH2s) {
+                proseInner.querySelectorAll('h2').forEach(h2 => {
+                    if (typeof h2._mbToggle === 'function') h2._mbToggle(true);
+                });
+            }
+            return;
+        }
+
+        const lis = _findCellListItems(td);
         if (lis.length < 2) return;
 
         const currentExpanded = toggle.getAttribute('aria-expanded') === 'true';
@@ -33315,10 +37104,64 @@ a { color: #1565c0; }`;
 
             const td = toggle.closest('td');
             if (!td) return;
-            // Find the <ul> that is a direct child of the <td> — the multi-row list.
-            const ul = td.querySelector(':scope > ul') || td.querySelector('ul');
-            if (!ul) return;
-            const lis = Array.from(ul.querySelectorAll(':scope > li'));
+
+            // ── Prose (free-text) cell: height-clamp toggle ───────────────────
+            // "Annotation"-style cells have no <ul> — an <inner> wrapper div is
+            // clamped/expanded via a CSS class instead of hiding <li> siblings.
+            // Ctrl+Click always expands (never toggles to collapsed) and also
+            // uncollapses every nested wiki <h2> sub-heading inside the cell.
+            const proseInner = td.querySelector(':scope > .mb-text-clamp-inner');
+            if (proseInner) {
+                const proseExpanding = ev.ctrlKey ? true : toggle.getAttribute('aria-expanded') !== 'true';
+                proseInner.classList.toggle('mb-text-clamp-expanded', proseExpanding);
+
+                const _pGlyphEl = toggle.querySelector('.mb-cell-collapse-glyph');
+                if (_pGlyphEl) _pGlyphEl.textContent = proseExpanding ? '▼' : '▶';
+                const _pLabelEl = toggle.querySelector('.mb-cell-collapse-label');
+                if (_pLabelEl) _pLabelEl.textContent = proseExpanding ? 'less' : 'more';
+                toggle.title = _proseToggleTitle(proseExpanding, proseInner);
+                toggle.setAttribute('aria-expanded', proseExpanding ? 'true' : 'false');
+                toggle.setAttribute('aria-label',
+                    proseExpanding ? 'Collapse: showing full text' : 'Expand: text is truncated'
+                );
+
+                const _pTr = toggle.closest('tr');
+                const _pRowIdx = _pTr ? _pTr.dataset.mbRowIdx : undefined;
+                if (_pRowIdx !== undefined) {
+                    const _pColIdx = Array.from(_pTr.cells).indexOf(td);
+                    if (_pColIdx >= 0) {
+                        const _pKey = `${_pRowIdx}:${_pColIdx}`;
+                        if (proseExpanding) expandedCells.set(_pKey, true);
+                        else                 expandedCells.delete(_pKey);
+                    }
+                }
+
+                if (proseExpanding) {
+                    toggle.classList.remove('mb-collapse-toggle-has-match');
+                } else {
+                    toggle.classList.toggle(
+                        'mb-collapse-toggle-has-match',
+                        !!proseInner.querySelector(_COLLAPSE_MATCH_SEL)
+                    );
+                }
+
+                // Ctrl+Click: also uncollapse every nested wiki <h2> sub-heading.
+                if (ev.ctrlKey) {
+                    proseInner.querySelectorAll('h2').forEach(h2 => {
+                        if (typeof h2._mbToggle === 'function') h2._mbToggle(true);
+                    });
+                }
+
+                const _pTbl = toggle.closest('table');
+                const _pScanScope = (activeDefinition && activeDefinition.tableMode === 'multi') ? null : _pTbl;
+                if (_pTbl) updateGlobalCollapseButtonHighlight(_pScanScope);
+                if (_pTbl) updateSubTableCollapseButton(_pTbl);
+                return;
+            }
+
+            // Find this cell's "own" list — see _findCellListItems for why this
+            // is not simply the <ul> that is a direct child of the <td>.
+            const lis = _findCellListItems(td);
             if (lis.length < 2) return;
 
             const nowExpanding = toggle.getAttribute('aria-expanded') !== 'true';
@@ -33402,9 +37245,11 @@ a { color: #1565c0; }`;
      *      number in the header always matches the count shown in the dropdown.
      *
      *   2. `.mb-col-collapse-count` span (inside the ▶N▤/▼N▤ button) — number
-     *      of visible tbody rows whose cell in that column contains ≥2 ul>li
-     *      items (i.e. rows that actually have a collapse toggle).  Only present
-     *      on collapsable columns; other columns have no collapse button.
+     *      of visible tbody rows whose cell in that column actually has a
+     *      collapse toggle, per `_classifyCollapseCell()` (a direct-child
+     *      `ul>li` list with ≥2 items, OR a prose cell — e.g. "Annotation" —
+     *      that overflowed its height-clamp). Only present on collapsable
+     *      columns; other columns have no collapse button.
      *
      * Called at the tail of initCollapsableColumns() so it runs automatically
      * at every render-completion and filter-cycle site.
@@ -33453,12 +37298,15 @@ a { color: #1565c0; }`;
             if (collapseBtn) {
                 const countSpan = collapseBtn.querySelector('.mb-col-collapse-count');
                 if (countSpan) {
+                    // _classifyCollapseCell unifies list cells and prose cells
+                    // (e.g. "Annotation") under one multi-row concept — matches
+                    // the collapsibleCount computed by initCollapsableColumns.
                     let multiRowCount = 0;
                     Array.from(tbody.rows).forEach(row => {
                         if (row.style.display === 'none') return;
                         const cell = row.cells[colIndex];
                         if (!cell) return;
-                        if (cell.querySelectorAll('ul > li').length >= 2) multiRowCount++;
+                        if (_classifyCollapseCell(cell).isMultiRow) multiRowCount++;
                     });
                     countSpan.textContent = String(multiRowCount);
                 }
@@ -33578,11 +37426,17 @@ a { color: #1565c0; }`;
         //   .mb-cell-collapse-toggle  — per-cell toggle span in tbody (removed unconditionally)
         //   td.mb-has-collapse-toggle — td class that sets position:relative + padding-right
         //   tbody td ul > li          — list items whose display was set to 'none' when collapsed
+        //   .mb-text-clamp-marker     — prose-cell wrapper (kept, cheap to reuse); reset to bare
+        //                               (unclamped, uncollapsed) state — the per-column wiring
+        //                               pass below re-adds the clamp class only when both the
+        //                               cell is still a prose candidate AND
+        //                               sa_enable_annotation_collapse is on
         table.querySelectorAll(
             '.mb-col-collapse-hdr-btn, .mb-caa-col-hdr-btn, ' +
             '.mb-cell-collapse-toggle, ' +
             'td.mb-has-collapse-toggle, ' +
-            'tbody td ul > li'
+            'tbody td ul > li, ' +
+            '.mb-text-clamp-marker'
         ).forEach(el => {
             if (el.classList.contains('mb-col-collapse-hdr-btn')) {
                 const hdrFlex = el.closest('.mb-col-hdr-flex');
@@ -33599,6 +37453,11 @@ a { color: #1565c0; }`;
                 // now the authoritative art-cell toggle, so any remaining
                 // mb-cell-collapse-toggle on such cells is dead markup).
                 el.remove();
+            } else if (el.classList.contains('mb-text-clamp-marker')) {
+                // Prose-cell wrapper — reset to bare (unclamped, uncollapsed)
+                // state; re-measured and re-wired (or left bare) later in
+                // this function depending on sa_enable_annotation_collapse.
+                el.classList.remove('mb-text-clamp-inner', 'mb-text-clamp-expanded');
             } else if (el.tagName === 'TD') {
                 // td.mb-has-collapse-toggle — clear positioning class.
                 el.classList.remove('mb-has-collapse-toggle');
@@ -33618,6 +37477,12 @@ a { color: #1565c0; }`;
 
         const headers = Array.from(table.querySelectorAll('thead tr:first-child th'));
         let anyColumnHasMultiRow = false;
+        // True when ANY column's cells started expanded (see
+        // _anyCellStartedExpanded per-column below) — drives the GLOBAL
+        // collapse/expand button's own initial state the same way, so it
+        // doesn't stay hardcoded to "▶ Expand all" when e.g. "Edit
+        // details"/"Edit notes" defaulted their cells open.
+        let anyCellInAnyColumnStartedExpanded = false;
         // Collect header-level toggle buttons for global-button wiring.
         const collapseHdrBtns = [];
         // Hoist the tbody-row snapshot once — reused for every collapsable column
@@ -33643,28 +37508,68 @@ a { color: #1565c0; }`;
             const th = headers[colIndex];
 
             // ── Gather multi-row body cells ───────────────────────────────────
+            // _findCellListItems() recognises a cell's "own" list whether it's
+            // a direct-child <ul> (script-generated: Catalog#, Label, video, …)
+            // or one level deeper inside a wrapper <div>/<script> (native MB
+            // markup, e.g. "Authors": <script>…</script><div class=
+            // "artist-roles-container"><ul class="artist-roles">…) — while
+            // still correctly rejecting a wiki-rendered bullet/numbered list
+            // buried inside free-text "Annotation" prose, which is what makes
+            // it safe to also treat non-list free-text cells as "prose" below.
+            // True when at least one cell in this column starts expanded —
+            // either because the user manually expanded it on a previous
+            // render (expandedCells), or because it was pre-populated as
+            // expanded by the "Edit details"/"Edit notes" default-expand
+            // step below. Drives the column-header collapse/expand button's
+            // OWN initial glyph/aria-expanded/title (built further down),
+            // which used to be unconditionally hardcoded to the collapsed
+            // state regardless of the cells' actual starting state. See
+            // debug/NOTES.md.
+            let _anyCellStartedExpanded = false;
             const multiRowCells = [];
             bodyRows.forEach(tr => {
                 const td = tr.cells[colIndex];
                 if (!td) return;
-                const lis = Array.from(td.querySelectorAll('ul > li'));
+                const lis = _findCellListItems(td);
                 if (lis.length >= 2) multiRowCells.push({ td, lis });
             });
 
-            if (multiRowCells.length === 0) {
+            // ── Gather prose (free-text) body cells ───────────────────────────
+            // Cells not claimed above but with real content — e.g. "Annotation"
+            // columns, which are free-form wiki-rendered <div>/<p>/<bdi> prose
+            // rather than a list. Wired up separately below with a height-clamp
+            // "show more/less" treatment instead of item hide/show.
+            //
+            // Excludes ANY cell with a qualifying list (≥1 item, not just the
+            // ≥2 that counts as "multi-row" above) — a single-item list cell
+            // (e.g. a work with exactly one author) is still a list, not
+            // prose, and must be left exactly as before this feature existed:
+            // unwrapped, untouched, no toggle. Wrapping it in the prose clamp
+            // was harmless when short but would wrongly give it a "more"/"less"
+            // toggle if its one item happened to be long.
+            const proseCandidates = [];
+            bodyRows.forEach(tr => {
+                const td = tr.cells[colIndex];
+                if (!td) return;
+                if (td.querySelector(':scope > ul.mb-caa-art-ul')) return; // art cell
+                if (_findCellListItems(td).length >= 1) return; // a list cell (multi- or single-row)
+                if (!td.textContent.trim()) return; // empty
+                proseCandidates.push(td);
+            });
+
+            if (multiRowCells.length === 0 && proseCandidates.length === 0) {
                 Lib.debug(
                     'collapse',
                     `initCollapsableColumns: "${colName}" (col ${colIndex}) — ` +
-                    `no multi-row cells found, skipping.`
+                    `no collapsable cells found, skipping.`
                 );
                 return;
             }
 
-            anyColumnHasMultiRow = true;
             Lib.debug(
                 'collapse',
                 `initCollapsableColumns: "${colName}" (col ${colIndex}) — ` +
-                `${multiRowCells.length} multi-row cell(s).`
+                `${multiRowCells.length} multi-row cell(s), ${proseCandidates.length} prose candidate(s).`
             );
 
             // ── Wire up each multi-row body cell ──────────────────────────────
@@ -33702,6 +37607,7 @@ a { color: #1565c0; }`;
                 const rowIdx = tr ? tr.dataset.mbRowIdx : undefined;
                 const ecKey  = rowIdx !== undefined ? `${rowIdx}:${colIndex}` : undefined;
                 const startExpanded = ecKey !== undefined && expandedCells.get(ecKey) === true;
+                if (startExpanded) _anyCellStartedExpanded = true;
 
                 // Collapse or expand: hide/show extra <li> items.
                 lis.slice(1).forEach(li => {
@@ -33806,16 +37712,162 @@ a { color: #1565c0; }`;
                 expandBtn.classList.toggle('mb-collapse-toggle-has-match', hasHiddenMatch);
             });
 
+            // ── Wire up prose (free-text) body cells ───────────────────────────
+            // Height-clamp long free text (e.g. "Annotation") behind a ▶/▼
+            // "show more/less" toggle instead of the list-item hide/show
+            // treatment used above. Only cells that actually overflow the
+            // clamp get a toggle — short annotations render unchanged.
+            //
+            // Every candidate is ALWAYS wrapped in .mb-text-clamp-marker,
+            // regardless of whether collapsing is enabled — that marker is
+            // what auto-resize's _isProseCollapseColumn() keys off, and the
+            // width cap must stay active even when collapsing is disabled
+            // (see _getProseColumnMaxWidth). The .mb-text-clamp-inner class
+            // (which actually clamps height) and the toggle are only added
+            // when the setting is on.
+            //
+            // "Edit details"/"Edit notes" (edits pageType) always get the
+            // clamp/toggle machinery — sa_edits_enable_details_collapse /
+            // sa_edits_enable_notes_collapse do NOT gate it off entirely
+            // (that would remove the toggle handle along with the clamp,
+            // leaving no way to manually collapse a cell at all — see
+            // debug/NOTES.md). Instead those settings control only the
+            // INITIAL expand state (see the expandedCells pre-population
+            // below); the toggle itself works identically to Annotation's
+            // either way, in both directions, at any time.
+            const _isEditsProseCol = colName === 'Edit details' || colName === 'Edit notes';
+            const _annotationCollapseEnabled = _isEditsProseCol
+                ? true
+                : Lib.settings.sa_enable_annotation_collapse !== false;
+            // true = "start this edits prose column collapsed" (the
+            // Annotation-style default); false (the actual default for
+            // these two columns) = start expanded.
+            const _editsStartCollapsed = colName === 'Edit details'
+                ? Lib.settings.sa_edits_enable_details_collapse === true
+                : colName === 'Edit notes'
+                ? Lib.settings.sa_edits_enable_notes_collapse === true
+                : false;
+            let proseOverflowCount = 0;
+            // True when at least one overflowing prose cell in this column
+            // contains a nested wiki <h2> — used to decide whether the
+            // column-header toggle's tooltip should mention its Ctrl+Click
+            // "also expand all wiki sub-headings" shortcut.
+            let columnHasNestedH2 = false;
+            if (proseCandidates.length > 0) {
+                // Pass 1: wrap (idempotent) — pure DOM writes, no reads yet.
+                const _proseWrapped = proseCandidates.map(td => {
+                    let inner = td.querySelector(':scope > .mb-text-clamp-marker');
+                    if (!inner) {
+                        inner = document.createElement('div');
+                        inner.className = 'mb-text-clamp-marker';
+                        while (td.firstChild) inner.appendChild(td.firstChild);
+                        td.appendChild(inner);
+                    }
+                    return { td, inner };
+                });
+
+                // The top-of-function idempotent cleanup pass already reset every
+                // .mb-text-clamp-marker to bare state, so when the setting is off
+                // there is nothing further to do here — cells simply stay bare
+                // (full, unclamped text; no toggle).
+                const _proseOverflowing = _annotationCollapseEnabled
+                    ? (() => {
+                        _proseWrapped.forEach(({ inner }) => inner.classList.add('mb-text-clamp-inner'));
+                        // Pass 2: batch-read scrollHeight/clientHeight — one layout
+                        // flush for the whole column instead of one per cell.
+                        return _proseWrapped.filter(({ inner }) =>
+                            inner.scrollHeight > inner.clientHeight + 1
+                        );
+                    })()
+                    : [];
+
+                // "Edit details"/"Edit notes" default to expanded: on the
+                // FIRST pass over this column for the current fetch (guarded
+                // by _editsProseDefaultExpandedCols so a user's later manual
+                // collapse — which deletes the expandedCells entry — isn't
+                // silently re-expanded on the next sort/filter re-render),
+                // pre-populate expandedCells for every overflowing cell here,
+                // exactly as if the user had already clicked each one open.
+                // From then on these cells are indistinguishable from any
+                // other manually-expanded cell — same toggle, same
+                // persistence, same everything.
+                const _shouldDefaultExpandThisPass =
+                    _isEditsProseCol && !_editsStartCollapsed && !_editsProseDefaultExpandedCols.has(colName);
+
+                _proseOverflowing.forEach(({ td, inner }) => {
+                    proseOverflowCount++;
+                    if (inner.querySelector('h2')) columnHasNestedH2 = true;
+
+                    const tr     = td.closest('tr');
+                    const rowIdx = tr ? tr.dataset.mbRowIdx : undefined;
+                    const ecKey  = rowIdx !== undefined ? `${rowIdx}:${colIndex}` : undefined;
+                    if (_shouldDefaultExpandThisPass && ecKey !== undefined && !expandedCells.has(ecKey)) {
+                        expandedCells.set(ecKey, true);
+                    }
+                    const startExpanded = ecKey !== undefined && expandedCells.get(ecKey) === true;
+                    if (startExpanded) _anyCellStartedExpanded = true;
+
+                    inner.classList.toggle('mb-text-clamp-expanded', startExpanded);
+                    td.classList.add('mb-has-collapse-toggle');
+
+                    // Same three-child-span shape as the list-cell toggle, but
+                    // with a text label instead of an item count — "N items"
+                    // doesn't apply to a clamped block of prose.
+                    const cellToggle = document.createElement('span');
+                    cellToggle.className = 'mb-cell-collapse-toggle';
+                    const _cg = document.createElement('span');
+                    _cg.className   = 'mb-cell-collapse-glyph';
+                    _cg.textContent = startExpanded ? '▼' : '▶';
+                    const _cl = document.createElement('span');
+                    _cl.className   = 'mb-cell-collapse-label';
+                    _cl.textContent = startExpanded ? 'less' : 'more';
+                    cellToggle.appendChild(_cg);
+                    cellToggle.appendChild(_cl);
+                    cellToggle.title = _proseToggleTitle(startExpanded, inner);
+                    cellToggle.setAttribute('role', 'button');
+                    cellToggle.setAttribute('aria-expanded', startExpanded ? 'true' : 'false');
+                    cellToggle.setAttribute('aria-label',
+                        startExpanded ? 'Collapse: showing full text' : 'Expand: text is truncated'
+                    );
+                    td.appendChild(cellToggle);
+
+                    // ── Highlight toggle icon if the clamped text contains a
+                    // match ── prose content is never display:none-hidden per
+                    // node (just visually clamped), so a whole-cell check is
+                    // the correct equivalent of the list case's "hidden lis"
+                    // check, not an approximation of it.
+                    if (!startExpanded && inner.querySelector(_COLLAPSE_MATCH_SEL)) {
+                        cellToggle.classList.add('mb-collapse-toggle-has-match');
+                    }
+                });
+
+                if (_shouldDefaultExpandThisPass) _editsProseDefaultExpandedCols.add(colName);
+            }
+
+            const collapsibleCount = multiRowCells.length + proseOverflowCount;
+            if (collapsibleCount === 0) {
+                Lib.debug(
+                    'collapse',
+                    `initCollapsableColumns: "${colName}" (col ${colIndex}) — ` +
+                    `${proseCandidates.length} prose candidate(s), none overflowed — skipping toggle UI.`
+                );
+                return;
+            }
+            anyColumnHasMultiRow = true;
+
             // ── Set column minimum width ──────────────────────────────────────
             // Ensures the column is wide enough for the longest first-item
             // value across all rows + the toggle icon + its right padding,
             // preventing the first item from wrapping and pushing the toggle
-            // below the visible content area.
+            // below the visible content area.  List cells only — prose
+            // columns get their width capped separately during auto-resize.
             // 28 px = 18 px toggle icon width + 10 px margin / padding buffer.
-            const minPx = maxFirstLiWidth + 28;
-            const existingMin = parseFloat(th.style.minWidth) || 0;
-            if (minPx > existingMin) {
-                th.style.minWidth = minPx + 'px';
+            if (multiRowCells.length > 0) {
+                const minPx = maxFirstLiWidth + 28;
+                const existingMin = parseFloat(th.style.minWidth) || 0;
+                if (minPx > existingMin) {
+                    th.style.minWidth = minPx + 'px';
+                }
             }
 
             // ── Add true-toggle ▶N▤/▼N▤ button to column header ─────────────
@@ -33834,17 +37886,37 @@ a { color: #1565c0; }`;
             const _collapseKbHint = _collapseDirectOn
                 ? `keyboard: ${_collapseKey} or ${getPrefixDisplay()} then O when a column filter is focused`
                 : `keyboard: ${getPrefixDisplay()} then O when a column filter is focused (or enable Direct Ctrl+Letter Shortcuts for ${_collapseKey})`;
-            collapseHdrBtn.title = `Expand ALL multi-row "${colName}" cells (${multiRowCells.length}) in this table column — ${_collapseKbHint}`;
+            // Only mention the Ctrl+Click h2-expand shortcut when this column
+            // actually has cells containing a nested wiki <h2> — see
+            // columnHasNestedH2 above.
+            const _h2CtrlHint = columnHasNestedH2
+                ? ' — Ctrl+Click to also expand all wiki sub-headings inside every cell in this column'
+                : '';
+            // Initial state must reflect whether cells actually started
+            // expanded (_anyCellStartedExpanded) — previously hardcoded to
+            // "collapsed", which was fine for every column until "Edit
+            // details"/"Edit notes" started defaulting to expanded (see
+            // debug/NOTES.md). Not tri-state: on the very first render after
+            // a fetch a column's cells are always uniformly all-expanded or
+            // all-collapsed (nothing produces a genuine mixed state yet), so
+            // "any" is an equally sufficient signal as "all" would be here.
+            collapseHdrBtn.title = _anyCellStartedExpanded
+                ? `Collapse ALL multi-row "${colName}" cells (${collapsibleCount}) in this table column${_h2CtrlHint} — ${_collapseKbHint}`
+                : `Expand ALL multi-row "${colName}" cells (${collapsibleCount}) in this table column${_h2CtrlHint} — ${_collapseKbHint}`;
             collapseHdrBtn.setAttribute('role', 'button');
-            collapseHdrBtn.setAttribute('aria-expanded', 'false');
-            collapseHdrBtn.setAttribute('aria-label', `Expand all collapsed cells in: ${colName}`);
+            collapseHdrBtn.setAttribute('aria-expanded', _anyCellStartedExpanded ? 'true' : 'false');
+            collapseHdrBtn.setAttribute('aria-label',
+                _anyCellStartedExpanded
+                    ? `Collapse all multi-row cells in: ${colName}`
+                    : `Expand all collapsed cells in: ${colName}`
+            );
 
             const _glyphSpan = document.createElement('span');
             _glyphSpan.className   = 'mb-col-collapse-glyph';
-            _glyphSpan.textContent = '▶';
+            _glyphSpan.textContent = _anyCellStartedExpanded ? '▼' : '▶';
             const _countSpan = document.createElement('span');
             _countSpan.className   = 'mb-col-collapse-count';
-            _countSpan.textContent = String(multiRowCells.length);
+            _countSpan.textContent = String(collapsibleCount);
             const _rackSpan = document.createElement('span');
             _rackSpan.className   = 'mb-col-collapse-rack';
             _rackSpan.textContent = '▤';
@@ -33857,7 +37929,10 @@ a { color: #1565c0; }`;
 
                 // ▶▤ = currently collapsed → click to expand all cells.
                 // ▼▤ = currently expanded  → click to collapse all cells.
-                const targetExpand = collapseHdrBtn.getAttribute('aria-expanded') !== 'true';
+                // Ctrl+Click always expands (never collapses) and additionally
+                // uncollapses every nested wiki <h2> sub-heading in every cell
+                // of this column — see _applyCollapseState's expandH2s param.
+                const targetExpand = ev.ctrlKey ? true : collapseHdrBtn.getAttribute('aria-expanded') !== 'true';
 
                 // Drive every cell toggle in this column directly (avoids isTrusted
                 // synthetic-event suppression in some browsers / userscript managers).
@@ -33866,15 +37941,15 @@ a { color: #1565c0; }`;
                     if (!td) return;
                     const toggle = td.querySelector('.mb-cell-collapse-toggle');
                     if (!toggle) return;
-                    _applyCollapseState(toggle, targetExpand);
+                    _applyCollapseState(toggle, targetExpand, ev.ctrlKey);
                 });
 
                 // Flip header button glyph (child span) and tooltip.
                 _glyphSpan.textContent = targetExpand ? '▼' : '▶';
                 const _count = _countSpan.textContent;
                 collapseHdrBtn.title = targetExpand
-                    ? `Collapse ALL multi-row ${colName} cells (${_count}) in this table column — ${_collapseKbHint}`
-                    : `Expand ALL multi-row ${colName} cells (${_count}) in this table column — ${_collapseKbHint}`;
+                    ? `Collapse ALL multi-row ${colName} cells (${_count}) in this table column${_h2CtrlHint} — ${_collapseKbHint}`
+                    : `Expand ALL multi-row ${colName} cells (${_count}) in this table column${_h2CtrlHint} — ${_collapseKbHint}`;
                 collapseHdrBtn.setAttribute('aria-expanded', targetExpand ? 'true' : 'false');
                 collapseHdrBtn.setAttribute(
                     'aria-label',
@@ -33901,6 +37976,7 @@ a { color: #1565c0; }`;
             }
 
             collapseHdrBtns.push(collapseHdrBtn);
+            if (_anyCellStartedExpanded) anyCellInAnyColumnStartedExpanded = true;
         });
 
         // ── Wire global ▶/◀ toggle button ────────────────────────────────────
@@ -33914,9 +37990,14 @@ a { color: #1565c0; }`;
             if (globalBtn) {
                 if (anyColumnHasMultiRow) {
                     globalBtn.style.display = 'inline-flex';
-                    // Reset to collapsed state on every (re-)init.
-                    globalBtn.innerHTML = makeCollapseExpandBtnHTML(true);
-                    globalBtn.title = 'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
+                    // Reset on every (re-)init to reflect actual cell state —
+                    // collapsed, unless some column's cells started expanded
+                    // (e.g. "Edit details"/"Edit notes" defaulting open; see
+                    // anyCellInAnyColumnStartedExpanded above / debug/NOTES.md).
+                    globalBtn.innerHTML = makeCollapseExpandBtnHTML(!anyCellInAnyColumnStartedExpanded);
+                    globalBtn.title = anyCellInAnyColumnStartedExpanded
+                        ? 'Collapse ALL expanded multi-row cells in EVERY collapsable table column'
+                        : 'Expand ALL collapsed multi-row cells in EVERY collapsable table column';
 
                     // Re-wire onclick (safe for disk-load re-runs — re-wiring
                     // captures the fresh collapseHdrBtns array from this init).
@@ -34194,8 +38275,16 @@ a { color: #1565c0; }`;
         multiSortTintRegistry.set(sortKey, { applyTints: applyMultiSortColumnTints, clearTints: clearMultiSortColumnTints });
 
         // --- Helper: derive clean column name from a th element ---------------
+        // Prefer th.dataset.colName — set once, exactly, when the header is
+        // first built (see the `headers.forEach` loop below) — over re-deriving
+        // from th.textContent, which by the time this runs also contains the
+        // live uniq-count badge digits (e.g. "94") injected into the header's
+        // flex layout. Stripping plain ASCII 0-9 from that combined text would
+        // be ambiguous whenever the real column name itself contains a digit
+        // (e.g. "1st seconder"), so the fallback path is only exercised for a
+        // th that predates dataset.colName being set.
         const getCleanColName = (th) =>
-            th ? th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim() : '';
+            th ? (th.dataset.colName || th.textContent.replace(/[⇅▲▼⁰¹²³⁴⁵⁶⁷⁸⁹📊▶◀▤0-9]/g, '').trim()) : '';
 
         // --- Helper: is a column name numeric? ---------------------------------
         // Primary source: activeIntegerColumns declared in the page definition's
@@ -34213,12 +38302,44 @@ a { color: #1565c0; }`;
                    name.includes('#');
         };
 
+        // Register this table's current-sort comparator getter so runFilter()/
+        // _applyDiscographyViewFilter('merged') can re-sort a merged category's
+        // combined row set (pulled from several groupedRows entries) the same
+        // way the "=== Perform sort ===" block below does for a live click —
+        // mirrors that block's branching. Returns null when no sort is active
+        // (mirrors the isRestore check there), so unsorted tables are untouched.
+        mergedSortComparatorRegistry.set(sortKey, () => {
+            if (state.multiSortColumns.length > 1) {
+                return createMultiColumnComparator(state.multiSortColumns, headers);
+            }
+            if (state.multiSortColumns.length === 1) {
+                const col = state.multiSortColumns[0];
+                const cn = getCleanColName(headers[col.colIndex]);
+                return createSortComparator(col.colIndex, col.direction === 1, isNumericCol(cn));
+            }
+            if (state.lastSortIndex < 0 || state.sortState === 0) return null;
+            const cn = getCleanColName(headers[state.lastSortIndex]);
+            return createSortComparator(state.lastSortIndex, state.sortState === 1, isNumericCol(cn), state.sortByLength);
+        });
+
         // -----------------------------------------------------------------------
         headers.forEach((th, index) => {
             if (th.querySelector('input[type="checkbox"]')) return;
             th.style.cursor = 'default';
 
-            const colName = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
+            // th.textContent is always raw/undecorated here — this is the ONE
+            // point in the pipeline where a native or freshly-created synthetic
+            // <th>'s plain text is first read, immediately before th.innerHTML
+            // is cleared and rebuilt with the sort-icon / uniq-count layout
+            // below. No ASCII digits belonging to this script's own UI (the
+            // uniq-count badge, multi-sort superscript order) can be present
+            // yet, so plain 0-9 must NOT be stripped here — doing so mangled
+            // genuine numeric header text (e.g. auto-elections' "1st seconder"
+            // / "2nd seconder" columns rendered as "st seconder" / "nd
+            // seconder"). Only the decorative icon glyphs and Unicode
+            // superscript digits (used later for the multi-sort order badge,
+            // a distinct code point range from ASCII 0-9) are stripped.
+            const colName = th.textContent.replace(/[⇅▲▼📊▶◀▤⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
             th.innerHTML = ''; // clear for new icon layout
 
             const createIcon = (char, targetState) => {
@@ -34863,6 +38984,13 @@ a { color: #1565c0; }`;
      * already created the stat; during a disk load this function must be called
      * explicitly after updateH2Count().
      *
+     * h2 elements nested inside table.tbl cells (e.g. wiki-rendered
+     * "== Heading ==" markup inside Annotation-column text) are intentionally
+     * excluded from the candidate set — they are row content, not page-level
+     * sections, and including them physically relocated every matching row's
+     * cell content out of the table. See debug/report-detail.org and
+     * debug/search-annotation-*.html.
+     *
      * Controlled by sa_enable_h2_section_relocation_on_final_page (default: true).
      */
     function _relocateTrailingH2Sections() {
@@ -34870,7 +38998,8 @@ a { color: #1565c0; }`;
         try {
             const _content = document.getElementById('content');
             if (!_content) return;
-            const _allH2s = Array.from(_content.querySelectorAll('h2'));
+            const _allH2s = Array.from(_content.querySelectorAll('h2'))
+                .filter(h => !h.closest('table.tbl'));
             const _dataH2 = _allH2s.find(h => h.querySelector('.mb-row-count-stat'));
             if (!_dataH2) return;  // count stat not yet in DOM — caller must retry later
             const _trailing = _allH2s.filter(h =>
@@ -35927,9 +40056,9 @@ a { color: #1565c0; }`;
                 if (glyphEl) glyphEl.textContent = '▶';
                 else toggle.textContent = '▶'; // fallback for legacy toggles
                 toggle.setAttribute('aria-expanded', 'false');
-                const ul = toggle.closest('td')?.querySelector(':scope > ul');
-                if (ul) {
-                    const n = ul.querySelectorAll(':scope > li').length;
+                const _stripTd = toggle.closest('td');
+                const n = _stripTd ? _findCellListItems(_stripTd).length : 0;
+                if (n > 0) {
                     toggle.title = `Show all multi-row cell items (${n})`;
                     toggle.setAttribute('aria-label', `Expand: ${n} items are collapsed`);
                 }
@@ -36105,6 +40234,12 @@ a { color: #1565c0; }`;
      *   positioning the dialog near the button).
      */
     function _saveSettingsConfig(triggerButton = null) {
+        // Reuses the shared .sa-meta-* classes from _ensureMetaBlockStyle()
+        // (buildMetaBlockHTML's stylesheet) for the config-specific meta
+        // block built manually below — GM_addStyle-safe against page CSP,
+        // and showExportDialog's own buildMetaBlockHTML call further down
+        // would inject it anyway, but call explicitly for robustness.
+        _ensureMetaBlockStyle();
         try {
             const json     = _buildConfigJson();
             const blob     = new Blob([json], { type: 'application/json' });
@@ -36125,16 +40260,15 @@ a { color: #1565c0; }`;
             const fmtDate = (iso) => { try { return new Date(iso).toLocaleString(); } catch (_) { return iso; } };
             const row = (label, value) =>
                 `<tr>` +
-                `<td style="padding:3px 10px 3px 0;color:#666;font-weight:600;white-space:nowrap;vertical-align:top;">${label}</td>` +
-                `<td style="padding:3px 0;word-break:break-all;">${value}</td>` +
+                `<td class="sa-meta-label">${label}</td>` +
+                `<td class="sa-meta-value">${value}</td>` +
                 `</tr>`;
 
             const metaBlockHtml =
-                `<div style="font-size:0.82em;color:#555;margin-bottom:6px;font-weight:700;` +
-                `letter-spacing:0.03em;text-transform:uppercase;">&#128196; File Metadata</div>` +
-                `<table style="border-collapse:collapse;width:100%;font-size:0.88em;line-height:1.5;">` +
+                `<div class="sa-meta-header">&#128196; File Metadata</div>` +
+                `<table class="sa-meta-table">` +
                 row('Script ID',       `<code>${esc(meta.script_id || SCRIPT_ID)}</code>`) +
-                row('Script version',  `<span style="background:#f5f5f5;border:1px solid #ddd;border-radius:3px;padding:0 5px;font-size:0.85em;">${esc(meta.script_version || scriptVersion)}</span>`) +
+                row('Script version',  `<span class="sa-meta-version-badge">${esc(meta.script_version || scriptVersion)}</span>`) +
                 row('Schema version',  esc(String(meta.schema_version || _CFG_SCHEMA_VERSION))) +
                 row('Exported at',     esc(fmtDate(meta.exported_at))) +
                 row('Settings count',  `<strong>${settingsCount}</strong> keys`) +
@@ -37386,7 +41520,26 @@ a { color: #1565c0; }`;
      * @param {HTMLTableCellElement} cell  The `td.mb-rel-cell` being displayed.
      * @returns {string} Safe HTML string for `innerHTML`.
      */
+    /**
+     * Lazily injects the shared, id-guarded stylesheet for
+     * {@link _relBuildTooltipHTML}'s output. GM_addStyle so it is exempt
+     * from page CSP style-src restrictions. Fully static, safe to inject
+     * once per page load.
+     */
+    function _ensureRelTooltipStyle() {
+        if (document.getElementById('sa-rel-tooltip-style')) return;
+        const style = GM_addStyle(`
+            .sa-rel-tt-none { opacity:0.6; font-style:italic; }
+            .sa-rel-tt-img { width:16px; height:16px; vertical-align:middle; margin-right:5px; flex-shrink:0; }
+            .sa-rel-tt-ended { margin-left:5px; opacity:0.6; font-style:italic; }
+            .sa-rel-tt-row { display:flex; align-items:center; padding:2px 0; }
+            .sa-rel-tt-url { flex:1; min-width:0; }
+        `);
+        style.id = 'sa-rel-tooltip-style';
+    }
+
     function _relBuildTooltipHTML(cell) {
+        _ensureRelTooltipStyle();
         /**
          * Escapes a string for safe insertion as HTML text content.
          * @param {string} s
@@ -37447,26 +41600,25 @@ a { color: #1565c0; }`;
 
         const _anchors = Array.from(cell.querySelectorAll('a'));
         if (!_anchors.length) {
-            return `<span style="opacity:0.6;font-style:italic;">No relationships</span>`;
+            return `<span class="sa-rel-tt-none">No relationships</span>`;
         }
 
         const _lines = _anchors.map(a => {
             const _keySpan = a.querySelector('.mb-rel-filter-key');
             const _img     = a.querySelector('img');
             const _imgHtml = _img
-                ? `<img src="${_esc(_img.src)}" style="width:16px;height:16px;` +
-                  `vertical-align:middle;margin-right:5px;flex-shrink:0;">`
+                ? `<img src="${_esc(_img.src)}" class="sa-rel-tt-img">`
                 : '';
             const _ended    = parseFloat(a.style.opacity || '1') < 0.5;
             const _endedTag = _ended
-                ? `<span style="margin-left:5px;opacity:0.6;font-style:italic;">(ended)</span>`
+                ? `<span class="sa-rel-tt-ended">(ended)</span>`
                 : '';
             const _urlHtml  = _keySpan
                 ? _serialiseKeySpan(_keySpan)
                 : _esc(a.href);
-            return `<div style="display:flex;align-items:center;padding:2px 0;">` +
+            return `<div class="sa-rel-tt-row">` +
                    `${_imgHtml}` +
-                   `<span style="flex:1;min-width:0;">${_urlHtml}</span>` +
+                   `<span class="sa-rel-tt-url">${_urlHtml}</span>` +
                    `${_endedTag}` +
                    `</div>`;
         });
@@ -38510,6 +42662,8 @@ a { color: #1565c0; }`;
                 if (data.tableMode === 'multi' && data.groups) {
                     groupedRows = [];
                     expandedCells.clear();
+                    _areaFlagRegionCorrected.clear();
+                    _editsProseDefaultExpandedCols.clear();
                     _mbRowIdxCounter = 0;
 
                     // PageTypes that use singular colName (same set as _singularPageTypes
@@ -38598,7 +42752,7 @@ a { color: #1565c0; }`;
                         const _usesColNamePath = !!(activeDefinition.features?.listToTable ||
                                                     activeDefinition.features?.groupByH3);
                         const _grpColName = _usesColNamePath
-                            ? (_diskSingularTypes.has(pageType) ? _toSingular(_grpCat) : _grpCat)
+                            ? (pageType === 'reports-index' ? 'Report' : (_diskSingularTypes.has(pageType) ? _toSingular(_grpCat) : _grpCat))
                             : undefined;
                         const _grpEntityFeatures = (activeDefinition.entityFeatures && _grpCat)
                             ? resolveEntityFeaturesFromH3(_grpCat, activeDefinition)
@@ -38623,6 +42777,8 @@ a { color: #1565c0; }`;
                 } else if (data.rows) {
                     allRows = [];
                     expandedCells.clear();
+                    _areaFlagRegionCorrected.clear();
+                    _editsProseDefaultExpandedCols.clear();
                     _mbRowIdxCounter = 0;
                     data.rows.forEach((rowCells, rowIndex) => {
                         const tr = document.createElement('tr');
@@ -39359,9 +43515,11 @@ a { color: #1565c0; }`;
         if (document.getElementById('sa-unicode-menu')) return;
 
         // ── CSS ──────────────────────────────────────────────────────────────
-        const style = document.createElement('style');
-        style.id    = 'sa-unicode-menu-style';
-        style.textContent = `
+        // GM_addStyle (not document.createElement('style') + head.appendChild)
+        // so this stylesheet is exempt from page CSP style-src restrictions
+        // (MusicBrainz's account/* pages serve a CSP with no 'unsafe-inline'
+        // for style-src, which silently drops plain injected <style> tags).
+        const style = GM_addStyle(`
 #sa-unicode-menu {
     display: none;
     position: absolute;
@@ -39407,8 +43565,11 @@ a { color: #1565c0; }`;
     color: #666;
     font-size: 0.88em;
 }
-        `;
-        document.head.appendChild(style);
+.sa-unicode-cell-name-close {
+    text-align: right;
+}
+        `);
+        style.id = 'sa-unicode-menu-style';
 
         // ── Menu DOM ─────────────────────────────────────────────────────────
         const menu = document.createElement('div');
@@ -39420,7 +43581,7 @@ a { color: #1565c0; }`;
         closeRow.dataset.saUnicodeIdx = '0';
         closeRow.innerHTML =
             '<span class="sa-unicode-cell-char"></span>' +
-            '<span class="sa-unicode-cell-name" style="text-align:right">✕ Close (Esc)</span>';
+            '<span class="sa-unicode-cell-name sa-unicode-cell-name-close">✕ Close (Esc)</span>';
         menu.appendChild(closeRow);
 
         // Character rows
@@ -39669,7 +43830,9 @@ a { color: #1565c0; }`;
         // When the table is rendered, check whether it actually contains qualifying
         // release or release-group links (excluding cover-art links).
         const _relSel = ':is(#content,#page) table.tbl > tbody > tr > td a[href^="/release"]:not([href*="/cover-art"])';
-        const _absSel = ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.org/release"]:not([href*="/cover-art"])';
+        const _absSel =
+            ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.org/release"]:not([href*="/cover-art"]),' +
+            ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.eu/release"]:not([href*="/cover-art"])';
         const _found = !!document.querySelector(_relSel) || !!document.querySelector(_absSel);
         return _found;
     }
@@ -39991,6 +44154,13 @@ a { color: #1565c0; }`;
      * @param {HTMLTableCellElement} parent  The `<td>` element holding the RG link.
      */
     function ergInjectReleaseGroupButton(parent) {
+        // GM_addStyle so this error message's CSS is exempt from page CSP
+        // style-src restrictions. Fully static, safe to inject once; shared
+        // with ergInjectReleaseButton's identical error message.
+        if (!document.getElementById('sa-erg-error-style')) {
+            const ergStyle = GM_addStyle(`.sa-erg-error { color:#f00; }`);
+            ergStyle.id = 'sa-erg-error-style';
+        }
         const mbid  = parent.querySelector('a').href.match(MBID_REGEX)?.[0];
         if (!mbid) return;
         const table = document.createElement('table');
@@ -40043,7 +44213,7 @@ a { color: #1565c0; }`;
             `/ws/2/release?release-group=${mbid}&limit=100&inc=media&fmt=json`,
             (toggled) => { if (toggled) _insertTable(); else _removeTable(); },
             (json)    => { ergParseReleaseGroup(json, mbid, table); },
-            (status)  => { table.innerHTML = `<tr><td style="color:#f00;">Error loading release group (HTTP ${status})</td></tr>`; }
+            (status)  => { table.innerHTML = `<tr><td class="sa-erg-error">Error loading release group (HTTP ${status})</td></tr>`; }
         );
 
         parent.insertBefore(button, parent.firstChild);
@@ -40063,6 +44233,12 @@ a { color: #1565c0; }`;
      * @param {string}               [mbid]        Release MBID (default: read from first `<a>` in `parent`).
      */
     function ergInjectReleaseButton(parent, tableParent, table, mbid) {
+        // Shared with ergInjectReleaseGroupButton's identical error message —
+        // see its GM_addStyle comment for why this is safe to call here too.
+        if (!document.getElementById('sa-erg-error-style')) {
+            const ergStyle = GM_addStyle(`.sa-erg-error { color:#f00; }`);
+            ergStyle.id = 'sa-erg-error-style';
+        }
         const resolvedMbid = mbid || parent.querySelector('a')?.href.match(MBID_REGEX)?.[0];
         if (!resolvedMbid) return;
         const resolvedTable       = table       || document.createElement('table');
@@ -40076,7 +44252,7 @@ a { color: #1565c0; }`;
                 else         resolvedTableParent.removeChild(resolvedTable);
             },
             (json)   => { ergParseRelease(json, resolvedTable); },
-            (status) => { resolvedTable.innerHTML = `<tr><td style="color:#f00;">Error loading release (HTTP ${status})</td></tr>`; }
+            (status) => { resolvedTable.innerHTML = `<tr><td class="sa-erg-error">Error loading release (HTTP ${status})</td></tr>`; }
         );
 
         parent.insertBefore(button, parent.childNodes[0]);
@@ -40252,15 +44428,17 @@ a { color: #1565c0; }`;
         if (!Lib.settings.sa_enable_expand_rgs) return;
         if (!isExpandRGsPage()) return;
 
-        // Match both relative (/release/...) and absolute (https://musicbrainz.org/release/...) hrefs.
-        // The two-part selector covers:
+        // Match both relative (/release/...) and absolute (https://musicbrainz.org/release/...
+        // or https://musicbrainz.eu/release/...) hrefs. The selector covers:
         //   a[href^="/release"]                    — relative URLs (most pages)
-        //   a[href*="musicbrainz.org/release"]     — absolute URLs (some pages, e.g. taglookup)
+        //   a[href*="musicbrainz.org/release"]     — absolute URLs, .org (some pages, e.g. taglookup)
+        //   a[href*="musicbrainz.eu/release"]      — absolute URLs, .eu mirror
         // :is(#content,#page) covers both the standard div#content wrapper and the
         // div#page wrapper used on cdtoc, taglookup, and user-tag pages.
         const SELECTOR =
             ':is(#content,#page) table.tbl > tbody > tr > td a[href^="/release"],' +
-            ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.org/release"]';
+            ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.org/release"],' +
+            ':is(#content,#page) table.tbl > tbody > tr > td a[href*="musicbrainz.eu/release"]';
         const links    = document.querySelectorAll(SELECTOR);
 
         if (!links.length) {
@@ -41453,7 +45631,9 @@ a { color: #1565c0; }`;
      * @property {string}   inlineDoneAttr dataset key name for the per-cell idempotency marker.
      * @property {string}   enrichedAttr   dataset key name for the per-anchor enrichment marker.
      * @property {string}   addFeature     activeDefinition.features key that names the inline
-     *                                     thumbnail column (e.g. 'addCAA', 'addEAA').
+     *                                     thumbnail column (e.g. 'addCAA', 'addEAA'). The
+     *                                     feature's value may be a single column name or an
+     *                                     array of candidate names (see caaFindColumnByName).
      * @property {string}   iconSel        Selector for artwork-icon spans inside art anchors.
      * @property {string}   inlineLinkSel  Selector for the primary entity link per row (inline pics).
      * @property {string}   boxPrefix      ID prefix for the per-table bigbox element.
@@ -41559,6 +45739,14 @@ a { color: #1565c0; }`;
      * Returns the 0-based column index of the first column whose name matches
      * `name` in `table`'s header row, or -1 when not found.
      *
+     * `name` may be a single string or an array of candidate names — this
+     * supports column-agnostic page types (e.g. `report-detail`, which covers
+     * 117 differently-shaped reports) where `features.addCAA`/`addEAA` names
+     * several possible source columns but only one of them is ever actually
+     * present on a given table. Candidates are tried in array order; the first
+     * one found in the table's headers wins (tables never carry more than one
+     * of the candidates, so there is no "combine" case to worry about).
+     *
      * Detection uses (in priority order):
      *   1. `th.dataset.colName` — stamped by makeTableSortableUnified and the
      *      cleanupHeaders() synthetic-header injectors.  Reliable even after the
@@ -41570,20 +45758,76 @@ a { color: #1565c0; }`;
      * caaFindCaaColumnIndex / eaaFindEaaColumnIndex, which were each just
      * caaFindColumnByName(table, 'CAA'/'EAA') in disguise).
      *
-     * @param  {HTMLTableElement} table
-     * @param  {string}           name  — e.g. 'CAA', 'EAA', 'Release', 'Title'
+     * @param  {HTMLTableElement}   table
+     * @param  {string|string[]}    name  — e.g. 'CAA', 'EAA', 'Release', 'Title',
+     *                                     or ['Release', 'Release group']
      * @returns {number}
      */
     function caaFindColumnByName(table, name) {
         const headerRow = table.querySelector('thead tr') ||
                           table.querySelector('tr:has(th)');
         if (!headerRow) return -1;
+        const candidates = Array.isArray(name) ? name : [name];
         return Array.from(headerRow.children).findIndex(th => {
             const named = th.dataset && th.dataset.colName;
-            if (named) return named === name;
+            if (named) return candidates.includes(named);
             const txt = th.textContent.replace(/[⇅▲▼📊▶◀▤0-9⁰¹²³⁴⁵⁶⁷⁸⁹]/g, '').trim();
-            return txt === name;
+            return candidates.includes(txt);
         });
+    }
+
+    /**
+     * Returns the tbody-<td> anchor selector _artCountLinks/_artInitBigPics
+     * should use to find `table`'s own entity links for `ctx`.
+     *
+     * Scoped deliberately to the 'report-detail' page type only (see
+     * debug/report-detail.org). For every other page definition this returns
+     * the original whole-row-minus-exclusions selector unchanged — those 50+
+     * other addCAA/addEAA page definitions already work correctly today and
+     * must not change behavior.
+     *
+     * For report-detail, the scan is restricted to exactly the column named
+     * by activeDefinition.features[ctx.addFeature] (e.g. addCAA: ['Release',
+     * 'Release group'], addEAA: 'Event'), resolved via caaFindColumnByName().
+     * This bypasses the :not(.mb-sticky-col):not(.mb-rel-cell) exclusion
+     * entirely for that column — that exclusion only approximates "the row's
+     * own entity column" when no single column name is known in advance;
+     * once addCAA/addEAA has told us precisely which column holds the row's
+     * own entity link, scanning the whole row (or excluding it for being
+     * sticky) is unnecessary and actively wrong.
+     *
+     * @param  {ArtCtx}           ctx
+     * @param  {HTMLTableElement} table
+     * @returns {string|null}  Selector string, or null when report-detail's
+     *                         addCAA/addEAA candidate column(s) are not
+     *                         present in `table` (caller must then treat the
+     *                         table as having zero entity links without
+     *                         querying at all — e.g. Place reports have no
+     *                         Release/Release group/Event column, so both
+     *                         CAA and EAA stay at 0).
+     */
+    function _artEntityAnchorSelector(ctx, table) {
+        const DEFAULT_SELECTOR = 'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href]';
+        if (!activeDefinition || activeDefinition.type !== 'report-detail') {
+            return DEFAULT_SELECTOR;
+        }
+        const addFeatureNames = activeDefinition.features && activeDefinition.features[ctx.addFeature];
+        if (!addFeatureNames) return DEFAULT_SELECTOR;
+        const colIdx = caaFindColumnByName(table, addFeatureNames);
+        return colIdx === -1 ? null : `tbody td:nth-child(${colIdx + 1}) a[href]`;
+    }
+
+    /**
+     * Formats a `features[ctx.addFeature]` value for debug-log display —
+     * `caaFindColumnByName` accepts either a single column name or a candidate
+     * array (see its JSDoc), so log lines that interpolate the raw value need
+     * a readable form for the array case rather than the default `toString()`.
+     *
+     * @param  {string|string[]} colName
+     * @returns {string}
+     */
+    function caaFormatColNameForLog(colName) {
+        return Array.isArray(colName) ? colName.join(' / ') : colName;
     }
 
     /**
@@ -42842,7 +47086,7 @@ a { color: #1565c0; }`;
 
         // Column-scoped filters — only apply when the filter targets this art column.
         for (const f of ctx.colFilters) {
-            if (f.isMultiRowFilter) continue;  // state filters carry no highlight text
+            if (f.isMultiRowFilter || f.isMultiValueFilter) continue;  // state/value-set filters carry no highlight text
             if (f.idx !== colIdx)   continue;  // different column — skip
             // Use per-filter flags (embedded by getColFilters from the per-subtable
             // checkboxes) with a fallback to the context-level flags for compatibility.
@@ -43758,13 +48002,17 @@ a { color: #1565c0; }`;
         const seen = new Set();
         let firstImgUrl = null;
 
-        // Exclude mb-sticky-col cells (visual duplicate of the title column, added
-        // asynchronously by applyStickyColumn — would double-count every title link)
-        // and mb-rel-cell cells (Relationships column, whose entity links belong to
-        // related entities rather than the row's own cover art).
-        table.querySelectorAll(
-            'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href]'
-        ).forEach(a => {
+        // Default pages: exclude mb-sticky-col cells (visual duplicate of the
+        // title column, added asynchronously by applyStickyColumn — would
+        // double-count every title link) and mb-rel-cell cells (Relationships
+        // column, whose entity links belong to related entities rather than
+        // the row's own cover art). report-detail pages instead scan only the
+        // specific column named by features.addCAA/addEAA — see
+        // _artEntityAnchorSelector and debug/report-detail.org.
+        const anchorSelector = _artEntityAnchorSelector(ctx, table);
+        if (!anchorSelector) return { count: 0, firstImgUrl: null };
+
+        table.querySelectorAll(anchorSelector).forEach(a => {
             const href = a.getAttribute('href');
             for (const type of ctx.entityTypes) {
                 const m = href.match(
@@ -43930,16 +48178,18 @@ a { color: #1565c0; }`;
         }
 
         // ── 2. Collect unique entity links ────────────────────────────────────
-        // Exclude mb-sticky-col cells (visual duplicate of the title column injected
-        // asynchronously by applyStickyColumn — would double-count every title link)
-        // and mb-rel-cell cells (Relationships column — entity links there belong to
-        // related entities, not to the row's own cover-art subject).
+        // Default pages: exclude mb-sticky-col cells (visual duplicate of the
+        // title column injected asynchronously by applyStickyColumn — would
+        // double-count every title link) and mb-rel-cell cells (Relationships
+        // column — entity links there belong to related entities, not to the
+        // row's own cover-art subject). report-detail pages instead scan only
+        // the specific column named by features.addCAA/addEAA — see
+        // _artEntityAnchorSelector and debug/report-detail.org.
         const seen        = new Set();
         let   firstImgUrl = null;
 
-        table.querySelectorAll(
-            'tbody td:not(.mb-sticky-col):not(.mb-rel-cell) a[href]'
-        ).forEach(a => {
+        const anchorSelector = _artEntityAnchorSelector(ctx, table);
+        (anchorSelector ? table.querySelectorAll(anchorSelector) : []).forEach(a => {
             const href = a.getAttribute('href');
             for (const type of ctx.entityTypes) {
                 const m = href.match(
@@ -45893,8 +50143,9 @@ a { color: #1565c0; }`;
      *            archiveBase: string }} ctx
      *   Context descriptor — `key` is the log category ("caa" or "eaa"),
      *   `addFeature` is the `features` property name whose value gives the
-     *   target column name, `fetchUrl` builds the archive API URL for a GUID,
-     *   and `archiveBase` is the archive hostname used for thumbnail `src`.
+     *   target column name (or an array of candidate names — see
+     *   `caaFindColumnByName`), `fetchUrl` builds the archive API URL for a
+     *   GUID, and `archiveBase` is the archive hostname used for thumbnail `src`.
      * @param {boolean} [cacheBust=false]
      *   When `true`, bypasses the IndexedDB and memory caches and forces a
      *   fresh network fetch for every thumbnail (used by the ⟳ retry button).
@@ -45914,7 +50165,7 @@ a { color: #1565c0; }`;
             return;
         }
 
-        Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: ${ctx.addFeature} column = "${colName}"`);
+        Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: ${ctx.addFeature} column = "${caaFormatColNameForLog(colName)}"`);
 
         const tables = document.querySelectorAll('table.tbl');
         if (!tables.length) {
@@ -45935,11 +50186,11 @@ a { color: #1565c0; }`;
 
             const colIdx = caaFindColumnByName(table, colName);
             if (colIdx === -1) {
-                Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: column "${colName}" not found in table ${tblIdx} — skipping table`);
+                Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: column "${caaFormatColNameForLog(colName)}" not found in table ${tblIdx} — skipping table`);
                 return;
             }
 
-            Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: processing table ${tblIdx}, column "${colName}" at index ${colIdx}`);
+            Lib.debug(ctx.key, `init${ctx.key.toUpperCase()}InlinePics: processing table ${tblIdx}, column "${caaFormatColNameForLog(colName)}" at index ${colIdx}`);
 
             table.querySelectorAll('tbody tr').forEach(tr => {
                 const td = tr.cells[colIdx];
@@ -46650,7 +50901,8 @@ a { color: #1565c0; }`;
                 if (!_col5) return;
                 // Only replace when currently showing the placeholder '—'.
                 if (_col5.querySelector('span[title]') || _col5.textContent.trim() === '—' || _col5.querySelector('[style*="#bbb"]')) {
-                    _col5.innerHTML = `🖼️ <span style="color:#1565c0;font-weight:700">${_cnt.toLocaleString()}</span>`;
+                    _ensureStatsPanelStyle();
+                    _col5.innerHTML = `🖼️ <span class="sa-stats-accent-700">${_cnt.toLocaleString()}</span>`;
                 }
             });
 
@@ -46942,7 +51194,7 @@ a { color: #1565c0; }`;
      */
     function _picardBuildTaggerUrl(host, port, entityType, guid) {
         return `http://${host}:${port}/openalbum?id=${guid}&v=2&resource=${encodeURIComponent(
-            `https://musicbrainz.org/${entityType}/${guid}`
+            `${window.location.origin}/${entityType}/${guid}`
         )}`;
     }
 

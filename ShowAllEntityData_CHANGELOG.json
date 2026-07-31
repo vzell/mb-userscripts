@@ -1,5 +1,929 @@
 [
   {
+    "version": "9.99.746",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "📝 Docs",
+        "items": [
+          "Resynced ShowAllEntityData_HELP.txt against every user-facing change since 9.99.675, and against the live keyboard-shortcut/settings code as ground truth. Added: the report pages (/reports, /report/<Name>), edit-listing pages (edits/user-edits/user-open-edits/notes-received) as a new EDIT-LISTING PAGES section, auto-editor elections, genre/instrument/edit-types lists, CD stub pages, and privileged-accounts page to SUPPORTED PAGES; the musicbrainz.eu mirror note; unique-values dropdown multi-select checkboxes and the opt-in flag-icon decoration; the Locality/Region split of Area-family extracted columns; a new ANNOTATION COLUMNS section and ANNOTATION SECTION AUTO-EXPAND note; and the 🎨 EDITS PAGE / 📝 ANNOTATION COLUMNS / 📖 ANNOTATION SECTION settings groups. Also corrected a pre-existing keyboard-shortcuts inaccuracy found while cross-checking ctrlMFunctionMap and configSchema directly: `sa_enable_direct_ctrl_char_shortcuts` defaults to OFF, meaning every direct Ctrl+<letter> shortcut (including ones the HELP file listed as always-on, like Ctrl+G/Ctrl+C/Ctrl+K) is actually suppressed by default in favor of the Ctrl+M prefix mode — documented this plainly, added the missing Ctrl+B / prefix-mode b/g/c/q/a entries, and noted which shortcuts (Ctrl+2/3, Ctrl+,, Ctrl+Shift+G, Ctrl+↑/↓/#, Ctrl+U) are never affected by the toggle. Also added a new ACCOUNT APPLICATIONS PAGE section explaining why /account/applications gets its own callout: MusicBrainz serves /account/* with a stricter Content-Security-Policy (style-src 'self' staticbrainz.org static.metabrainz.org, no unsafe-inline) than other pages, and every dialog/tooltip/panel in this script now renders correctly there via GM_addStyle()-injected stylesheets — the subject of the 9.99.736-9.99.745 fix run — with no reduced functionality."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.745",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix the Ctrl+M shortcuts tooltip never appearing at all on page types with no `div#content` (e.g. /account/applications) — unrelated to the CSP `style-src` fixes above. `showCtrlMTooltip()` had an early `if (!contentDiv) return;` guard that skipped building the tooltip entirely whenever `#content` was absent, even though `#content` is only actually needed for the positioning step at the end of the function. Removed the early bailout and added a viewport-relative positioning fallback (anchored to the top-right corner) for when `#content` doesn't exist, instead of requiring it unconditionally."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.744",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix the remaining CSP `style-src` breakage on /account/applications in one final pass, closing out the investigation started in 9.99.736: `showRenderDecisionDialog` (the \"Large Dataset Fetched\" decision dialog), `showCtrlMTooltip` (the Ctrl+M shortcuts tooltip), `_saveSettingsConfig` (settings-export metadata block, now reusing the shared `.sa-meta-*` classes), `_relBuildTooltipHTML` (relationship-cell rich tooltips), `makeCollapseExpandBtnHTML` (the shared ▶/▼ collapse-toggle button label used throughout the script), and a handful of smaller 1-2-attribute sites (help-panel error fallback, resize/render progress overlays, mnemonic-underline button labels, rich hover-tooltip spans, and the release/release-group inline-expand error messages). File-wide: 0 remaining `style=\"...\"` attributes in live code (down from ~260 at the start of this investigation) — every class referenced via `class=\"...\"` verified to have a matching `GM_addStyle()` definition."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.743",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix the \"Edit Pinned Filter List\" table-editor dialog (`showEditPersistentListDialog`, opened via the ✎ Edit Pinned Filter List button inside any filter-history dropdown) rendering unstyled on /account/applications — same CSP `style-src` issue as 9.99.736-9.99.742, across 49 attributes, the biggest remaining function. Its per-row selection/mark highlighting (a dynamic `rowStyle` string computed from 3 discrete states) was converted to a base `.sa-epl-row` class plus `.sa-epl-row-sel`/`.sa-epl-row-mrk` modifier classes; the existing JS property-assignment calls that update selection after initial render are unaffected. Also reused the shared `.mb-fhw-mark` class for its quick-filter highlight."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.742",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix the generic export dialog (`showExportDialog`, the CSV/etc \"Save Data\" flow, distinct from `showSaveDialog`'s full-table-serialization dialog) rendering unstyled on /account/applications — same CSP `style-src` issue as 9.99.736-9.99.741, across 15 attributes. Virtually identical shell to `showSaveDialog`/`showLoadFilterDialog`, fixed with the same dedicated, id-guarded, injected-once `GM_addStyle()` stylesheet pattern."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.741",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix the statistics panel (`showStatsPanel`) rendering unstyled on /account/applications — same CSP `style-src` issue as 9.99.736-9.99.740, this time across 46 attributes in the largest single function fixed so far (~1570 lines). Almost every occurrence interpolated one of a handful of colors from the panel's own fixed, hardcoded palette (never settings-driven), so they collapsed into ~20 reusable `.sa-stats-*` classes via a new shared `_ensureStatsPanelStyle()` stylesheet. One genuinely conditional case (picking a color based on a column's sort direction) was changed to compute a class name instead of a color value, keeping it CSS-only."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.740",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix the \"Save Table Data\" dialog (`showSaveDialog`) and the shared \"File Metadata\" table it and the Load dialog both use (`buildMetaBlockHTML`) rendering unstyled on /account/applications — same CSP `style-src` issue as 9.99.736-9.99.739. `buildMetaBlockHTML`'s 10 attributes moved to a new shared, id-guarded `GM_addStyle()` stylesheet, including replacing an inline `${modeColor}`-interpolated background with two static modifier classes (`.sa-meta-mode-multi`/`.sa-meta-mode-single`) since the value is always one of exactly two options. `showSaveDialog`'s own 13 attributes moved to a dedicated, id-guarded, injected-once stylesheet (its interpolated values are settings-only, unchanged without a page reload)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.739",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix the \"Load from Disk\" dialog (`showLoadFilterDialog`) rendering completely unstyled/stacked on /account/applications on its very first open — same CSP `style-src` issue as 9.99.736-9.99.738, this time in the dialog's own 49 `innerHTML`-embedded `style=\"...\"` attributes (dialog shell) plus its internal duplicate of `createFilterHistoryWidget`'s history-dropdown code, which was rewired to reuse the exact same shared `.mb-fhw-*` classes from 9.99.738 instead of duplicating them. The dialog shell itself got its own dedicated, id-guarded `GM_addStyle()` stylesheet, safe to inject once since its interpolated dynamic values (font sizes, dropdown height) only change via a settings save, which reloads the page anyway."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.738",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix `createFilterHistoryWidget()` (the Pin/History dropdown attached to every filter input, including the global filter built during initial page load) rendering unstyled if opened on /account/applications — same CSP `style-src` issue as 9.99.736/9.99.737, found via console errors present on initial page load even though nothing looked visibly broken yet (the dropdown panel stays `display:none` until clicked). Converted its 11 `innerHTML`-embedded `style=\"...\"` attributes to a shared, page-global `GM_addStyle()` stylesheet (guarded by id so it's only injected once regardless of how many filter inputs get a history widget). Also replaced two single-letter mnemonic underline spans (`<span style=\"text-decoration:underline\">`) with plain `<u>` tags — no CSS needed. Also fixed one missed leftover from 9.99.736's `initSaUnicodeCharsFeature` conversion: a separate inline `style=\"text-align:right\"` on the picker's Close row that wasn't part of the `<style>` block originally converted. NOTE: an identical duplicated `_histGlyphs` badge-rendering block still exists un-fixed inside `showLoadFilterDialog` (one of the still-deferred functions, see debug/NOTES.md) — left alone per the incremental fix-as-you-test approach."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.737",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fix the settings/configuration dialog and the changelog viewer rendering broken on /account/applications (unstyled, stacked layout) by fixing the same CSP `style-src` issue as 9.99.736, this time in the shared `VZ_MBLibrary.user.js` library (`@require`d by this script): the dialog shells and per-row setting widgets were built via `container.innerHTML` templates with ~75 inline `style=\"...\"` attributes, which are blocked by page CSP the same as `<style>` elements. Converted to id/class selectors targeted by `GM_addStyle()`-injected stylesheets, plus added `// @grant GM_addStyle` to both `VZ_MBLibrary.user.js` and `MB_PageEnhancer.user.js` (the other consumer of this library) so `GM_addStyle` exists in their sandbox. Also replaced an `onfocus`/`onblur` inline event-handler pair in the changelog search box with a CSS `:focus` rule (also CSP-restricted). NOTE: the same `innerHTML`+`style=\"...\"` pattern still exists in ~20 more functions within ShowAllEntityData.user.js itself (dialogs, tooltips, stats panel — see debug/NOTES.md) and will be fixed incrementally as each is found broken during further pageType testing."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.736",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Replace all 9 direct `document.createElement('style')` + `document.head.appendChild()` CSS injection sites (edit-diff table colors, sticky table headers, export/save/load dialog hover states, sidebar toggle, main toolbar chrome, relationships-icon column, Unicode character picker) with `GM_addStyle()` so injected CSS is exempt from Content-Security-Policy `style-src` restrictions (no `unsafe-inline`) that MusicBrainz's backend applies to /account/* pages. This was silently dropping these stylesheets on /account/applications, causing a raw Unicode picker dump appended below the page footer and the sub-table filter row's Cc/Rx/Ex checkboxes stacking one-per-line instead of inline."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.735",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "The 📊 unique-values filter dropdown's flag-icon decoration (9.99.728-9.99.734, covering Country/Area/Locality/Region/Location/Place/Country-Date columns) is now gated behind a new 'Show Flag Icons In Unique-Values Dropdown' setting (sa_enable_dropdown_flag_icons, in the existing 'UNIQUE COLUMN VALUES DROP DOWN CONFIGURATION' settings section), default OFF. hasFlagIcons short-circuits on the setting before doing any column-name/DOM work, so the dropdown renders exactly as it did before this feature existed unless a user opts in."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.734",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "'Country/Date' unique-values filter dropdown (📊, 9.99.732/9.99.733): fixed a large empty gap between multiple flag icons in a cell, and between the last flag and the value text. Confirmed against a live cell's computed style: 'release-country' spans size their box (48x14.4px) to fit BOTH the flag AND a visible country-code abbreviation (e.g. \"AT\") that flagIconMap's clone deliberately strips to avoid duplicating the dropdown's own value text — baking that box's full width verbatim left a large empty gap after the now-childless icon (the PNG itself is only 16x11px). flagIconMap now reads the flag's actual pixel size directly from its background-image's PNG header (when background-size is 'auto', i.e. the image already paints at its natural size — a synchronous, exact fix, not a guess) and sizes the clone to that instead of the source's content-sized box."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.733",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "'Country/Date' unique-values filter dropdown (📊, 9.99.732): fixed the dropdown's value text landing on its own new line below the flag icon instead of right behind it. flagIconMap only normalized a baked 'display: none' to 'inline-block', passing every other resolved display value through verbatim — 'release-country' spans carry extra column-alignment CSS beyond the shared '.flag' sprite rule (unlike the plain '.flag.flag-XX' spans on the Country column, which is unaffected), and a layout-context-dependent display value (e.g. block/list-item/table-cell) baked onto the icon clone forces a line break once it's cloned standalone into the dropdown item. Now only inherently context-free display values (inline/inline-block/inline-flex/inline-grid) are passed through; anything else normalizes to inline-block, same as the existing 'none' case."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.732",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "'Location', source-column 'Place' (Place-category reports, e.g. AnnotationsPlaces), and 'Country/Date' unique-values filter dropdown (📊): entries now show flag icon(s) too, matching the table cells. These are the unsplit SOURCE columns splitLocation/splitCountryDate operate on, and their native markup uses the exact same two flag shapes already fixed for Country/Area (9.99.728/9.99.731) — the gap was only that the dropdown's column-name detection never recognized these three exact names. (Deliberately NOT extended to 'Release events' — that column's flag is a script-rebuilt <li class=\"flag flag-XX\"> with no wrapping <span>/<a>, a different shape whose decoration attempt was reverted after regressing the Country column; see git history.) Because 'Location'/'Country/Date' (unlike Country/Area) can appear inside a currently-collapsed multi-event <li>, resolveFlagVisual() now also temporarily reveals a hidden ancestor <li> around the getComputedStyle() read (restored immediately after) so a collapsed-but-not-first event's flag doesn't read back as blank."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.731",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Country column unique-values filter dropdown (📊): fixed a regression from 9.99.730 where flags looked flat/washed-out again — 9.99.730's multi-flag fix wrapped icons in a <span style=\"display:inline-flex\"> container, an extra layout context not present in the table cell that could interfere with the native flag's baked width/height/background rendering. Removed the wrapper: each icon is now stored/cloned independently and appended as its own direct sibling (matching the original, working single-flag structure), with no behavior change for the multi-flag case.",
+          "'Area'/'Begin area'/'End area' (the unsplit source columns splitArea/splitLocation operate on) unique-values filter dropdown (📊): entries now show flag icon(s) too, matching the table cells. These columns can hold BOTH icon shapes in one cell (a Locality/Region subdivision icon followed by the Country's own flag), so column-name matching now also covers an 'rea' suffix, and countryFlagMap/areaIconMap (9.99.728/9.99.729) are unified into a single flagIconMap that scans for both shapes together in document order, so a combined cell's icons come out correctly interleaved rather than grouped by shape."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.730",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Country/MB-Locality/MB-Region unique-values filter dropdown (📊): cells holding more than one flag (a multi-event Country cell, or a Region cell where a third-party userscript decorates both a subdivision AND its sovereign state with custom flag icons, e.g. \"Noord-Holland, Kingdom of the Netherlands\") now show all of their flags in the dropdown instead of none. countryFlagMap/areaIconMap (see 9.99.728/9.99.729) previously keyed each flag by a label parsed from that single flag's own text, but the dropdown's unique value is always the whole cell's combined text — a multi-flag cell's combined value never matched any single flag's label, so no icon was shown at all. Both maps are now keyed by the cell's full getCleanColumnText() value (exactly how the dropdown's own value list is built) and bundle every flag found in that cell into one wrapper."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.729",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "MB-Locality/MB-Region (and Begin/End variants) unique-values filter dropdown (📊): entries now show the subdivision flag icon injected by third-party userscripts like \"MusicBrainz: More Flags Everywhere\", matching the icon already shown in the table cells. The dropdown's flag-decoration feature previously only recognized exact Country column names, so it never ran at all for Locality/Region columns; its cell scan was also hardcoded to <span> elements, which would have missed the <img class=\"flag ...\"> markup these third-party icons actually use even if it had run. Column-name matching is now suffix-based (matching this file's own _flagRegionColumnTrios convention for the same column family), which as a side effect also fixes the Country dropdown never decorating a 'Release country' column."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.728",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Country column unique-values filter dropdown (📊): the flag icon next to each country name now renders identically to the flag in the table cell. Previously only the span's CSS class was copied into the dropdown clone, which relies on MusicBrainz's own stylesheet cascading correctly wherever the clone lands — the dropdown panel sits outside #content/table.tbl and in a smaller font-size context, so the flag could come out looking flatter/blanker than the real one. Now the resolved visual (background sprite, size, border, vertical-align, …) is read directly from the live table-cell flag via getComputedStyle() — including a ::before/::after pseudo-element fallback — and baked as inline styles onto the dropdown clone, so it is pixel-identical regardless of where MusicBrainz's CSS rule is scoped."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.727",
+    "date": "2026-07-31",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Auto-expand native 'Annotation' section default configuration setting changed to false."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.726",
+    "date": "2026-07-30",
+    "sections": [
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "Removed the `sa_area_flag_region_countries` settings-menu entry (and its now-empty \"🌍 AREA / LOCATION COLUMN SPLITTING\" section) — the countries where a flagged subdivision link forces \"Region\" instead of \"Locality\" (United States, United Kingdom, Canada, Australia) are no longer end-user configurable, and are now a fixed internal `AREA_FLAG_REGION_COUNTRIES` constant instead."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.725",
+    "date": "2026-07-30",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Auto-expand MusicBrainz's native \"Annotation\" section on entity pages (e.g. /work/<mbid>): the script now clicks the native `a.annotation-toggle` \"Show more...\" link on load, so a long annotation is fully visible immediately instead of truncated behind an extra manual click. New setting `sa_enable_annotation_auto_expand` (default: on) in a new \"📖 ANNOTATION SECTION (Entity Pages)\" settings section — unrelated to the existing \"📝 ANNOTATION COLUMNS\" section, which only affects this script's own rendered table columns."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.724",
+    "date": "2026-07-30",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Added \"United Kingdom\", \"Canada\", and \"Australia\" to the default `sa_area_flag_region_countries` list (was just \"United States\"), which now reads \"United States, United Kingdom, Canada, Australia\" — all three are already-supported countries per the setting's own description (matching the flag-decorating userscripts it's designed to work with, e.g. \"MusicBrainz: Canadian Province Flags Everywhere\")."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.723",
+    "date": "2026-07-30",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Changed the default `sa_ui_row_hover_bg` (table row hover background color) from `#e2e2e2` to `#c2d2e9` — both the `configSchema` default and its two JS-side fallback literals were updated together, so they stay in sync as the setting's own description already states."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.722",
+    "date": "2026-07-30",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added a `Vote` column to the `notes-received` page type (`/edit/notes-received`), positioned right before `Edit notes` — see `9.99.720`/`9.99.721`. Extracted from the note's own `<h3>` class (`yes`/`no`/`abstain`/`approve`; `\"\"` means no vote was cast alongside the note), the same element `User`/`Date/Time` already parse. MusicBrainz normally shows this via an adjacent empty `<div class=\"voting-icon\"></div>` styled entirely through its own site CSS (a background-image keyed off the `<h3>`'s class) — unavailable to a detached/fetched page, same unreliability `_editActionBgColor`'s JSDoc already documents for edit-type colors — so a new `_NOTE_VOTE_GLYPHS` lookup (👍 yes, 👎 no, ➖ abstain, ✔️ approve) supplies its own fixed glyph instead, prefixed onto the vote-outcome text. Verified via jsdom against the real `debug/notes-received.html` snapshot: all four non-empty vote classes present on that page extract correctly, and the no-vote case (empty class) correctly falls back to `N/A`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.721",
+    "date": "2026-07-29",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added `User` and `Date/Time` columns to the `notes-received` page type (`/edit/notes-received`), positioned between `Edit action` and `Edit notes` — see `9.99.720`. Both are parsed from the note's own `<h3>` (e.g. `<h3 class=\"yes\"><a href=\"/user/tigerman325\">…<bdi>tigerman325</bdi></a><div class=\"voting-icon\"></div> <a class=\"date\" href=\"/edit-note/NNN\">2025-02-04 17:29 GMT+1</a></h3>`) — `User` clones the author's `<a href=\"/user/…\">` link (avatar + username, preserving the hyperlink), `Date/Time` clones the `<a class=\"date\">` link (preserving its deep link to that specific edit note). Both extractions ignore the optional `<div class=\"voting-icon\">` MusicBrainz sometimes inserts between them (present when the note's `<h3>` carries a vote-outcome class like `yes`/`no`/`abstain`/`approve`), since they query for the two anchors directly rather than relying on sibling position."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.720",
+    "date": "2026-07-29",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added a new `notes-received` page type for `/edit/notes-received` (\"Recent notes left on your edits\") — e.g. the \"Show all Notes Received\" button. This page's `div.edit-list` blocks are much sparser than every other edits-listing page: each wraps only the edit-header `<h2>` plus a single nested `div.edit-note` — none of `.edit-description`/`p.subheader`/`.edit-details`/the multi-note `.edit-notes` wrapper — so only 3 columns exist: `Edit#`, `Edit action`, `Edit notes`. When an edit received multiple notes, MusicBrainz repeats the WHOLE `div.edit-list` block (header + that one note) once per note rather than nesting multiple notes under one heading, so this produces one row per (edit, note) pair. New `_buildNotesReceivedRow()`/`applyNotesReceivedToTable()` (gated on a new `features.notesReceivedToTable: true`, wired into the same pre-processing slot as `applyEditsToTable`/`applyListToTable`, including the fetched-page and ambiguous-pagination-early-stop handling) build this deliberately instead of reusing `applyEditsToTable`/`_buildEditRow`, which assume columns this page doesn't have. Unlike `user-edits`/`user-open-edits`, this page already has a native `<h1>Recent notes left on your edits</h1>`, so no `renameH2ToH1` is needed — just the usual `insertH2: 'Edit Notes'` anchor, same as base `edits`. Also extended the `@include` header's `edit/subscribed(_editors)?` alternative to `edit/(?:subscribed(?:_editors)?|notes-received)`, which didn't cover this URL before. Verified via jsdom against the real `debug/notes-received.html` snapshot, including the duplicate-block (multi-note) case."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.719",
+    "date": "2026-07-29",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed `user-edits`/`user-open-edits` cramming the entire action-button toolbar, row-count badge, CAA toggle, and filter bar onto the same native heading (see `debug/user-edits-wrong.org`). Both pages render no native `<h1>` at all — their only heading is a `<h2>Edits by <username></h2>` / `<h2>Open edits by <username></h2>` — so the page-load button-toolbar injection and the post-render filter/count/CAA-toggle injection both resolved to that one element, which then also got made collapsible (every `<h2>` is fair game for `makeH2sCollapsible()`, unlike an `<h1>` page title). Added a new `renameH2ToH1: true` feature (mirroring the existing `renameH2ToH3: true` used by tag pages) that promotes the native `<h2>` to `<h1>` — carrying the already-injected button toolbar with it, since the promotion moves child nodes rather than discarding them — and gave both page types `insertH2: 'Edits'` / `insertH2: 'Open edits'` so a fresh, dedicated `<h2>` gets injected as the actual filter/count/CAA-toggle anchor, matching every other single-table page type's h1-title/h2-anchor split. New `applyRenameH2ToH1()` (mirrors `applyRenameH2ToH3()`) excludes any `<h2>` nested inside a `div.edit-list` block — every real edit on an as-yet-unconverted edits-listing page carries its own native `<h2>Edit #NNNNNN - Action</h2>` heading, and promoting those too (confirmed via a jsdom run against the real `debug/edits-by-vzell.html` snapshot: 51 `<h1>`s instead of 1, before this exclusion was added) would have been a much worse regression than the one being fixed. Verified via jsdom against both real snapshots: exactly one `<h1>` and one `<h2>` result, in the correct order, before `applyEditsToTable` removes the `div.edit-list` blocks."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.718",
+    "date": "2026-07-29",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added two new page types for a user's own edit-listing pages: `user-edits` (`/user/<username>/edits`) and `user-open-edits` (`/user/<username>/edits/open`) — e.g. `/user/vzell/edits`, `/user/vzell/edits/open`. Both reuse the exact same `editsToTable`/`unboundedPagination`/`collapsableColumns`/`addCAA` pipeline as the existing `edits` page type (see `9.99.719` for the `renameH2ToH1`/`insertH2` heading setup these two needed on top of that, which the base `edits` page type does not). Also extended the `@include` header's `/user/<username>/...` regex to cover `edits`/`edits/open`, which it did not match before.",
+          "Fixed the two new page types failing to initialize at all (\"Required elements not found. Terminating.\", `hasHeader: false`) — confirmed live on `/user/vzell/edits`. Both pages render no `<h1>` whatsoever (only the native `<h2>` mentioned above), but every branch of the init header-detection chain required an `<h1>`, so `headerContainer` stayed `null` and the script aborted before doing anything. Added a `headerContainer` fallback scoped specifically to `user-edits`/`user-open-edits` (not a blanket \"no h1 → use any h2\" rule, to avoid masking a real missing-header case on some other page type) that falls back to the page's `<h2>` when no `<h1>` is found. Every other consumer of `headerContainer` already degrades gracefully to \"use headerContainer itself\" when no ancestor `<h1>` exists, so no other code needed to change."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.717",
+    "date": "2026-07-29",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed the `edits` page type's column filter highlighting matches in the wrong column — e.g. filtering the \"Edit notes\" column highlighted \"alias\" inside \"Edit details\" instead, or (with a trailing comma in the filter string) narrowed to the correct row but highlighted nothing at all. `highlightText()` was scanning `row.querySelectorAll('td')` and using its flat, recursive index to find the target column's cell, but that numbering doesn't match `row.cells`-based indexing (used by `testRowMatch()`/`getColFilters`) once any earlier cell contains nested real `<td>`/`<th>` elements — which every `_detableify()`'d \"Edit details\" cell does (per its own JSDoc, `<td>`/`<th>` are deliberately kept real for `rowspan`/`colspan`). `highlightText()` now resolves the target column via `row.cells[targetColIndex]` directly (matching the same numbering the match logic already uses) and lets `highlightCrossTag()` walk that cell's own subtree, which still finds nested matches correctly. The global-filter case (no target column) is unchanged. Row matching itself was already correct — only the highlight placement was wrong. See `debug/filter-bug.org`, `debug/editNotes-filter-bug.html`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.716",
+    "date": "2026-07-29",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Reordered the `edits` page type's columns to group related content together: `Edit#`, `Edit action`, `Edit details`, `Edit notes`, `Entered from release`, `By artist`, `Edit by`, `My vote`, `Vote count`, `Closed/Approved`, `Voting`, `Edit status` (was: `Edit#`, `Edit action`, `Edit by`, `My vote`, `Vote count`, `Closed/Approved`, `Voting`, `Edit status`, `Entered from release`, `By artist`, `Edit details`, `Edit notes` — see `9.99.715`). `_buildEditRow()`'s cell-building order was moved to match, since cells are appended positionally against the `headers` array; no other code references these columns by index (`collapsableColumns`, `addCAA`, and the prose-column checks all key off the column name), so nothing else needed to change."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.715",
+    "date": "2026-07-25",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added a new `edits` page type covering MusicBrainz edit-listing pages (`/search/edits`, `/<entity>/<mbid>/edits`, `/edit/subscribed`, `/edit/subscribed_editors`) — including the required `@include` header directives for all five URL shapes. Each `<div class=\"edit-list\">` block is converted into a table row with 12 columns (Edit#, Edit action, Edit by, My vote, Vote count, Closed/Approved, Voting, Edit status, Entered from release, By artist, Edit details, Edit notes) via a new `applyEditsToTable()` DOM pre-processing step, mirroring `applyListToTable()`'s pattern. `Edit details` and `Edit notes` are collapsable/height-clamped the same way the Annotation column is — with a manual \"more/less\" toggle per cell plus a column-header \"collapse all\"/\"expand all\" button always available — but via independent `sa_edits_enable_details_collapse`/`sa_edits_enable_notes_collapse` settings controlling only the *initial* expand state: both default to off, so cells start expanded (unlike Annotation's default-on `sa_enable_annotation_collapse`, which starts collapsed); a fresh `Edits` `<h2>` filterline is injected so the single-table collapsible-section/filter-bar infrastructure has something to anchor to. `Entered from release`/`By artist` are populated by scanning for the entity-linked-to-artist-credit shape wherever it appears (not just the dedicated `.entered-from` block), so they cover far more edit types than just relationship edits (e.g. \"Edit recording\", \"Edit medium\", \"Add cover art\", ...), and get inline CAA cover-art thumbnails via `features.addCAA`. `Closed/Approved` covers both MusicBrainz's `Closed:` and `Approved:` `.edit-expiration` prefixes (the latter used for auto-editor edits that passed voting without ever being formally \"closed\").",
+          "Handled MusicBrainz's edit-listing pagination not always exposing a true last page. Small result sets either have no pagination at all or a complete, gap-free widget that already reveals the real last page (both handled correctly by the existing DOM-based detection); only the double-ellipsis milestone-window widget MusicBrainz shows for large/uncounted result sets (\"Found at least N edits\", confirmed live to keep growing past page 1000) is actually ambiguous. A new `_hasAmbiguousEditsPagination()` check now decides dynamically, per page, whether to trust the normal detection or fall back to a safety-capped fetch-until-empty-page strategy (`features.unboundedPagination`, `sa_max_page` setting) — scoped entirely to `editsToTable` pages, no behavior change for any other page type.",
+          "Colored the \"Edit#\" and \"Edit action\" columns by edit category (Add/Edit/Remove/Merge/Other) and open-vs-closed state, matching the well-known \"MusicBrainz: Colourful edits\" userscript's classification — but computed independently from `.edit-header`'s own class list rather than reading any inline/computed style (MusicBrainz sets no inline background there itself; visible color on a live page comes from its own class-based site CSS and/or that userscript if installed, neither of which is reliably readable from a detached, stylesheet-less fetched page). New `_editActionBgColor()` plus 11 configurable `sa_edits_color_*` color-picker settings (`🎨 EDITS PAGE COLORS` section, `sa_enable_edits_type_colors` master toggle) defaulting to that userscript's palette. `applyStickyColumn` learned a generic `data-mb-custom-cell-bg` per-cell marker — respected in both its sticky-cell and non-sticky-cell background computation — so a colored cell survives its zebra-striping-preserving cleanup pass without the function needing to know anything about the `edits` page type.",
+          "Colored old/new value diff cells inside the \"Edit details\" column's compare tables (e.g. a track-title edit's before/after row), matching MusicBrainz's own site CSS (`table.details td.new`/`td.old`) — which no longer matches anything once `.edit-details` has been de-tableified, since it requires a real `<table>` ancestor. `_ensureDetableifyStyle()` now also injects `!important` `.mb-dt-table td.new`/`.mb-dt-table td.old` rules (needed to reliably beat MusicBrainz's own zebra-striping CSS, which reaches these deeply-nested cells too on \"even\" rows) using the `.mb-dt-table` marker class `_detableify()` already stamps on the converted element. Configurable via `sa_enable_edits_diff_colors` (default on) / `sa_edits_color_diff_new` (`#e4fbe4`) / `sa_edits_color_diff_old` (`#fbe3e4`), defaults copied directly from MusicBrainz's own stylesheet.",
+          "Added zebra striping to nested compare tables inside \"Edit details\" (e.g. a medium edit's Old/New tracklist grid) — the `odd`/`even` classes survive `_detableify()`'s conversion untouched, but nothing colored them since MusicBrainz's own zebra CSS can't reach de-tableified content either. New `.mb-dt-tr.odd`/`.mb-dt-tr.even` rules in `_ensureDetableifyStyle()` set the background on both the row and its direct `.mb-dt-cell` children (not the row alone, which relies on painting through cells with no background of their own and silently fails to show on \"even\"/grey rows the moment anything sets a competing background directly on the cell) — matching how MusicBrainz's own equivalent rule always colors cells directly. Configurable via `sa_edits_color_zebra_odd` (`#ffffff`) / `sa_edits_color_zebra_even` (`#f2f2f2`)."
+        ]
+      },
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed `applyInsertH2` failing to insert (or mis-placing) its page-level filterline heading whenever native content it runs before-processing (e.g. a wiki-formatted edit note, which can contain its own `== Edits ==` sub-heading and/or a native `<h3 class=\"owner\">`) happened to collide with the chosen label or heading level. The idempotency guard now stamps and checks a `data-mb-injected-h2` marker instead of matching by text content (position/timing-independent, can't be fooled by unrelated headings); the \"before first h3\" placement fallback now also excludes headings nested inside `div.edit-list`, alongside the existing `table.tbl` exclusion. General fix to shared insertH2 infrastructure, not specific to the `edits` page type.",
+          "Fixed `rowspan`/`colspan` being silently dropped from `.edit-details` compare tables (a relationship diff's old/new values rendering side-by-side instead of stacked; a medium edit's \"Old tracklist\"/\"New tracklist\" 4-column group headers collapsing to one column each). `_detableify()` was converting `<th>`/`<td>` into `<div>`s, but `rowSpan`/`colSpan` are DOM properties only real table-cell elements expose. `<th>`/`<td>` are now left as real elements (only `<table>`/`<thead>`/`<tbody>`/`<tfoot>`/`<tr>` are converted, which is all the nested-table-corruption fix ever needed).",
+          "Fixed the \"By artist\" column including trailing relationship-attribute description text after the artist credit (e.g. \"... has a discography entry at <url> [info]\", \"... can be purchased for download at <url> [info]\"). `_splitEnteredFrom` now stops right after the first element following \"by\" (the artist-credit `<bdi>`) instead of taking the rest of the sentence.",
+          "Fixed \"Edit details\"/\"Edit notes\" having no way to manually collapse a cell (or the whole column) at all once uncollapsed-by-default landed — the earlier implementation gated off the entire clamp/toggle mechanism when the new setting was false, not just the initial visual state. The mechanism now always stays active; the setting only controls whether cells start expanded (the default) or collapsed, via a one-time `expandedCells` pre-population on the first render after a fetch that a later manual collapse correctly survives across sort/filter re-renders.",
+          "Fixed the global \"collapse all\"/\"expand all\" button and the per-column header collapse toggle both staying stuck on \"Expand all\" (`aria-expanded=\"false\"`) even when a column's cells had actually started expanded — both were unconditionally hardcoded to the collapsed initial state in `initCollapsableColumns`. They now track whether any cell in the relevant column(s) started expanded and reflect that in their initial glyph/`aria-expanded`/title, same as an individual cell's own toggle already did.",
+          "Fixed `sa_ui_row_hover_bg` (the table row hover background color, used by `applyStickyColumn` for every table this script renders, not just edits) having no `configSchema` entry at all despite being read in code — it was permanently stuck on its `#e2e2e2` JS-side fallback and never actually adjustable via the settings menu. Also added a CSS `tr:hover .mb-dt-table .mb-dt-cell` rule using this setting: the existing JS-driven hover handler only ever touches a row's direct `<td>` children, so it never reached deeply-nested cells inside de-tableified \"Edit details\" content, which MusicBrainz's own native hover CSS was darkening instead (reaching arbitrary depth, same pattern as its zebra rule) — making their thin `#ddd` borders nearly invisible."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.714",
+    "date": "2026-07-25",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "The 9.99.713 diagnostics revealed the real root cause of `initAreaFlagRegionObserver` never finding a Locality/Region/Country column trio: on `tableMode: 'single'` pages, `startFetchingProcess()` calls `renderFinalTable()` — which called `initAreaFlagRegionObserver()` at its very end — *before* its own subsequent `cleanupHeaders()` pass, the step that actually injects the `MB-Locality`/`MB-Region`/`Country` synthetic `<th>`s. So the observer's trio-finder always scanned a thead that still only had the raw native headers (e.g. 'Area', 'Begin area'), on every page, not just page 2+ — matching the console log exactly. Moved the `initAreaFlagRegionObserver()` call out of `renderFinalTable()` and into `startFetchingProcess()`, right after its `cleanupHeaders()` pass, so the synthetic headers reliably exist first. `renderGroupedTable()`'s own call (for `tableMode: 'multi'` pages) was already correctly ordered after its per-group `cleanupHeaders()` calls and needed no change."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.713",
+    "date": "2026-07-25",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "9.99.712's `initAreaFlagRegionObserver` still didn't correct page 2..Max rows even though the flag icon was confirmed to visually render for them. The observer only watched `attributes` mutations (the flag-decorating userscript setting `data-flag-processed` on the existing anchor); if it instead replaces the anchor/cell subtree wholesale (e.g. via `innerHTML`), that fires no attribute-mutation event on the new node at all, so no code path ever caught it. Now also watches `childList` mutations, and additionally runs a bounded set of full re-checks (immediately, then at 500/1500/3000/6000ms after render) as a belt-and-suspenders fallback independent of which DOM strategy the userscript uses. Also added `sa_enable_debug_logging`-gated diagnostics at each decision point (no trio found on a table, cell missing, country not resolved, country not in the list) so a next investigation has concrete evidence instead of another guess."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.712",
+    "date": "2026-07-25",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "The 9.99.711 country-specific Locality/Region override only worked for the current page's rows: pages 2..Max are parsed from a detached `DOMParser` document (see `fetchHtml`) that flag-decorating userscripts (\"More Flags Everywhere\" / \"Canadian Province Flags Everywhere\", @Lotheric) never touch, so `splitLocation`/`splitArea` never saw the subdivision flag icon at extraction time for those rows — even though the userscript does correctly decorate them once they're inserted into the live table. Added a `MutationObserver` (`initAreaFlagRegionObserver`, installed after every `renderFinalTable`/`renderGroupedTable`, mirroring the existing jesus2099-treleases observer) that watches for the `data-flag-processed` attribute the flag userscripts stamp on processed anchors, and moves the Locality value to Region reactively the moment it's decorated — regardless of which page it came from. The correction is applied to both the visible row and its master row (`allRows`/`groupedRows`), so it also survives later sort/filter re-renders."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.711",
+    "date": "2026-07-25",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "`splitLocation`/`splitArea` now apply an optional country-specific override: if the area link that would become `Locality` (the first/most specific one) is decorated with a subdivision flag icon by a separately-installed userscript (e.g. \"MusicBrainz: More Flags Everywhere\" or \"MusicBrainz: Canadian Province Flags Everywhere\", @Lotheric) — meaning no city/locality was ever entered, only a bare state/province — it is routed to `Region` instead. New setting `sa_area_flag_region_countries` (🌍 AREA / LOCATION COLUMN SPLITTING section) lists which countries this applies to, matched against the row's resolved Country; defaults to `United States` only. Leave blank to disable entirely. Fixes e.g. a US artist whose only Area is \"Florida\" showing up under `MB-Locality` instead of `MB-Region` on `/area/<mbid>/artists`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.710",
+    "date": "2026-07-24",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "`splitArea` (used on `Area`/`Begin area`/`End area`, e.g. on `/area/<mbid>/artists`) mis-identified the country on rows decorated by the separately-installed \"Canadian Province Flags Everywhere\" userscript (@Lotheric): its whole-cell scan picked the first node whose subtree contained a `.flag` class as \"the country\", which wrongly matched the province's sibling `<span class=\"area-icon\"><img class=\"flag flag-XX-prov\"></span>` icon when it preceded the real `<span class=\"flag flag-XX\">` country span — so `Country` showed the province flag icon and `MB-Area` ended up with the real country text stuck in it instead. Fixed by rewriting `splitArea` to route each `/area/` link individually via the same per-anchor `a.closest('.flag')` check already used by `splitLocation` (only the anchor's own ancestor chain, never a sibling), extracted into a new shared helper `_routeAreaLink`."
+        ]
+      },
+      {
+        "label": "✨ Improve",
+        "items": [
+          "`splitArea`'s synthetic `MB-Area`/`MB-Begin area`/`MB-End area` columns are now further split into `MB-Locality`/`MB-Region` pairs (and `MB-Begin locality`/`MB-Begin region`, `MB-End locality`/`MB-End region`), mirroring the `Locality`/`Region` split added to `splitLocation` in 9.99.708: the first (most specific) `/area/` link is Locality, every subsequent one is Region, comma-joined. Same positional rationale as 9.99.708 — MusicBrainz area links carry no type information and the chain depth varies per place, not per country."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.709",
+    "date": "2026-07-24",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "`report-detail` (e.g. `/report/AnnotationsPlaces`) now also runs `splitLocation` on the `Place` column, not just `Location` — the native `Place` cell on Place-category reports has the same \"place in area-chain[, flag country]\" shape. The extracted place-name column is called `MB-Place` rather than `Place` so it doesn't collide with the native `Place` column (which still carries the full place name + area/country chain unchanged); `Locality`/`Region`/`Country` are shared with the existing `Location`-based split."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.708",
+    "date": "2026-07-24",
+    "sections": [
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "`splitLocation`'s synthetic `Area` column is now split into `Locality` and `Region`: `Locality` is the first (most specific) `/area/` link between the Place and Country — typically a city or neighbourhood — and `Region` is every subsequent `/area/` link, comma-joined in the existing broad-to-specific order (e.g. county/borough + state). MusicBrainz area links carry no type information and the hierarchy depth between Place and Country varies per place (not per country), so this is a positional split rather than a true City/County/State classification; a fully semantic split would require an MB API lookup per area (800+ distinct areas on a typical large Events table) with caching, which is out of scope for this synchronous, DOM-only extractor. Updated all 7 `splitLocation` call sites, their `collapsableColumns` lists, and the synthetic-column header tooltips accordingly."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.707",
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "Consolidated the 48 `@match` lines (24 path patterns × 2 domains) in the userscript header into 2 `@include` regex lines, mirroring the file's existing two `@include` lines used for MBID-entity pages. Also dropped `/cdstub/browse` as a `@match` entry since it was already a strict subset of `/cdstub/*`. No functional change — every page the script previously ran on, it still runs on."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.706",
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added support for an eighth new page type: individual auto-editor election pages (`/election/<n>`), as `'auto-editor-election'`. Its \"Votes cast\" table is already native `table.tbl`-shaped with an existing `<h2>` label, so — like `cd-stub` — no `listToTable`/`insertH2` conversion is needed. The separate `<table class=\"properties\">` (election details) is left untouched."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.705",
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "privileged-accounts (`/privileged`, 9.99.704): the relocated intro/count paragraphs now collapse and uncollapse together with their associated sub-table when clicking the h3 header, via a new shared `_syncGroupIntroVisibility()` helper wired into every sub-table visibility toggle path (per-h3 click, Ctrl+Click toggle-all, the master toggle button, and the Ctrl+3 keyboard shortcut)."
+        ]
+      },
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "Renamed pageType `'cd-stub'` (`/cdstub/browse`) to `'top-cd-stub'` to free up the name for a new, more specific page type — see below."
+        ]
+      },
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added support for a seventh new page type: individual CD stub pages (`/cdstub/<disc-id>`), as `'cd-stub'`. Its Tracklist table is already native `table.tbl`-shaped with an existing `<h2>` label, so — unlike every other page type added this session — no `listToTable`/`insertH2` conversion is needed; the script just applies its filter/sort UI directly. The page's separate `<table class=\"details\">` (Disc ID information) and `div#sidebar` are left untouched."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.704",
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "privileged-accounts (`/privileged`, 9.99.703): fixed each section's descriptive/count paragraphs (e.g. \"Auto-editors are trusted users who have been given …\") rendering bunched together after all 7 sub-tables instead of each staying right before its own table. `renderGroupedTable`'s cleanup pass only ever removed `h3`/`table.tbl` elements, leaving those `<p>`s orphaned in their original position while the rebuilt h3/table pairs were inserted as one contiguous block elsewhere. Structure K now stashes them on the table's `dataset.mbIntroHtml`, `startFetchingProcess` carries that onto `group.introHtml`, and `renderGroupedTable` re-inserts them in a `.mb-group-intro` wrapper directly between each `h3` and its `table`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.703",
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added support for a sixth new page type: Privileged user accounts (`/privileged`). Its 7 category sections (Auto-editors, Relationship editors, Transclusion editors, Location editors, Banner message editors, Account administrators, Bots) render each editor list as a plain `<p>` of comma-glued `<a>` links rather than a `<ul>`, so a new Structure K was added to `applyListToTable` — it identifies the correct paragraph per section (the one containing `/user/` links, not by position) and converts it to a one-column \"Editor\" table, splitting by walking the `<a>` elements rather than parsing the \",\" separator text (at least one MusicBrainz username itself contains a literal comma)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.702",
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed native column headers containing a leading digit (e.g. auto-elections' \"1st seconder\" / \"2nd seconder\") being mangled to \"st seconder\" / \"nd seconder\" in both the rendered header text and `data-col-name`. The shared icon-stripping regex in `makeTableSortableUnified` blindly stripped ASCII `0-9` from raw, undecorated header text — removed there (only decorative icon glyphs and Unicode superscript multi-sort-order digits are stripped now) and made `getCleanColName` prefer the already-correct `th.dataset.colName` over re-deriving from text that later also carries the live uniq-count badge digits."
+        ]
+      },
+      {
+        "label": "✨ Improve",
+        "items": [
+          "cd-stub (`/cdstub/browse`): the informational \"Added N years ago, last modified M years ago\" row that MusicBrainz renders after every real row is no longer silently dropped — it is now folded into the preceding row as a disambiguation comment (`<span class=\"comment\">(<bdi>…</bdi>)</span>`) appended to the Title cell, mirroring the existing `cdtoc` tracklist-row interception pattern in `startFetchingProcess`. `cd-stub` now also declares `extractMainColumn: 'Title'`, so the merged text populates dedicated MB-Name/Comment columns.",
+          "Instrument list (`/instruments`, 9.99.701): added a new `Name_Comment_Description` extractor that splits each family's combined cell (name link, optional short comment, optional longer free-text description — which may itself contain nested instrument links) into separate Name / Comment / Description columns, wired per-family via `entityFeatures` (mirrors the `tag-value` per-group columnExtractor pattern). Required extending two pageType gates in `startFetchingProcess` / `renderGroupedTable` (row-level colIdx re-resolution, and per-group thead rebuild) to also cover `instrument-list`, alongside the existing `tag-value` / `user-tag-value` / `user-ratings` pageTypes."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.701",
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added support for five new page types: Auto-editor elections (`/elections`), Genre list (`/genres`), Top CD stubs (`/cdstub/browse`), Edit types (`/doc/Edit_Types`), and Instrument list (`/instruments`). All five reuse existing `applyListToTable` conversion structures — Structure G (bare `<ul>` → one-column table, extended for `genres-list`) and Structure J (repeated `<h2>+<ul>` category sections → one table per section, extended for `edit-types` and `instrument-list` with a per-section column name instead of `reports-index`'s fixed literal). `cd-stub`'s informational 'Added N years ago…' filler rows are skipped by the existing generic single-cell/colSpan>1 row-extraction guard with no new code."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.700",
+    "date": "2026-07-23",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Unique-value dropdown (📊): value items now render a checkbox (☑/☐) and support multi-select, OR'ing every checked value together as a single column filter. Clicking a value (or Enter on a keyboard-focused value) toggles its checkbox and keeps the dropdown open instead of replacing the filter and closing. Selecting checkboxes is mutually exclusive with typing plain text or picking a 'Cell structure' entry in the same column — whichever is used last wins and clears the other."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.699",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added support for the `musicbrainz.eu` mirror domain alongside `musicbrainz.org`: both `@include` regex directives and all 18 `@match` directives in the userscript header now cover `.eu`; the Expand Release Groups feature's absolute-href selectors (`isExpandRGsPage()`, `initExpandRGsFeature()`) now also match `musicbrainz.eu/release` links; and `_picardBuildTaggerUrl()` now builds its resource URL from `window.location.origin` instead of a hardcoded `https://musicbrainz.org`, so the Picard tagger button sends the correct domain regardless of which MusicBrainz mirror the page was loaded from."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.698",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added support for `/account/applications` (the editor's OAuth2 'Authorized applications' and 'Developer applications' page), modelled on the `user-collections` groupByH3 pattern — a 'Show all Applications' button consolidates both native h2-headed tables into one filterable/sortable view."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.697",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added `dateTimeParts` column extractor — splits a \"YYYY-MM-DD HH:MM\" timestamp (e.g. report-detail's native \"Last edited\" column) into separate date and time synthetic columns.",
+          "Added `numberOfChars` column extractor — counts a source cell's whitespace-normalised visible-text length into a single right-aligned numeric synthetic column (e.g. an \"Annotation chars\" column for sorting/filtering annotations by size).",
+          "report-detail now uses both: 'Last edited' → ['Last edited date', 'Last edited time'], 'Annotation' → ['Annotation chars'] (added to `integerColumns` for right-aligned numeric sorting)."
+        ]
+      },
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed a syntax error (missing comma) in report-detail's `integerColumns` array introduced by a manual edit, which broke the entire userscript."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.696",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed multi-row list cells' count-based '▶ N ▤' collapse toggle (Catalog#, Label, Authors, …) becoming permanently unresponsive to clicks right after it was first built — 9.99.695's `_findCellListItems()` walked a cell's list up to the `<td>` checking for competing sibling text, but didn't exclude the toggle span it had itself just appended as a sibling of that list; the toggle's own glyph/count text (e.g. '▶3▤') was seen as competing prose on every subsequent call, so the very next click (or column-header/global mass-toggle) silently found zero list items and did nothing.",
+          "`_findCellListItems()` now excludes anything matching `_CLEAN_STRIP_SEL` (which already covers `.mb-cell-collapse-toggle` and other injected/decorative spans) from that sibling check, not just `<script>`/`<style>`/`<ul>`/`<ol>`.",
+          "Single-item list cells (e.g. a work with exactly one author) are no longer wrapped as a 'prose' cell — they render untouched with no toggle, as before this feature existed, instead of sometimes getting an incorrect 'more'/'less' toggle."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.695",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed the 'Authors' column on report-detail pages (e.g. https://musicbrainz.org/report/AnnotationsWorks) regressing to the prose-cell 'more'/'less' toggle instead of its correct count-based '▶ N ▤' list toggle. 9.99.688's `:scope > ul > li` tightening assumed every script-generated multi-row column places its `<ul>` as a direct child of `<td>`, but native MusicBrainz 'Authors' markup wraps its list one level deeper (`<td><script type=\"application/json\">…</script><div class=\"artist-roles-container\"><ul class=\"artist-roles\">…`), so the tightened selector no longer found it and the cell fell through to being treated as free-form prose.",
+          "Replaced the direct-child-only list lookup everywhere with a new `_findCellListItems()` that walks from a cell's first `<ul>`/`<ol>` up to the `<td>`, treating `<script>`/`<style>` tags and sibling lists as non-competing, but still correctly rejecting a wiki-rendered list embedded inside actual 'Annotation' prose text (real sibling text anywhere along that walk disqualifies it)."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.694",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed the 'Annotation' column header's collapse-toggle count (`.mb-col-collapse-count`, e.g. showing '5' while its own tooltip correctly said '496') and the unique-values dropdown's 'Cell structure' collapsed/expanded counts being wrong for prose (free-text) collapsable columns. Several places independently recomputed 'is this cell multi-row?' using an unscoped `cell.querySelectorAll('ul > li')` check with no awareness of prose cells at all — it only matched cells whose Annotation text happened to contain an embedded wiki bullet/numbered list, and otherwise ignored the actual (much larger) set of collapsed prose cells entirely. Also affected — and fixed — the same way: the multi-row state column filter ('collapsed'/'expanded'/'any' entries in the unique-values dropdown actually filtering the table) and the developer stats panel's per-column multi-row count.",
+          "Added `_classifyCollapseCell()` as the single shared implementation of this check (list cells via `:scope > ul > li`, prose cells via presence of a `.mb-cell-collapse-toggle`), replacing the four independent, inconsistent implementations."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.693",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Ctrl+Click on an 'Annotation'-style cell's ▶/▼ collapse toggle now also expands (uncollapses) every nested wiki `<h2>` sub-heading inside that cell, instead of just expanding the cell's own text preview.",
+          "Ctrl+Click on the 'Annotation' column's header collapse toggle now also expands every nested wiki `<h2>` sub-heading in every cell of the column, in addition to expanding all cells.",
+          "Both toggles' tooltips now explain the Ctrl+Click behaviour — shown only when the cell/column actually contains a nested wiki sub-heading, so the hint doesn't appear on plain annotations with no headings to expand."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.692",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Added `sa_annotation_h2_bg` / `sa_annotation_h2_color` settings for the text color of wiki-rendered `<h2>` sub-headings nested inside table cells (e.g. 'Annotation' column sub-sections like '== Known performances =='), separate from the existing page-level H2 section-header colors. Defaults (#e3f2fd background / #1565c0 text) are chosen to sit quietly against the grey/white alternating row backgrounds and to read as related to (rather than compete with) the standard blue hyperlink color that often appears in annotation text."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.691",
+    "date": "2026-07-22",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Fixed wiki-rendered `<h2>` sub-headings inside 'Annotation'-style column cells (e.g. '== Known performances ==') becoming permanently non-collapsible after the first sort or filter. renderFinalTable()/renderGroupedTable() replace table rows with cloneNode(true) copies on every sort/filter re-render, which copies the collapsed-h2 marker classes and icon but not the click listener — makeH2sCollapsible() (which normally sets these up) only runs after the initial full-page render and a disk-load, never after a sort/filter, so the cloned headings looked processed but were inert. A new `_rewireNestedTableH2Toggles()` re-attaches working click handlers to these nested headings after every sort/filter re-render, without touching page-level h2 sections (Genres, Tags, Relationships, …) or resetting any section's manually-toggled state."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.690",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Made the collapsed-cell clamp height of 'Annotation'-style columns configurable via a new `sa_annotation_column_max_height_em` setting (default 5.6em, ~4 lines — the same value used in 9.99.688), instead of a hardcoded CSS value."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.689",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Added a new '📝 ANNOTATION COLUMNS' settings section: `sa_enable_annotation_collapse` (checkbox, default on) toggles the 9.99.688 free-text collapse/height-clamp behaviour on/off for 'Annotation'-style columns, and `sa_annotation_column_max_width` (number, default 480) makes the auto-resize width cap configurable.",
+          "The auto-resize width cap for these columns is now always active, independent of `sa_enable_annotation_collapse` — even with collapsing disabled, a long annotation no longer stretches the column to its unwrapped width."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.688",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Annotation-style columns declared in `collapsableColumns` (report-detail's AnnotationsPlaces/AnnotationsReleases sub-reports, the instrument 'Annotations' report category) are now collapsible: free-text cells are height-clamped behind a ▶/▼ 'show more/less' toggle, sharing the same column-header and global mass-toggle buttons, filter-match highlighting, and expand-state persistence as existing list-type collapsable columns (Catalog#, Label, …).",
+          "Auto-resize (↔️ Resize / Ctrl+R) no longer sizes these free-text columns to a paragraph's unwrapped single-line width — their measured width is now capped, matching the new height-clamped rendering.",
+          "Tightened `collapsableColumns`' list-cell detection to only match a `<ul><li>` that is a direct child of the `<td>`, fixing a latent bug where a wiki-rendered bullet/numbered list embedded inside free-text annotation prose could be mistaken for a script-generated multi-row list and partially hidden."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.687",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Split 'Location' column in 'report-detail' pageTypes."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.686",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "splitLocation: the synthetic 'Area' column now preserves the Canadian-province flag icon injected by the 'MusicBrainz: Canadian Province Flags Everywhere' userscript (@Lotheric), instead of dropping it during the Location → Place/Area/Country split."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.685",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "report-detail pages: removed the native 'Show only results that are in my subscribed entities.' list item from the report description block — redundant with the existing 'Show all (subscribed only)' button."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.684",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "report-detail pages: applyInsertH2() no longer picks an <h3> nested inside table.tbl cells (e.g. wiki-rendered '=== Heading ===' markup in an Annotation-column cell on the report's native first page, before any DOM pre-processing runs) as the insertion anchor for the synthetic 'Report' <h2>. Confirmed via live debug logs as the root cause of AnnotationsPlaces/AnnotationsReleases rendering with no discoverable page-level heading: the <h2> was actually being created, but nested deep inside a table cell after the data table instead of before it, so updateH2Count's 'table follows h2' search never found it. The report-detail-scoped self-heal added in v9.99.682 remains in place as a defensive backstop."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.683",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "_relocateTrailingH2Sections() no longer treats <h2> headings nested inside table.tbl cells (e.g. wiki-rendered '== Heading ==' markup in Annotation-column text) as page-level trailing sections — previously every matching row's cell content was physically relocated out of the table to just before the page header, corrupting Annotation columns on report-detail's AnnotationsEvents/AnnotationsReleaseGroups reports and on 'search' pages for entity type Annotation."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.682",
+    "date": "2026-07-21",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "report-detail pages ('/report/<Name>'): CAA/EAA cover-/event-art detection now scans only the specific Release/Release group/Event column designated by the report's addCAA/addEAA feature instead of the whole row — fixes missing big-picture stripes when that column happened to become the sticky column (ReleasedTooEarlyForLabel, ReleasesWithUnlikelyLanguageScript, SetInDifferentRG, EventSequenceNotInSeries), and fixes wrong/spurious CAA or EAA indicators picked up from incidental entity links inside free-text Annotation cells (AnnotationsEvents, AnnotationsReleaseGroups). Scoped strictly to the report-detail page type; no other page definition's artwork detection changes.",
+          "report-detail pages: the 'Report' <h2> heading (and the row-count/filter-bar infrastructure anchored to it) is now defensively re-asserted if missing, mitigating a rendering issue that left some sub-reports (AnnotationsPlaces, AnnotationsReleases) without any heading at all. Scoped strictly to the report-detail page type. Root cause identified and fixed in v9.99.684; this self-heal remains as a backstop."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.681",
+    "date": "2026-07-20",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Merged discography view sub-tables (release-group pages) now stay fully sorted when their rows are combined from multiple underlying category groups — sorting the visible table previously only reordered one contributing group, leaving the others spliced in at their original position."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.680",
+    "date": "2026-07-20",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Sort keys (and the non-regex global filter) no longer include leaked inline CAA/EAA artwork markup — cache-hint emoji, thumbnail placeholders, count badges, the row-expand glyph. Whether a row's inline thumbnail had resolved from cache by render time previously determined its sort position ahead of the actual visible text, splitting otherwise-correctly-ordered rows into wrongly-ordered clusters on any table with inline cover-art/event-art thumbnails."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.679",
+    "date": "2026-07-19",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "report-detail pages now get a collapsible \"Report\" <h2> section header (row-count badge, global filter bar) matching other single-table page types, which also unlocks the CAA/EAA cover-art/event-art toggle button and big-picture image stripe above the table when a report has a Release/Release group or Event column."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.678",
+    "date": "2026-07-19",
+    "sections": [
+      {
+        "label": "✨ Improve",
+        "items": [
+          "`addCAA`/`addEAA` page-definition features now accept an array of candidate column names (e.g. `addCAA: ['Release', 'Release group']`), so column-agnostic page types like `report-detail` (117 differently-shaped reports) can render inline cover/event-art thumbnails regardless of which of several possible columns a given report table actually has. `report-detail`'s `addCAA` now uses `['Release', 'Release group']`."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.677",
+    "date": "2026-07-19",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Add feature support for pageType 'report-detail'."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.676",
+    "date": "2026-07-19",
+    "sections": [
+      {
+        "label": "🐛 Fix",
+        "items": [
+          "Unconditionally remove the bulk-tag checkbox column injected by the third-party \"MusicBrainz Nuclear Tags\" userscript (`<th class=\"elephant-tag-col\">`) before rendering the consolidated table, so it no longer shifts column alignment on pages like series releases."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.675",
+    "date": "2026-07-01",
+    "sections": [
+      {
+        "label": "🚀 Feature",
+        "items": [
+          "Added support for MusicBrainz report pages: the /reports index (all 117 reports across 14 categories, rendered as a filterable multi-table view) and individual /report/<ReportName> pages (paginated, with buttons to switch between all results and results limited to your subscribed entities). Column sets are report-specific and auto-detected generically; the DuplicateArtists-style 'merge queue' checkbox column renders but is non-functional (known limitation — the table is detached from its native <form>)."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.674",
     "date": "2026-06-18",
     "sections": [

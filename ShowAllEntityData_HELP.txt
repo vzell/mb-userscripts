@@ -15,10 +15,27 @@ SUPPORTED PAGES
   Instrument, Event pages — all supported sub-tabs
 • Collection pages (own collections, subscribed collections, entity sub-tabs
   including Release groups with native h3-grouped sub-tables)
+• Account pages (/account/applications — authorized and developer
+  applications) — see ACCOUNT APPLICATIONS PAGE below
 • Tag pages — entity tag pages (/tag/<value>, /tag/<value>/<entity>),
   user tag pages (/user/*/tags, /user/*/tag/*),
   and the MusicBrainz Most Popular Tags page (/tags)
 • Search result pages (all entity types)
+• Report pages — the /reports index (all 117 reports across 14 categories)
+  and individual /report/<ReportName> pages (with buttons to switch between
+  all results and results limited to your subscribed entities)
+• Edit-listing pages — /search/edits, /<entity>/<mbid>/edits,
+  /edit/subscribed, /edit/subscribed_editors, /user/<username>/edits,
+  /user/<username>/edits/open, and /edit/notes-received ("Recent notes left
+  on your edits") — see EDIT-LISTING PAGES below
+• Auto-editor elections (/elections) and individual election pages
+  (/election/<n>)
+• Genre list (/genres), Instrument list (/instruments), Edit Types
+  documentation (/doc/Edit_Types), Top CD stubs (/cdstub/browse), and
+  individual CD stub pages (/cdstub/<disc-id>)
+• Privileged user accounts (/privileged)
+• Also works on the musicbrainz.eu mirror domain, in addition to
+  musicbrainz.org
 
 GETTING STARTED
 ---------------
@@ -64,13 +81,16 @@ FILTERING
 • Filter highlighting works across inline HTML element boundaries (cross-tag
   matching) — search terms spanning <a>, <bdi>, or <span> elements highlight
   correctly in all three filter levels
-• Ctrl-G  — focus global filter field (configurable)
+• Ctrl-G  — focus global filter field (configurable; requires "Enable Direct
+            Ctrl+Letter Shortcuts" — off by default; use prefix+G otherwise
+            — see KEYBOARD SHORTCUTS below)
 • Ctrl-C  — focus first column filter; repeated presses cycle through tables
-            (configurable)
+            (configurable; same direct-shortcuts requirement as Ctrl-G above)
 • Ctrl-U  — open Unicode character picker (when any text input is focused;
-            configurable) — insert special characters into filter strings
-• Ctrl-Shift-G — clear all active filters (configurable; also activates the
-                "✕ Clear ALL filters" button)
+            configurable; never suppressed) — insert special characters
+            into filter strings
+• Ctrl-Shift-G — clear all active filters (configurable; never suppressed;
+                also activates the "✕ Clear ALL filters" button)
 • Shift-Esc    — clear all COLUMN filters only (global — works from anywhere)
 • Escape  — first press clears the focused filter, second press removes focus
 • 🎨 Toggle highlighting — toggle highlight colours on/off for active filters
@@ -171,9 +191,15 @@ every distinct non-empty value currently visible in that column.
   auto-focused when the panel opens.  Type to narrow the item list in real
   time; matching substrings are highlighted (configurable colors).  A ×
   button clears the filter.
-• Selecting a value — click any item, or navigate with ↑/↓ / Home / End
-  and press Enter, to write the value directly into the column's filter
-  input and apply the filter immediately.
+• Multi-select checkboxes — each value shows a ☑/☐ checkbox. Clicking a
+  value (or pressing Enter on a keyboard-focused value) toggles its
+  checkbox and keeps the panel open instead of replacing the filter and
+  closing; every checked value is OR'd together into a single column
+  filter. Typing plain text or picking a "Cell structure" entry is mutually
+  exclusive with checkbox selection — whichever you use last wins and
+  clears the other.
+• Navigate with ↑/↓ / Home / End; Enter toggles the keyboard-focused value's
+  checkbox the same way clicking it does.
 • Escape — first press clears the quickfilter (if non-empty); second press
   (or first press when quickfilter is already empty) closes the panel.
 • The panel closes automatically when clicking outside it or when the page
@@ -181,6 +207,11 @@ every distinct non-empty value currently visible in that column.
 • Cache-status emoji (🟢/🟡/🔵/🗄️/⚠️) injected into CAA/EAA artwork columns
   are automatically excluded so that release/event title text is never mixed
   with artwork metadata in the dropdown values.
+• Flag icons (optional, off by default) — enable "Show Flag Icons In
+  Unique-Values Dropdown" in ⚙️ Settings to decorate each entry with the same
+  flag icon shown in the table cell, for Country/Area/Locality/Region/
+  Location/Place/Country-Date columns (including subdivision icons added by
+  separately-installed userscripts such as "More Flags Everywhere").
 
 PRE-FILTER (Load from Disk — three-phase dialog)
 -------------------------------------------------
@@ -226,14 +257,28 @@ COLLAPSING / EXPANDING
 
 KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
 --------------------------------------------------------------------------
-  ? or /           Show keyboard shortcuts reference
-  Ctrl+K           Show keyboard shortcuts reference (direct, not configurable)
+IMPORTANT — direct Ctrl+<letter> shortcuts are OFF by default. Enable
+"Enable Direct Ctrl+Letter Shortcuts" in ⚙️ Settings → 🎹 KEYBOARD SHORTCUTS
+to make every Ctrl+<letter> combo below fire globally at all times. While
+disabled (the default), ALL Ctrl+<a-z> shortcuts are suppressed everywhere —
+use the Keyboard Shortcut Prefix (below, default Ctrl+M) instead, which
+always works and is never suppressed. Ctrl+2/Ctrl+3 (number keys), Ctrl+,
+(comma), Ctrl+Shift+G, and Ctrl+U are never affected by this setting either
+way.
+
+  ? or /           Show keyboard shortcuts reference (only outside text inputs)
+  Ctrl+K           Show keyboard shortcuts reference (configurable; suppressed
+                   unless direct shortcuts are enabled — use prefix+K instead)
   Ctrl+U           Open Unicode character picker (only when a text input or
-                   textarea is focused; configurable)
-  Ctrl+G           Focus global filter
-  Ctrl+C           Focus first column filter (cycles through tables)
-  Ctrl+Shift+G     Clear all filters (configurable; tooltip on "✕ Clear ALL
-                   filters" button reflects the currently configured shortcut)
+                   textarea is focused; configurable; never suppressed)
+  Ctrl+G           Focus global filter (suppressed unless direct shortcuts
+                   are enabled — use prefix+G instead, always available)
+  Ctrl+C           Focus first column filter, cycles through tables
+                   (suppressed unless direct shortcuts are enabled — use
+                   prefix+C instead, always available)
+  Ctrl+Shift+G     Clear all filters (configurable; never suppressed; tooltip
+                   on "✕ Clear ALL filters" button reflects the currently
+                   configured shortcut)
   Shift+Esc        Clear all COLUMN filters only (global — works from anywhere)
   Ctrl+S           Save to Disk
   Ctrl+L           Load from Disk dialog
@@ -242,18 +287,25 @@ KEYBOARD SHORTCUTS  (all configurable in ⚙️ → Keyboard Shortcuts section)
   Ctrl+D           Open Density menu
   Ctrl+V           Open Visible menu
   Ctrl+I           Open Statistics panel
-  Ctrl+2           Toggle all h2 section headers
-  Ctrl+3           Toggle all h3 type headers
-  Ctrl+,           Open Settings dialog
+  Ctrl+B           Toggle barcode row highlighting
+  Ctrl+2           Toggle all h2 section headers (never suppressed)
+  Ctrl+3           Toggle all h3 type headers (never suppressed)
+  Ctrl+,           Open Settings dialog (never suppressed)
   Escape           Clear focused filter / close open menus
                    (first press clears text, second press removes focus)
+
+  Every Ctrl+<letter> row above (Ctrl+K/G/C/S/L/E/R/D/V/I/B) requires
+  "Enable Direct Ctrl+Letter Shortcuts" to be turned on; otherwise use the
+  matching prefix-mode letter instead (see PREFIX-MODE SHORTCUTS below).
 
 COLUMN FILTER FOCUS SHORTCUTS  (active only when a column filter has focus)
 ---------------------------------------------------------------------------
   Ctrl+↑           Sort the column ascending (emulates clicking ▲ in header)
+                   — never suppressed
   Ctrl+↓           Sort the column descending (emulates clicking ▼ in header)
+                   — never suppressed
   Ctrl+#           Restore original row order (emulates clicking ⇅ in header)
-                   ('#' is Shift+3 on US/UK keyboards)
+                   ('#' is Shift+3 on US/UK keyboards) — never suppressed
   Ctrl+O           Toggle collapse/expand of multi-row cells in this column
                    (emulates the ▶/◀ collapse icon in the column header)
   Ctrl+Q           Open the unique-values dropdown for this column
@@ -265,23 +317,44 @@ COLUMN FILTER FOCUS SHORTCUTS  (active only when a column filter has focus)
   Ctrl+V           Open the per-sub-table visible-columns menu (falls back to
                    global visible-columns menu in single-table mode)
   Note: all column-filter focus shortcuts are configurable in ⚙️ Settings.
+  Like the global shortcuts above, Ctrl+O/Q/A/R/V here require "Enable Direct
+  Ctrl+Letter Shortcuts" to be on — Ctrl+↑/↓/# are letter-free and always
+  work regardless. When direct shortcuts are off, use prefix-mode o/q/a as
+  alternatives for Ctrl+O/Q/A (they resolve to whichever column filter was
+  last focused, even after the prefix key itself has taken focus away).
 
 PREFIX-MODE SHORTCUTS  (configurable prefix, default: Ctrl+M)
 --------------------------------------------------------------
+Always available, regardless of the "Enable Direct Ctrl+Letter Shortcuts"
+setting — this is the reliable way to trigger any shortcut when direct
+Ctrl+<letter> combos are suppressed (the default).
+
   Press the prefix key, release, then press:
     s   Save to Disk
     l   Load from Disk
     r   Toggle Resize Columns
     v   Open Visible menu
+    b   Toggle barcode row highlighting
     d   Open Density menu
     i   Show Statistics panel
     e   Open Export menu
     k   Show keyboard shortcuts reference
     ,   Open Settings dialog
     h   Show App Help (this dialog)
-    o   Activate Stop button (only while a fetch is running)
+    g   Focus global filter
+    c   Focus next column filter (cycles through tables)
+    o   Toggle Multi-Row Cell Collapse for the last-focused column filter;
+        while a fetch is running, temporarily becomes "Stop fetching" instead
+    q   Show Unique Values Dropdown for the last-focused column filter
+    a   Toggle CAA/EAA Cover Art Images for the last-focused column filter's
+        table
     1–9 / a–z  Trigger the corresponding action button by mnemonic index
                 (action buttons show 🧮N superscript to indicate their index)
+                — only reached for letters not already claimed above
+
+  o/q/a require a column filter to have been focused at some point on the
+  page (they remember the last one, even after pressing the prefix key
+  itself, which doesn't blur the input).
 
   The prefix key can be changed in ⚙️ Settings → "🎹 KEYBOARD SHORTCUTS"
   to any combination such as "Ctrl+.", "Alt+X", "Ctrl+Shift+,".
@@ -349,14 +422,24 @@ COLUMN MANAGEMENT
 • Extracted columns added by the script alongside the raw data:
     — "Country" + "Date"        split from the combined "Country/Date" cell on
                                 release and label pages
-    — "Place" + "Area" + "Country"  split from the "Location" cell on event
-                                    and area pages
-    — "MB-Area" + "Country"     split from the "Area" cell on label, area,
-                                and recording pages
-    — "MB-Begin area" + "Begin country"  split from the "Begin area" cell on
+    — "Place" + "Locality" + "Region" + "Country"  split from the "Location"
+                                cell on event and area pages (and from the
+                                "Place" cell, as "MB-Place", on Place-category
+                                report pages, e.g. AnnotationsPlaces)
+    — "MB-Area" + "MB-Locality" + "MB-Region" + "Country"  split from the
+                                "Area" cell on label, area, and recording pages
+    — "MB-Begin area" + "MB-Begin locality" + "MB-Begin region" +
+      "Begin country"          split from the "Begin area" cell on
                                 area-artists and similar pages
-    — "MB-End area" + "End country"      split from the "End area" cell on
+    — "MB-End area" + "MB-End locality" + "MB-End region" + "End country"
+                                split from the "End area" cell on
                                 area-artists and similar pages
+      (Locality is the first/most-specific area link, e.g. a city; Region is
+      every subsequent one, comma-joined — a positional split, since
+      MusicBrainz area links carry no type information. A bare subdivision
+      flag icon added by a separately-installed userscript, with no city
+      ever entered, is routed to Region instead of Locality for United
+      States/United Kingdom/Canada/Australia.)
     — "Total Tracks"            computed from track-count data on release pages
     — "Format Types"            strips quantity prefixes (e.g. "8×") from
                                 the Format column on release-group, label, and
@@ -370,6 +453,10 @@ COLUMN MANAGEMENT
     — "MB-Name" + "Comment"     extracted from the main entity name cell on
                                 pages that expose the raw MusicBrainz entity
                                 name alongside its disambiguation comment
+    — "Last edited date" + "Last edited time"  split from report pages'
+                                native "Last edited" timestamp column
+    — "Annotation chars"        character count of the "Annotation" column,
+                                on report pages, for sorting/filtering by size
 • Derived columns (split from already-extracted columns):
     — "DD" + "MM" + "YYYY" + "Day" + "Month"  derived from the extracted "Date"
                                 column on release, label, event, and work pages
@@ -391,6 +478,31 @@ inline-block wrapping so values line up vertically regardless of digit count.
 The "Length" column on recording pages uses colon-split alignment so the ":"
 separator lines up across all rows.  Numeric alignment can be disabled
 globally in ⚙️ Settings.
+
+ANNOTATION COLUMNS  (📝 ANNOTATION COLUMNS in ⚙️ Settings)
+------------------------------------------------------------
+Free-text columns declared as collapsable (e.g. "Annotation" on report pages
+such as AnnotationsPlaces/AnnotationsReleases, and the instrument
+Annotations report) are height-clamped behind a ▶/▼ "show more/less" toggle,
+the same way multi-row list columns (Catalog#, Label, …) collapse — only
+cells that actually overflow the clamp get a toggle.
+• Enable/disable the collapse behaviour, and configure the clamp height (em)
+  and the auto-resize max width (px) applied to these columns — the width
+  cap stays active even when collapsing is disabled.
+• Wiki-rendered <h2> sub-headings inside an Annotation cell (e.g.
+  "== Known performances ==") get their own configurable background/text
+  color, separate from the page-level H2 section-header colors.
+• Ctrl+Click a cell's ▶/▼ toggle (or the column header's toggle) to expand
+  the cell/column AND every nested wiki <h2> sub-heading inside it in one
+  step; the tooltip mentions this only when the cell actually has one.
+
+ANNOTATION SECTION AUTO-EXPAND  (📖 ANNOTATION SECTION (Entity Pages) in ⚙️ Settings)
+----------------------------------------------------------------------------------------
+On entity pages (e.g. /work/<mbid>) with a native "Annotation" section, this
+optional setting (off by default) clicks the native "Show more…" link on
+load so a long annotation is fully visible immediately instead of truncated.
+Unrelated to the ANNOTATION COLUMNS feature above, which only affects this
+script's own rendered table columns.
 
 CAA/EAA ILLUSTRATED DISCOGRAPHY  (🖼️ in ⚙️ Settings)
 ------------------------------------------------------
@@ -446,6 +558,45 @@ Web Service.  Relationship icons (favicons) appear after the table renders.
 • Relationship data is cached in IndexedDB (7-day TTL) to avoid re-fetching
   on repeated visits.  Retry buttons (⟳) force a fresh network fetch with
   IDB cache invalidation.
+
+EDIT-LISTING PAGES  (🎨 EDITS PAGE in ⚙️ Settings)
+----------------------------------------------------
+Covers /search/edits, /<entity>/<mbid>/edits, /edit/subscribed,
+/edit/subscribed_editors, /user/<username>/edits(/open), and
+/edit/notes-received. Each native edit block is converted into a table row
+(Edit#, Edit action, Edit details, Edit notes, Entered from release, By
+artist, Edit by, My vote, Vote count, Closed/Approved, Voting, Edit status —
+notes-received instead shows Edit#, Edit action, User, Date/Time, Vote,
+Edit notes).
+• "Edit details" and "Edit notes" are collapsable/height-clamped the same
+  way Annotation columns are, with independent settings controlling whether
+  they start expanded (default) or collapsed.
+• "Edit#"/"Edit action" are colored by edit category and open/closed state
+  (matching the well-known "MusicBrainz: Colourful edits" userscript's
+  palette), independently of whether that script is installed. Old/new
+  value diff cells inside "Edit details" compare tables, and zebra striping
+  on nested compare tables (e.g. a medium edit's tracklist grid), are also
+  colored to match MusicBrainz's own site styling. All colors and the
+  master toggle are configurable in ⚙️ Settings → 🎨 EDITS PAGE.
+• Inline CAA cover-art thumbnails for release/release-group links found in
+  "Entered from release".
+• Pages with an ambiguous "Found at least N edits" pagination widget
+  (uncounted, growing result sets) use a safety-capped fetch-until-empty
+  strategy instead of trusting the widget's page-number links.
+
+ACCOUNT APPLICATIONS PAGE  (/account/applications)
+-----------------------------------------------------
+Shows your "Authorized applications" (OAuth2 apps you've granted access) and
+"Developer applications" (apps you've registered) as two consolidated
+tables, via a single "Show all Applications" button — a static page, no
+pagination.
+• Unlike other MusicBrainz pages, /account/* is served with a stricter
+  Content-Security-Policy (style-src 'self' staticbrainz.org
+  static.metabrainz.org, no unsafe-inline) that blocks plain inline <style>
+  elements and style="..." attributes outright. Every dialog, tooltip, and
+  panel in this script is built with GM_addStyle()-injected stylesheets
+  instead, so all features render correctly here exactly as they do
+  elsewhere — no reduced functionality on this page.
 
 H1 ALIAS LINE
 -------------
@@ -558,11 +709,16 @@ labels and descriptions.  Major setting groups:
 
 • 🎹 KEYBOARD SHORTCUTS
     — Enable / disable keyboard shortcuts and prefix-mode tooltip overlay
-    — Configure the prefix key (default: Ctrl+M)
+    — Configure the prefix key (default: Ctrl+M) — always available
+    — Enable Direct Ctrl+Letter Shortcuts (default: OFF) — while off, ALL
+      Ctrl+<letter> shortcuts are suppressed everywhere and the prefix-mode
+      equivalent must be used instead; Ctrl+2/3, Ctrl+,, Ctrl+Shift+G, and
+      Ctrl+U are unaffected either way
     — 20+ configurable direct-chord shortcuts:
          Global: Save, Load, Resize, Visible, Density, Statistics, Export,
                  Settings, Global Filter, Column Filter, Clear Filters,
-                 Toggle h2, Toggle h3, Unicode Character Picker
+                 Toggle h2, Toggle h3, Unicode Character Picker, Toggle
+                 Barcode Highlighting
          Column-filter-focused: Sort Ascending, Sort Descending, Unsort,
                  Toggle Multi-Row Collapse, Unique-Values Dropdown,
                  Toggle CAA/EAA Cover Art, Resize Sub-table, Visible Sub-table
@@ -577,6 +733,24 @@ labels and descriptions.  Major setting groups:
     — Shared error border color (applies to all filter types)
     — Unique-Values quickfilter highlight foreground and background colors
     — Unique-Values count badge text and background colors
+    — Show Flag Icons In Unique-Values Dropdown (default: OFF)
+
+• 📝 ANNOTATION COLUMNS
+    — Enable / disable collapsible free-text "Annotation"-style columns
+    — Collapsed height (em) and auto-resize max width (px)
+    — Nested wiki <h2> sub-heading background/text colors
+
+• 📖 ANNOTATION SECTION (Entity Pages)
+    — Auto-expand the native "Annotation" section on entity pages
+      (default: OFF)
+
+• 🎨 EDITS PAGE
+    — Enable / disable "Edit#"/"Edit action" background colors by edit
+      category and open/closed state, plus per-category/state color pickers
+    — Start "Edit details" / "Edit notes" columns collapsed (default: OFF —
+      both start expanded)
+    — Enable / disable old/new value diff cell colors, plus their colors
+    — Zebra-striping colors for nested compare tables
 
 • ⚡ PERFORMANCE SETTINGS
     — Load Filter History Limit (0–50, default 50)
