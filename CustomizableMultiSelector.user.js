@@ -10,7 +10,7 @@
 // @downloadURL  https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js
 // @updateURL    https://raw.githubusercontent.com/vzell/mb-userscripts/master/CustomizableMultiSelector.user.js
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=musicbrainz.org
-// @require      file:///V:/home/vzell/git/mb-userscripts/lib/VZMBLibrary.user.js
+// @require      https://raw.githubusercontent.com/vzell/mb-userscripts/master/lib/VZ_MBLibrary.user.js
 // @match        https://musicbrainz.org/release/add
 // @match        https://musicbrainz.org/release/*/edit
 // @grant        GM_info
