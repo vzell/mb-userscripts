@@ -111,11 +111,11 @@ buttons:
 🧮¹ Show all …  |  📦 Data ▾   🛠 View ▾   [ ⚙️ | ❓ ]
 ```
 
-| Menu | Rows |
-|------|------|
-| **📦 Data ▾** | 💾 Save to Disk · 📂 Load from Disk · 💾 Export |
-| **🛠 View ▾** | 📏 Density · 📊 Statistics · ▌█▌▐█▐▌██▐▌█ Barcode · 🎹 Keyboard Shortcuts |
-| **⚙️ ❓** | Settings Manager and this help page — pinned side by side as one control, never in a menu. Shift-click ❓ reads the help in the page. |
+| Menu          | Rows                                                                                                                                  |
+|---------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| **📦 Data ▾** | 💾 Save to Disk · 📂 Load from Disk · 💾 Export                                                                                       |
+| **🛠 View ▾**  | 📏 Density · 📊 Statistics · 🎹 Keyboard Shortcuts                                                                                    |
+| **⚙️ ❓**      | Settings Manager and this help page — pinned side by side as one control, never in a menu. Shift-click ❓ reads the help in the page. |
 
 Each row shows its own keyboard shortcut on the right. Open a menu with the
 mouse or with that shortcut — pressing `Ctrl+D` opens **🛠 View** and then the
@@ -125,6 +125,15 @@ the other.
 
 On artist release-group pages a third menu appears, **📀 Discography ▾**, whose
 own label names the view you are in — *📀 Discography: Official*.
+
+**🎹 Keyboard Shortcuts and ❓ Application Help (Shift-click) both have a
+resize handle in their lower-right corner**, and remember their own position
+and size — drag or resize either one and it reopens exactly where you left
+it, no reload needed. Each dialog's own quick-filter input (**🔍 Filter
+shortcuts…** / **🔍 Filter help text…**) highlights every match as you type;
+in the ❓ dialog this searches the whole rendered page — headings, paragraphs,
+lists and tables alike, not just code blocks — and never hides anything, so a
+long document stays readable while you search it.
 
 ### Beside the table, not in the bar
 
@@ -149,11 +158,11 @@ time. The page-level pair now reads identically.
 
 Three independent levels, and they combine:
 
-| Level | Where | Scope |
-|-------|-------|-------|
-| **Global** | the big box at the top | every column of every table |
-| **Column** | the filter row under each header | one column |
-| **Sub-table** | above each sub-table | that sub-table only |
+| Level         | Where                            | Scope                       |
+|---------------|----------------------------------|-----------------------------|
+| **Global**    | the big box at the top           | every column of every table |
+| **Column**    | the filter row under each header | one column                  |
+| **Sub-table** | above each sub-table             | that sub-table only         |
 
 Every input supports plain text, **Aa** case-sensitive, **.*** regular
 expressions, and **!** exclude-matches (hide what matches instead of keeping
@@ -243,6 +252,35 @@ themselves:
 - **🎚️ Credit details**, **🎭 Roles**, **📅 Release events**, **💿 Format
   info**, **🏷️ Catalog info**, **🔗 Relationship icons**, **⏳ Pending edits**,
   and a **Relationships — Load state** section on pages carrying that column.
+- **🔢 Tracks info** — a "Tracks" column's per-medium counts, a multi-medium
+  flag, and the summed **Total** (the same number as the "Total Tracks" column:
+  "5 + 5 + 5" is `5` under *Tracks* and `15` under *Total*).
+- **⏱ Length info** — duration buckets, deviation from the page average, live
+  status and, once the ⏱ toggle has put milliseconds on the page, a
+  **Milliseconds** split: `≠ .000` (real sub-second precision), `= .000` (whole
+  seconds only) and *no millisecond data*. The split is not offered until some
+  cell has milliseconds, and it keeps working with ⏱ switched back off, because
+  the cells still carry them.
+- **🌅 Time info** — a "Time" column's start time as a part of the day: morning
+  (04:00-11:59), lunch (12:00-12:59), afternoon (13:00-17:59), evening
+  (18:00-23:59) or night (00:00-03:59). An empty cell stays under "empty cells".
+- **📛 Relationship types - Credited as** — the `(as “…”)` credit of a
+  "Relationship types" item, prefixed with its type (`» instrument as: lead
+  guitar`), beside the whole-value list. **Attributes - Identifier type** also
+  lists the parts of a slash-joined type separately: a `BUMA/STEMRA ID` badge
+  is offered as `BUMA/STEMRA ID`, `BUMA` and `STEMRA ID`.
+- **ISRC info** — one sub-section per constituent (country, registrant, year,
+  designation) plus a validity flag, on any "ISRCs" column. An entry whose code
+  sits only inside a **collapsed** list item carries a ▶ marker: it is still
+  offered (ticking it shows the row and tints the cell's ▶ toggle), the marker
+  just says why nothing on screen shows it until the cell is expanded. **ISWC info** — a
+  validity flag on any "ISWC" column. See "ISRC/ISWC codes" below.
+- **Barcode info** — on any "Barcode" column: a validity flag (✅/⚠️), which
+  GS1 format (UPC-A/EAN-13/EAN-8/GTIN-14) a conforming entry matches, and a
+  "Same As" list, one entry per group of rows sharing a barcode number
+  across different textual representations (e.g. a UPC-A and its own
+  zero-padded EAN-13 form), labeled with the actual values involved. See
+  "Barcode validation" below.
 
 **Keyboard**: ↑/↓/Home/End navigate, Enter or Space toggles, Escape clears the
 quick filter and then closes. The panel closes on an outside click.
@@ -427,6 +465,20 @@ the filter bar to isolate them.
 
 ---
 
+## Barcode highlighting
+
+On a listing with a **Barcode** column, matching barcodes are colour-coded and
+clicking one toggles the merge checkboxes for the whole group. The
+**▶▌█**/**▼▌█** toggle in the *Barcode* column header turns
+this off and on — same idiom as the ⏱ toggle above. `Ctrl+B` (configurable)
+toggles it directly, from anywhere on the page.
+
+Separately, every Barcode column is also checked against the GS1 spec
+(UPC-A/EAN-13/EAN-8/GTIN-14) — see "Barcode validation" under
+"Page-specific behaviour" below.
+
+---
+
 ## Save and load
 
 **💾 Save to Disk** writes the whole dataset as gzip-compressed JSON
@@ -481,35 +533,36 @@ counts.
 
 Press the prefix (default `Ctrl+M`), release it, then press a letter:
 
-| Key | Action | Key | Action |
-|-----|--------|-----|--------|
-| `s` | Save to Disk | `g` | Focus global filter |
-| `l` | Load from Disk | `c` | Focus next column filter |
-| `e` | Export menu | `o` | Toggle multi-row collapse — or **Stop**, during a fetch |
-| `d` | Density menu | `q` | Unique-values dropdown |
-| `v` | Visible menu | `a` | Toggle cover art for this table |
-| `r` | Resize columns | `k` | Keyboard shortcuts reference |
-| `i` | Statistics panel | `h` | This help, in the page |
-| `b` | Barcode highlighting | `,` | Settings |
-| `1`–`9` | Action button by index (the `🧮N` superscript) | | |
+| Key     | Action                                         | Key | Action                                                  |
+|---------|------------------------------------------------|-----|---------------------------------------------------------|
+| `s`     | Save to Disk                                   | `g` | Focus global filter                                     |
+| `l`     | Load from Disk                                 | `c` | Focus next column filter                                |
+| `e`     | Export menu                                    | `o` | Toggle multi-row collapse — or **Stop**, during a fetch |
+| `d`     | Density menu                                   | `q` | Unique-values dropdown                                  |
+| `v`     | Visible menu                                   | `a` | Toggle cover art for this table                         |
+| `r`     | Resize columns                                 | `k` | Keyboard shortcuts reference                            |
+| `i`     | Statistics panel                               | `h` | This help, in the page                                  |
+| `b`     | Barcode highlighting                           | `,` | Settings                                                |
+| `1`–`9` | Action button by index (the `🧮N` superscript) |     |                                                         |
 
 `o`, `q` and `a` act on the column filter that was last focused, so they still
 work after the prefix key has taken focus away.
 
 ### Direct shortcuts
 
-| Keys | Action |
-|------|--------|
-| `?` or `/` | Keyboard shortcuts reference (outside text inputs) |
-| `Ctrl+U` | Unicode character picker (when a text input is focused) |
-| `Ctrl+Shift+G` | Clear all filters |
-| `Shift+Esc` | Clear all column filters only |
-| `Ctrl+2` / `Ctrl+3` | Toggle all h2 / all h3 headings |
-| `Ctrl+,` | Settings |
-| `Escape` | Clear the focused filter, then remove focus; close open menus |
-| `Ctrl+S` `Ctrl+L` `Ctrl+E` | Save · Load · Export — each opens 📦 Data first |
-| `Ctrl+D` `Ctrl+I` `Ctrl+B` | Density · Statistics · Barcode — each opens 🛠 View first |
-| `Ctrl+R` `Ctrl+V` | Resize columns · Visible columns |
+| Keys                       | Action                                                          |
+|----------------------------|-----------------------------------------------------------------|
+| `?` or `/`                 | Keyboard shortcuts reference (outside text inputs)              |
+| `Ctrl+U`                   | Unicode character picker (when a text input is focused)         |
+| `Ctrl+Shift+G`             | Clear all filters                                               |
+| `Shift+Esc`                | Clear all column filters only                                   |
+| `Ctrl+2` / `Ctrl+3`        | Toggle all h2 / all h3 headings                                 |
+| `Ctrl+,`                   | Settings                                                        |
+| `Escape`                   | Clear the focused filter, then remove focus; close open menus   |
+| `Ctrl+S` `Ctrl+L` `Ctrl+E` | Save · Load · Export — each opens 📦 Data first                 |
+| `Ctrl+D` `Ctrl+I`          | Density · Statistics — each opens 🛠 View first                  |
+| `Ctrl+B`                   | Toggle barcode highlighting directly (no menu)                  |
+| `Ctrl+R` `Ctrl+V`          | Resize columns · Visible columns                                |
 | `Ctrl+K` `Ctrl+G` `Ctrl+C` | Shortcuts reference · Focus global filter · Focus column filter |
 
 <details>
@@ -517,13 +570,13 @@ work after the prefix key has taken focus away.
 
 **With a column filter focused:**
 
-| Keys | Action |
-|------|--------|
-| `Ctrl+↑` / `Ctrl+↓` | Sort this column ascending / descending |
-| `Ctrl+#` | Restore the original row order |
-| `Ctrl+O` | Collapse or expand this column's multi-row cells |
-| `Ctrl+Q` | Open this column's unique-values dropdown |
-| `Ctrl+A` | Toggle cover art for the enclosing table |
+| Keys                | Action                                               |
+|---------------------|------------------------------------------------------|
+| `Ctrl+↑` / `Ctrl+↓` | Sort this column ascending / descending              |
+| `Ctrl+#`            | Restore the original row order                       |
+| `Ctrl+O`            | Collapse or expand this column's multi-row cells     |
+| `Ctrl+Q`            | Open this column's unique-values dropdown            |
+| `Ctrl+A`            | Toggle cover art for the enclosing table             |
 | `Ctrl+R` / `Ctrl+V` | Resize / visible columns for the enclosing sub-table |
 
 `Ctrl+↑`, `Ctrl+↓` and `Ctrl+#` carry no letter and always work. The rest follow
@@ -558,44 +611,45 @@ you automatically.
 <details>
 <summary>The setting groups</summary>
 
-| Group | What is in it |
-|-------|---------------|
-| 🛠️ Generic | Debug logging; overflow tables in a new tab; artwork diagnostics |
-| 🔬 Experimental | Collapsible sidebar |
-| 🏷️ Page header and body | Relocating h1 alias blocks, legal names and trailing h2 sections |
-| 💬 Tooltips | Rich row-count tooltips and their colours |
-| 🔢 Numeric alignment | Digit and colon alignment on numeric and duration columns |
-| 🧮 Optional column removal | Drop the Tagger, Rating and checkbox columns |
-| 🎹 Keyboard shortcuts | The prefix key, the direct-shortcuts master switch, and 20+ individual bindings |
-| 🎨 Table filter configuration | Every filter colour and border state, the focus prefix and focus backgrounds |
-| #₁ Unique column values drop down configuration | Badge colours, quick-filter highlight colours, flag icons, visible row count |
-| Σ Threshold settings | Auto-expand rows, max page warning, sort progress indicator |
-| 📝 Annotation columns | Collapsible prose columns, clamp height, max width, nested heading colours |
-| 📖 Annotation section | Auto-expand the native annotation section |
-| 🔀 Annotation history | Open *Compare versions* in a new tab |
-| 🎨 Edits page | Per-category edit colours, collapse defaults, diff colours, zebra striping |
-| ⚡ Performance | Debounce, sort chunk size, render and warning thresholds, history limit |
-| 🎨 UI features | Column visibility, density control, sticky headers, default hidden columns per page type |
-| 📌 Table stickiness | Sticky column and header configuration |
-| 🖌️ Element UI styles | Action button base style, per-button colours (including the two halves of the ⚙️❓ pill), toolbar menu button colours, dividers, filter input styles, header cell colours |
-| 🔗 Relationships column | Enable, auto-collapse threshold, cell load-state glyphs, whole-page fetching |
-| ↔️ Column resize | Enable resizing; auto-resize on load |
-| 📤 Export | What headers and cells carry in an export |
-| 📊 Statistics panel | Enable; maximum width and height |
-| 💾 Load and save | Edit the pinned filter list |
-| 🔍 Expand release and release groups | Inline ▶/▼ expanders |
-| ▶️ Expand truncated cells | Whether a clipped cell offers an expander, and how it looks |
-| 📑 Show single-table | The client-side sub-table snapshot button and its colours |
-| 💿 Release tracklist | Every tracklist column family, credit colours, live-date flagging, the ARs column |
-| 🔖 Barcode highlight | Identical-barcode highlighting |
-| 🎨 Artist role colours | Main and guest performer label colours |
-| 🖼️ CAA/EAA illustrated discography | The whole artwork feature: icons, strips, inline thumbnails, sizes, concurrency |
-| 🗄️ Art archive IndexedDB | The image cache: TTL, entry count, store sizes |
-| 🎵 Picard tagger | The ♪ column, its collapse default, host and port range |
-| ⏱️ Track length precision | Millisecond lengths, the `.000` suffix, the IndexedDB cache and its TTL |
-| 📅 Release events column | Enable the asynchronous release-events column |
-| ⏱️ Resource timing | Cache-hint indicators and where they appear |
-| 🔤 Unicode picker | Enable, shortcut key, and the glyph table |
+| Group                                           | What is in it                                                                                                                                                             |
+|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 🛠️ Generic                                       | Debug logging; overflow tables in a new tab; artwork diagnostics                                                                                                          |
+| 🔬 Experimental                                 | Collapsible sidebar                                                                                                                                                       |
+| 🏷️ Page header and body                          | Relocating h1 alias blocks, legal names and trailing h2 sections                                                                                                          |
+| 💬 Tooltips                                     | Rich row-count tooltips and their colours                                                                                                                                 |
+| 🔢 Numeric alignment                            | Digit and colon alignment on numeric and duration columns                                                                                                                 |
+| 🧮 Optional column removal                      | Drop the Tagger, Rating and checkbox columns                                                                                                                              |
+| 🎹 Keyboard shortcuts                           | The prefix key, the direct-shortcuts master switch, and 20+ individual bindings                                                                                           |
+| 🎨 Table filter configuration                   | Every filter colour and border state, the focus prefix and focus backgrounds                                                                                              |
+| #₁ Unique column values drop down configuration | Badge colours, quick-filter highlight colours, flag icons, visible row count                                                                                              |
+| Σ Threshold settings                            | Auto-expand rows, max page warning, sort progress indicator                                                                                                               |
+| 📝 Annotation columns                           | Collapsible prose columns, clamp height, max width, nested heading colours                                                                                                |
+| 📖 Annotation section                           | Auto-expand the native annotation section                                                                                                                                 |
+| 🔀 Annotation history                           | Open *Compare versions* in a new tab                                                                                                                                      |
+| 🎨 Edits page                                   | Per-category edit colours, collapse defaults, diff colours, zebra striping                                                                                                |
+| ⚡ Performance                                  | Debounce, sort chunk size, render and warning thresholds, history limit                                                                                                   |
+| 🎨 UI features                                  | Column visibility, density control, sticky headers, default hidden columns per page type                                                                                  |
+| 📌 Table stickiness                             | Sticky column and header configuration                                                                                                                                    |
+| 🖌️ Element UI styles                             | Action button base style, per-button colours (including the two halves of the ⚙️❓ pill), toolbar menu button colours, dividers, filter input styles, header cell colours  |
+| 🔗 Relationships column                         | Enable, auto-collapse threshold, cell load-state glyphs, whole-page fetching                                                                                              |
+| ↔️ Column resize                                 | Enable resizing; auto-resize on load                                                                                                                                      |
+| 📤 Export                                       | What headers and cells carry in an export                                                                                                                                 |
+| 📊 Statistics panel                             | Enable; maximum width and height                                                                                                                                          |
+| 💾 Load and save                                | Edit the pinned filter list                                                                                                                                               |
+| 🔍 Expand release and release groups            | Inline ▶/▼ expanders                                                                                                                                                      |
+| ▶️ Expand truncated cells                        | Whether a clipped cell offers an expander, and how it looks                                                                                                               |
+| 📑 Show single-table                            | The client-side sub-table snapshot button and its colours                                                                                                                 |
+| 💿 Release tracklist                            | Every tracklist column family, credit colours, live-date flagging, the ARs column                                                                                         |
+| 🔖 Barcode highlight                            | Identical-barcode highlighting                                                                                                                                            |
+| 🔖 Barcode validation                           | GS1 format/check-digit validation, the 📊 Validity/Format/Same As sections                                                                                                |
+| 🎨 Artist role colours                          | Main and guest performer label colours                                                                                                                                    |
+| 🖼️ CAA/EAA illustrated discography               | The whole artwork feature: icons, strips, inline thumbnails, sizes, concurrency                                                                                           |
+| 🗄️ Art archive IndexedDB                         | The image cache: TTL, entry count, store sizes                                                                                                                            |
+| 🎵 Picard tagger                                | The ♪ column, its collapse default, host and port range                                                                                                                   |
+| ⏱️ Track length precision                        | Millisecond lengths, the `.000` suffix, the IndexedDB cache and its TTL                                                                                                   |
+| 📅 Release events column                        | Enable the asynchronous release-events column                                                                                                                             |
+| ⏱️ Resource timing                               | Cache-hint indicators and where they appear                                                                                                                               |
+| 🔤 Unicode picker                               | Enable, shortcut key, and the glyph table                                                                                                                                 |
 
 </details>
 
@@ -648,7 +702,7 @@ an import brings your deletions back.
   subscribed edits, notes received
 - **Annotation history** (`/<entity>/<mbid>/annotations`) across ten entity types
 - **Auto-editor elections**, **genre**, **instrument** and **edit-type** lists,
-  **top CD stubs**, **ISRC** and **privileged account** pages
+  **top CD stubs**, **ISRC**, **ISWC** and **privileged account** pages
 - **Account pages** (`/account/applications`)
 - Also works on the **musicbrainz.eu** mirror
 
@@ -678,6 +732,48 @@ recording's, because they are relationships of a different entity.
 Also available: **AcoustIDs** and **ISRCs** columns (both off by default), a
 raw **ARs** column, and a flag on live-recording credit dates that disagree with
 the recording date.
+
+</details>
+
+<details>
+<summary>ISRC/ISWC codes</summary>
+
+Wherever an **ISRCs** column appears (here, and on any native recordings
+listing), every code is shown as `CC-XXX-YY-NNNNN` with the country and year
+segments lightly tinted — regardless of whether MusicBrainz's own markup or a
+third-party script produced the cell. A code that doesn't match that shape is
+left as-is but gets a ⚠️ warning glyph and a tooltip explaining why.
+
+Native **ISWC** columns (e.g. an artist's Works tab) get the same treatment:
+MusicBrainz already displays these correctly, so a valid one is never touched —
+only a code with the wrong shape, or a check digit that doesn't match ISO
+15707's own formula, gets the ⚠️ glyph.
+
+Both feed their own 📊 dropdown sections — see "ISRC info"/"ISWC info" above.
+
+</details>
+
+<details>
+<summary>Barcode validation</summary>
+
+Every native **Barcode** column is checked against the GS1 standard —
+UPC-A, EAN-13, EAN-8 and GTIN-14 — including the check digit. The
+displayed value is **never rewritten**, valid or invalid; an entry that
+doesn't match a known length, contains non-digit characters, or has an
+incorrect check digit gets a ⚠️ warning glyph and a tooltip explaining why.
+
+This is a separate feature from Barcode *highlighting* (see "Barcode
+highlighting" above) — validation checks the number itself against the
+spec; highlighting groups identical barcode+Format pairs for merge
+candidates.
+
+The 📊 dropdown's "Barcode info" section (see "The unique-values dropdown"
+above) also offers a **Same As** list: rows whose barcode NUMBER matches
+another row's, even written differently — for example a UPC-A and its own
+zero-padded EAN-13 form — are grouped into one checkable entry showing both
+values, e.g. `0196587565725 / 196587565725`. This is deliberately
+independent of the release's own Format column, so it can catch a match
+that the highlighting feature intentionally does not group.
 
 </details>
 
