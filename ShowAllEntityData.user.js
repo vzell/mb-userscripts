@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         VZ: MusicBrainz - Show All Entity Data In A Consolidated View With Filtering And Multi-Sorting Capabilities
 // @namespace    https://github.com/vzell/mb-userscripts
-// @version      9.99.1165+2026-09-26
+// @version      9.99.1167+2026-09-27
 // @description  Consolidation tool to accumulate paginated and non-paginated (tables with subheadings) MusicBrainz table lists (Events, Recordings, Releases, Works, etc.) into a single view with real-time filtering and sorting
 // @author       vzell
 // @tag          AI generated
@@ -14794,12 +14794,17 @@
         {
             type: 'user-subscriptions',
             match: (path) => path.match(/\/user\/.*\/subscriptions/),
+            // buttonGroupLabel renders a bold "<Label>:" ahead of the button row —
+            // conf.label (still "🧮 Artist subscriptions" etc.) is what the "🧮
+            // Label subscriptions" DOM-snapshot comment above and any dataset.label
+            // consumer sees; shortLabel only changes what's painted on the button.
+            buttonGroupLabel: 'Subscriptions',
             buttons: [
-                { label: '🧮 Artist subscriptions',     virtualPath: '/artist' },
-                { label: '🧮 Collection subscriptions', virtualPath: '/collection' },
-                { label: '🧮 Label subscriptions',      virtualPath: '/label' },
-                { label: '🧮 Series subscriptions',     virtualPath: '/series' },
-                { label: '🧮 Editor subscriptions',     virtualPath: '/editor' }
+                { label: '🧮 Artist subscriptions',     shortLabel: 'Artist',     virtualPath: '/artist' },
+                { label: '🧮 Collection subscriptions', shortLabel: 'Collection', virtualPath: '/collection' },
+                { label: '🧮 Label subscriptions',      shortLabel: 'Label',      virtualPath: '/label' },
+                { label: '🧮 Series subscriptions',     shortLabel: 'Series',     virtualPath: '/series' },
+                { label: '🧮 Editor subscriptions',     shortLabel: 'Editor',     virtualPath: '/editor' }
             ],
             features: {
                 extractMainColumn: 'Name',
@@ -14811,7 +14816,7 @@
         {
             type: 'editor-subscribers',
             match: (path) => path.includes('/subscribers'),
-            buttons: [ { label: 'Show all Editor Subscribers for User' } ],
+            buttons: [ { label: 'Show all Editor Subscribers for User', shortLabel: 'Editor Subscribers' } ],
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
@@ -14846,7 +14851,7 @@
         {
             type: 'artist-tags',
             match: (path) => path.match(/\/artist\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Artist' } ],
+            buttons: [ { label: 'Show all Tags for Artist', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 // Click \"Show all tags.\" before processing so hidden zero-score
@@ -14863,7 +14868,7 @@
         {
             type: 'releasegroup-tags',
             match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Releasegroup' } ],
+            buttons: [ { label: 'Show all Tags for Releasegroup', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14876,7 +14881,7 @@
         {
             type: 'release-tags',
             match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Release' } ],
+            buttons: [ { label: 'Show all Tags for Release', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14889,7 +14894,7 @@
         {
             type: 'recording-tags',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Recording' } ],
+            buttons: [ { label: 'Show all Tags for Recording', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14902,7 +14907,7 @@
         {
             type: 'work-tags',
             match: (path) => path.match(/\/work\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Work' } ],
+            buttons: [ { label: 'Show all Tags for Work', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14915,7 +14920,7 @@
         {
             type: 'label-tags',
             match: (path) => path.match(/\/label\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Label' } ],
+            buttons: [ { label: 'Show all Tags for Label', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14928,7 +14933,7 @@
         {
             type: 'series-tags',
             match: (path) => path.match(/\/series\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Series' } ],
+            buttons: [ { label: 'Show all Tags for Series', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14941,7 +14946,7 @@
         {
             type: 'place-tags',
             match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Place' } ],
+            buttons: [ { label: 'Show all Tags for Place', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14954,7 +14959,7 @@
         {
             type: 'area-tags',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Area' } ],
+            buttons: [ { label: 'Show all Tags for Area', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14967,7 +14972,7 @@
         {
             type: 'instrument-tags',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Instrument' } ],
+            buttons: [ { label: 'Show all Tags for Instrument', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -14980,7 +14985,7 @@
         {
             type: 'event-tags',
             match: (path) => path.match(/\/event\/[a-f0-9-]{36}\/tags/),
-            buttons: [ { label: 'Show all Tags for Event' } ],
+            buttons: [ { label: 'Show all Tags for Event', shortLabel: 'Tags' } ],
             tableMode: 'multi',
             features: {
                 showAllTags: true,
@@ -15158,7 +15163,7 @@
             type: 'user-ratings',
             match: (path) => path.match(/\/user\/[^/]+\/ratings\/?$/),
             buttons: [
-                { label: 'Show Ratings for User' }
+                { label: 'Show Ratings for User', shortLabel: 'Ratings' }
             ],
             features: {
                 renameH2ToH3: true,
@@ -15255,7 +15260,7 @@
             type: 'popular-tags',
             match: (path, params) => path.match(/^\/tags/),
             buttons: [
-                { label: 'Show most popular tags', params: { show_list: '1' } }
+                { label: 'Show most popular tags', shortLabel: 'Most Popular Tags', params: { show_list: '1' } }
             ],
             features: {
                 renameH2ToH3: true,
@@ -15358,8 +15363,8 @@
                 return !REPORT_MULTIPLE_LINKED_EXCEPTIONS.includes(normalizedPath);
             },
             buttons: [
-                { label: 'Show all (unfiltered)', params: { filter: '0' } },
-                { label: 'Show all (subscribed only)', params: { filter: '1' } }
+                { label: 'Unfiltered', params: { filter: '0' } },
+                { label: 'Subscribed Only', params: { filter: '1' } }
             ],
             features: {
                 // Numeric fallback only — the linked-entity column's POSITION
@@ -15398,8 +15403,8 @@
             type: 'report-detail',
             match: (path) => path.match(/^\/report\/[^/]+\/?$/),
             buttons: [
-                { label: 'Show all (unfiltered)', params: { filter: '0' } },
-                { label: 'Show all (subscribed only)', params: { filter: '1' } }
+                { label: 'Unfiltered', params: { filter: '0' } },
+                { label: 'Subscribed Only', params: { filter: '1' } }
             ],
             features: {
                 columnExtractors: [
@@ -15474,8 +15479,8 @@
                 // see the comment on that pageType's own injectedColumns entry.
                 injectedColumns: [ 'Relationships' ],
                 // The native description block includes "Show only results that are
-                // in my subscribed entities." — redundant with the "Show all
-                // (subscribed only)" button above, so remove it if present.
+                // in my subscribed entities." — redundant with the "Subscribed Only"
+                // button above, so remove it if present.
                 removeSelector: 'li:has(a[href*="?filter=1"])'
             },
             tableMode: 'single'
@@ -15797,8 +15802,8 @@
             type: 'user-tag-value-entity',
             match: (path, params) => path.match(/\/user\/[^/]+\/tag\/[^/]+\/.+/),
             buttons: [
-                { label: 'Tag for Entities upvoted',   params: { show_downvoted: '0' } },
-                { label: 'Tag for Entities downvoted', params: { show_downvoted: '1' } }
+                { label: 'Tag for Entities upvoted',   shortLabel: 'Upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Tag for Entities downvoted', shortLabel: 'Downvoted', params: { show_downvoted: '1' } }
             ],
             entityFeatures: {
                 'Areas': {},
@@ -15869,8 +15874,8 @@
             type: 'user-tag-value',
             match: (path, params) => path.match(/\/user\/.*\/tag\//),
             buttons: [
-                { label: 'Tag for Entities upvoted',   params: { show_downvoted: '0' } },
-                { label: 'Tag for Entities downvoted', params: { show_downvoted: '1' } }
+                { label: 'Tag for Entities upvoted',   shortLabel: 'Upvoted',   params: { show_downvoted: '0' } },
+                { label: 'Tag for Entities downvoted', shortLabel: 'Downvoted', params: { show_downvoted: '1' } }
             ],
             entityFeatures: {
                 'Areas': {},
@@ -16098,7 +16103,7 @@
         {
             type: 'user-collections',
             match: (path) => path.match(/\/user\/.*\/collections/),
-            buttons: [ { label: 'Show all Collections for User' } ],
+            buttons: [ { label: 'Show all Collections for User', shortLabel: 'Collections' } ],
             tableMode: 'multi',
             features: {
                 // The user-collections page has multiple <h3>-headed <table.tbl> siblings
@@ -16112,7 +16117,7 @@
         {
             type: 'release-collections',
             match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/collections/),
-            buttons: [ { label: 'Show all Collections for Release' } ],
+            buttons: [ { label: 'Show all Collections for Release', shortLabel: 'Collections' } ],
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
@@ -16128,7 +16133,7 @@
         {
             type: 'releasegroup-collections',
             match: (path) => path.match(/\/release-group\/[a-f0-9-]{36}\/collections/),
-            buttons: [ { label: 'Show all Collections for Release Group' } ],
+            buttons: [ { label: 'Show all Collections for Release Group', shortLabel: 'Collections' } ],
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
@@ -16148,7 +16153,7 @@
             // header text that precedes the table and substitute it into the label so
             // the button reads "Show all <EntityType> for Collections" dynamically.
             // Collections pages can contain Releases, Events, Works, Recordings, etc.
-            buttons: [ { label: 'Show all Releases for Collection', labelFromH2: true } ],
+            buttons: [ { label: 'Show all Releases for Collection', labelFromH2: true, shortLabel: 'Releases' } ],
             // columnHeaderErasers: list of eraser tokens applied to <thead> cells before
             // the header-scanning pass reads column names.  Currently supports '▴/▾'
             // which extracts only the text from <a> link(s) inside a <th>, concatenating
@@ -16383,7 +16388,7 @@
         {
             type: 'user-open-edits',
             match: (path) => /^\/user\/[^/]+\/edits\/open\/?$/.test(path),
-            buttons: [ { label: 'Show all Open Edits for User' } ],
+            buttons: [ { label: 'Show all Open Edits for User', shortLabel: 'Open Edits' } ],
             features: {
                 editsToTable: true,
                 unboundedPagination: true,
@@ -16397,7 +16402,7 @@
         {
             type: 'user-edits',
             match: (path) => /^\/user\/[^/]+\/edits\/?$/.test(path),
-            buttons: [ { label: 'Show all Edits for User' } ],
+            buttons: [ { label: 'Show all Edits for User', shortLabel: 'Edits' } ],
             features: {
                 editsToTable: true,
                 unboundedPagination: true,
@@ -16608,7 +16613,7 @@
         {
             type: 'instrument-artists',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/artists/),
-            buttons: [ { label: 'Show all Artists for Instrument' } ],
+            buttons: [ { label: 'Show all Artists for Instrument', shortLabel: 'Artists' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] }
@@ -16623,7 +16628,7 @@
         {
             type: 'instrument-releases',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/releases/),
-            buttons: [ { label: 'Show all Releases for Instrument' } ],
+            buttons: [ { label: 'Show all Releases for Instrument', shortLabel: 'Releases' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Country/Date', extractor: 'splitCountryDate', syntheticColumns: ['Country', 'Date'] },
@@ -16652,7 +16657,7 @@
         {
             type: 'instrument-recordings',
             match: (path) => path.match(/\/instrument\/[a-f0-9-]{36}\/recordings/),
-            buttons: [ { label: 'Show all Recordings for Instrument' } ],
+            buttons: [ { label: 'Show all Recordings for Instrument', shortLabel: 'Recordings' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Name', extractor: 'video', syntheticColumns: ['Video'] }
@@ -16755,7 +16760,7 @@
         {
             type: 'area-artists',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/artists/),
-            buttons: [ { label: 'Show all Artists for Area' } ],
+            buttons: [ { label: 'Show all Artists for Area', shortLabel: 'Artists' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Area',       extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] },
@@ -16773,7 +16778,7 @@
         {
             type: 'area-events',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Area' } ],
+            buttons: [ { label: 'Show all Events for Area', shortLabel: 'Events' } ],
             features: {
                 // 'expandEvents' eraser: strips the "Expand events" (Dvir Yitzchaki)
                 // userscript's inline ▸ toggle button, already present on the initial
@@ -16797,7 +16802,7 @@
         {
             type: 'area-labels',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/labels/),
-            buttons: [ { label: 'Show all Labels for Area' } ],
+            buttons: [ { label: 'Show all Labels for Area', shortLabel: 'Labels' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Area',  extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] },
@@ -16818,7 +16823,7 @@
         {
             type: 'area-users',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/users/),
-            buttons: [ { label: 'Show all Users for Area' } ],
+            buttons: [ { label: 'Show all Users for Area', shortLabel: 'Users' } ],
             features: {
                 // Empty sectionId triggers Structure C in applyListToTable: the
                 // function scans for <h2>…<ul> pairs in the content area and uses
@@ -16833,6 +16838,7 @@
             buttons: [
                 {
                     label: 'Show all Release Relationships for Area (complete)',
+                    shortLabel: 'Release Relationships (complete)',
                     targetHeader: 'Relationships',
                     tableMode: 'single',
                     non_paginated: false,
@@ -16857,6 +16863,7 @@
             buttons: [
                 {
                     label: 'Show all Releases for Area',
+                    shortLabel: 'Releases',
                     // "Area-Relases" pages have a paginated "Releases" and multi-table "Relationships" section
                     // The 'targetHeader' parameter is used to distinguish them
                     targetHeader: 'Releases',
@@ -16887,6 +16894,7 @@
                 },
                 {
                     label: 'Show all Release Relationships for Area',
+                    shortLabel: 'Release Relationships',
                     // "Area-Relases" pages have a paginated "Releases" and multi-table "Relationships" section
                     // The 'targetHeader' parameter is used to distinguish them
                     targetHeader: 'Relationships',
@@ -16910,7 +16918,7 @@
         {
             type: 'area-places',
             match: (path) => path.match(/\/area\/[a-f0-9-]{36}\/places/),
-            buttons: [ { label: 'Show all Places for Area' } ],
+            buttons: [ { label: 'Show all Places for Area', shortLabel: 'Places' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Area', extractor: 'splitArea', syntheticColumns: ['MB-Locality', 'MB-Region', 'Country'] }
@@ -16923,7 +16931,7 @@
         {
             type: 'area-recordings-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Area (complete)' } ],
+            buttons: [ { label: 'Show all Recordings for Area (complete)', shortLabel: 'Recordings (complete)' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
@@ -16945,7 +16953,7 @@
         {
             type: 'area-recordings',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/recordings/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Area' } ],
+            buttons: [ { label: 'Show all Recordings for Area', shortLabel: 'Recordings' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'video', syntheticColumns: ['Video'] },
@@ -16968,7 +16976,7 @@
         {
             type: 'area-works-filtered',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Works for Area (complete)' } ],
+            buttons: [ { label: 'Show all Works for Area (complete)', shortLabel: 'Works (complete)' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
@@ -16985,7 +16993,7 @@
         {
             type: 'area-works',
             match: (path, params) => path.match(/\/area\/[a-f0-9-]{36}\/works/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Works for Area' } ],
+            buttons: [ { label: 'Show all Works for Area', shortLabel: 'Works' } ],
             tableMode: 'multi',
             features: {
                 columnExtractors: [
@@ -17004,7 +17012,7 @@
         {
             type: 'place-events',
             match: (path) => path.match(/\/place\/[a-f0-9-]{36}\/events/),
-            buttons: [ { label: 'Show all Events for Place' } ],
+            buttons: [ { label: 'Show all Events for Place', shortLabel: 'Events' } ],
             features: {
                 // 'expandEvents' eraser: strips the "Expand events" (Dvir Yitzchaki)
                 // userscript's inline ▸ toggle button, already present on the initial
@@ -17027,7 +17035,7 @@
         {
             type: 'place-performances-filtered',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place (complete)' } ],
+            buttons: [ { label: 'Show all Performances for Place (complete)', shortLabel: 'Performances (complete)' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] },
@@ -17057,7 +17065,7 @@
         {
             type: 'place-performances',
             match: (path, params) => path.match(/\/place\/[a-f0-9-]{36}\/performances/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Performances for Place' } ],
+            buttons: [ { label: 'Show all Performances for Place', shortLabel: 'Performances' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Title', extractor: 'video',     syntheticColumns: ['Video'] },
@@ -17093,7 +17101,7 @@
             // header text that precedes the table and substitute it into the label so
             // the button reads "Show all <EntityType> for Series" dynamically.
             // Series pages can contain Releases, Events, Works, Recordings, etc.
-            buttons: [ { label: 'Show all Releases for Series', labelFromH2: true } ],
+            buttons: [ { label: 'Show all Releases for Series', labelFromH2: true, shortLabel: 'Releases' } ],
             // entityFeatures maps each possible H2 entity-type heading to its own
             // feature set.  When the page is activated, resolveEntityFeaturesFromH2()
             // reads the live H2 text and picks the matching entry.  If no match is
@@ -17209,7 +17217,7 @@
         {
             type: 'label-relationships-filtered',
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label (complete)' } ],
+            buttons: [ { label: 'Show all Relationships for Label (complete)', shortLabel: 'Relationships (complete)' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
@@ -17234,7 +17242,7 @@
         {
             type: 'label-relationships',
             match: (path, params) => path.match(/\/label\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Label' } ],
+            buttons: [ { label: 'Show all Relationships for Label', shortLabel: 'Relationships' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Date', extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] }
@@ -17259,7 +17267,7 @@
         {
             type: 'label-releases',
             match: (path) => path.includes('/label'),
-            buttons: [ { label: 'Show all Releases for Label' } ],
+            buttons: [ { label: 'Show all Releases for Label', shortLabel: 'Releases' } ],
             features: {
                 columnErasers: [
                     { sourceColumn: 'Release', erasers: ['▶', '➕'] }
@@ -17293,7 +17301,7 @@
         {
             type: 'work-recordings-filtered',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work (complete)' } ],
+            buttons: [ { label: 'Show all Recordings for Work (complete)', shortLabel: 'Recordings (complete)' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] },
@@ -17312,7 +17320,7 @@
         {
             type: 'work-recordings',
             match: (path, params) => path.match(/\/work\/[a-f0-9-]{36}/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Recordings for Work' } ],
+            buttons: [ { label: 'Show all Recordings for Work', shortLabel: 'Recordings' } ],
             features: {
                 columnExtractors: [
                     { sourceColumn: 'Date',  extractor: 'dateParts', syntheticColumns: ['DD', 'MM', 'YYYY', 'Day', 'Month'] },
@@ -17334,7 +17342,7 @@
             type: 'artist-relationships-filtered',
             // Check for link_type_id to identify the paginated "See all" view. This MUST come before the general 'artist-relationships' match.
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist (complete)' } ],
+            buttons: [ { label: 'Show all Relationships for Artist (complete)', shortLabel: 'Relationships (complete)' } ],
             features: {
                 columnErasers: [
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
@@ -17362,7 +17370,7 @@
             type: 'artist-relationships',
             // Only match if NO link_type_id is present (the overview page)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/relationships/) && !params.has('link_type_id'),
-            buttons: [ { label: 'Show all Relationships for Artist' } ],
+            buttons: [ { label: 'Show all Relationships for Artist', shortLabel: 'Relationships' } ],
             features: {
                 columnErasers: [
                     { sourceColumn: 'Title', erasers: ['▶', '➕'] }
@@ -17393,11 +17401,13 @@
             buttons: [
                 {
                     label: 'Show all Aliases for Artist',
+                    shortLabel: 'Aliases',
                     targetHeader: 'Aliases',
                     tableMode: 'single'
                 },
                 {
                     label: 'Show all Artist Credits for Artist',
+                    shortLabel: 'Credits',
                     targetHeader: 'Artist credits',
                     tableMode: 'single'
                 }
@@ -17418,6 +17428,7 @@
             type: 'artist-releasegroups',
             // Root artist page (Official/Non-Official views handled by specific buttons on the final rendered page)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/?$/) && !path.endsWith('/releases'),
+            buttonGroupLabel: 'RGs',
             buttons: [
                 // These two narrow buttons (official only) are superseded by the
                 // per-view toggle buttons injected after the full render: "Official
@@ -17425,8 +17436,8 @@
                 // "Complete (merged)".  Kept here (commented) for reference only.
                 // { label: '🧮 Official RGs',         params: { all: '0', va: '0' } },
                 // { label: '🧮 Official VA RGs',      params: { all: '0', va: '1' } },
-                { label: '🧮 Artist RGs',           params: { all: '1', va: '0' } },
-                { label: '🧮 Various Artists RGs',  params: { all: '1', va: '1' } }
+                { label: '🧮 Artist RGs',           shortLabel: 'Artists',         params: { all: '1', va: '0' } },
+                { label: '🧮 Various Artists RGs',  shortLabel: 'Various Artists', params: { all: '1', va: '1' } }
             ],
             features: {
                 columnErasers: [
@@ -17462,9 +17473,10 @@
             type: 'artist-releases',
             // Artist Releases page (Official/VA views handled by specific buttons)
             match: (path, params) => path.match(/\/artist\/[a-f0-9-]{36}\/releases\/?$/),
+            buttonGroupLabel: 'Releases',
             buttons: [
-                { label: '🧮 Artist releases', params: { va: '0' } },
-                { label: '🧮 VA releases',     params: { va: '1' } }
+                { label: '🧮 Artist releases', shortLabel: 'Artists',         params: { va: '0' } },
+                { label: '🧮 VA releases',     shortLabel: 'Various Artists', params: { va: '1' } }
             ],
             features: {
                 columnExtractors: [
@@ -17526,7 +17538,7 @@
         {
             type: 'artist-works',
             match: (path) => path.includes('/works'),
-            buttons: [ { label: 'Show all Works for Artist' } ],
+            buttons: [ { label: 'Show all Works for Artist', shortLabel: 'Works' } ],
             features: {
                 collapsableColumns: [ 'Authors', 'Recording artists', 'Other artists', 'ISWC', 'Lyrics languages', 'Attributes' ],
                 // Relationships bulk source, see _relBrowseSource(). `match` also
@@ -17543,7 +17555,7 @@
         {
             type: 'releasegroup-releases',
             match: (path) => path.includes('/release-group/'),
-            buttons: [ { label: 'Show all Releases for ReleaseGroup' } ],
+            buttons: [ { label: 'Show all Releases for ReleaseGroup', shortLabel: 'Releases' } ],
             features: {
                 columnErasers: [
                     { sourceColumn: 'Release', erasers: ['▶', '➕'] }
@@ -17580,7 +17592,7 @@
         {
             type: 'release-discids',
             match: (path) => path.match(/\/release\/[a-f0-9-]{36}\/discids/),
-            buttons: [ { label: 'Show all Disc IDs for Release' } ],
+            buttons: [ { label: 'Show all Disc IDs for Release', shortLabel: 'Disc IDs' } ],
             tableMode: 'multi',
             non_paginated: false
         },
@@ -17591,7 +17603,7 @@
             // dedicated pageDefinitions above). Gated by sa_enable_release_tracks so
             // the whole feature (and its toolbar button) can be turned off.
             match: (path) => Lib.settings.sa_enable_release_tracks && path.match(/^\/release\/[a-f0-9-]{36}\/?$/),
-            buttons: [ { label: 'Show all Tracks for Release' } ],
+            buttons: [ { label: 'Show all Tracks for Release', shortLabel: 'Tracks' } ],
             features: {
                 removeYomoWidget: true,          // strip the "Batch Add Recording Aliases" userscript's widget, if present
                 ensureCreditsInline: true,       // click + await native #toggle-credits if credits are "at bottom"
@@ -17674,7 +17686,7 @@
         {
             type: 'recording-fingerprints',
             match: (path) => path.match(/\/recording\/[a-f0-9-]{36}\/fingerprints/),
-            buttons: [ { label: 'Show all Fingerprints for Recording' } ],
+            buttons: [ { label: 'Show all Fingerprints for Recording', shortLabel: 'Fingerprints' } ],
             tableMode: 'single'
             //rowTargetSelector: '.acoustid-fingerprints table.tbl'
         },
@@ -17697,7 +17709,7 @@
         {
             type: 'recording-releases',
             match: (path) => path.includes('/recording'),
-            buttons: [ { label: 'Show all Releases for Recording' } ],
+            buttons: [ { label: 'Show all Releases for Recording', shortLabel: 'Releases' } ],
             features: {
                 columnErasers: [
                     { sourceColumn: 'Release title', erasers: ['▶', 'jesus2099'] }
@@ -17726,7 +17738,7 @@
         {
             type: 'artist-events',
             match: (path) => path.includes('/events'),
-            buttons: [ { label: 'Show all Events for Artist' } ],
+            buttons: [ { label: 'Show all Events for Artist', shortLabel: 'Events' } ],
             features: {
                 // 'expandEvents' eraser: strips the "Expand events" (Dvir Yitzchaki)
                 // userscript's inline ▸ toggle button, already present on the initial
@@ -36356,6 +36368,26 @@ a { color: #1565c0; }`;
     // Superscript numerals for Ctrl-M + 1..9 mnemonic display on action buttons
     const SUPERSCRIPT_DIGITS = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
 
+    // A "| <Label>:" ahead of the button run, for page types whose buttons
+    // were shortened enough (e.g. "Artists"/"Various Artists") that the group
+    // they belong to ("RGs", "Releases", …) needs to be named once rather than
+    // repeated on every button — see org/remove-showall.org TODO 2. The "|"
+    // reuses the same divider style as the one between the buttons and the
+    // 📦 Data ▾ menu; the label itself is bold but deliberately smaller than
+    // the native h1 text it follows, so it reads as a caption, not a title.
+    if (activeDefinition.buttonGroupLabel) {
+        const groupDivider = document.createElement('span');
+        groupDivider.textContent = ' | ';
+        groupDivider.className = 'mb-button-group-label-divider';
+        groupDivider.style.cssText = uiButtonDividerCSS();
+        controlsContainer.appendChild(groupDivider);
+
+        const groupLabelEl = document.createElement('strong');
+        groupLabelEl.textContent = `${activeDefinition.buttonGroupLabel}:`;
+        groupLabelEl.style.cssText = 'margin-right:2px; font-size:0.65em;';
+        controlsContainer.appendChild(groupLabelEl);
+    }
+
     buttonsToRender.forEach((conf, btnIndex) => {
         const eb = document.createElement('button');
 
@@ -36408,7 +36440,11 @@ a { color: #1565c0; }`;
                 // Template form: "Show all <OldType> for <Entity>"
                 // Replace everything between "Show all " and " for " with the H2 name.
                 conf = Object.assign({}, conf, {
-                    label: conf.label.replace(/^(Show all ).*?( for )/, `$1${_sectionName}$2`)
+                    label: conf.label.replace(/^(Show all ).*?( for )/, `$1${_sectionName}$2`),
+                    // Display-only: the trailing "for <Entity>" just repeats the page's
+                    // own subject, so shortLabel drops it — conf.label (above) keeps
+                    // the full text for eb.dataset.label/tooltip purposes.
+                    shortLabel: _sectionName
                 });
             }
         }
@@ -36426,7 +36462,12 @@ a { color: #1565c0; }`;
                 // existing suffix so re-renders stay correct.
                 const _base = conf.label.replace(/\s+for\s+\S.*$/, '').trim();
                 conf = Object.assign({}, conf, {
-                    label: `${_base} for ${_typeLabel}`
+                    label: `${_base} for ${_typeLabel}`,
+                    // Display-only: the native h1 on a search page already reads
+                    // "Search results", so "Search Results for " is redundant —
+                    // drop it, leaving just the entity type; conf.label (above)
+                    // keeps the full text for eb.dataset.label/tooltip purposes.
+                    shortLabel: _typeLabel
                 });
             }
         }
@@ -36466,7 +36507,12 @@ a { color: #1565c0; }`;
             if (_entity) {
                 const _base = conf.label.replace(/\s+for\s+.*$/, '').trim();
                 conf = Object.assign({}, conf, {
-                    label: `${_base} for ${_entity}`
+                    label: `${_base} for ${_entity}`,
+                    // Display-only: labelFromPathEntity always appends the page's OWN
+                    // entity type, which is redundant with the page context — drop it
+                    // for display; conf.label (above) still carries it for
+                    // eb.dataset.label/tooltip purposes.
+                    shortLabel: _base
                 });
             }
         }
@@ -36485,39 +36531,71 @@ a { color: #1565c0; }`;
         //   (b) all other labels ('Show all…', plain text, other-emoji prefix, …):
         //       prepend '🧮N ' directly
         const superscript = btnIndex < SUPERSCRIPT_DIGITS.length ? SUPERSCRIPT_DIGITS[btnIndex] : '';
-        const labelText = conf.label.startsWith('🧮')
-            ? `🧮${superscript} ` + conf.label.replace(/^🧮\s*/, '')
-            : `🧮${superscript} ` + conf.label;
+        // Strip the generic "Show all "/"Show " prefix for DISPLAY only. conf.label
+        // itself is left untouched — eb.dataset.label (below) and the tooltip
+        // .includes('Show all') check both still need the original text.
+        // conf.shortLabel additionally overrides the display text outright (e.g.
+        // dropping a "for <Entity>" suffix that only repeats the page's own
+        // subject) without touching conf.label at all.
+        const _rawDisplay = conf.shortLabel !== undefined ? conf.shortLabel : conf.label;
+        const _displayLabel = _rawDisplay.replace(/^Show(?: all)?\s+/, '');
+        const labelText = _displayLabel.startsWith('🧮')
+            ? `🧮${superscript} ` + _displayLabel.replace(/^🧮\s*/, '')
+            : `🧮${superscript} ` + _displayLabel;
         eb.textContent = labelText;
         eb.style.cssText = uiActionBtnBaseCSS();
         eb.type = 'button';
 
-        // Add tooltip based on button label
-        if (conf.label.includes('Show all')) {
+        // Plain-text tooltip description, based on conf.label (never shortLabel) —
+        // shortLabel only ever shortens what's painted on the button.
+        let _tooltipDesc;
+        if (conf.label.includes('Show all') || conf.label === 'Unfiltered' || conf.label === 'Subscribed Only') {
             // Extract entity types from label (e.g., "Show all Releases for ReleaseGroup")
-            eb.title = `Fetch all the table data from the MusicBrainz backend database`;
+            _tooltipDesc = `Fetch all the table data from the MusicBrainz backend database`;
         } else if (conf.label.includes('Official VA RGs')) {
             // Must be checked BEFORE 'Various Artists RGs' and 'Official RGs' / 'Artist RGs'
-            eb.title = 'Fetch all official various artists release groups from the MusicBrainz backend database';
+            _tooltipDesc = 'Fetch all official various artists release groups from the MusicBrainz backend database';
         } else if (conf.label.includes('Various Artists RGs')) {
             // Must be checked BEFORE 'Artist RGs' because the VA label also contains 'Artist RGs'
-            eb.title = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
+            _tooltipDesc = 'Fetch all official and non-official various artists release groups from the MusicBrainz backend database (combined)';
         } else if (conf.label.includes('Official RGs')) {
             // Must be checked BEFORE 'Artist RGs' because 'Official RGs' does not contain 'Artist'
             // but guard ordering is important: 'Official VA RGs' already matched above
-            eb.title = 'Fetch all official artist release groups from the MusicBrainz backend database';
+            _tooltipDesc = 'Fetch all official artist release groups from the MusicBrainz backend database';
         } else if (conf.label.includes('Artist RGs')) {
-            eb.title = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database (combined)';
+            _tooltipDesc = 'Fetch all official and non-official artist release groups from the MusicBrainz backend database (combined)';
         } else if (conf.label.includes('Artist releases')) {
-            eb.title = 'Fetch all official artist releases from the MusicBrainz backend database';
+            _tooltipDesc = 'Fetch all official artist releases from the MusicBrainz backend database';
         } else if (conf.label.includes('VA releases')) {
-            eb.title = 'Fetch all various artists releases from the MusicBrainz backend database';
+            _tooltipDesc = 'Fetch all various artists releases from the MusicBrainz backend database';
+        } else {
+            // Every button gets a description now — this used to be blank for
+            // anything not matched above (subscriptions, tag-value, aliases, …),
+            // which also meant the shortcut hint below never got appended either.
+            _tooltipDesc = 'Fetch this table data from the MusicBrainz backend database';
         }
+        eb.title = _tooltipDesc;
 
         // Append Ctrl-M + N prefix-mode shortcut hint to tooltip (buttons 1–9 only)
-        if (superscript && eb.title) {
-            eb.title += ` (${getPrefixDisplay()}, then ${btnIndex + 1})`;
+        const _shortcutHint = superscript ? `${getPrefixDisplay()}, then ${btnIndex + 1}` : '';
+        if (_shortcutHint) {
+            eb.title += ` (${_shortcutHint})`;
         }
+
+        // Rich hover tooltip (shares the #mb-stat-tooltip delegation the
+        // row-count stat uses, see _initStatTooltip): shows the FULL descriptive
+        // label — important now that the painted text (_displayLabel above) can
+        // be as short as a single word via shortLabel — plus the fetch
+        // description and the keyboard shortcut, with styling a native `title`
+        // can't do. eb.title (above) is kept as the accessible fallback; the
+        // hover system blanks it while the rich popup is shown.
+        _ensureMbttStyle();
+        const _fullLabel = conf.label.replace(/^Show(?: all)?\s+/, '');
+        let _mbttHtml = `<strong>${_mbttEscape(_fullLabel)}</strong><br>${_mbttEscape(_tooltipDesc)}`;
+        if (_shortcutHint) {
+            _mbttHtml += `<div class="mb-mbtt-shortcut">${_mbttEscape(_shortcutHint)}</div>`;
+        }
+        eb.dataset.mbtt = _mbttHtml;
 
         // Pass the entire config object
         eb.dataset.label = conf.label;  // stable original label — survives superscript/textContent mutations
@@ -40191,9 +40269,11 @@ a { color: #1565c0; }`;
         }
     })();
 
-    if (Lib.settings.sa_enable_count_stat_tooltip) {
-        _initStatTooltip(); // create the custom #mb-stat-tooltip hover system once
-    }
+    // Unconditional: the shared #mb-stat-tooltip delegation now also serves
+    // action-button tooltips (see the button-generation loop), not just the
+    // row-count stat — which still independently gates its OWN data-mbtt via
+    // sa_enable_count_stat_tooltip at the point it's set, further below.
+    _initStatTooltip(); // create the custom #mb-stat-tooltip hover system once
 
     if (headerContainer.tagName === 'A') {
         // Resolve the owning <h1> and append at the END so that any pre-existing
@@ -43232,16 +43312,32 @@ a { color: #1565c0; }`;
         window.dispatchEvent(new CustomEvent('mb-stop-all-scripts'));
     }
 
-    // ── Custom rich tooltip for .mb-row-count-stat spans ──────────────────────
+    // ── Custom rich tooltip for .mb-row-count-stat spans and action buttons ────
     // Native `title` attributes only support plain text — no colors.
     // We store HTML in `data-mbtt` and show a floating `#mb-stat-tooltip` div
-    // on mouseenter so filter expressions appear with the same highlight colors
-    // used in the table cells.
+    // on mouseenter (delegated on any `[data-mbtt]` element, see
+    // _initStatTooltip) so filter expressions — and, for action buttons, the
+    // full descriptive label a shortLabel button hides — appear with real
+    // styling.
     //
     // Color token helpers (read Lib.settings lazily so they stay current):
     //   gf()  → global-filter highlight (default gold background, red text)
     //   stf() → sub-table filter highlight (light green bg, black text)
     //   cf()  → column-filter highlight (light blue bg, red text)
+
+    /**
+     * Escapes HTML special characters so arbitrary text can be embedded in a
+     * `data-mbtt` string without the browser interpreting it as markup.
+     * @param {string} text
+     * @returns {string}
+     */
+    function _mbttEscape(text) {
+        return String(text)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
 
     /**
      * Wrap `expr` in a colored highlight span matching the filter type.
@@ -43285,6 +43381,7 @@ a { color: #1565c0; }`;
             .mb-mbtt-cf { background:${cfBg}; color:${cfCol}; }
             .mb-mbtt-colname { color:${cfBg}; font-weight:bold; }
             .mb-mbtt-count { background:${countBg}; color:${countCol}; border-radius:2px; padding:0 3px; font-weight:bold; }
+            .mb-mbtt-shortcut { display:inline-block; margin-top:4px; background:rgba(255,255,255,0.12); border-radius:3px; padding:1px 5px; font-family:monospace; font-size:0.85em; }
         `);
         style.id = 'sa-mbtt-style';
     }
@@ -43342,8 +43439,10 @@ a { color: #1565c0; }`;
     }
 
     /**
-     * Initialise the singleton custom tooltip for `.mb-row-count-stat` spans.
-     * Safe to call multiple times — creates the div only once.
+     * Initialise the singleton custom tooltip, delegated on any `[data-mbtt]`
+     * element — originally just `.mb-row-count-stat` spans, now also the h1
+     * action buttons (see the button-generation loop). Safe to call multiple
+     * times — creates the div only once.
      */
     function _initStatTooltip() {
         if (document.getElementById('mb-stat-tooltip')) return;
@@ -43355,31 +43454,40 @@ a { color: #1565c0; }`;
         let _target = null; // current hovered element
 
         document.addEventListener('mouseover', (e) => {
-            const el = e.target.closest('.mb-row-count-stat');
+            const el = e.target.closest('[data-mbtt]');
             if (!el || !el.dataset.mbtt) return;
             _target = el;
             _tip.innerHTML = el.dataset.mbtt;
             _tip.style.display = 'block';
             _positionTip(e);
-            // Suppress the h2/h3 parent's native title while our tooltip is visible
+            // Suppress the element's own native title (action buttons) and any
+            // h2/h3 ancestor's (row-count stat) while our tooltip is visible,
             // so the browser doesn't overlay both tooltips simultaneously.
+            if (el.title) {
+                el.dataset.mbttSavedTitle = el.title;
+                el.title = '';
+            }
             const _hParent = el.closest('h2, h3');
-            if (_hParent && _hParent.title) {
-                _hParent.dataset.mbttSavedTitle = _hParent.title;
+            if (_hParent && _hParent !== el && _hParent.title) {
+                _hParent.dataset.mbttSavedTitleParent = _hParent.title;
                 _hParent.title = '';
             }
         }, true);
 
         document.addEventListener('mouseout', (e) => {
-            const el = e.target.closest('.mb-row-count-stat');
+            const el = e.target.closest('[data-mbtt]');
             if (!el || el !== _target) return;
             _target = null;
             _tip.style.display = 'none';
-            // Restore the h2/h3 parent's native title
+            // Restore the element's own native title, and any h2/h3 ancestor's.
+            if (el.dataset.mbttSavedTitle !== undefined) {
+                el.title = el.dataset.mbttSavedTitle;
+                delete el.dataset.mbttSavedTitle;
+            }
             const _hParent = el.closest('h2, h3');
-            if (_hParent && _hParent.dataset.mbttSavedTitle !== undefined) {
-                _hParent.title = _hParent.dataset.mbttSavedTitle;
-                delete _hParent.dataset.mbttSavedTitle;
+            if (_hParent && _hParent.dataset.mbttSavedTitleParent !== undefined) {
+                _hParent.title = _hParent.dataset.mbttSavedTitleParent;
+                delete _hParent.dataset.mbttSavedTitleParent;
             }
         }, true);
 

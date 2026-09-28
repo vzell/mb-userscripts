@@ -46,7 +46,7 @@ will never need is folded into collapsible sections.
 1. Open any supported MusicBrainz page — an artist's *Recordings* tab, a release
    group, a series, a tag listing. See [Supported pages](#supported-pages).
 2. Press the action button beside the page heading. It is labelled for what it
-   will fetch, for example **🧮¹ Show all Events for Artist**. Pages that offer
+   will fetch, for example **🧮¹ Events for Artist**. Pages that offer
    more than one listing get one button each, numbered `🧮¹ 🧮² 🧮³` so the
    keyboard can reach them.
 3. A progress bar tracks the fetch, page by page. **⏹ Stop** interrupts it and
@@ -108,7 +108,7 @@ The controls beside the page heading are two pull-down menus plus two pinned
 buttons:
 
 ```
-🧮¹ Show all …  |  📦 Data ▾   🛠 View ▾   [ ⚙️ | ❓ ]
+🧮¹ …  |  📦 Data ▾   🛠 View ▾   [ ⚙️ | ❓ ]
 ```
 
 | Menu          | Rows                                                                                                                                  |
@@ -715,7 +715,7 @@ an import brings your deletions back.
 <details>
 <summary>Release tracklists</summary>
 
-A release page gains **Show all Tracks for Release**, which consolidates every
+A release page gains **Tracks for Release**, which consolidates every
 medium into one table and unpacks each track's relationships into columns:
 *Recording of work*, *Recorded at* event and place, *Recorded in area*, *Mixed
 at*, *Performer*, the engineer / producer / mixer credit family, phonographic

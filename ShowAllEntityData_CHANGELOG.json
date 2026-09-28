@@ -1,5 +1,35 @@
 [
   {
+    "version": "9.99.1167",
+    "date": "2026-09-27",
+    "sections": [
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "Action-button text is shortened further wherever it just repeated the page's own subject, e.g. 'Tags for Artist' → 'Tags', 'Relationships for Label (complete)' → 'Relationships (complete)', 'Aliases for Artist' → 'Aliases', 'Search Results for Recordings' → 'Recordings' (the native heading already says 'Search results'). Three pages (subscriptions, artist release groups, artist releases) gain a bold '<Label>: ' ahead of their now much shorter buttons, e.g. 'Bruce Springsteen | Releases: Artists / Various Artists', separated by the same '|' divider used before the 📦 Data ▾ menu. As with 9.99.1166, only what's painted changes — the underlying label used for caching/matching is untouched."
+        ]
+      },
+      {
+        "label": "✨ Improve",
+        "items": [
+          "Every action button now has a rich, styled hover tooltip (reusing the existing #mb-stat-tooltip popup the row-count stat already used) that restores the full descriptive text a shortened button hides, plus its Ctrl-M keyboard shortcut. Previously several buttons (subscriptions, tag upvote/downvote, aliases, …) had no tooltip and no shortcut hint at all."
+        ]
+      }
+    ]
+  },
+  {
+    "version": "9.99.1166",
+    "date": "2026-09-27",
+    "sections": [
+      {
+        "label": "🔧 Refactor",
+        "items": [
+          "Action buttons no longer show the generic 'Show all '/'Show ' prefix — e.g. '🧮¹ Show all Events for Artist' now reads '🧮¹ Events for Artist'. The underlying label (used for internal caching/matching) is unchanged, only what's painted on the button. The two report-page buttons ('Show all (unfiltered)' / 'Show all (subscribed only)') are additionally renamed to 'Unfiltered' / 'Subscribed Only'."
+        ]
+      }
+    ]
+  },
+  {
     "version": "9.99.1165",
     "date": "2026-09-26",
     "sections": [
